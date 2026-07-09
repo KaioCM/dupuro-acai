@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Área do Revendedor — Dupuro Açaí</title>
+<link rel="icon" href="../assets/img/brand/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="../assets/img/brand/favicon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body>
+
+<div class="login-page">
+
+  <div class="login-brand-pane">
+    <div class="login-brand-logo">
+      <a href="../index.html" aria-label="Voltar ao início"><img src="../assets/img/brand/logo-branco-slogan.png" alt="Dupuro Açaí — Puro como tem que ser"></a>
+    </div>
+    <div class="login-brand-msg">
+      <h2>Seu negócio abastecido <em>sem complicação</em>.</h2>
+      <p>Faça pedidos em poucos cliques, acompanhe entregas e aproveite cupons exclusivos — tudo em um só lugar.</p>
+    </div>
+    <div class="login-brand-foot">Onde tem energia, tem Dupuro Açaí. 💜</div>
+  </div>
+
+  <div class="login-form-pane">
+    <div class="login-card">
+      <div class="brand"><a href="../index.html" aria-label="Voltar ao início"><img src="../assets/img/brand/logo-principal.png" alt="Dupuro Açaí"></a></div>
+      <h1>Área do Revendedor</h1>
+      <p class="hint">Acompanhe seus pedidos, cupons e dados de revenda.</p>
+
+      <form id="loginForm" novalidate>
+        <div class="field" id="field-email">
+          <label for="email">E-mail</label>
+          <input type="email" id="email" name="email" placeholder="voce@email.com" autocomplete="email">
+          <span class="error-msg">Informe um e-mail válido.</span>
+        </div>
+        <div class="field" id="field-senha">
+          <label for="senha">Senha</label>
+          <input type="password" id="senha" name="senha" placeholder="••••••••" autocomplete="current-password">
+          <span class="error-msg">Informe sua senha.</span>
+        </div>
+        <div class="field-note" id="loginError">E-mail ou senha inválidos. Verifique os dados ou fale com o suporte.</div>
+        <div class="field-note" id="loginUnconfirmed" style="color:var(--warning); background:rgba(199,124,0,0.08);">📧 Confirme seu e-mail antes de entrar — enviamos um link de confirmação para a caixa de entrada no momento do cadastro.</div>
+        <div class="field-note" id="loginPending" style="color:var(--warning); background:rgba(199,124,0,0.08);">⏳ Seu cadastro ainda está em análise. Assim que for aprovado, você recebe acesso ao painel.</div>
+        <div class="field-note" id="loginRejected">Seu cadastro não foi aprovado. Fale com a gente pelo WhatsApp para entender os próximos passos.</div>
+        <button type="submit" class="btn btn-primary btn-block">Entrar</button>
+      </form>
+
+      <div class="demo-note">
+        🔑 Ainda não tem conta? Cadastre-se pelo site — seu acesso é liberado assim que o time Dupuro aprovar seu cadastro.
+      </div>
+
+      <p class="login-footer">Ainda não é revendedor? <a href="../index.html#revenda" style="color:var(--roxo-700); font-weight:700;">Cadastre-se aqui</a></p>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/js/supabase-config.js"></script>
+<script src="../assets/js/supabase-client.js"></script>
+<script src="../assets/js/cliente.js"></script>
+<script>
+  document.getElementById('loginForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var email = document.getElementById('email');
+    var senha = document.getElementById('senha');
+    var errorNote = document.getElementById('loginError');
+    var unconfirmedNote = document.getElementById('loginUnconfirmed');
+    var pendingNote = document.getElementById('loginPending');
+    var rejectedNote = document.getElementById('loginRejected');
+    var submitBtn = e.target.querySelector('button[type="submit"]');
+    var valid = true;
+
+    var emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim());
+    email.closest('.field').classList.toggle('invalid', !emailOk);
+    if (!emailOk) valid = false;
+
+    var senhaOk = senha.value.trim().length > 0;
+    senha.closest('.field').classList.toggle('invalid', !senhaOk);
+    if (!senhaOk) valid = false;
+
+    errorNote.classList.remove('show');
+    unconfirmedNote.classList.remove('show');
+    pendingNote.classList.remove('show');
+    rejectedNote.classList.remove('show');
+    if (!valid) return;
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Entrando...';
+
+    DupuroCliente.login(email.value.trim(), senha.value).then(function (result) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Entrar';
+
+      if (result.error) {
+        if (result.error.code === 'email_not_confirmed') {
+          unconfirmedNote.classList.add('show');
+        } else {
+          errorNote.classList.add('show');
+        }
+        return;
+      }
+      if (result.status === 'pendente') {
+        pendingNote.classList.add('show');
+        return;
+      }
+      if (result.status === 'rejeitado') {
+        rejectedNote.classList.add('show');
+        return;
+      }
+      window.location.href = result.role === 'admin' ? 'admin.html' : 'dashboard.html';
+    });
+  });
+</script>
+</body>
+</html>

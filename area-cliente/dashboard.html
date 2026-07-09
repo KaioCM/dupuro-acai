@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel do Revendedor — Dupuro Açaí</title>
+<link rel="icon" href="../assets/img/brand/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="../assets/img/brand/favicon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body>
+
+<div class="mobile-topbar">
+  <div class="brand"><a href="#" data-goto="inicio" aria-label="Voltar ao início"><img src="../assets/img/brand/logo-branco.png" alt="Dupuro Açaí"></a></div>
+  <button id="mobileMenuBtn" aria-label="Abrir menu">☰</button>
+</div>
+
+<div class="app-shell">
+
+  <aside class="sidebar" id="sidebar">
+    <div class="brand"><a href="#" data-goto="inicio" aria-label="Voltar ao início"><img src="../assets/img/brand/logo-branco.png" alt="Dupuro Açaí"></a></div>
+
+    <a href="#" class="sidebar-cta" data-tab="fazer-pedido">🛒 Fazer pedido</a>
+
+    <a href="#" class="sidebar-link active" data-tab="inicio"><span class="ic">🏠</span> Início</a>
+    <a href="#" class="sidebar-link" data-tab="pedidos"><span class="ic">📦</span> Meus pedidos</a>
+    <a href="#" class="sidebar-link" data-tab="cupons"><span class="ic">🏷️</span> Cupons <span class="badge-pill hidden" id="couponBadge"></span></a>
+    <a href="#" class="sidebar-link" data-tab="perfil"><span class="ic">👤</span> Meu perfil</a>
+
+    <div class="sidebar-footer">
+      <a href="https://wa.me/5566996549545" target="_blank" rel="noopener" class="sidebar-link"><span class="ic">💬</span> Suporte no WhatsApp</a>
+      <a href="../index.html" class="sidebar-link"><span class="ic">🌐</span> Ver site</a>
+      <a href="#" class="sidebar-link" id="logoutBtn"><span class="ic">🚪</span> Sair</a>
+    </div>
+  </aside>
+
+  <main class="app-main">
+
+    <!-- ============ INÍCIO ============ -->
+    <section class="tab-panel" id="tab-inicio">
+      <div class="app-topbar">
+        <div>
+          <h1>Olá, <span id="greetName">revendedor(a)</span> 👋</h1>
+          <div class="subtitle">Aqui está o resumo da sua parceria com a Dupuro Açaí.</div>
+        </div>
+        <div class="user-chip"><span class="avatar" id="avatarInitial">R</span> <span id="chipName">Revendedor(a)</span></div>
+      </div>
+
+      <div class="stat-grid">
+        <div class="stat-card">
+          <span class="stat-ic">📦</span>
+          <div class="label">Pedidos totais</div>
+          <div class="value" id="statTotalOrders">—</div>
+          <div class="delta">desde o cadastro</div>
+        </div>
+        <div class="stat-card">
+          <span class="stat-ic">💰</span>
+          <div class="label">Valor total comprado</div>
+          <div class="value" id="statTotalValue">—</div>
+          <div class="delta">acumulado</div>
+        </div>
+        <div class="stat-card">
+          <span class="stat-ic">🏷️</span>
+          <div class="label">Cupons disponíveis</div>
+          <div class="value" id="statCoupons">—</div>
+          <div class="delta">prontos para usar</div>
+        </div>
+        <div class="stat-card">
+          <span class="stat-ic">🚚</span>
+          <div class="label">Último pedido</div>
+          <div class="value" id="statLastStatus" style="font-size:18px; padding-top:6px;">—</div>
+          <div class="delta" id="statLastOrder">—</div>
+        </div>
+      </div>
+
+      <div class="panel" style="display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap; background:linear-gradient(120deg, rgba(245,179,1,0.12), rgba(139,184,49,0.1)); border-color:rgba(245,179,1,0.35);">
+        <div>
+          <h3 style="font-family:var(--font-display); color:var(--roxo-700); font-size:20px; text-transform:uppercase; margin-bottom:4px;">Precisa repor o estoque?</h3>
+          <p style="font-size:14px; color:var(--text-light);">Monte seu pedido em menos de um minuto, sem sair do painel.</p>
+        </div>
+        <div style="display:flex; gap:12px; flex-wrap:wrap;">
+          <a href="#" class="btn btn-primary" data-goto="fazer-pedido">🛒 Fazer pedido</a>
+          <a href="#" class="btn btn-dark-outline hidden" id="repeatOrderBtn">🔁 Repetir último pedido</a>
+        </div>
+      </div>
+
+      <div class="charts-grid">
+        <div class="panel chart-card">
+          <h3>Minhas compras por mês</h3>
+          <div class="subtitle">Valor total pedido, por mês</div>
+          <div class="chart-wrap"><canvas id="chartMyRevenue"></canvas></div>
+        </div>
+        <div class="panel chart-card">
+          <h3>Meus pedidos por status</h3>
+          <div class="subtitle">Distribuição dos seus pedidos</div>
+          <div class="chart-wrap"><canvas id="chartMyOrderStatus"></canvas></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <h3>Pedidos recentes</h3>
+            <div class="subtitle">Seus últimos 3 pedidos</div>
+          </div>
+          <a href="#" class="btn btn-dark-outline btn-sm" data-goto="pedidos">Ver todos</a>
+        </div>
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead><tr><th>Pedido</th><th>Data</th><th>Itens</th><th>Valor</th><th>Status</th></tr></thead>
+            <tbody id="recentOrdersBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ FAZER PEDIDO ============ -->
+    <section class="tab-panel hidden" id="tab-fazer-pedido">
+      <div class="app-topbar">
+        <div><h1>Fazer pedido</h1><div class="subtitle">Toque em um produto para escolher, ajuste a quantidade e envie — simples assim.</div></div>
+      </div>
+
+      <div class="order-flow">
+        <div id="shopCatalog">
+          <div class="empty-state"><div class="icon">🫐</div>Carregando o catálogo...</div>
+        </div>
+
+        <aside class="order-summary" aria-label="Resumo do pedido">
+          <div class="order-summary-head">🧾 Seu pedido</div>
+          <div class="order-summary-body">
+
+            <div class="placeholder" id="summaryPlaceholder">
+              <span class="icon">👈</span>
+              Escolha um produto na vitrine ao lado para começar o pedido.
+            </div>
+
+            <div id="summaryContent" class="hidden">
+              <div class="picked">
+                <div class="thumb" id="summaryThumb">🫐</div>
+                <div>
+                  <h4 id="summaryName">—</h4>
+                  <div class="unit" id="summaryUnit">—</div>
+                </div>
+              </div>
+
+              <div class="field hidden" id="summarySaborField">
+                <label for="summarySabor">Sabor</label>
+                <select id="summarySabor"></select>
+              </div>
+
+              <div class="field" style="margin-bottom:0;">
+                <label for="summaryQty">Quantidade</label>
+                <div class="qty-stepper">
+                  <button type="button" id="qtyMinus" aria-label="Diminuir quantidade">−</button>
+                  <input type="number" id="summaryQty" min="1" max="99" step="1" value="1" inputmode="numeric">
+                  <button type="button" id="qtyPlus" aria-label="Aumentar quantidade">+</button>
+                </div>
+              </div>
+
+              <div class="order-total-row">
+                <span class="lbl">Item</span>
+                <span class="val" id="summaryTotal">—</span>
+              </div>
+
+              <div class="field-note" id="clientOrderError">Confira os dados do item.</div>
+              <button type="button" class="btn btn-green btn-block" id="addToCartBtn">➕ Adicionar ao pedido</button>
+            </div>
+
+            <div id="cartSection" class="hidden">
+              <div class="cart-head">🛒 Itens do pedido</div>
+              <ul class="cart-list" id="cartList"></ul>
+              <div class="order-total-row"><span class="lbl">Total</span><span class="val" id="cartTotal">—</span></div>
+              <div class="field-note" id="cartError">Não foi possível enviar o pedido.</div>
+              <button type="button" class="btn btn-primary btn-block" id="sendCartBtn">Enviar pedido ✔</button>
+              <p style="font-size:12px; color:var(--text-light); text-align:center; margin-top:12px;">O pedido chega direto para o time Dupuro, com status <strong>Enviado</strong>. Você acompanha em <em>Meus pedidos</em>.</p>
+            </div>
+
+            <div id="summarySuccess" class="hidden" style="text-align:center; padding:14px 4px;">
+              <div style="width:64px; height:64px; margin:0 auto 14px; background:rgba(139,184,49,0.18); border-radius:20px; display:flex; align-items:center; justify-content:center; font-size:30px;">🎉</div>
+              <h4 style="font-family:var(--font-display); color:var(--roxo-700); font-size:19px; text-transform:uppercase; margin-bottom:6px;">Pedido enviado!</h4>
+              <p style="font-size:13.5px; color:var(--text-light); margin-bottom:18px;" id="summarySuccessDetail">O time Dupuro já recebeu seu pedido.</p>
+              <button type="button" class="btn btn-green btn-block" id="newOrderBtn">Fazer outro pedido</button>
+              <a href="#" class="btn btn-dark-outline btn-block" data-goto="pedidos" style="margin-top:10px;">Acompanhar pedido</a>
+            </div>
+
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ============ MEUS PEDIDOS ============ -->
+    <section class="tab-panel hidden" id="tab-pedidos">
+      <div class="app-topbar">
+        <div><h1>Meus pedidos</h1><div class="subtitle">Histórico completo das suas compras na Dupuro Açaí</div></div>
+        <a href="#" class="btn btn-primary btn-sm" data-goto="fazer-pedido">🛒 Fazer pedido</a>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header"><h3>Histórico de pedidos</h3></div>
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead><tr><th>Pedido</th><th>Data</th><th>Itens</th><th>Valor</th><th>Status</th></tr></thead>
+            <tbody id="allOrdersBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ CUPONS ============ -->
+    <section class="tab-panel hidden" id="tab-cupons">
+      <div class="app-topbar">
+        <div><h1>Cupons</h1><div class="subtitle">Cupons de desconto que a Dupuro liberou pra você</div></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header"><h3>Meus cupons</h3></div>
+        <div class="coupon-grid" id="couponGrid"></div>
+      </div>
+    </section>
+
+    <!-- ============ PERFIL ============ -->
+    <section class="tab-panel hidden" id="tab-perfil">
+      <div class="app-topbar">
+        <div><h1>Meu perfil</h1><div class="subtitle">Dados de contato e da sua revenda</div></div>
+      </div>
+      <div class="panel" style="max-width:560px;">
+        <form id="profileForm">
+          <div class="field">
+            <label for="pNome">Nome completo</label>
+            <input type="text" id="pNome">
+          </div>
+          <div class="field">
+            <label for="pEmpresa">Nome da revenda / negócio</label>
+            <input type="text" id="pEmpresa">
+          </div>
+          <div class="field">
+            <label for="pEmail">E-mail</label>
+            <input type="email" id="pEmail">
+          </div>
+          <div class="field">
+            <label for="pTelefone">Telefone / WhatsApp</label>
+            <input type="text" id="pTelefone">
+          </div>
+          <div class="field">
+            <label for="pCidade">Cidade e Estado</label>
+            <input type="text" id="pCidade">
+          </div>
+          <button type="submit" class="btn btn-primary">Salvar alterações</button>
+          <span id="profileSaved" class="hidden" style="margin-left:14px; color:var(--verde-dark); font-weight:700; font-size:13px;">✓ Salvo!</span>
+        </form>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script src="../assets/js/supabase-config.js"></script>
+<script src="../assets/js/supabase-client.js"></script>
+<script src="../assets/js/app-ui.js"></script>
+<script src="../assets/js/cliente.js"></script>
+<script>
+(async function () {
+  var session = await DupuroCliente.requireAuth('login.html');
+  if (!session) return;
+
+  DupuroCliente.onAuthStateChange(function (event) {
+    if (event === 'SIGNED_OUT') window.location.href = 'login.html';
+  });
+
+  var profile = await DupuroCliente.getProfile();
+
+  // Conta admin não usa este painel — manda pro painel admin.
+  if (profile.role === 'admin') {
+    window.location.href = 'admin.html';
+    return;
+  }
+
+  // Se o status deixou de ser 'aprovado' enquanto a sessão existia, encerra.
+  if (profile.status && profile.status !== 'aprovado') {
+    await DupuroCliente.logout();
+    window.location.href = 'login.html';
+    return;
+  }
+
+  var orders = await DupuroCliente.getOrders();
+
+  // ---- Saudação / chip ----
+  var firstName = (profile.nome || 'Revendedor').split(' ')[0];
+  document.getElementById('greetName').textContent = firstName;
+  document.getElementById('chipName').textContent = profile.nome || 'Revendedor(a)';
+  document.getElementById('avatarInitial').textContent = (profile.nome || 'R').charAt(0).toUpperCase();
+
+  // ---- Stats ----
+  var totalValue = orders.reduce(function (sum, o) { return sum + o.valor; }, 0);
+  DupuroUI.countUp(document.getElementById('statTotalOrders'), orders.length);
+  DupuroUI.countUp(document.getElementById('statTotalValue'), totalValue, DupuroUI.brl);
+  var currentCoupons = await DupuroCliente.getCoupons();
+  var availableCoupons = currentCoupons.filter(function (c) { return !c.usado; }).length;
+  DupuroUI.countUp(document.getElementById('statCoupons'), availableCoupons);
+  if (availableCoupons > 0) {
+    var badge = document.getElementById('couponBadge');
+    badge.textContent = availableCoupons;
+    badge.classList.remove('hidden');
+  }
+
+  var sortedByDate = orders.slice().sort(function (a, b) { return new Date(b.data) - new Date(a.data); });
+  if (sortedByDate.length) {
+    document.getElementById('statLastStatus').innerHTML = statusBadge(sortedByDate[0].status);
+    document.getElementById('statLastOrder').textContent = sortedByDate[0].id + ' · ' + formatDate(sortedByDate[0].data);
+  }
+
+  function statusBadge(status) {
+    var labels = { entregue: 'Entregue', enviado: 'Enviado', processando: 'Processando', cancelado: 'Cancelado' };
+    return '<span class="status-badge ' + status + '">' + (labels[status] || status) + '</span>';
+  }
+
+  function formatDate(d) {
+    var parts = d.split('-');
+    return parts[2] + '/' + parts[1] + '/' + parts[0];
+  }
+
+  function brl(v) {
+    return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  }
+
+  function renderOrdersRows(list) {
+    if (!list.length) {
+      return '<tr><td colspan="5"><div class="empty-state"><div class="icon">📦</div>Nenhum pedido por aqui ainda. Que tal fazer o primeiro?</div></td></tr>';
+    }
+    return list.map(function (o) {
+      return '<tr>' +
+        '<td><strong>' + o.id + '</strong></td>' +
+        '<td>' + formatDate(o.data) + '</td>' +
+        '<td>' + o.itens + '</td>' +
+        '<td class="num">' + brl(o.valor) + '</td>' +
+        '<td>' + statusBadge(o.status) + '</td>' +
+        '</tr>';
+    }).join('');
+  }
+
+  document.getElementById('recentOrdersBody').innerHTML = renderOrdersRows(sortedByDate.slice(0, 3));
+  document.getElementById('allOrdersBody').innerHTML = renderOrdersRows(sortedByDate);
+
+  // ---- Gráficos (paleta oficial) ----
+  var PALETTE = { primary: '#601050', gold: '#F5B301', green: '#8BB831', warning: '#C77C00', danger: '#C0392B' };
+  var MONTH_NAMES = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+
+  var byMonth = {};
+  orders.forEach(function (o) {
+    var month = (o.data || '').slice(0, 7);
+    if (!month) return;
+    byMonth[month] = (byMonth[month] || 0) + o.valor;
+  });
+  var months = Object.keys(byMonth).sort();
+  var revenueCanvas = document.getElementById('chartMyRevenue');
+  if (revenueCanvas) {
+    new Chart(revenueCanvas.getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels: months.map(function (m) {
+          var parts = m.split('-');
+          return MONTH_NAMES[parseInt(parts[1], 10) - 1] + '/' + parts[0].slice(2);
+        }),
+        datasets: [{ label: 'Comprado', data: months.map(function (m) { return byMonth[m]; }), backgroundColor: PALETTE.gold, borderRadius: 8 }]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+    });
+  }
+
+  var statusLabels = { processando: 'Processando', enviado: 'Enviado', entregue: 'Entregue', cancelado: 'Cancelado' };
+  var statusOrder = ['processando', 'enviado', 'entregue', 'cancelado'];
+  var statusCounts = { processando: 0, enviado: 0, entregue: 0, cancelado: 0 };
+  orders.forEach(function (o) { if (statusCounts[o.status] !== undefined) statusCounts[o.status]++; });
+  var statusCanvas = document.getElementById('chartMyOrderStatus');
+  if (statusCanvas) {
+    new Chart(statusCanvas.getContext('2d'), {
+      type: 'doughnut',
+      data: {
+        labels: statusOrder.map(function (s) { return statusLabels[s]; }),
+        datasets: [{ data: statusOrder.map(function (s) { return statusCounts[s]; }), backgroundColor: [PALETTE.warning, PALETTE.primary, PALETTE.green, PALETTE.danger] }]
+      },
+      options: { responsive: true, maintainAspectRatio: false }
+    });
+  }
+
+  // ==========================================================
+  //  Fazer pedido — vitrine interativa
+  // ==========================================================
+  var TIPO_LABELS = { varejo: 'Varejo', atacado: 'Atacado' };
+  var SABORES = ['Açaí', 'Creme de Morango', 'Creme de Paçoca', 'Creme de Maracujá', 'Creme de Cupuaçu', 'Creme de Pistache', 'Creme de Ninho', 'Creme de Banana', 'Creme de Doce de Leite'];
+
+  var productsCache = [];
+  var selectedProduct = null;
+
+  var shopCatalog = document.getElementById('shopCatalog');
+  var summaryPlaceholder = document.getElementById('summaryPlaceholder');
+  var summaryContent = document.getElementById('summaryContent');
+  var summarySuccess = document.getElementById('summarySuccess');
+  var summarySaborField = document.getElementById('summarySaborField');
+  var summarySabor = document.getElementById('summarySabor');
+  var summaryQtyInput = document.getElementById('summaryQty');
+  var errorNote = document.getElementById('clientOrderError');
+  var cart = [];
+  var addBtn = document.getElementById('addToCartBtn');
+  var sendBtn = document.getElementById('sendCartBtn');
+  var cartError = document.getElementById('cartError');
+
+  function shopCardHtml(p) {
+    var oos = !p.emEstoque;
+    return '<button type="button" class="shop-card' + (oos ? ' out-of-stock' : '') + '" data-product-id="' + p.id + '" aria-pressed="false"' + (oos ? ' disabled aria-disabled="true"' : '') + '>' +
+      '<div class="ph">' + (p.imagemUrl ? '<img src="' + p.imagemUrl + '" alt="" loading="lazy">' : '🫐') + '</div>' +
+      '<div class="body">' +
+        '<h4>' + p.nome + '</h4>' +
+        '<div class="price">' + brl(p.preco) + '</div>' +
+        (oos ? '<span class="flavor-hint oos-hint">esgotado</span>' : (p.multissabor ? '<span class="flavor-hint">escolha o sabor</span>' : '')) +
+      '</div>' +
+      '</button>';
+  }
+
+  function renderShop() {
+    if (!productsCache.length) {
+      shopCatalog.innerHTML = '<div class="panel"><div class="empty-state"><div class="icon">🫐</div>Nenhum produto disponível no momento. Fale com o time Dupuro pelo WhatsApp.</div></div>';
+      return;
+    }
+    shopCatalog.innerHTML = ['varejo', 'atacado'].map(function (tipo) {
+      var group = productsCache.filter(function (p) { return (p.tipo || 'varejo') === tipo; });
+      if (!group.length) return '';
+      return '<div class="shop-section-title">' + (tipo === 'varejo' ? '🛍️' : '📦') + ' ' + TIPO_LABELS[tipo] + '</div>' +
+        '<div class="shop-grid">' + group.map(shopCardHtml).join('') + '</div>';
+    }).join('');
+
+    shopCatalog.querySelectorAll('.shop-card').forEach(function (card) {
+      card.addEventListener('click', function () {
+        selectProduct(card.getAttribute('data-product-id'));
+      });
+    });
+  }
+
+  function getQty() {
+    var qty = parseInt(summaryQtyInput.value, 10);
+    if (isNaN(qty)) return null;
+    return qty;
+  }
+
+  // Pedido mínimo do produto selecionado (1 = sem mínimo).
+  function minQty() {
+    return selectedProduct ? (selectedProduct.pedidoMinimo || 1) : 1;
+  }
+
+  function updateTotal() {
+    var qty = getQty();
+    var totalEl = document.getElementById('summaryTotal');
+    if (!selectedProduct || !qty || qty < minQty() || qty > 99) {
+      totalEl.textContent = '—';
+      return;
+    }
+    totalEl.textContent = brl(selectedProduct.preco * qty);
+  }
+
+  function selectProduct(id, keepQty) {
+    selectedProduct = productsCache.find(function (p) { return String(p.id) === String(id) && p.emEstoque; }) || null;
+
+    shopCatalog.querySelectorAll('.shop-card').forEach(function (c) {
+      var isSel = selectedProduct && c.getAttribute('data-product-id') === String(selectedProduct.id);
+      c.classList.toggle('selected', isSel);
+      c.setAttribute('aria-pressed', isSel ? 'true' : 'false');
+    });
+
+    if (!selectedProduct) return;
+
+    summarySuccess.classList.add('hidden');
+    summaryPlaceholder.classList.add('hidden');
+    summaryContent.classList.remove('hidden');
+
+    var thumb = document.getElementById('summaryThumb');
+    thumb.innerHTML = selectedProduct.imagemUrl ? '<img src="' + selectedProduct.imagemUrl + '" alt="">' : '🫐';
+    document.getElementById('summaryName').textContent = selectedProduct.nome;
+    document.getElementById('summaryUnit').textContent = brl(selectedProduct.preco) + ' / unidade' + (minQty() > 1 ? ' · pedido mín. ' + minQty() : '');
+    summaryQtyInput.min = minQty();
+
+    if (selectedProduct.multissabor) {
+      // Só os sabores COM estoque (definido pelo admin). Ordena seguindo SABORES.
+      var disp = selectedProduct.saboresDisponiveis || [];
+      var opcoes = SABORES.filter(function (s) { return disp.indexOf(s) !== -1; });
+      summarySabor.innerHTML = opcoes.map(function (s) { return '<option value="' + s + '">' + s + '</option>'; }).join('');
+      summarySaborField.classList.remove('hidden');
+    } else {
+      summarySaborField.classList.add('hidden');
+    }
+
+    if (!keepQty) summaryQtyInput.value = minQty();
+    errorNote.classList.remove('show');
+    updateTotal();
+  }
+
+  document.getElementById('qtyMinus').addEventListener('click', function () {
+    var qty = getQty() || minQty();
+    summaryQtyInput.value = Math.max(minQty(), qty - 1);
+    updateTotal();
+  });
+  document.getElementById('qtyPlus').addEventListener('click', function () {
+    var qty = getQty() || 0;
+    summaryQtyInput.value = Math.min(99, qty + 1);
+    updateTotal();
+  });
+  summaryQtyInput.addEventListener('input', updateTotal);
+
+  // Desenha a lista do carrinho + total; esconde a seção quando vazia.
+  function renderCart() {
+    var section = document.getElementById('cartSection');
+    var list = document.getElementById('cartList');
+    sendBtn.textContent = 'Enviar pedido' + (cart.length ? ' (' + cart.length + ')' : '') + ' ✔';
+    if (!cart.length) { section.classList.add('hidden'); return; }
+    section.classList.remove('hidden');
+    list.innerHTML = cart.map(function (it, i) {
+      return '<li class="cart-item"><div class="ci-info"><span class="ci-name">' + it.nome + (it.sabor ? ' · ' + it.sabor : '') + '</span>' +
+        '<span class="ci-sub">' + it.quantidade + ' × ' + brl(it.preco) + ' = ' + brl(it.preco * it.quantidade) + '</span></div>' +
+        '<button type="button" class="ci-remove" data-cart-i="' + i + '" aria-label="Remover item">×</button></li>';
+    }).join('');
+    document.getElementById('cartTotal').textContent = brl(cart.reduce(function (s, it) { return s + it.preco * it.quantidade; }, 0));
+    list.querySelectorAll('[data-cart-i]').forEach(function (b) {
+      b.addEventListener('click', function () { cart.splice(parseInt(b.getAttribute('data-cart-i'), 10), 1); renderCart(); });
+    });
+  }
+
+  function deselectProduct() {
+    selectedProduct = null;
+    summaryContent.classList.add('hidden');
+    summarySuccess.classList.add('hidden');
+    summaryPlaceholder.classList.remove('hidden');
+    shopCatalog.querySelectorAll('.shop-card').forEach(function (c) {
+      c.classList.remove('selected');
+      c.setAttribute('aria-pressed', 'false');
+    });
+  }
+
+  // "Adicionar ao pedido": valida o item e o coloca no carrinho (mescla iguais).
+  addBtn.addEventListener('click', function () {
+    errorNote.classList.remove('show');
+    errorNote.textContent = 'Confira os dados do item.';
+    var qty = getQty();
+    var sabor = selectedProduct && selectedProduct.multissabor ? summarySabor.value : null;
+
+    if (!selectedProduct || !qty || qty < minQty() || qty > 99 || (selectedProduct.multissabor && !sabor)) {
+      if (selectedProduct && qty && qty < minQty()) errorNote.textContent = 'O pedido mínimo deste produto é ' + minQty() + ' unidades.';
+      errorNote.classList.add('show');
+      return;
+    }
+
+    var existing = cart.filter(function (it) { return it.productId === selectedProduct.id && (it.sabor || null) === (sabor || null); })[0];
+    if (existing) existing.quantidade = Math.min(99, existing.quantidade + qty);
+    else cart.push({ productId: selectedProduct.id, nome: selectedProduct.nome, preco: selectedProduct.preco, sabor: sabor, quantidade: qty });
+    renderCart();
+    deselectProduct();
+  });
+
+  // "Enviar pedido (N)": manda o carrinho inteiro num pedido só.
+  sendBtn.addEventListener('click', async function () {
+    cartError.classList.remove('show');
+    if (!cart.length) return;
+    var items = cart.map(function (it) {
+      return { productId: it.productId, quantidade: it.quantidade, sabor: it.sabor,
+        itens: it.nome + (it.sabor ? ' - ' + it.sabor : '') + ' x' + it.quantidade, valor: it.preco * it.quantidade };
+    });
+    sendBtn.disabled = true; sendBtn.textContent = 'Enviando...';
+    var result = await DupuroCliente.createOrderCart(items);
+    sendBtn.disabled = false;
+    if (result.error) {
+      cartError.textContent = result.error.code === '23514'
+        ? 'Algum item ficou sem estoque. Revise o pedido.'
+        : 'Não foi possível enviar o pedido. Tente novamente.';
+      cartError.classList.add('show');
+      renderCart();
+      if (result.error.code === '23514') { productsCache = await DupuroCliente.getProducts(); renderShop(); }
+      return;
+    }
+    var total = cart.reduce(function (s, it) { return s + it.preco * it.quantidade; }, 0);
+    var n = cart.length;
+    cart = [];
+    renderCart();
+    document.getElementById('summarySuccessDetail').textContent = n + (n === 1 ? ' item' : ' itens') + ' · ' + brl(total);
+    summaryContent.classList.add('hidden');
+    summaryPlaceholder.classList.add('hidden');
+    summarySuccess.classList.remove('hidden');
+    refreshOrdersSoft();
+  });
+
+  document.getElementById('newOrderBtn').addEventListener('click', function () {
+    deselectProduct();
+  });
+
+  async function refreshOrdersSoft() {
+    orders = await DupuroCliente.getOrders();
+    sortedByDate = orders.slice().sort(function (a, b) { return new Date(b.data) - new Date(a.data); });
+    document.getElementById('recentOrdersBody').innerHTML = renderOrdersRows(sortedByDate.slice(0, 3));
+    document.getElementById('allOrdersBody').innerHTML = renderOrdersRows(sortedByDate);
+    document.getElementById('statTotalOrders').textContent = orders.length;
+    document.getElementById('statTotalValue').textContent = brl(orders.reduce(function (s, o) { return s + o.valor; }, 0));
+    if (sortedByDate.length) {
+      document.getElementById('statLastStatus').innerHTML = statusBadge(sortedByDate[0].status);
+      document.getElementById('statLastOrder').textContent = sortedByDate[0].id + ' · ' + formatDate(sortedByDate[0].data);
+    }
+  }
+
+  // ---- Repetir último pedido ----
+  var repeatBtn = document.getElementById('repeatOrderBtn');
+  function setupRepeatButton() {
+    var last = sortedByDate[0];
+    if (!last || !last.items || !last.items.length) return;
+    // Só os itens que ainda existem e têm estoque/sabor disponível.
+    var repeatable = last.items.map(function (it) {
+      var product = productsCache.find(function (p) { return String(p.id) === String(it.produtoId) && p.emEstoque; });
+      if (!product) return null;
+      if (product.multissabor && it.sabor && (product.saboresDisponiveis || []).indexOf(it.sabor) === -1) return null;
+      return { productId: product.id, nome: product.nome, preco: product.preco, sabor: it.sabor || null,
+        quantidade: Math.min(99, Math.max(product.pedidoMinimo || 1, it.quantidade || 1)) };
+    }).filter(Boolean);
+    if (!repeatable.length) return;
+    repeatBtn.classList.remove('hidden');
+    repeatBtn.addEventListener('click', function (e) {
+      e.preventDefault();
+      goTo('fazer-pedido');
+      repeatable.forEach(function (r) {
+        var existing = cart.filter(function (it) { return it.productId === r.productId && (it.sabor || null) === (r.sabor || null); })[0];
+        if (existing) existing.quantidade = Math.min(99, existing.quantidade + r.quantidade);
+        else cart.push({ productId: r.productId, nome: r.nome, preco: r.preco, sabor: r.sabor, quantidade: r.quantidade });
+      });
+      renderCart();
+    });
+  }
+
+  productsCache = await DupuroCliente.getProducts();
+  renderShop();
+  setupRepeatButton();
+
+  // ---- Cupons ----
+  async function renderCoupons() {
+    var coupons = await DupuroCliente.getCoupons();
+    var grid = document.getElementById('couponGrid');
+    if (!coupons.length) {
+      grid.innerHTML = '<div class="empty-state" style="grid-column: 1/-1;"><div class="icon">🏷️</div>Nenhum cupom gerado ainda.</div>';
+      return;
+    }
+    grid.innerHTML = coupons.map(function (c) {
+      return '<div class="coupon-card">' +
+        '<div class="code">' + c.code + '</div>' +
+        '<div class="desc">' + c.desc + '</div>' +
+        '<div class="meta"><span>Válido até ' + formatDate(c.validade) + '</span>' +
+        '<button class="copy-btn" data-code="' + c.code + '">Copiar</button></div>' +
+        '</div>';
+    }).join('');
+
+    grid.querySelectorAll('.copy-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var code = btn.getAttribute('data-code');
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(code);
+        }
+        btn.textContent = 'Copiado!';
+        setTimeout(function () { btn.textContent = 'Copiar'; }, 1500);
+      });
+    });
+  }
+  renderCoupons();
+
+  // ---- Perfil ----
+  document.getElementById('pNome').value = profile.nome || '';
+  document.getElementById('pEmpresa').value = profile.empresa || '';
+  document.getElementById('pEmail').value = profile.email || '';
+  document.getElementById('pTelefone').value = profile.telefone || '';
+  document.getElementById('pCidade').value = profile.cidade || '';
+
+  document.getElementById('profileForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    var updated = {
+      nome: document.getElementById('pNome').value.trim(),
+      empresa: document.getElementById('pEmpresa').value.trim(),
+      email: document.getElementById('pEmail').value.trim(),
+      telefone: document.getElementById('pTelefone').value.trim(),
+      cidade: document.getElementById('pCidade').value.trim()
+    };
+    var result = await DupuroCliente.saveProfile(updated);
+    if (result.error) return;
+    document.getElementById('greetName').textContent = updated.nome.split(' ')[0] || 'revendedor(a)';
+    document.getElementById('chipName').textContent = updated.nome;
+    document.getElementById('avatarInitial').textContent = (updated.nome || 'R').charAt(0).toUpperCase();
+    var saved = document.getElementById('profileSaved');
+    saved.classList.remove('hidden');
+    setTimeout(function () { saved.classList.add('hidden'); }, 2000);
+  });
+
+  // ---- Navegação por abas ----
+  var navItems = document.querySelectorAll('.sidebar-link[data-tab], .sidebar-cta[data-tab]');
+  function goTo(tab) {
+    document.querySelectorAll('.tab-panel').forEach(function (p) { p.classList.add('hidden'); });
+    document.getElementById('tab-' + tab).classList.remove('hidden');
+    document.querySelectorAll('.sidebar-link[data-tab]').forEach(function (l) {
+      l.classList.toggle('active', l.getAttribute('data-tab') === tab);
+    });
+    document.getElementById('sidebar').classList.remove('open');
+    window.scrollTo(0, 0);
+  }
+  navItems.forEach(function (link) {
+    link.addEventListener('click', function (e) {
+      e.preventDefault();
+      goTo(link.getAttribute('data-tab'));
+    });
+  });
+  document.querySelectorAll('[data-goto]').forEach(function (el) {
+    el.addEventListener('click', function (e) {
+      e.preventDefault();
+      goTo(el.getAttribute('data-goto'));
+    });
+  });
+
+  // ---- Sidebar mobile ----
+  var mobileBtn = document.getElementById('mobileMenuBtn');
+  if (mobileBtn) {
+    mobileBtn.addEventListener('click', function () {
+      document.getElementById('sidebar').classList.toggle('open');
+    });
+  }
+
+  // ---- Logout ----
+  document.getElementById('logoutBtn').addEventListener('click', async function (e) {
+    e.preventDefault();
+    await DupuroCliente.logout();
+    window.location.href = 'login.html';
+  });
+
+})();
+</script>
+</body>
+</html>

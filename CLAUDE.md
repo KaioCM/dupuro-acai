@@ -1,0 +1,66 @@
+# Dupuro Açaí — Site institucional + Área do Revendedor
+
+## Eficiência (leia primeiro)
+
+- **Site 100% estático** (HTML/CSS/JS puro): sem build, sem framework, sem npm. Editou → recarrega o preview.
+- **Preview**: servidor `dupuro-acai` na porta 8853, raiz serve `dupuro-acai/` (ex.: `/area-cliente/login.html`). Dashboard/admin exigem sessão Supabase — não dá pra clicar através deles sem login.
+- **Orientação de imagem**: as fotos em `assets/img/fotos/` **não têm tag EXIF** de orientação. Cheque orientação pelas dimensões via PowerShell (`System.Drawing`) — não abra o arquivo em tamanho cheio (caro em tokens). Deitada = conteúdo retrato salvo em landscape; corrija com `RotateFlip(Rotate270FlipNone)` (90° anti-horário) e atualize `width`/`height` no HTML.
+- Toda ação de compra leva ao WhatsApp `5566996549545` (sem carrinho/checkout).
+
+## Negócio
+
+Fábrica/distribuidora de açaí e cremes em Cuiabá-MT (drive-thru, Av. das Torres nº 16, Jardim Imperial II, 78076-001). WhatsApp (66) 99654-9545. 4,8★ no Google (33 aval.). Vende também pelo iFood. Tagline: **"Puro como tem que ser"**. **Sem pedido mínimo.** Dois públicos: (1) quem quer virar revendedor, (2) revendedores ativos que precisam de painel. *Dados extraídos de Instagram/Maps — reconfirmar antes de publicar.*
+
+## Estrutura
+
+```
+index.html                landing
+area-cliente/
+  login.html              login (revendedor ou admin, redireciona conforme role)
+  dashboard.html          painel revendedor (fazer pedido, pedidos, cupons, perfil)
+  admin.html              painel admin (aprovações, revendedores, produtos, pedidos, cupons)
+assets/css/style.css      design system único (variáveis em :root)
+assets/js/
+  main.js                 interações da landing
+  supabase-config.js      URL + anon key (projeto real)
+  supabase-client.js      instância única do cliente Supabase (compartilhada)
+  cliente.js              acesso revendedor (auth, perfil, pedidos/cupons leitura, criar pedido)
+  admin.js                acesso admin (aprovar, revendedores, produtos, pedidos, cupons)
+  app-ui.js               helpers de UI (DupuroUI.countUp)
+assets/img/brand/         logos PNG oficiais + favicons
+assets/img/fotos/         21 fotos profissionais otimizadas
+assets/fonts/Klinko-PlayfulBold.otf
+supabase/schema.sql       esquema completo p/ projeto novo (já inclui policies das migrações)
+supabase/migration_*.sql  registro das migrações incrementais (005+ aplicadas via MCP)
+supabase/functions/admin-delete-reseller/index.ts
+```
+
+## Backend Supabase (real e validado)
+
+Projeto real em `supabase-config.js` (URL `zqadfktfplrbrjmepllh.supabase.co`). Duas camadas sobre o mesmo cliente compartilhado: `cliente.js` (usado por index+dashboard) e `admin.js` (admin). Conta admin: **kayocamargo@outlook.com** (`profiles.role = 'admin'`).
+
+- **Cadastro/aprovação**: cliente se cadastra em `index.html#revenda` → `status = 'pendente'`. Login só libera se `aprovado`. Admin aprova/rejeita na aba Aprovações. Login admin pula aprovação e vai direto ao painel admin. **"Confirm email" do Supabase está desativado** — aprovação do admin é o único obstáculo.
+- **Painel admin**: Visão geral (cards + 4 gráficos Chart.js via CDN); Aprovações; Revendedores (listar + editar + remover); Produtos (CRUD, imagem no bucket público `produtos`); Pedidos (select de produto + qtd 1–99, valor auto, campo de data livre, criar/editar/excluir, número `PED-XXXX` auto); Cupons (gerar/excluir — revendedor só vê).
+- **Revendedor lança pedido** (aba Fazer pedido): sempre nasce `status = 'enviado'` — travado no banco pela policy `orders_insert_self` (revendedor_id = auth.uid() + status='enviado' + perfil aprovado).
+- **Excluir revendedor** apaga a conta de auth de verdade via Edge Function `admin-delete-reseller` (service role, `verify_jwt: true`, valida role=admin no servidor). Pedidos/cupons do revendedor removido **não somem**: `revendedor_id` é opcional com `on delete set null` (UI mostra "Revendedor removido").
+- Migrações 005+ e a Edge Function são aplicadas via **MCP do Supabase** (acesso concedido); os arquivos `.sql`/`.ts` são só o espelho.
+- Cadastro dispara notificação best-effort via Formspree (`data-formspree-action`), mas o `SEU_FORM_ID` ainda é placeholder — cadastro funciona sem isso.
+
+## Design system v2
+
+Tudo em `:root` no topo de `style.css` — **ajuste as variáveis, não hardcode cores**. Paleta amostrada do logo: roxo `#601050` (escala 950→300), dourado `#F5B301` (gradiente âmbar), verde-limão `#8BB831`, cream `#FFF7EC` (aliases `--color-*` mantidos). Tipografia: **Klinko** (display/uppercase/botões) + **Inter** (corpo). Pattern oficial (cumbuca+açaí) como SVG data-URI em duas versões (`--pattern-color` claro, `--pattern-ghost` roxo). Estilo "candy": botões 3D, cantos arredondados, molduras douradas. Landing com blobs animados, marquee dourado, scrollspy, parallax, contadores (`data-count-to`). Login split-screen. Logos internas (dashboard/admin/login) são botões "home". Tudo respeita `prefers-reduced-motion`.
+
+## Assets
+
+- `img/brand/`: logos PNG transparentes (`logo-principal[-slogan]`, `logo-branco[-slogan]`, `logo-secundaria-1/2`, `selo-movimento`) + favicons 16/32/180.
+- `img/fotos/`: 21 fotos (Belvedere, Carmen, crianças, atleta Marcos, produto), máx. 1600px JPEG q80/82.
+- Fonte display: `Klinko-PlayfulBold.otf` via `@font-face`.
+- **As fotos antigas de IA em `assets/img/*.jpg` e `logo.svg` não são mais referenciadas** — podem ser removidas.
+
+## SEO
+
+`index.html` tem Open Graph, Twitter Card, JSON-LD (`LocalBusiness`), `robots.txt` e `sitemap.xml`. **Todas as URLs usam o domínio placeholder `https://www.dupuroacai.com.br/`** — trocar pelo real ao definir hospedagem. Imagens com `width`/`height` e `loading="lazy"` (hero é eager/`fetchpriority="high"`). Tem skip-link, `prefers-reduced-motion`, `aria-expanded` no menu mobile.
+
+## Lacunas conhecidas
+
+Sem analytics/pixel; sem checkout (CTA → WhatsApp); sem testes automatizados (validação manual); não testado em dispositivo real; sem hospedagem/domínio definidos.
