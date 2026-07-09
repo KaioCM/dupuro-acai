@@ -622,12 +622,15 @@ select:focus-visible,
     var(--pattern-color);
   background-size: auto, 300px;
 }
+/* Flex (não grid): com auto-fit, colunas vazias e suas calhas continuam contando
+   no cálculo do centro e os cards saem deslocados em telas largas. */
 .products-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 300px));
-  gap: 24px;
+  display: flex;
+  flex-wrap: wrap;
   justify-content: center;
+  gap: 24px;
 }
+.products-grid .product-card { flex: 0 1 300px; max-width: 300px; }
 
 .product-card {
   background: var(--white);
