@@ -100,6 +100,15 @@ var DupuroCliente = (function () {
     return { error: result.error };
   }
 
+  // Troca a senha da conta logada. Exige sessão ativa; o Supabase valida o
+  // tamanho mínimo (6 caracteres na config padrão) e recusa senha igual à atual.
+  async function changePassword(novaSenha) {
+    var session = await getSession();
+    if (!session) return { error: new Error('Sem sessão ativa') };
+    var result = await client.auth.updateUser({ password: novaSenha });
+    return { error: result.error };
+  }
+
   // Não exponha o número de estoque pro revendedor — só se o produto/sabor ainda
   // pode ser pedido. O número em si é informação exclusiva do admin.
   // - Produto comum: emEstoque = products.estoque > 0.
@@ -258,6 +267,7 @@ var DupuroCliente = (function () {
     getProfile: getProfile,
     saveProfile: saveProfile,
     getProducts: getProducts,
+    changePassword: changePassword,
     createOrder: createOrder,
     createOrderCart: createOrderCart,
     getOrders: getOrders,

@@ -99,6 +99,33 @@ var DupuroAdmin = (function () {
     return { error: null };
   }
 
+  // ---------- Administradores ----------
+  // Lista as contas com papel de admin (acesso total ao painel).
+  async function getAdmins() {
+    var result = await client
+      .from('profiles')
+      .select('id, nome, empresa, email, created_at')
+      .eq('role', 'admin')
+      .order('nome', { ascending: true });
+    return result.data || [];
+  }
+
+  // Id da conta logada — usado pra impedir que o admin rebaixe a si mesmo.
+  async function getCurrentUserId() {
+    var session = await getSession();
+    return session ? session.user.id : null;
+  }
+
+  // Promove/rebaixa uma conta entre 'revendedor' e 'admin'. Ao virar admin, força
+  // status 'aprovado' (admin não passa pelo fluxo de aprovação). A policy
+  // profiles_update_own_or_admin deixa um admin alterar qualquer perfil.
+  async function setProfileRole(id, role) {
+    var patch = { role: role };
+    if (role === 'admin') patch.status = 'aprovado';
+    var result = await client.from('profiles').update(patch).eq('id', id);
+    return { error: result.error };
+  }
+
   // ---------- Pedidos ----------
   // Junta orders + profiles no cliente (não há FK direta entre as duas
   // tabelas para o PostgREST embutir automaticamente).
@@ -382,6 +409,9 @@ var DupuroAdmin = (function () {
     getResellers: getResellers,
     updateReseller: updateReseller,
     deleteReseller: deleteReseller,
+    getAdmins: getAdmins,
+    getCurrentUserId: getCurrentUserId,
+    setProfileRole: setProfileRole,
     getAllOrders: getAllOrders,
     getNextOrderNumber: getNextOrderNumber,
     createOrder: createOrder,

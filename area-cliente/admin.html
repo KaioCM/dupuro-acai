@@ -137,6 +137,16 @@
       </div>
 
       <div class="panel">
+        <div class="panel-header">
+          <div><h3>Administradores</h3><div class="subtitle">Contas com acesso total ao painel. Promova um revendedor abaixo com "Tornar admin".</div></div>
+        </div>
+        <table class="data-table">
+          <thead><tr><th>Nome</th><th>E-mail</th><th>Ações</th></tr></thead>
+          <tbody id="adminsBody"></tbody>
+        </table>
+      </div>
+
+      <div class="panel">
         <table class="data-table">
           <thead><tr><th>Nome</th><th>Empresa</th><th>Telefone</th><th>E-mail</th><th>Cidade</th><th>Desde</th><th>Ações</th></tr></thead>
           <tbody id="resellersBody"></tbody>
@@ -826,9 +836,52 @@
   }
 
   // ---- Revendedores ----
+  var adminsCache = [];
+
+  async function renderAdmins() {
+    var body = document.getElementById('adminsBody');
+    if (!body) return;
+    var currentId = await DupuroAdmin.getCurrentUserId();
+    adminsCache = await DupuroAdmin.getAdmins();
+    if (!adminsCache.length) {
+      body.innerHTML = '<tr><td colspan="3"><div class="empty-state"><div class="icon">🛡️</div>Nenhum admin cadastrado.</div></td></tr>';
+      return;
+    }
+    body.innerHTML = adminsCache.map(function (a) {
+      var isSelf = String(a.id) === String(currentId);
+      var action = isSelf
+        ? '<span class="subtitle" style="margin:0;">você (conta atual)</span>'
+        : '<button class="btn btn-dark-outline btn-sm" data-remove-admin="' + a.id + '">Remover admin</button>';
+      return '<tr>' +
+        '<td><strong>' + (a.nome || '—') + '</strong></td>' +
+        '<td>' + (a.email || '—') + '</td>' +
+        '<td class="admin-table-actions">' + action + '</td>' +
+        '</tr>';
+    }).join('');
+
+    body.querySelectorAll('[data-remove-admin]').forEach(function (btn) {
+      btn.addEventListener('click', async function () {
+        var a = adminsCache.find(function (x) { return String(x.id) === btn.getAttribute('data-remove-admin'); });
+        if (!a) return;
+        var ok = window.confirm('Remover o acesso de administrador de "' + (a.nome || a.email) + '"? Ele volta a ser um revendedor comum (mantém a conta e o login).');
+        if (!ok) return;
+        btn.disabled = true;
+        var result = await DupuroAdmin.setProfileRole(a.id, 'revendedor');
+        if (result.error) {
+          window.alert('Não foi possível remover o admin: ' + result.error.message);
+          btn.disabled = false;
+          return;
+        }
+        await renderResellers();
+        await populateResellerSelect();
+      });
+    });
+  }
+
   var resellersCache = [];
 
   async function renderResellers() {
+    await renderAdmins();
     resellersCache = await DupuroAdmin.getResellers();
     var body = document.getElementById('resellersBody');
     if (!resellersCache.length) {
@@ -845,6 +898,7 @@
         '<td>' + formatDate(r.created_at) + '</td>' +
         '<td class="admin-table-actions">' +
           '<button class="btn btn-dark-outline btn-sm" data-edit-reseller="' + r.id + '">Editar</button>' +
+          '<button class="btn btn-dark-outline btn-sm" data-make-admin="' + r.id + '">Tornar admin</button>' +
           '<button class="btn btn-dark-outline btn-sm" data-remove-reseller="' + r.id + '">Remover</button>' +
         '</td>' +
         '</tr>';
@@ -862,6 +916,24 @@
         document.getElementById('resellerEditSubtitle').textContent = r.email || '';
         document.getElementById('resellerEditPanel').classList.remove('hidden');
         document.getElementById('resellerEditPanel').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      });
+    });
+
+    body.querySelectorAll('[data-make-admin]').forEach(function (btn) {
+      btn.addEventListener('click', async function () {
+        var r = resellersCache.find(function (x) { return String(x.id) === btn.getAttribute('data-make-admin'); });
+        if (!r) return;
+        var ok = window.confirm('Tornar "' + (r.empresa || r.nome) + '" um ADMINISTRADOR? Ele passa a ter acesso total ao painel (aprovar contas, produtos, pedidos, cupons).');
+        if (!ok) return;
+        btn.disabled = true;
+        var result = await DupuroAdmin.setProfileRole(r.id, 'admin');
+        if (result.error) {
+          window.alert('Não foi possível promover: ' + result.error.message);
+          btn.disabled = false;
+          return;
+        }
+        await renderResellers();
+        await populateResellerSelect();
       });
     });
 
