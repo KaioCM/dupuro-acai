@@ -163,7 +163,7 @@
 
       <div class="panel chart-card">
         <h3>Estoque por produto</h3>
-        <div class="subtitle">Do mais urgente pro mais saudável — a cor nunca é a única pista, o número sempre aparece</div>
+        <div class="subtitle">Do mais urgente pro mais saudável — cremes esgotados aparecem destacados em vermelho (passe o mouse pra ver quais)</div>
         <div class="chart-wrap" id="chartStockWrap"><canvas id="chartStock"></canvas></div>
         <div class="stock-legend">
           <span class="stock-legend-item"><span class="dot dot-danger"></span> Esgotado</span>
@@ -766,12 +766,26 @@
     var sorted = chartProducts.slice().sort(function (a, b) { return a.estoqueTotal - b.estoqueTotal; });
     wrap.style.height = Math.max(240, sorted.length * 40 + 70) + 'px';
 
-    // Sabores com estoque em algum produto viram os segmentos (e a legenda).
+    // TODOS os sabores presentes em algum produto (com ou SEM estoque) viram
+    // segmentos/legenda — assim os cremes esgotados também aparecem na legenda.
     var flavorSet = {};
     sorted.forEach(function (p) {
-      if (p.multissabor) p.sabores.forEach(function (s) { if (s.estoque > 0) flavorSet[s.sabor] = true; });
+      if (p.multissabor) p.sabores.forEach(function (s) { flavorSet[s.sabor] = true; });
     });
     var flavors = SABORES.filter(function (s) { return flavorSet[s]; });
+
+    // Cremes esgotados (estoque 0) por produto — para o destaque e o tooltip.
+    // Produto de sabor único zerado é marcado com o rótulo genérico 'Esgotado'.
+    var esgotados = sorted.map(function (p) {
+      if (p.multissabor) {
+        return p.sabores.filter(function (s) { return s.estoque === 0; }).map(function (s) { return s.sabor; });
+      }
+      return p.estoqueTotal === 0 ? ['Esgotado'] : [];
+    });
+    // Largura simbólica do marcador de esgotado: pequena e relativa ao maior
+    // estoque (some visualmente perto das barras cheias, mas fica visível no 0).
+    var maxTotal = sorted.reduce(function (m, p) { return Math.max(m, p.estoqueTotal); }, 0);
+    var sentinel = Math.max(1, Math.round(maxTotal * 0.05));
 
     var datasets = flavors.map(function (sabor) {
       return {
@@ -791,19 +805,44 @@
     if (single.some(function (v) { return v > 0; })) {
       datasets.push({ label: 'Estoque', data: single, backgroundColor: CHART.gold, borderWidth: 0, borderRadius: 3 });
     }
+    // Destaque dos esgotados: um marcador vermelho por creme zerado (a largura é
+    // simbólica; o tooltip diz "0 un" e nomeia os cremes esgotados do produto).
+    var esgotadoData = esgotados.map(function (list) { return list.length * sentinel; });
+    if (esgotadoData.some(function (v) { return v > 0; })) {
+      datasets.push({
+        label: 'Esgotado',
+        data: esgotadoData,
+        backgroundColor: 'rgba(214, 69, 69, 0.55)',
+        borderColor: '#C0392B',
+        borderWidth: 1,
+        borderRadius: 3
+      });
+    }
 
-    upsertChart('chartStock', 'bar', {
+    // Nomes e esgotados vão no objeto data (não no closure): upsertChart troca
+    // chart.data no update, então o tooltip lê sempre o estado atual.
+    var chartData = {
       labels: sorted.map(function (p) { return truncateLabel(p.nome, 28); }),
-      datasets: datasets
-    }, {
+      datasets: datasets,
+      _nomes: sorted.map(function (p) { return p.nome; }),
+      _esgotados: esgotados
+    };
+
+    upsertChart('chartStock', 'bar', chartData, {
       indexAxis: 'y',
       plugins: {
         legend: { position: 'bottom', labels: { boxWidth: 12, padding: 8, font: { size: 11 } } },
         tooltip: {
           filter: function (item) { return item.parsed.x > 0; },
           callbacks: {
-            title: function (items) { return sorted[items[0].dataIndex].nome; },
-            label: function (ctx) { return ctx.dataset.label + ': ' + ctx.parsed.x + ' un'; }
+            title: function (items) { return items[0].chart.data._nomes[items[0].dataIndex]; },
+            label: function (ctx) {
+              if (ctx.dataset.label === 'Esgotado') {
+                var list = (ctx.chart.data._esgotados[ctx.dataIndex] || []).filter(function (n) { return n !== 'Esgotado'; });
+                return list.length ? 'Esgotado (0 un): ' + list.join(', ') : 'Esgotado (0 un)';
+              }
+              return ctx.dataset.label + ': ' + ctx.parsed.x + ' un';
+            }
           }
         }
       },
