@@ -42,8 +42,12 @@
           <input type="password" id="senha" name="senha" placeholder="••••••••" autocomplete="current-password">
           <span class="error-msg">Informe sua senha.</span>
         </div>
-        <div style="text-align:right; margin:-4px 0 10px;">
-          <a href="#" id="forgotLink" style="color:var(--roxo-700); font-weight:600; font-size:13px;">Esqueceu sua senha?</a>
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin:-4px 0 12px;">
+          <label for="manterLogin" style="display:flex; align-items:center; gap:7px; cursor:pointer; font-size:13px; color:var(--text-light); font-weight:600; margin:0;">
+            <input type="checkbox" id="manterLogin" checked style="width:16px; height:16px; accent-color:var(--roxo-700); cursor:pointer; margin:0;">
+            Manter-me conectado
+          </label>
+          <a href="#" id="forgotLink" style="color:var(--roxo-700); font-weight:600; font-size:13px; white-space:nowrap;">Esqueceu sua senha?</a>
         </div>
         <div class="field-note" id="loginError">E-mail ou senha inválidos. Verifique os dados ou fale com o suporte.</div>
         <div class="field-note" id="loginUnconfirmed" style="color:var(--warning); background:rgba(199,124,0,0.08);">📧 Confirme seu e-mail antes de entrar — enviamos um link de confirmação para a caixa de entrada no momento do cadastro.</div>
@@ -105,6 +109,12 @@
     rejectedNote.classList.remove('show');
     if (!valid) return;
 
+    // Define ONDE a sessão será gravada antes de autenticar: localStorage
+    // (mantém conectado) ou sessionStorage (cai ao fechar o navegador).
+    if (window.DupuroPersistLogin) {
+      window.DupuroPersistLogin.set(document.getElementById('manterLogin').checked);
+    }
+
     submitBtn.disabled = true;
     submitBtn.textContent = 'Entrando...';
 
@@ -131,6 +141,12 @@
       window.location.href = result.role === 'admin' ? 'admin.html' : 'dashboard.html';
     });
   });
+
+  // Restaura a preferência de "manter conectado" da última vez.
+  (function () {
+    var el = document.getElementById('manterLogin');
+    if (el && window.DupuroPersistLogin) el.checked = window.DupuroPersistLogin.get();
+  })();
 
   // ---- Recuperação de senha ("Esqueceu sua senha?") ----
   var loginFormEl = document.getElementById('loginForm');
