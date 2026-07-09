@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Redefinir senha — Dupuro Açaí</title>
+<link rel="icon" href="../assets/img/brand/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="../assets/img/brand/favicon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body>
+
+<div class="login-page">
+
+  <div class="login-brand-pane">
+    <div class="login-brand-logo">
+      <a href="../index.html" aria-label="Voltar ao início"><img src="../assets/img/brand/logo-branco-slogan.png" alt="Dupuro Açaí — Puro como tem que ser"></a>
+    </div>
+    <div class="login-brand-msg">
+      <h2>Quase lá! <em>Crie sua nova senha</em>.</h2>
+      <p>Escolha uma senha nova e segura para voltar a acessar o seu painel.</p>
+    </div>
+    <div class="login-brand-foot">Onde tem energia, tem Dupuro Açaí. 💜</div>
+  </div>
+
+  <div class="login-form-pane">
+    <div class="login-card">
+      <div class="brand"><a href="../index.html" aria-label="Voltar ao início"><img src="../assets/img/brand/logo-principal.png" alt="Dupuro Açaí"></a></div>
+      <h1>Redefinir senha</h1>
+
+      <!-- Estado: verificando o link -->
+      <p class="hint" id="checkingMsg">Verificando o link de recuperação…</p>
+
+      <!-- Estado: link inválido/expirado -->
+      <div id="invalidPanel" class="hidden">
+        <div class="field-note show" style="color:var(--warning); background:rgba(199,124,0,0.08);">
+          ⚠️ Este link de recuperação é inválido ou expirou. Peça um novo em "Esqueceu sua senha?" na tela de login.
+        </div>
+        <p class="login-footer"><a href="login.html" style="color:var(--roxo-700); font-weight:700;">← Ir para o login</a></p>
+      </div>
+
+      <!-- Estado: formulário de nova senha -->
+      <form id="resetForm" class="hidden">
+        <p class="hint">Defina sua nova senha (mínimo 6 caracteres).</p>
+        <div class="field">
+          <label for="nova1">Nova senha</label>
+          <input type="password" id="nova1" autocomplete="new-password" minlength="6" placeholder="••••••••">
+        </div>
+        <div class="field">
+          <label for="nova2">Confirmar nova senha</label>
+          <input type="password" id="nova2" autocomplete="new-password" minlength="6" placeholder="••••••••">
+        </div>
+        <div class="field-note" id="resetError">As senhas não conferem.</div>
+        <button type="submit" class="btn btn-primary btn-block">Salvar nova senha</button>
+      </form>
+
+      <!-- Estado: sucesso -->
+      <div id="successPanel" class="hidden">
+        <div class="field-note show" style="color:var(--verde-dark); background:rgba(139,184,49,0.10);">
+          ✓ Senha alterada com sucesso! Agora é só entrar com a nova senha.
+        </div>
+        <p class="login-footer"><a href="login.html" style="color:var(--roxo-700); font-weight:700;">Ir para o login →</a></p>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/js/supabase-config.js"></script>
+<script src="../assets/js/supabase-client.js"></script>
+<script src="../assets/js/cliente.js"></script>
+<script>
+  var client = window.DupuroSupabaseClient;
+  var checkingMsg = document.getElementById('checkingMsg');
+  var invalidPanel = document.getElementById('invalidPanel');
+  var resetForm = document.getElementById('resetForm');
+  var successPanel = document.getElementById('successPanel');
+  var recoveryReady = false;
+
+  function showForm() {
+    if (recoveryReady) return;
+    recoveryReady = true;
+    checkingMsg.classList.add('hidden');
+    invalidPanel.classList.add('hidden');
+    resetForm.classList.remove('hidden');
+  }
+  function showInvalid() {
+    if (recoveryReady) return;
+    checkingMsg.classList.add('hidden');
+    resetForm.classList.add('hidden');
+    invalidPanel.classList.remove('hidden');
+  }
+
+  // O client (detectSessionInUrl ativo) processa o token da URL e dispara
+  // 'PASSWORD_RECOVERY'. Também checamos a sessão diretamente, caso o evento
+  // já tenha ocorrido antes deste script rodar.
+  client.auth.onAuthStateChange(function (event, session) {
+    if (event === 'PASSWORD_RECOVERY' || (session && event === 'SIGNED_IN')) showForm();
+  });
+
+  (async function () {
+    for (var i = 0; i < 20; i++) {
+      var s = await client.auth.getSession();
+      if (s.data.session) { showForm(); return; }
+      await new Promise(function (r) { setTimeout(r, 200); });
+    }
+    showInvalid();
+  })();
+
+  resetForm.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    var n1 = document.getElementById('nova1').value;
+    var n2 = document.getElementById('nova2').value;
+    var err = document.getElementById('resetError');
+    var btn = e.target.querySelector('button[type="submit"]');
+    err.classList.remove('show');
+    if (n1.length < 6) {
+      err.textContent = 'A senha precisa ter pelo menos 6 caracteres.';
+      err.classList.add('show');
+      return;
+    }
+    if (n1 !== n2) {
+      err.textContent = 'As senhas não conferem. Digite a mesma nas duas caixas.';
+      err.classList.add('show');
+      return;
+    }
+    btn.disabled = true;
+    btn.textContent = 'Salvando...';
+    var result = await DupuroCliente.changePassword(n1);
+    if (result.error) {
+      btn.disabled = false;
+      btn.textContent = 'Salvar nova senha';
+      err.textContent = /same/i.test(result.error.message || '')
+        ? 'A nova senha não pode ser igual à atual.'
+        : 'Não foi possível salvar: ' + result.error.message;
+      err.classList.add('show');
+      return;
+    }
+    // Encerra a sessão de recuperação e mostra o sucesso (login limpo depois).
+    await client.auth.signOut();
+    resetForm.classList.add('hidden');
+    successPanel.classList.remove('hidden');
+  });
+</script>
+</body>
+</html>

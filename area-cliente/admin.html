@@ -29,6 +29,7 @@
     <a href="#" class="sidebar-link" data-tab="produtos"><span class="ic">🧺</span> Produtos</a>
     <a href="#" class="sidebar-link" data-tab="pedidos"><span class="ic">📦</span> Pedidos</a>
     <a href="#" class="sidebar-link" data-tab="cupons"><span class="ic">🏷️</span> Cupons</a>
+    <a href="#" class="sidebar-link" data-tab="conta"><span class="ic">⚙️</span> Minha conta</a>
 
     <div class="sidebar-footer">
       <a href="../index.html" class="sidebar-link"><span class="ic">🏠</span> Ver site</a>
@@ -342,6 +343,31 @@
           <thead><tr><th>Código</th><th>Revendedor</th><th>Descrição</th><th>Validade</th><th>Usado</th><th></th></tr></thead>
           <tbody id="couponsBody"></tbody>
         </table>
+      </div>
+    </section>
+
+    <!-- ============ MINHA CONTA ============ -->
+    <section class="tab-panel hidden" id="tab-conta">
+      <div class="app-topbar">
+        <div><h1>Minha conta</h1><div class="subtitle">Configurações da sua conta de administrador</div></div>
+      </div>
+      <div class="panel" style="max-width:560px;">
+        <div class="panel-header">
+          <div><h3>Alterar senha</h3><div class="subtitle">Defina uma nova senha de acesso (mínimo 6 caracteres)</div></div>
+        </div>
+        <form id="adminPasswordForm">
+          <div class="field">
+            <label for="aSenha1">Nova senha</label>
+            <input type="password" id="aSenha1" autocomplete="new-password" minlength="6">
+          </div>
+          <div class="field">
+            <label for="aSenha2">Confirmar nova senha</label>
+            <input type="password" id="aSenha2" autocomplete="new-password" minlength="6">
+          </div>
+          <button type="submit" class="btn btn-primary">Alterar senha</button>
+          <span id="adminPasswordSaved" class="hidden" style="margin-left:14px; color:var(--verde-dark); font-weight:700; font-size:13px;">✓ Senha alterada!</span>
+          <div id="adminPasswordError" class="hidden" style="margin-top:10px; color:#c0392b; font-weight:600; font-size:13px;"></div>
+        </form>
       </div>
     </section>
 
@@ -1620,6 +1646,42 @@
       document.getElementById('sidebar').classList.toggle('open');
     });
   }
+
+  // ---- Alterar senha (Minha conta) ----
+  document.getElementById('adminPasswordForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    var s1 = document.getElementById('aSenha1').value;
+    var s2 = document.getElementById('aSenha2').value;
+    var err = document.getElementById('adminPasswordError');
+    var ok = document.getElementById('adminPasswordSaved');
+    err.classList.add('hidden');
+    ok.classList.add('hidden');
+    if (s1.length < 6) {
+      err.textContent = 'A senha precisa ter pelo menos 6 caracteres.';
+      err.classList.remove('hidden');
+      return;
+    }
+    if (s1 !== s2) {
+      err.textContent = 'As senhas não conferem. Digite a mesma nas duas caixas.';
+      err.classList.remove('hidden');
+      return;
+    }
+    var btn = e.target.querySelector('button[type="submit"]');
+    btn.disabled = true;
+    var result = await DupuroAdmin.changePassword(s1);
+    btn.disabled = false;
+    if (result.error) {
+      err.textContent = /same/i.test(result.error.message || '')
+        ? 'A nova senha não pode ser igual à atual.'
+        : 'Não foi possível alterar a senha: ' + result.error.message;
+      err.classList.remove('hidden');
+      return;
+    }
+    document.getElementById('aSenha1').value = '';
+    document.getElementById('aSenha2').value = '';
+    ok.classList.remove('hidden');
+    setTimeout(function () { ok.classList.add('hidden'); }, 2500);
+  });
 
   // ---- Logout ----
   document.getElementById('logoutBtn').addEventListener('click', async function (e) {

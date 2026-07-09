@@ -42,12 +42,28 @@
           <input type="password" id="senha" name="senha" placeholder="••••••••" autocomplete="current-password">
           <span class="error-msg">Informe sua senha.</span>
         </div>
+        <div style="text-align:right; margin:-4px 0 10px;">
+          <a href="#" id="forgotLink" style="color:var(--roxo-700); font-weight:600; font-size:13px;">Esqueceu sua senha?</a>
+        </div>
         <div class="field-note" id="loginError">E-mail ou senha inválidos. Verifique os dados ou fale com o suporte.</div>
         <div class="field-note" id="loginUnconfirmed" style="color:var(--warning); background:rgba(199,124,0,0.08);">📧 Confirme seu e-mail antes de entrar — enviamos um link de confirmação para a caixa de entrada no momento do cadastro.</div>
         <div class="field-note" id="loginPending" style="color:var(--warning); background:rgba(199,124,0,0.08);">⏳ Seu cadastro ainda está em análise. Assim que for aprovado, você recebe acesso ao painel.</div>
         <div class="field-note" id="loginRejected">Seu cadastro não foi aprovado. Fale com a gente pelo WhatsApp para entender os próximos passos.</div>
         <button type="submit" class="btn btn-primary btn-block">Entrar</button>
       </form>
+
+      <div id="recoveryPanel" class="hidden" style="margin-top:14px;">
+        <h1 style="font-size:18px;">Recuperar senha</h1>
+        <p class="hint">Informe seu e-mail e enviaremos um link para você criar uma nova senha.</p>
+        <div class="field" id="field-recovery-email">
+          <label for="recoveryEmail">E-mail</label>
+          <input type="email" id="recoveryEmail" placeholder="voce@email.com" autocomplete="email">
+        </div>
+        <div class="field-note" id="recoveryError">Informe um e-mail válido.</div>
+        <div class="field-note" id="recoverySuccess" style="color:var(--verde-dark); background:rgba(139,184,49,0.10);">📧 Se este e-mail tiver uma conta, enviamos um link de recuperação. Confira sua caixa de entrada (e a pasta de spam).</div>
+        <button type="button" class="btn btn-primary btn-block" id="recoverySend">Enviar link de recuperação</button>
+        <p class="login-footer"><a href="#" id="backToLogin" style="color:var(--roxo-700); font-weight:700;">← Voltar ao login</a></p>
+      </div>
 
       <div class="demo-note">
         🔑 Ainda não tem conta? Cadastre-se pelo site — seu acesso é liberado assim que o time Dupuro aprovar seu cadastro.
@@ -114,6 +130,59 @@
       }
       window.location.href = result.role === 'admin' ? 'admin.html' : 'dashboard.html';
     });
+  });
+
+  // ---- Recuperação de senha ("Esqueceu sua senha?") ----
+  var loginFormEl = document.getElementById('loginForm');
+  var recoveryPanel = document.getElementById('recoveryPanel');
+  var demoNote = document.querySelector('.demo-note');
+  var loginFooter = loginFormEl.parentNode.querySelector('.login-footer');
+
+  function toggleRecovery(show) {
+    recoveryPanel.classList.toggle('hidden', !show);
+    loginFormEl.classList.toggle('hidden', show);
+    demoNote.classList.toggle('hidden', show);
+    if (loginFooter) loginFooter.classList.toggle('hidden', show);
+    if (show) {
+      document.getElementById('recoveryEmail').value = document.getElementById('email').value.trim();
+      document.getElementById('recoveryError').classList.remove('show');
+      document.getElementById('recoverySuccess').classList.remove('show');
+    }
+  }
+
+  document.getElementById('forgotLink').addEventListener('click', function (e) {
+    e.preventDefault();
+    toggleRecovery(true);
+  });
+  document.getElementById('backToLogin').addEventListener('click', function (e) {
+    e.preventDefault();
+    toggleRecovery(false);
+  });
+
+  document.getElementById('recoverySend').addEventListener('click', async function () {
+    var em = document.getElementById('recoveryEmail');
+    var errN = document.getElementById('recoveryError');
+    var okN = document.getElementById('recoverySuccess');
+    var btn = this;
+    errN.classList.remove('show');
+    okN.classList.remove('show');
+    var emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em.value.trim());
+    if (!emailOk) {
+      errN.textContent = 'Informe um e-mail válido.';
+      errN.classList.add('show');
+      return;
+    }
+    btn.disabled = true;
+    btn.textContent = 'Enviando...';
+    var result = await DupuroCliente.requestPasswordReset(em.value.trim());
+    btn.disabled = false;
+    btn.textContent = 'Enviar link de recuperação';
+    if (result.error) {
+      errN.textContent = 'Não foi possível enviar agora: ' + result.error.message;
+      errN.classList.add('show');
+      return;
+    }
+    okN.classList.add('show');
   });
 </script>
 </body>

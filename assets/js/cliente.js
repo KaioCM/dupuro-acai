@@ -100,6 +100,17 @@ var DupuroCliente = (function () {
     return { error: result.error };
   }
 
+  // Dispara o e-mail de recuperação de senha. O link do e-mail leva o usuário
+  // para redefinir-senha.html (mesma origem), onde ele cria a nova senha. Por
+  // segurança, o Supabase não revela se o e-mail existe — resposta sem erro
+  // mesmo quando não há conta. O redirectTo precisa estar na lista de "Redirect
+  // URLs" do projeto Supabase (ex.: https://www.dupuroacai.com/**).
+  async function requestPasswordReset(email) {
+    var redirectTo = new URL('redefinir-senha.html', window.location.href).href;
+    var result = await client.auth.resetPasswordForEmail(email, { redirectTo: redirectTo });
+    return { error: result.error };
+  }
+
   // Troca a senha da conta logada. Exige sessão ativa; o Supabase valida o
   // tamanho mínimo (6 caracteres na config padrão) e recusa senha igual à atual.
   async function changePassword(novaSenha) {
@@ -268,6 +279,7 @@ var DupuroCliente = (function () {
     saveProfile: saveProfile,
     getProducts: getProducts,
     changePassword: changePassword,
+    requestPasswordReset: requestPasswordReset,
     createOrder: createOrder,
     createOrderCart: createOrderCart,
     getOrders: getOrders,

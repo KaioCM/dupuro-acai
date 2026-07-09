@@ -99,6 +99,15 @@ var DupuroAdmin = (function () {
     return { error: null };
   }
 
+  // Troca a senha do admin logado. Mesmo mecanismo do revendedor: exige sessão
+  // ativa e o Supabase valida tamanho mínimo e recusa senha igual à atual.
+  async function changePassword(novaSenha) {
+    var session = await getSession();
+    if (!session) return { error: new Error('Sem sessão ativa') };
+    var result = await client.auth.updateUser({ password: novaSenha });
+    return { error: result.error };
+  }
+
   // ---------- Administradores ----------
   // Lista as contas com papel de admin (acesso total ao painel).
   async function getAdmins() {
@@ -412,6 +421,7 @@ var DupuroAdmin = (function () {
     getAdmins: getAdmins,
     getCurrentUserId: getCurrentUserId,
     setProfileRole: setProfileRole,
+    changePassword: changePassword,
     getAllOrders: getAllOrders,
     getNextOrderNumber: getNextOrderNumber,
     createOrder: createOrder,
