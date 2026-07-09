@@ -9,7 +9,7 @@
 
 ## Negócio
 
-Fábrica/distribuidora de açaí e cremes em Cuiabá-MT (drive-thru, Av. das Torres nº 16, Jardim Imperial II, 78076-001). WhatsApp (66) 99654-9545. 4,8★ no Google (33 aval.). Vende também pelo iFood. Tagline: **"Puro como tem que ser"**. **Sem pedido mínimo.** Dois públicos: (1) quem quer virar revendedor, (2) revendedores ativos que precisam de painel. *Dados extraídos de Instagram/Maps — reconfirmar antes de publicar.*
+Fábrica/distribuidora de açaí e cremes em Cuiabá-MT (atendimento presencial, Av. das Torres nº 16, Jardim Imperial II, 78076-001). NÃO tem drive-thru. WhatsApp (66) 99654-9545. 4,8★ no Google (33 aval.). Vende também pelo iFood. Tagline: **"Puro como tem que ser"**. **Sem pedido mínimo.** Dois públicos: (1) quem quer virar revendedor, (2) revendedores ativos que precisam de painel. *Dados extraídos de Instagram/Maps — reconfirmar antes de publicar.*
 
 ## Estrutura
 
