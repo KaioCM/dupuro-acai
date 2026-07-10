@@ -502,10 +502,24 @@
     summaryQtyInput.min = minQty();
 
     if (selectedProduct.multissabor) {
-      // Só os sabores COM estoque (definido pelo admin). Ordena seguindo SABORES.
-      var disp = selectedProduct.saboresDisponiveis || [];
-      var opcoes = SABORES.filter(function (s) { return disp.indexOf(s) !== -1; });
-      summarySabor.innerHTML = opcoes.map(function (s) { return '<option value="' + s + '">' + s + '</option>'; }).join('');
+      // Mostra TODOS os sabores do produto; os esgotados aparecem na lista, mas
+      // desabilitados (não dá pra escolher). Ordena seguindo SABORES.
+      var todos = selectedProduct.sabores || [];
+      var byName = {};
+      todos.forEach(function (s) { byName[s.sabor] = s; });
+      var opcoes = SABORES.filter(function (s) { return byName[s]; })
+        .concat(todos.map(function (s) { return s.sabor; })
+          .filter(function (s) { return SABORES.indexOf(s) === -1; }));
+
+      summarySabor.innerHTML = opcoes.map(function (s) {
+        var ok = byName[s].disponivel;
+        return '<option value="' + s + '"' + (ok ? '' : ' disabled') + '>' +
+          s + (ok ? '' : ' — esgotado') + '</option>';
+      }).join('');
+
+      // Um <option disabled> não pode ficar como escolhido: seleciona o 1º disponível.
+      var primeiroDisponivel = opcoes.filter(function (s) { return byName[s].disponivel; })[0];
+      if (primeiroDisponivel) summarySabor.value = primeiroDisponivel;
       summarySaborField.classList.remove('hidden');
     } else {
       summarySaborField.classList.add('hidden');
@@ -564,7 +578,9 @@
     var qty = getQty();
     var sabor = selectedProduct && selectedProduct.multissabor ? summarySabor.value : null;
 
-    if (!selectedProduct || !qty || qty < minQty() || qty > 99 || (selectedProduct.multissabor && !sabor)) {
+    var saborIndisponivel = selectedProduct && selectedProduct.multissabor &&
+      (!sabor || (selectedProduct.saboresDisponiveis || []).indexOf(sabor) === -1);
+    if (!selectedProduct || !qty || qty < minQty() || qty > 99 || saborIndisponivel) {
       if (selectedProduct && qty && qty < minQty()) errorNote.textContent = 'O pedido mínimo deste produto é ' + minQty() + ' unidades.';
       errorNote.classList.add('show');
       return;

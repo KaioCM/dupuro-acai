@@ -142,17 +142,22 @@ var DupuroCliente = (function () {
       // Fonte do estoque: o dono (estoque_ref) ou o próprio produto.
       var source = (p.estoque_ref && byId[p.estoque_ref]) ? byId[p.estoque_ref] : p;
       var sourceFlavors = source.product_flavor_stock || [];
-      var emEstoque, saboresDisponiveis = [];
+      var emEstoque, saboresDisponiveis = [], sabores = [];
 
       if (p.estoque_ref_sabor) {
         // Não-multissabor que consome um sabor fixo do dono (ex: Açaí 10L atacado).
         var row = sourceFlavors.filter(function (s) { return s.sabor === p.estoque_ref_sabor; })[0];
         emEstoque = !!row && Number(row.estoque) > 0;
       } else if (multissabor) {
-        saboresDisponiveis = sourceFlavors
-          .filter(function (s) { return Number(s.estoque) > 0; })
-          .map(function (s) { return s.sabor; })
-          .filter(function (s) { return incluiAcai || s !== 'Açaí'; });
+        // TODOS os sabores do produto, cada um com um booleano de disponibilidade:
+        // o revendedor vê os esgotados (sem poder escolhê-los), mas nunca vê o
+        // número do estoque — esse continua sendo informação só do admin.
+        sabores = sourceFlavors
+          .filter(function (s) { return incluiAcai || s.sabor !== 'Açaí'; })
+          .map(function (s) { return { sabor: s.sabor, disponivel: Number(s.estoque) > 0 }; });
+        saboresDisponiveis = sabores
+          .filter(function (s) { return s.disponivel; })
+          .map(function (s) { return s.sabor; });
         emEstoque = saboresDisponiveis.length > 0;
       } else {
         emEstoque = Number(source.estoque) > 0;
@@ -162,7 +167,7 @@ var DupuroCliente = (function () {
         id: p.id, nome: p.nome, preco: Number(p.preco), imagemUrl: p.imagem_url,
         tipo: p.tipo || 'varejo', multissabor: multissabor,
         multissaborIncluirAcai: incluiAcai,
-        emEstoque: emEstoque, saboresDisponiveis: saboresDisponiveis,
+        emEstoque: emEstoque, saboresDisponiveis: saboresDisponiveis, sabores: sabores,
         pedidoMinimo: Number(p.pedido_minimo) || 1
       };
     });

@@ -1456,11 +1456,29 @@
         '<tr class="order-details hidden" data-details-row="' + o.numero + '"><td colspan="7">' + itemsHtml + '</td></tr>';
     }).join('');
 
-    // Status do pedido inteiro (todas as linhas do mesmo numero).
+    // Status do pedido inteiro (todas as linhas do mesmo numero). Confirmar um
+    // pedido ('processando'/'entregue') é o que baixa o estoque; cancelar devolve.
+    // Se faltar estoque, o banco recusa: avisa e volta o select ao valor anterior.
     body.querySelectorAll('.status-select').forEach(function (select) {
+      select.dataset.prev = select.value;
       select.addEventListener('change', async function () {
-        await DupuroAdmin.updateOrderStatusByNumero(select.getAttribute('data-num'), select.value);
+        var anterior = select.dataset.prev;
+        select.disabled = true;
+        var result = await DupuroAdmin.updateOrderStatusByNumero(select.getAttribute('data-num'), select.value);
+        select.disabled = false;
+        if (result && result.error) {
+          var e = result.error;
+          window.alert(
+            (e.code === '23514' || /estoque/i.test(e.message || ''))
+              ? 'Não foi possível confirmar: estoque insuficiente para um ou mais itens deste pedido.'
+              : 'Não foi possível alterar o status: ' + e.message
+          );
+          select.value = anterior;
+          return;
+        }
+        select.dataset.prev = select.value;
         await renderOverview();
+        await renderProducts();
       });
     });
 
