@@ -266,6 +266,13 @@
               <option value="cancelado">Cancelado</option>
             </select>
           </div>
+          <div class="field" style="margin-bottom:0; grid-column:1/-1;">
+            <label for="orderUsaEstoque" class="checkbox-line">
+              <input type="checkbox" id="orderUsaEstoque" checked>
+              <span>Utilizar estoque?</span>
+            </label>
+            <div class="field-note-inline">Desmarque para lançar pedidos antigos: o pedido não exige estoque disponível nem altera o estoque atual.</div>
+          </div>
           <div class="field" style="margin-bottom:0; grid-column:1/-1;"><div class="cart-head" style="margin:2px 0 0;">Adicionar item</div></div>
           <div class="field" style="margin-bottom:0;">
             <label for="orderProduto">Produto</label>
@@ -1407,6 +1414,7 @@
   function resetOrderForm() {
     editingItemId = null;
     orderCart = [];
+    document.getElementById('orderUsaEstoque').checked = true;  // padrão: usa estoque
     document.getElementById('orderEditingId').value = '';
     document.getElementById('orderFormTitle').textContent = 'Novo pedido';
     document.getElementById('orderFormSubtitle').textContent = 'Monte o pedido adicionando itens e depois clique em criar';
@@ -1436,7 +1444,10 @@
           '</span></div>';
       }).join('');
       return '<tr>' +
-        '<td><strong>' + o.numero + '</strong>' + (o.items.length > 1 ? ' <span class="status-badge enviado">' + o.items.length + ' itens</span>' : '') + '</td>' +
+        '<td><strong>' + o.numero + '</strong>' +
+          (o.items.length > 1 ? ' <span class="status-badge enviado">' + o.items.length + ' itens</span>' : '') +
+          (o.usaEstoque ? '' : ' <span class="status-badge cancelado" title="Este pedido não usa o estoque">sem estoque</span>') +
+        '</td>' +
         '<td>' + o.revendedorNome + '</td>' +
         '<td>' + formatDate(o.data) + '</td>' +
         '<td>' + o.itens + '</td>' +
@@ -1590,10 +1601,11 @@
       return { produtoId: it.productId, quantidade: it.quantidade, sabor: it.sabor,
         itens: it.nome + (it.sabor ? ' - ' + it.sabor : '') + ' x' + it.quantidade, valor: it.preco * it.quantidade };
     });
-    var result = await DupuroAdmin.createOrderCart({ revendedorId: revendedorId, data: data, status: status }, items);
+    var usaEstoque = document.getElementById('orderUsaEstoque').checked;
+    var result = await DupuroAdmin.createOrderCart({ revendedorId: revendedorId, data: data, status: status, usaEstoque: usaEstoque }, items);
     if (result.error) {
       errorNote.textContent = result.error.code === '23514'
-        ? 'Algum item ficou sem estoque para essa quantidade.'
+        ? 'Algum item ficou sem estoque para essa quantidade. Se for um pedido antigo, desmarque "Utilizar estoque?".'
         : 'Não foi possível criar o pedido. Confira os dados.';
       errorNote.classList.add('show');
       return;

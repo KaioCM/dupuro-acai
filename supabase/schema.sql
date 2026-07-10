@@ -164,6 +164,10 @@ create table if not exists public.orders (
   -- Sabor escolhido nesse pedido, quando o produto é multissabor (nulo
   -- para produtos com sabor fixo no nome, ex: "Caixa de Açaí 10 Litros").
   sabor text,
+  -- false: o pedido não valida disponibilidade nem altera o estoque (usado pelo
+  -- admin para lançar pedidos antigos de produtos hoje esgotados). O revendedor
+  -- não pode usar false — a policy orders_insert_self obriga true.
+  usa_estoque boolean not null default true,
   created_at timestamptz not null default now()
 );
 
@@ -185,6 +189,7 @@ create policy "orders_insert_self" on public.orders
   for insert with check (
     auth.uid() = revendedor_id
     and status = 'enviado'
+    and usa_estoque = true
     and exists (select 1 from public.profiles p where p.id = auth.uid() and p.status = 'aprovado')
     and quantidade >= coalesce((select pedido_minimo from public.products where id = produto_id), 1)
   );
@@ -268,26 +273,28 @@ set search_path = public
 as $$
 begin
   if (tg_op = 'INSERT') then
-    if public.order_consumes_stock(new.status) then
-      perform public.apply_stock_delta(new.produto_id, new.sabor, -new.quantidade);
-    elsif new.status = 'enviado' then
-      -- Aguardando confirmação do admin: NÃO baixa estoque, mas garante que
-      -- havia quantidade disponível no momento do pedido.
-      if public.available_stock(new.produto_id, new.sabor) < new.quantidade then
-        raise exception 'Estoque insuficiente' using errcode = '23514';
+    if new.usa_estoque then
+      if public.order_consumes_stock(new.status) then
+        perform public.apply_stock_delta(new.produto_id, new.sabor, -new.quantidade);
+      elsif new.status = 'enviado' then
+        -- Aguardando confirmação do admin: NÃO baixa estoque, mas garante que
+        -- havia quantidade disponível no momento do pedido.
+        if public.available_stock(new.produto_id, new.sabor) < new.quantidade then
+          raise exception 'Estoque insuficiente' using errcode = '23514';
+        end if;
       end if;
     end if;
     return new;
   elsif (tg_op = 'DELETE') then
-    if public.order_consumes_stock(old.status) then
+    if old.usa_estoque and public.order_consumes_stock(old.status) then
       perform public.apply_stock_delta(old.produto_id, old.sabor, old.quantidade);
     end if;
     return old;
   elsif (tg_op = 'UPDATE') then
-    if public.order_consumes_stock(old.status) then
+    if old.usa_estoque and public.order_consumes_stock(old.status) then
       perform public.apply_stock_delta(old.produto_id, old.sabor, old.quantidade);
     end if;
-    if public.order_consumes_stock(new.status) then
+    if new.usa_estoque and public.order_consumes_stock(new.status) then
       perform public.apply_stock_delta(new.produto_id, new.sabor, -new.quantidade);
     end if;
     return new;

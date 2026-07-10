@@ -141,7 +141,7 @@ var DupuroAdmin = (function () {
   async function getAllOrders() {
     var ordersResult = await client
       .from('orders')
-      .select('id, revendedor_id, numero, data, itens, valor, status, produto_id, quantidade, sabor')
+      .select('id, revendedor_id, numero, data, itens, valor, status, produto_id, quantidade, sabor, usa_estoque')
       .order('data', { ascending: false });
     if (ordersResult.error) return [];
 
@@ -160,7 +160,8 @@ var DupuroAdmin = (function () {
           id: o.numero, numero: o.numero,
           revendedorId: o.revendedor_id,
           revendedorNome: reseller ? (reseller.empresa || reseller.nome) : (o.revendedor_id ? '—' : 'Revendedor removido'),
-          data: o.data, status: o.status, valor: 0, items: []
+          data: o.data, status: o.status, valor: 0, items: [],
+          usaEstoque: o.usa_estoque !== false
         };
         order.push(g);
       }
@@ -196,9 +197,13 @@ var DupuroAdmin = (function () {
   // Pedido com vários itens ("carrinho"): N linhas com o MESMO numero, para o
   // mesmo revendedor/data/status. Insert de array = atômico (se um item faltar
   // estoque, o pedido inteiro é revertido).
+  // header.usaEstoque = false: o pedido não valida nem altera o estoque (usado
+  // para lançar pedidos antigos de produtos hoje esgotados). Só o admin pode —
+  // a policy orders_insert_self obriga usa_estoque = true para o revendedor.
   async function createOrderCart(header, items) {
     if (!items || !items.length) return { error: new Error('Carrinho vazio') };
     var numero = await getNextOrderNumber();
+    var usaEstoque = header.usaEstoque !== false;
     var rows = items.map(function (it) {
       return {
         revendedor_id: header.revendedorId,
@@ -209,7 +214,8 @@ var DupuroAdmin = (function () {
         status: header.status,
         produto_id: it.produtoId || null,
         quantidade: it.quantidade || null,
-        sabor: it.sabor || null
+        sabor: it.sabor || null,
+        usa_estoque: usaEstoque
       };
     });
     var result = await client.from('orders').insert(rows);
