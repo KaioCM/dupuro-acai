@@ -86,6 +86,22 @@
         </div>
       </div>
 
+      <div class="chart-period">
+        <div class="period-presets">
+          <button type="button" class="period-btn active" data-period="30">30 dias</button>
+          <button type="button" class="period-btn" data-period="90">90 dias</button>
+          <button type="button" class="period-btn" data-period="365">1 ano</button>
+          <button type="button" class="period-btn" data-period="all">Tudo</button>
+        </div>
+        <div class="period-range">
+          <label for="periodFrom">De</label>
+          <input type="date" id="periodFrom">
+          <label for="periodTo">até</label>
+          <input type="date" id="periodTo">
+        </div>
+      </div>
+      <div class="period-empty" id="periodEmpty">Nenhum pedido neste período. Escolha outro intervalo ou clique em “Tudo”.</div>
+
       <div class="charts-grid">
         <div class="panel chart-card">
           <h3>Minhas compras por data</h3>
@@ -381,94 +397,167 @@
     return p[2] + '/' + MONTH_NAMES[parseInt(p[1], 10) - 1] + '/' + p[0].slice(2);
   }
 
-  // Valor comprado por DATA do pedido (uma barra por dia em que houve pedido).
-  var porData = {};
-  orders.forEach(function (o) {
-    if (!o.data) return;
-    porData[o.data] = (porData[o.data] || 0) + o.valor;
-  });
-  var datas = Object.keys(porData).sort();
-  var revenueCanvas = document.getElementById('chartMyRevenue');
-  if (revenueCanvas) {
-    new Chart(revenueCanvas.getContext('2d'), {
-      type: 'bar',
-      data: {
-        labels: datas.map(fmtData),
-        datasets: [{ label: 'Comprado', data: datas.map(function (d) { return porData[d]; }), backgroundColor: PALETTE.gold, borderRadius: 8 }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false },
-          tooltip: { callbacks: { label: function (ctx) { return brl(ctx.parsed.y); } } }
-        }
-      }
+  // ---- Período dos gráficos ----
+  // Data local em ISO (toISOString usa UTC e pode "pular" um dia no Brasil).
+  function toISO(d) {
+    return d.getFullYear() + '-' +
+      ('0' + (d.getMonth() + 1)).slice(-2) + '-' +
+      ('0' + d.getDate()).slice(-2);
+  }
+  function hojeISO() { return toISO(new Date()); }
+  function haDiasISO(n) { var d = new Date(); d.setDate(d.getDate() - n); return toISO(d); }
+
+  // Nada antes do primeiro pedido do cliente.
+  var primeiraData = orders.reduce(function (min, o) {
+    if (!o.data) return min;
+    return (!min || o.data < min) ? o.data : min;
+  }, null) || hojeISO();
+
+  // Recalcula tudo para o intervalo escolhido (o "top 6" é do período, não geral).
+  function dadosDoPeriodo(deISO, ateISO) {
+    var sel = orders.filter(function (o) { return o.data && o.data >= deISO && o.data <= ateISO; });
+
+    var porData = {};
+    sel.forEach(function (o) { porData[o.data] = (porData[o.data] || 0) + o.valor; });
+
+    var qtdPorDataProduto = {}, totalPorProduto = {};
+    sel.forEach(function (o) {
+      (o.items || []).forEach(function (it) {
+        var nome = nomePorId[it.produtoId] || 'Produto removido';
+        var q = Number(it.quantidade) || 0;
+        if (!qtdPorDataProduto[o.data]) qtdPorDataProduto[o.data] = {};
+        qtdPorDataProduto[o.data][nome] = (qtdPorDataProduto[o.data][nome] || 0) + q;
+        totalPorProduto[nome] = (totalPorProduto[nome] || 0) + q;
+      });
     });
+
+    // 6 produtos mais pedidos; o resto vira "Outros" (legenda não vira lista infinita).
+    var ranking = Object.keys(totalPorProduto).sort(function (a, b) { return totalPorProduto[b] - totalPorProduto[a]; });
+    var principais = ranking.slice(0, 6);
+    var series = principais.concat(ranking.length > 6 ? ['Outros'] : []);
+
+    function qtdDe(data, nome) {
+      var m = qtdPorDataProduto[data] || {};
+      if (nome !== 'Outros') return m[nome] || 0;
+      return Object.keys(m).reduce(function (soma, k) {
+        return principais.indexOf(k) === -1 ? soma + m[k] : soma;
+      }, 0);
+    }
+
+    return {
+      datas: Object.keys(porData).sort(),
+      porData: porData,
+      datasProduto: Object.keys(qtdPorDataProduto).sort(),
+      series: series,
+      qtdDe: qtdDe
+    };
   }
 
-  // Quantidade pedida de cada produto, por DATA do pedido (barras empilhadas).
-  // Cada pedido pode ter vários itens (carrinho), então soma item a item.
-  var qtdPorDataProduto = {};
-  var totalPorProduto = {};
-  orders.forEach(function (o) {
-    if (!o.data) return;
-    (o.items || []).forEach(function (it) {
-      var nome = nomePorId[it.produtoId] || 'Produto removido';
-      var q = Number(it.quantidade) || 0;
-      if (!qtdPorDataProduto[o.data]) qtdPorDataProduto[o.data] = {};
-      qtdPorDataProduto[o.data][nome] = (qtdPorDataProduto[o.data][nome] || 0) + q;
-      totalPorProduto[nome] = (totalPorProduto[nome] || 0) + q;
-    });
-  });
+  // Cria cada gráfico UMA vez e depois só troca os dados (nunca destrói/recria).
+  var chartRevenue = null, chartProducts = null;
 
-  // Mantém os 6 produtos mais pedidos; o restante entra como "Outros" para a
-  // legenda não virar uma lista interminável.
-  var ranking = Object.keys(totalPorProduto).sort(function (a, b) { return totalPorProduto[b] - totalPorProduto[a]; });
-  var principais = ranking.slice(0, 6);
-  var series = principais.concat(ranking.length > 6 ? ['Outros'] : []);
-  var datasProduto = Object.keys(qtdPorDataProduto).sort();
+  function renderCharts(deISO, ateISO) {
+    var d = dadosDoPeriodo(deISO, ateISO);
 
-  function qtdDe(data, nome) {
-    var m = qtdPorDataProduto[data] || {};
-    if (nome !== 'Outros') return m[nome] || 0;
-    return Object.keys(m).reduce(function (soma, k) {
-      return principais.indexOf(k) === -1 ? soma + m[k] : soma;
-    }, 0);
-  }
-
-  var productsCanvas = document.getElementById('chartMyProducts');
-  if (productsCanvas) {
-    new Chart(productsCanvas.getContext('2d'), {
-      type: 'bar',
-      data: {
-        labels: datasProduto.map(fmtData),
-        datasets: series.map(function (nome, i) {
-          return {
-            label: nome,
-            data: datasProduto.map(function (d) { return qtdDe(d, nome); }),
-            backgroundColor: PRODUCT_COLORS[i % PRODUCT_COLORS.length],
-            borderRadius: 4
-          };
-        })
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { position: 'bottom', labels: { boxWidth: 12, padding: 8, font: { size: 11 } } },
-          tooltip: {
-            filter: function (item) { return item.parsed.y > 0; },
-            callbacks: { label: function (ctx) { return ctx.dataset.label + ': ' + ctx.parsed.y + ' un'; } }
+    var revData = {
+      labels: d.datas.map(fmtData),
+      datasets: [{ label: 'Comprado', data: d.datas.map(function (x) { return d.porData[x]; }), backgroundColor: PALETTE.gold, borderRadius: 8 }]
+    };
+    var revenueCanvas = document.getElementById('chartMyRevenue');
+    if (revenueCanvas) {
+      if (chartRevenue) { chartRevenue.data = revData; chartRevenue.update(); }
+      else chartRevenue = new Chart(revenueCanvas.getContext('2d'), {
+        type: 'bar',
+        data: revData,
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: function (ctx) { return brl(ctx.parsed.y); } } }
           }
-        },
-        scales: {
-          x: { stacked: true, grid: { display: false } },
-          y: { stacked: true, beginAtZero: true, ticks: { precision: 0 } }
         }
-      }
-    });
+      });
+    }
+
+    var prodData = {
+      labels: d.datasProduto.map(fmtData),
+      datasets: d.series.map(function (nome, i) {
+        return {
+          label: nome,
+          data: d.datasProduto.map(function (x) { return d.qtdDe(x, nome); }),
+          backgroundColor: PRODUCT_COLORS[i % PRODUCT_COLORS.length],
+          borderRadius: 4
+        };
+      })
+    };
+    var productsCanvas = document.getElementById('chartMyProducts');
+    if (productsCanvas) {
+      if (chartProducts) { chartProducts.data = prodData; chartProducts.update(); }
+      else chartProducts = new Chart(productsCanvas.getContext('2d'), {
+        type: 'bar',
+        data: prodData,
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom', labels: { boxWidth: 12, padding: 8, font: { size: 11 } } },
+            tooltip: {
+              filter: function (item) { return item.parsed.y > 0; },
+              callbacks: { label: function (ctx) { return ctx.dataset.label + ': ' + ctx.parsed.y + ' un'; } }
+            }
+          },
+          scales: {
+            x: { stacked: true, grid: { display: false } },
+            y: { stacked: true, beginAtZero: true, ticks: { precision: 0 } }
+          }
+        }
+      });
+    }
+
+    // Avisa quando o intervalo escolhido não tem nenhum pedido.
+    var vazio = document.getElementById('periodEmpty');
+    if (vazio) vazio.classList.toggle('show', d.datas.length === 0);
   }
+
+  // ---- Controles de período ----
+  var fromEl = document.getElementById('periodFrom');
+  var toEl = document.getElementById('periodTo');
+  var presetBtns = document.querySelectorAll('.period-btn');
+
+  fromEl.min = primeiraData; fromEl.max = hojeISO();
+  toEl.min = primeiraData;   toEl.max = hojeISO();
+
+  function marcarPreset(alvo) {
+    presetBtns.forEach(function (b) { b.classList.toggle('active', b === alvo); });
+  }
+
+  function aplicarPeriodo(deISO, ateISO) {
+    if (deISO < primeiraData) deISO = primeiraData;  // nunca antes do 1º pedido
+    fromEl.value = deISO;
+    toEl.value = ateISO;
+    renderCharts(deISO, ateISO);
+  }
+
+  presetBtns.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var p = btn.getAttribute('data-period');
+      marcarPreset(btn);
+      aplicarPeriodo(p === 'all' ? primeiraData : haDiasISO(parseInt(p, 10)), hojeISO());
+    });
+  });
+
+  // Datas livres: qualquer intervalo desde o primeiro pedido até hoje.
+  [fromEl, toEl].forEach(function (el) {
+    el.addEventListener('change', function () {
+      var de = fromEl.value || primeiraData;
+      var ate = toEl.value || hojeISO();
+      if (de > ate) { var tmp = de; de = ate; ate = tmp; fromEl.value = de; toEl.value = ate; }
+      marcarPreset(null);  // virou período personalizado
+      renderCharts(de, ate);
+    });
+  });
+
+  // Padrão: últimos 30 dias.
+  aplicarPeriodo(haDiasISO(30), hojeISO());
 
   // ==========================================================
   //  Fazer pedido — vitrine interativa
