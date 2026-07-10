@@ -157,6 +157,7 @@
                   <input type="number" id="summaryQty" min="1" max="99" step="1" value="1" inputmode="numeric">
                   <button type="button" id="qtyPlus" aria-label="Aumentar quantidade">+</button>
                 </div>
+                <div class="qty-hint" id="qtyHint" role="status" aria-live="polite"></div>
               </div>
 
               <div class="order-total-row">
@@ -513,8 +514,7 @@
 
       summarySabor.innerHTML = opcoes.map(function (s) {
         var ok = byName[s].disponivel;
-        return '<option value="' + s + '"' + (ok ? '' : ' disabled') + '>' +
-          s + (ok ? '' : ' — esgotado') + '</option>';
+        return '<option value="' + s + '"' + (ok ? '' : ' disabled') + '>' + s + '</option>';
       }).join('');
 
       // Um <option disabled> não pode ficar como escolhido: seleciona o 1º disponível.
@@ -527,20 +527,43 @@
 
     if (!keepQty) summaryQtyInput.value = minQty();
     errorNote.classList.remove('show');
+    hideQtyHint();
     updateTotal();
   }
 
+  // Explica por que a quantidade não desce além do pedido mínimo do produto.
+  var qtyHint = document.getElementById('qtyHint');
+  function showQtyHint() {
+    qtyHint.textContent = 'A quantidade mínima para este produto é ' + minQty() + ' unidades.';
+    qtyHint.classList.add('show');
+  }
+  function hideQtyHint() { qtyHint.classList.remove('show'); }
+
   document.getElementById('qtyMinus').addEventListener('click', function () {
-    var qty = getQty() || minQty();
-    summaryQtyInput.value = Math.max(minQty(), qty - 1);
+    var min = minQty();
+    var qty = getQty() || min;
+    if (qty <= min) {
+      summaryQtyInput.value = min;
+      if (min > 1) showQtyHint();
+      updateTotal();
+      return;
+    }
+    hideQtyHint();
+    summaryQtyInput.value = qty - 1;
     updateTotal();
   });
   document.getElementById('qtyPlus').addEventListener('click', function () {
     var qty = getQty() || 0;
     summaryQtyInput.value = Math.min(99, qty + 1);
+    hideQtyHint();
     updateTotal();
   });
-  summaryQtyInput.addEventListener('input', updateTotal);
+  // Digitar um valor abaixo do mínimo também avisa (sem travar a digitação).
+  summaryQtyInput.addEventListener('input', function () {
+    var qty = getQty();
+    if (qty && qty < minQty()) showQtyHint(); else hideQtyHint();
+    updateTotal();
+  });
 
   // Desenha a lista do carrinho + total; esconde a seção quando vazia.
   function renderCart() {

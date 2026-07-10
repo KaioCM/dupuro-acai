@@ -853,6 +853,11 @@ select:focus-visible,
   box-shadow: 0 0 0 4px rgba(245,179,1,0.18);
 }
 .field .error-msg { display: none; color: var(--danger); font-size: 12px; margin-top: 5px; }
+/* Sabor esgotado: aparece na lista, em cinza e sem poder ser escolhido. */
+.field select option:disabled { color: #9aa0a6; }
+/* Explica por que a quantidade não desce além do pedido mínimo. */
+.qty-hint { display: none; color: var(--warning); font-size: 12px; font-weight: 600; margin-top: 7px; }
+.qty-hint.show { display: block; }
 .field.invalid input, .field.invalid select { border-color: var(--danger); }
 .field.invalid .error-msg { display: block; }
 
