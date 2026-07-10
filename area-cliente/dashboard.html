@@ -88,14 +88,14 @@
 
       <div class="charts-grid">
         <div class="panel chart-card">
-          <h3>Minhas compras por mês</h3>
-          <div class="subtitle">Valor total pedido, por mês</div>
+          <h3>Minhas compras por data</h3>
+          <div class="subtitle">Valor total pedido, por dia de pedido</div>
           <div class="chart-wrap"><canvas id="chartMyRevenue"></canvas></div>
         </div>
         <div class="panel chart-card">
-          <h3>Meus pedidos por status</h3>
-          <div class="subtitle">Distribuição dos seus pedidos</div>
-          <div class="chart-wrap"><canvas id="chartMyOrderStatus"></canvas></div>
+          <h3>Meus produtos por data</h3>
+          <div class="subtitle">Quantidade pedida de cada produto, por dia de pedido</div>
+          <div class="chart-wrap"><canvas id="chartMyProducts"></canvas></div>
         </div>
       </div>
 
@@ -365,45 +365,108 @@
   document.getElementById('recentOrdersBody').innerHTML = renderOrdersRows(sortedByDate.slice(0, 3));
   document.getElementById('allOrdersBody').innerHTML = renderOrdersRows(sortedByDate);
 
+  // Produtos carregados uma única vez: os nomes alimentam o gráfico de produtos
+  // por mês, e a mesma lista é reaproveitada pela vitrine (productsCache).
+  var produtos = await DupuroCliente.getProducts();
+  var nomePorId = {};
+  produtos.forEach(function (p) { nomePorId[p.id] = p.nome; });
+
   // ---- Gráficos (paleta oficial) ----
   var PALETTE = { primary: '#601050', gold: '#F5B301', green: '#8BB831', warning: '#C77C00', danger: '#C0392B' };
+  var PRODUCT_COLORS = ['#601050', '#F5B301', '#8BB831', '#9575CD', '#4FC3F7', '#F06292', '#C69C6D'];
   var MONTH_NAMES = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+  // Rótulo por DATA do pedido (dia/mês/ano curto), ex: "05/Jul/26".
+  function fmtData(d) {
+    var p = d.split('-');
+    return p[2] + '/' + MONTH_NAMES[parseInt(p[1], 10) - 1] + '/' + p[0].slice(2);
+  }
 
-  var byMonth = {};
+  // Valor comprado por DATA do pedido (uma barra por dia em que houve pedido).
+  var porData = {};
   orders.forEach(function (o) {
-    var month = (o.data || '').slice(0, 7);
-    if (!month) return;
-    byMonth[month] = (byMonth[month] || 0) + o.valor;
+    if (!o.data) return;
+    porData[o.data] = (porData[o.data] || 0) + o.valor;
   });
-  var months = Object.keys(byMonth).sort();
+  var datas = Object.keys(porData).sort();
   var revenueCanvas = document.getElementById('chartMyRevenue');
   if (revenueCanvas) {
     new Chart(revenueCanvas.getContext('2d'), {
       type: 'bar',
       data: {
-        labels: months.map(function (m) {
-          var parts = m.split('-');
-          return MONTH_NAMES[parseInt(parts[1], 10) - 1] + '/' + parts[0].slice(2);
-        }),
-        datasets: [{ label: 'Comprado', data: months.map(function (m) { return byMonth[m]; }), backgroundColor: PALETTE.gold, borderRadius: 8 }]
+        labels: datas.map(fmtData),
+        datasets: [{ label: 'Comprado', data: datas.map(function (d) { return porData[d]; }), backgroundColor: PALETTE.gold, borderRadius: 8 }]
       },
-      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: function (ctx) { return brl(ctx.parsed.y); } } }
+        }
+      }
     });
   }
 
-  var statusLabels = { processando: 'Processando', enviado: 'Enviado', entregue: 'Entregue', cancelado: 'Cancelado' };
-  var statusOrder = ['processando', 'enviado', 'entregue', 'cancelado'];
-  var statusCounts = { processando: 0, enviado: 0, entregue: 0, cancelado: 0 };
-  orders.forEach(function (o) { if (statusCounts[o.status] !== undefined) statusCounts[o.status]++; });
-  var statusCanvas = document.getElementById('chartMyOrderStatus');
-  if (statusCanvas) {
-    new Chart(statusCanvas.getContext('2d'), {
-      type: 'doughnut',
+  // Quantidade pedida de cada produto, por DATA do pedido (barras empilhadas).
+  // Cada pedido pode ter vários itens (carrinho), então soma item a item.
+  var qtdPorDataProduto = {};
+  var totalPorProduto = {};
+  orders.forEach(function (o) {
+    if (!o.data) return;
+    (o.items || []).forEach(function (it) {
+      var nome = nomePorId[it.produtoId] || 'Produto removido';
+      var q = Number(it.quantidade) || 0;
+      if (!qtdPorDataProduto[o.data]) qtdPorDataProduto[o.data] = {};
+      qtdPorDataProduto[o.data][nome] = (qtdPorDataProduto[o.data][nome] || 0) + q;
+      totalPorProduto[nome] = (totalPorProduto[nome] || 0) + q;
+    });
+  });
+
+  // Mantém os 6 produtos mais pedidos; o restante entra como "Outros" para a
+  // legenda não virar uma lista interminável.
+  var ranking = Object.keys(totalPorProduto).sort(function (a, b) { return totalPorProduto[b] - totalPorProduto[a]; });
+  var principais = ranking.slice(0, 6);
+  var series = principais.concat(ranking.length > 6 ? ['Outros'] : []);
+  var datasProduto = Object.keys(qtdPorDataProduto).sort();
+
+  function qtdDe(data, nome) {
+    var m = qtdPorDataProduto[data] || {};
+    if (nome !== 'Outros') return m[nome] || 0;
+    return Object.keys(m).reduce(function (soma, k) {
+      return principais.indexOf(k) === -1 ? soma + m[k] : soma;
+    }, 0);
+  }
+
+  var productsCanvas = document.getElementById('chartMyProducts');
+  if (productsCanvas) {
+    new Chart(productsCanvas.getContext('2d'), {
+      type: 'bar',
       data: {
-        labels: statusOrder.map(function (s) { return statusLabels[s]; }),
-        datasets: [{ data: statusOrder.map(function (s) { return statusCounts[s]; }), backgroundColor: [PALETTE.warning, PALETTE.primary, PALETTE.green, PALETTE.danger] }]
+        labels: datasProduto.map(fmtData),
+        datasets: series.map(function (nome, i) {
+          return {
+            label: nome,
+            data: datasProduto.map(function (d) { return qtdDe(d, nome); }),
+            backgroundColor: PRODUCT_COLORS[i % PRODUCT_COLORS.length],
+            borderRadius: 4
+          };
+        })
       },
-      options: { responsive: true, maintainAspectRatio: false }
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom', labels: { boxWidth: 12, padding: 8, font: { size: 11 } } },
+          tooltip: {
+            filter: function (item) { return item.parsed.y > 0; },
+            callbacks: { label: function (ctx) { return ctx.dataset.label + ': ' + ctx.parsed.y + ' un'; } }
+          }
+        },
+        scales: {
+          x: { stacked: true, grid: { display: false } },
+          y: { stacked: true, beginAtZero: true, ticks: { precision: 0 } }
+        }
+      }
     });
   }
 
@@ -691,7 +754,7 @@
     });
   }
 
-  productsCache = await DupuroCliente.getProducts();
+  productsCache = produtos;
   renderShop();
   setupRepeatButton();
 
