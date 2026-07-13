@@ -148,6 +148,16 @@
       </div>
 
       <div class="panel">
+        <div class="panel-header">
+          <div><h3>Atendentes da loja (caixa)</h3><div class="subtitle">Contas que só registram vendas presenciais no caixa (PDV). Promova um revendedor abaixo com "Caixa".</div></div>
+        </div>
+        <table class="data-table">
+          <thead><tr><th>Nome</th><th>E-mail</th><th>Ações</th></tr></thead>
+          <tbody id="atendentesBody"></tbody>
+        </table>
+      </div>
+
+      <div class="panel">
         <table class="data-table">
           <thead><tr><th>Nome</th><th>Empresa</th><th>Telefone</th><th>E-mail</th><th>Cidade</th><th>Desde</th><th>Ações</th></tr></thead>
           <tbody id="resellersBody"></tbody>
@@ -1036,10 +1046,50 @@
     });
   }
 
+  // ---- Atendentes (caixa/PDV) ----
+  var atendentesCache = [];
+  async function renderAtendentes() {
+    var body = document.getElementById('atendentesBody');
+    if (!body) return;
+    atendentesCache = await DupuroAdmin.getAtendentes();
+    if (!atendentesCache.length) {
+      body.innerHTML = '<tr><td colspan="3"><div class="empty-state"><div class="icon">🧾</div>Nenhum atendente ainda. Promova um revendedor com o botão "Caixa".</div></td></tr>';
+      return;
+    }
+    body.innerHTML = atendentesCache.map(function (a) {
+      return '<tr>' +
+        '<td><strong>' + (a.nome || '—') + '</strong></td>' +
+        '<td>' + (a.email || '—') + '</td>' +
+        '<td class="admin-table-actions">' +
+          '<button class="btn btn-dark-outline btn-sm" data-remove-atendente="' + a.id + '">Remover acesso</button>' +
+        '</td>' +
+        '</tr>';
+    }).join('');
+
+    body.querySelectorAll('[data-remove-atendente]').forEach(function (btn) {
+      btn.addEventListener('click', async function () {
+        var a = atendentesCache.find(function (x) { return String(x.id) === btn.getAttribute('data-remove-atendente'); });
+        if (!a) return;
+        var ok = window.confirm('Remover o acesso de caixa de "' + (a.nome || a.email) + '"? Ele volta a ser um revendedor comum (mantém a conta e o login).');
+        if (!ok) return;
+        btn.disabled = true;
+        var result = await DupuroAdmin.setProfileRole(a.id, 'revendedor');
+        if (result.error) {
+          window.alert('Não foi possível remover: ' + result.error.message);
+          btn.disabled = false;
+          return;
+        }
+        await renderResellers();
+        await populateResellerSelect();
+      });
+    });
+  }
+
   var resellersCache = [];
 
   async function renderResellers() {
     await renderAdmins();
+    await renderAtendentes();
     resellersCache = await DupuroAdmin.getResellers();
     var body = document.getElementById('resellersBody');
     if (!resellersCache.length) {
@@ -1056,6 +1106,7 @@
         '<td>' + formatDate(r.created_at) + '</td>' +
         '<td class="admin-table-actions">' +
           '<button class="btn btn-dark-outline btn-sm" data-edit-reseller="' + r.id + '">Editar</button>' +
+          '<button class="btn btn-dark-outline btn-sm" data-make-atendente="' + r.id + '">Caixa</button>' +
           '<button class="btn btn-dark-outline btn-sm" data-make-admin="' + r.id + '">Tornar admin</button>' +
           '<button class="btn btn-dark-outline btn-sm" data-remove-reseller="' + r.id + '">Remover</button>' +
         '</td>' +
@@ -1087,6 +1138,24 @@
         var result = await DupuroAdmin.setProfileRole(r.id, 'admin');
         if (result.error) {
           window.alert('Não foi possível promover: ' + result.error.message);
+          btn.disabled = false;
+          return;
+        }
+        await renderResellers();
+        await populateResellerSelect();
+      });
+    });
+
+    body.querySelectorAll('[data-make-atendente]').forEach(function (btn) {
+      btn.addEventListener('click', async function () {
+        var r = resellersCache.find(function (x) { return String(x.id) === btn.getAttribute('data-make-atendente'); });
+        if (!r) return;
+        var ok = window.confirm('Tornar "' + (r.empresa || r.nome) + '" um ATENDENTE de caixa? Ela poderá registrar vendas presenciais da loja (baixam o estoque na hora), mas não gerencia produtos, revendedores nem pedidos.');
+        if (!ok) return;
+        btn.disabled = true;
+        var result = await DupuroAdmin.setProfileRole(r.id, 'atendente');
+        if (result.error) {
+          window.alert('Não foi possível tornar atendente: ' + result.error.message);
           btn.disabled = false;
           return;
         }

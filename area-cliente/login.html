@@ -138,7 +138,10 @@
         rejectedNote.classList.add('show');
         return;
       }
-      window.location.href = result.role === 'admin' ? 'admin.html' : 'dashboard.html';
+      var destino = result.role === 'admin' ? 'admin.html'
+        : result.role === 'atendente' ? 'caixa.html'
+        : 'dashboard.html';
+      window.location.href = destino;
     });
   });
 

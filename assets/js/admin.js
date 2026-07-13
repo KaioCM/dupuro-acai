@@ -119,18 +119,28 @@ var DupuroAdmin = (function () {
     return result.data || [];
   }
 
+  // Lista as contas de atendente (caixa/PDV da loja).
+  async function getAtendentes() {
+    var result = await client
+      .from('profiles')
+      .select('id, nome, empresa, email, created_at')
+      .eq('role', 'atendente')
+      .order('nome', { ascending: true });
+    return result.data || [];
+  }
+
   // Id da conta logada — usado pra impedir que o admin rebaixe a si mesmo.
   async function getCurrentUserId() {
     var session = await getSession();
     return session ? session.user.id : null;
   }
 
-  // Promove/rebaixa uma conta entre 'revendedor' e 'admin'. Ao virar admin, força
-  // status 'aprovado' (admin não passa pelo fluxo de aprovação). A policy
+  // Promove/rebaixa uma conta entre 'revendedor', 'admin' e 'atendente'. Ao virar
+  // admin ou atendente, força status 'aprovado' (precisam poder entrar). A policy
   // profiles_update_own_or_admin deixa um admin alterar qualquer perfil.
   async function setProfileRole(id, role) {
     var patch = { role: role };
-    if (role === 'admin') patch.status = 'aprovado';
+    if (role === 'admin' || role === 'atendente') patch.status = 'aprovado';
     var result = await client.from('profiles').update(patch).eq('id', id);
     return { error: result.error };
   }
@@ -141,7 +151,7 @@ var DupuroAdmin = (function () {
   async function getAllOrders() {
     var ordersResult = await client
       .from('orders')
-      .select('id, revendedor_id, numero, data, itens, valor, status, produto_id, quantidade, sabor, usa_estoque')
+      .select('id, revendedor_id, numero, data, itens, valor, status, produto_id, quantidade, sabor, usa_estoque, origem')
       .order('data', { ascending: false });
     if (ordersResult.error) return [];
 
@@ -156,10 +166,16 @@ var DupuroAdmin = (function () {
       var g = byNum[o.numero];
       if (!g) {
         var reseller = byId[o.revendedor_id];
+        // Venda de loja (caixa): balcão avulso não tem revendedor; se tiver, é a
+        // retirada de um revendedor. Rotula como "loja" para o admin distinguir.
+        var nome;
+        if (reseller) nome = (reseller.empresa || reseller.nome) + (o.origem === 'loja' ? ' (loja)' : '');
+        else if (o.origem === 'loja') nome = o.revendedor_id ? 'Revendedor (loja)' : 'Balcão (loja)';
+        else nome = o.revendedor_id ? '—' : 'Revendedor removido';
         g = byNum[o.numero] = {
           id: o.numero, numero: o.numero,
           revendedorId: o.revendedor_id,
-          revendedorNome: reseller ? (reseller.empresa || reseller.nome) : (o.revendedor_id ? '—' : 'Revendedor removido'),
+          revendedorNome: nome,
           data: o.data, status: o.status, valor: 0, items: [],
           usaEstoque: o.usa_estoque !== false
         };
@@ -425,6 +441,7 @@ var DupuroAdmin = (function () {
     updateReseller: updateReseller,
     deleteReseller: deleteReseller,
     getAdmins: getAdmins,
+    getAtendentes: getAtendentes,
     getCurrentUserId: getCurrentUserId,
     setProfileRole: setProfileRole,
     changePassword: changePassword,

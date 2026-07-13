@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Caixa da Loja — Dupuro Açaí</title>
+<link rel="icon" href="../assets/img/brand/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="../assets/img/brand/favicon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body>
+
+<div class="mobile-topbar">
+  <div class="brand"><a href="../index.html" aria-label="Site Dupuro"><img src="../assets/img/brand/logo-branco.png" alt="Dupuro Açaí"></a></div>
+  <button id="mobileMenuBtn" aria-label="Abrir menu">☰</button>
+</div>
+
+<div class="app-shell">
+
+  <aside class="sidebar" id="sidebar">
+    <div class="brand"><a href="../index.html" aria-label="Site Dupuro"><img src="../assets/img/brand/logo-branco.png" alt="Dupuro Açaí"></a></div>
+
+    <a href="#" class="sidebar-cta" data-tab="venda">🛒 Nova venda</a>
+
+    <a href="#" class="sidebar-link active" data-tab="venda"><span class="ic">🛒</span> Nova venda</a>
+    <a href="#" class="sidebar-link" data-tab="vendas"><span class="ic">🧾</span> Vendas do dia</a>
+    <a href="#" class="sidebar-link" data-tab="estoque"><span class="ic">📦</span> Estoque</a>
+
+    <div class="sidebar-footer">
+      <a href="https://wa.me/5566996549545" target="_blank" rel="noopener" class="sidebar-link"><span class="ic">💬</span> Suporte no WhatsApp</a>
+      <a href="#" class="sidebar-link" id="logoutBtn"><span class="ic">🚪</span> Sair</a>
+    </div>
+  </aside>
+
+  <main class="app-main">
+
+    <!-- ============ NOVA VENDA ============ -->
+    <section class="tab-panel" id="tab-venda">
+      <div class="app-topbar">
+        <div><h1>Nova venda</h1><div class="subtitle">Registre a venda da loja — o estoque baixa na hora.</div></div>
+        <div class="user-chip"><span class="avatar" id="avatarInitial">A</span> <span id="chipName">Atendente</span></div>
+      </div>
+
+      <!-- Para quem é a venda -->
+      <div class="panel" style="margin-bottom:18px;">
+        <div class="sale-target">
+          <div class="seg">
+            <button type="button" class="seg-btn active" data-target="balcao">🛍️ Balcão (avulso)</button>
+            <button type="button" class="seg-btn" data-target="revendedor">🤝 Revendedor</button>
+          </div>
+          <div class="field hidden" id="resellerField" style="margin-bottom:0; flex:1; min-width:220px;">
+            <label for="resellerSelect">Revendedor</label>
+            <select id="resellerSelect"></select>
+          </div>
+        </div>
+      </div>
+
+      <div class="order-flow">
+        <div id="shopCatalog">
+          <div class="empty-state"><div class="icon">🫐</div>Carregando o catálogo...</div>
+        </div>
+
+        <aside class="order-summary" aria-label="Resumo da venda">
+          <div class="order-summary-head">🧾 Venda atual</div>
+          <div class="order-summary-body">
+
+            <div class="placeholder" id="summaryPlaceholder">
+              <span class="icon">👈</span>
+              Toque em um produto para adicionar à venda.
+            </div>
+
+            <div id="summaryContent" class="hidden">
+              <div class="picked">
+                <div class="thumb" id="summaryThumb">🫐</div>
+                <div>
+                  <h4 id="summaryName">—</h4>
+                  <div class="unit" id="summaryUnit">—</div>
+                </div>
+              </div>
+
+              <div class="field hidden" id="summarySaborField">
+                <label for="summarySabor">Sabor</label>
+                <select id="summarySabor"></select>
+              </div>
+
+              <div class="field" style="margin-bottom:0;">
+                <label for="summaryQty">Quantidade</label>
+                <div class="qty-stepper">
+                  <button type="button" id="qtyMinus" aria-label="Diminuir quantidade">−</button>
+                  <input type="number" id="summaryQty" min="1" max="99" step="1" value="1" inputmode="numeric">
+                  <button type="button" id="qtyPlus" aria-label="Aumentar quantidade">+</button>
+                </div>
+                <div class="qty-hint" id="qtyHint" role="status" aria-live="polite"></div>
+              </div>
+
+              <div class="order-total-row">
+                <span class="lbl">Item</span>
+                <span class="val" id="summaryTotal">—</span>
+              </div>
+
+              <div class="field-note" id="itemError">Confira os dados do item.</div>
+              <button type="button" class="btn btn-green btn-block" id="addToCartBtn">➕ Adicionar à venda</button>
+            </div>
+
+            <div id="cartSection" class="hidden">
+              <div class="cart-head">🛒 Itens da venda</div>
+              <ul class="cart-list" id="cartList"></ul>
+              <div class="order-total-row"><span class="lbl">Total</span><span class="val" id="cartTotal">—</span></div>
+              <div class="field-note" id="cartError">Não foi possível registrar a venda.</div>
+              <button type="button" class="btn btn-primary btn-block" id="sendCartBtn">Registrar venda ✔</button>
+              <p style="font-size:12px; color:var(--text-light); text-align:center; margin-top:12px;">A venda entra como <strong>Entregue</strong> e baixa o estoque na hora.</p>
+            </div>
+
+            <div id="saleSuccess" class="hidden" style="text-align:center; padding:14px 4px;">
+              <div style="width:64px; height:64px; margin:0 auto 14px; background:rgba(139,184,49,0.18); border-radius:20px; display:flex; align-items:center; justify-content:center; font-size:30px;">✅</div>
+              <h4 style="font-family:var(--font-display); color:var(--roxo-700); font-size:19px; text-transform:uppercase; margin-bottom:6px;">Venda registrada!</h4>
+              <p style="font-size:13.5px; color:var(--text-light); margin-bottom:18px;" id="saleSuccessDetail">—</p>
+              <button type="button" class="btn btn-green btn-block" id="newSaleBtn">Nova venda</button>
+            </div>
+
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ============ VENDAS DO DIA ============ -->
+    <section class="tab-panel hidden" id="tab-vendas">
+      <div class="app-topbar">
+        <div><h1>Vendas do dia</h1><div class="subtitle" id="vendasDataSub">Fechamento de caixa — vendas registradas hoje</div></div>
+        <button type="button" class="btn btn-dark-outline btn-sm" id="refreshVendasBtn">↻ Atualizar</button>
+      </div>
+
+      <div class="stat-grid" style="margin-bottom:18px;">
+        <div class="stat-card">
+          <span class="stat-ic">🧾</span>
+          <div class="label">Vendas de hoje</div>
+          <div class="value" id="statVendasCount">—</div>
+        </div>
+        <div class="stat-card">
+          <span class="stat-ic">💰</span>
+          <div class="label">Total do dia</div>
+          <div class="value" id="statVendasTotal">—</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="admin-table-wrap">
+          <table class="admin-table">
+            <thead><tr><th>Nº</th><th>Hora</th><th>Cliente</th><th>Itens</th><th class="num">Total</th></tr></thead>
+            <tbody id="vendasBody">
+              <tr><td colspan="5"><div class="empty-state"><div class="icon">🧾</div>Carregando...</div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ ESTOQUE ============ -->
+    <section class="tab-panel hidden" id="tab-estoque">
+      <div class="app-topbar">
+        <div><h1>Estoque</h1><div class="subtitle">O que tem disponível para vender agora</div></div>
+        <button type="button" class="btn btn-dark-outline btn-sm" id="refreshEstoqueBtn">↻ Atualizar</button>
+      </div>
+      <div class="panel">
+        <div id="estoqueList"><div class="empty-state"><div class="icon">📦</div>Carregando...</div></div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/js/supabase-config.js"></script>
+<script src="../assets/js/supabase-client.js"></script>
+<script src="../assets/js/app-ui.js"></script>
+<script src="../assets/js/caixa.js"></script>
+<script>
+(async function () {
+  var auth = await DupuroCaixa.requireCaixa('login.html');
+  if (!auth) return;
+
+  var SABORES = ['Açaí', 'Creme de Morango', 'Creme de Paçoca', 'Creme de Maracujá', 'Creme de Cupuaçu', 'Creme de Pistache', 'Creme de Ninho', 'Creme de Banana', 'Creme de Doce de Leite'];
+  var TIPO_LABELS = { varejo: 'Varejo', atacado: 'Atacado' };
+
+  function brl(v) { return (Number(v) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
+
+  // Saudação
+  var nome = auth.nome || 'Atendente';
+  document.getElementById('chipName').textContent = nome;
+  document.getElementById('avatarInitial').textContent = nome.charAt(0).toUpperCase();
+
+  // ---- Catálogo com disponibilidade derivada do estoque numérico ----
+  var productsCache = [];
+  var selectedProduct = null;
+  var cart = [];
+
+  function decorate(list) {
+    return list.map(function (p) {
+      var sabores = (p.sabores || []).map(function (s) {
+        return { sabor: s.sabor, estoque: s.estoque, disponivel: s.estoque > 0 };
+      });
+      return Object.assign({}, p, {
+        sabores: sabores,
+        emEstoque: p.multissabor ? sabores.some(function (s) { return s.disponivel; }) : p.estoqueTotal > 0,
+        saboresDisponiveis: sabores.filter(function (s) { return s.disponivel; }).map(function (s) { return s.sabor; }),
+        pedidoMinimo: 1
+      });
+    });
+  }
+
+  var shopCatalog = document.getElementById('shopCatalog');
+  var summaryPlaceholder = document.getElementById('summaryPlaceholder');
+  var summaryContent = document.getElementById('summaryContent');
+  var saleSuccess = document.getElementById('saleSuccess');
+  var summarySaborField = document.getElementById('summarySaborField');
+  var summarySabor = document.getElementById('summarySabor');
+  var summaryQtyInput = document.getElementById('summaryQty');
+  var itemError = document.getElementById('itemError');
+  var addBtn = document.getElementById('addToCartBtn');
+  var sendBtn = document.getElementById('sendCartBtn');
+  var cartError = document.getElementById('cartError');
+
+  function shopCardHtml(p) {
+    var oos = !p.emEstoque;
+    return '<button type="button" class="shop-card' + (oos ? ' out-of-stock' : '') + '" data-product-id="' + p.id + '" aria-pressed="false"' + (oos ? ' disabled aria-disabled="true"' : '') + '>' +
+      '<div class="ph">' + (p.imagemUrl ? '<img src="' + p.imagemUrl + '" alt="" loading="lazy">' : '🫐') + '</div>' +
+      '<div class="body">' +
+        '<h4>' + p.nome + '</h4>' +
+        '<div class="price">' + brl(p.preco) + '</div>' +
+        (oos ? '<span class="flavor-hint oos-hint">esgotado</span>' : (p.multissabor ? '<span class="flavor-hint">escolha o sabor</span>' : '')) +
+      '</div>' +
+      '</button>';
+  }
+
+  function renderShop() {
+    if (!productsCache.length) {
+      shopCatalog.innerHTML = '<div class="panel"><div class="empty-state"><div class="icon">🫐</div>Nenhum produto cadastrado.</div></div>';
+      return;
+    }
+    shopCatalog.innerHTML = ['varejo', 'atacado'].map(function (tipo) {
+      var group = productsCache.filter(function (p) { return (p.tipo || 'varejo') === tipo; });
+      if (!group.length) return '';
+      return '<div class="shop-section-title">' + (tipo === 'varejo' ? '🛍️' : '📦') + ' ' + TIPO_LABELS[tipo] + '</div>' +
+        '<div class="shop-grid">' + group.map(shopCardHtml).join('') + '</div>';
+    }).join('');
+    shopCatalog.querySelectorAll('.shop-card').forEach(function (card) {
+      card.addEventListener('click', function () { selectProduct(card.getAttribute('data-product-id')); });
+    });
+  }
+
+  function getQty() { var q = parseInt(summaryQtyInput.value, 10); return isNaN(q) ? null : q; }
+
+  function updateTotal() {
+    var qty = getQty();
+    var el = document.getElementById('summaryTotal');
+    if (!selectedProduct || !qty || qty < 1 || qty > 99) { el.textContent = '—'; return; }
+    el.textContent = brl(selectedProduct.preco * qty);
+  }
+
+  function selectProduct(id) {
+    selectedProduct = productsCache.find(function (p) { return String(p.id) === String(id) && p.emEstoque; }) || null;
+    shopCatalog.querySelectorAll('.shop-card').forEach(function (c) {
+      var isSel = selectedProduct && c.getAttribute('data-product-id') === String(selectedProduct.id);
+      c.classList.toggle('selected', isSel);
+      c.setAttribute('aria-pressed', isSel ? 'true' : 'false');
+    });
+    if (!selectedProduct) return;
+
+    saleSuccess.classList.add('hidden');
+    summaryPlaceholder.classList.add('hidden');
+    summaryContent.classList.remove('hidden');
+
+    document.getElementById('summaryThumb').innerHTML = selectedProduct.imagemUrl ? '<img src="' + selectedProduct.imagemUrl + '" alt="">' : '🫐';
+    document.getElementById('summaryName').textContent = selectedProduct.nome;
+    document.getElementById('summaryUnit').textContent = brl(selectedProduct.preco) + ' / unidade';
+
+    if (selectedProduct.multissabor) {
+      var todos = selectedProduct.sabores || [];
+      var byName = {};
+      todos.forEach(function (s) { byName[s.sabor] = s; });
+      var opcoes = SABORES.filter(function (s) { return byName[s]; })
+        .concat(todos.map(function (s) { return s.sabor; }).filter(function (s) { return SABORES.indexOf(s) === -1; }));
+      summarySabor.innerHTML = opcoes.map(function (s) {
+        var ok = byName[s].disponivel;
+        return '<option value="' + s + '"' + (ok ? '' : ' disabled') + '>' + s + (ok ? ' · ' + byName[s].estoque : '') + '</option>';
+      }).join('');
+      var primeiro = opcoes.filter(function (s) { return byName[s].disponivel; })[0];
+      if (primeiro) summarySabor.value = primeiro;
+      summarySaborField.classList.remove('hidden');
+    } else {
+      summarySaborField.classList.add('hidden');
+    }
+
+    summaryQtyInput.value = 1;
+    itemError.classList.remove('show');
+    updateTotal();
+  }
+
+  document.getElementById('qtyMinus').addEventListener('click', function () {
+    var qty = getQty() || 1;
+    summaryQtyInput.value = Math.max(1, qty - 1);
+    updateTotal();
+  });
+  document.getElementById('qtyPlus').addEventListener('click', function () {
+    var qty = getQty() || 0;
+    summaryQtyInput.value = Math.min(99, qty + 1);
+    updateTotal();
+  });
+  summaryQtyInput.addEventListener('input', updateTotal);
+
+  function renderCart() {
+    var section = document.getElementById('cartSection');
+    var list = document.getElementById('cartList');
+    sendBtn.textContent = 'Registrar venda' + (cart.length ? ' (' + cart.length + ')' : '') + ' ✔';
+    if (!cart.length) { section.classList.add('hidden'); return; }
+    section.classList.remove('hidden');
+    list.innerHTML = cart.map(function (it, i) {
+      return '<li class="cart-item"><div class="ci-info"><span class="ci-name">' + it.nome + (it.sabor ? ' · ' + it.sabor : '') + '</span>' +
+        '<span class="ci-sub">' + it.quantidade + ' × ' + brl(it.preco) + ' = ' + brl(it.preco * it.quantidade) + '</span></div>' +
+        '<button type="button" class="ci-remove" data-cart-i="' + i + '" aria-label="Remover item">×</button></li>';
+    }).join('');
+    document.getElementById('cartTotal').textContent = brl(cart.reduce(function (s, it) { return s + it.preco * it.quantidade; }, 0));
+    list.querySelectorAll('[data-cart-i]').forEach(function (b) {
+      b.addEventListener('click', function () { cart.splice(parseInt(b.getAttribute('data-cart-i'), 10), 1); renderCart(); });
+    });
+  }
+
+  function deselectProduct() {
+    selectedProduct = null;
+    summaryContent.classList.add('hidden');
+    saleSuccess.classList.add('hidden');
+    summaryPlaceholder.classList.remove('hidden');
+    shopCatalog.querySelectorAll('.shop-card').forEach(function (c) {
+      c.classList.remove('selected');
+      c.setAttribute('aria-pressed', 'false');
+    });
+  }
+
+  addBtn.addEventListener('click', function () {
+    itemError.classList.remove('show');
+    itemError.textContent = 'Confira os dados do item.';
+    var qty = getQty();
+    var sabor = selectedProduct && selectedProduct.multissabor ? summarySabor.value : null;
+    var saborIndisponivel = selectedProduct && selectedProduct.multissabor &&
+      (!sabor || (selectedProduct.saboresDisponiveis || []).indexOf(sabor) === -1);
+    if (!selectedProduct || !qty || qty < 1 || qty > 99 || saborIndisponivel) {
+      itemError.classList.add('show');
+      return;
+    }
+    var existing = cart.filter(function (it) { return it.productId === selectedProduct.id && (it.sabor || null) === (sabor || null); })[0];
+    if (existing) existing.quantidade = Math.min(99, existing.quantidade + qty);
+    else cart.push({ productId: selectedProduct.id, nome: selectedProduct.nome, preco: selectedProduct.preco, sabor: sabor, quantidade: qty });
+    renderCart();
+    deselectProduct();
+  });
+
+  // ---- Para quem é a venda (balcão x revendedor) ----
+  var saleTarget = 'balcao';
+  var resellerField = document.getElementById('resellerField');
+  var resellerSelect = document.getElementById('resellerSelect');
+  document.querySelectorAll('.seg-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('.seg-btn').forEach(function (b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      saleTarget = btn.getAttribute('data-target');
+      resellerField.classList.toggle('hidden', saleTarget !== 'revendedor');
+    });
+  });
+
+  DupuroCaixa.getResellers().then(function (resellers) {
+    if (!resellers.length) {
+      resellerSelect.innerHTML = '<option value="">Nenhum revendedor aprovado</option>';
+      return;
+    }
+    resellerSelect.innerHTML = resellers.map(function (r) {
+      return '<option value="' + r.id + '">' + r.nome + '</option>';
+    }).join('');
+  });
+
+  sendBtn.addEventListener('click', async function () {
+    cartError.classList.remove('show');
+    if (!cart.length) return;
+    var revendedorId = null;
+    if (saleTarget === 'revendedor') {
+      revendedorId = resellerSelect.value || null;
+      if (!revendedorId) {
+        cartError.textContent = 'Escolha o revendedor ou mude para Balcão.';
+        cartError.classList.add('show');
+        return;
+      }
+    }
+    var items = cart.map(function (it) {
+      return { produtoId: it.productId, quantidade: it.quantidade, sabor: it.sabor,
+        itens: it.nome + (it.sabor ? ' - ' + it.sabor : '') + ' x' + it.quantidade, valor: it.preco * it.quantidade };
+    });
+    sendBtn.disabled = true; sendBtn.textContent = 'Registrando...';
+    var result = await DupuroCaixa.registerSale({ revendedorId: revendedorId }, items);
+    sendBtn.disabled = false;
+    if (result.error) {
+      cartError.textContent = result.error.code === '23514'
+        ? 'Algum item ficou sem estoque suficiente. Revise a venda.'
+        : 'Não foi possível registrar a venda. Tente novamente.';
+      cartError.classList.add('show');
+      renderCart();
+      productsCache = decorate(await DupuroCaixa.getProducts());
+      renderShop();
+      return;
+    }
+    var total = cart.reduce(function (s, it) { return s + it.preco * it.quantidade; }, 0);
+    var n = cart.length;
+    cart = [];
+    renderCart();
+    document.getElementById('saleSuccessDetail').textContent = result.numero + ' · ' + n + (n === 1 ? ' item' : ' itens') + ' · ' + brl(total);
+    summaryContent.classList.add('hidden');
+    summaryPlaceholder.classList.add('hidden');
+    saleSuccess.classList.remove('hidden');
+    // Atualiza estoque e vendas do dia em segundo plano.
+    productsCache = decorate(await DupuroCaixa.getProducts());
+    renderShop();
+    loadVendas();
+  });
+
+  document.getElementById('newSaleBtn').addEventListener('click', deselectProduct);
+
+  // ---- Vendas do dia ----
+  async function loadVendas() {
+    var data = await DupuroCaixa.getTodaySales();
+    document.getElementById('statVendasCount').textContent = data.sales.length;
+    document.getElementById('statVendasTotal').textContent = brl(data.total);
+    var body = document.getElementById('vendasBody');
+    if (!data.sales.length) {
+      body.innerHTML = '<tr><td colspan="5"><div class="empty-state"><div class="icon">🧾</div>Nenhuma venda registrada hoje ainda.</div></td></tr>';
+      return;
+    }
+    body.innerHTML = data.sales.map(function (v) {
+      var hora = new Date(v.hora).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      var itensTxt = v.items.map(function (it) { return it.itens; }).join(', ');
+      return '<tr>' +
+        '<td><strong>' + v.numero + '</strong></td>' +
+        '<td>' + hora + '</td>' +
+        '<td>' + v.cliente + '</td>' +
+        '<td>' + itensTxt + '</td>' +
+        '<td class="num">' + brl(v.valor) + '</td>' +
+        '</tr>';
+    }).join('');
+  }
+  document.getElementById('refreshVendasBtn').addEventListener('click', loadVendas);
+
+  // ---- Estoque ----
+  function saborDot(estoque) { return estoque === 0 ? 'dot-danger' : (estoque < 5 ? 'dot-warning' : 'dot-green'); }
+  function renderEstoque() {
+    var box = document.getElementById('estoqueList');
+    if (!productsCache.length) { box.innerHTML = '<div class="empty-state"><div class="icon">📦</div>Nenhum produto.</div>'; return; }
+    box.innerHTML = ['varejo', 'atacado'].map(function (tipo) {
+      var group = productsCache.filter(function (p) { return (p.tipo || 'varejo') === tipo; });
+      if (!group.length) return '';
+      return '<div class="shop-section-title">' + (tipo === 'varejo' ? '🛍️' : '📦') + ' ' + TIPO_LABELS[tipo] + '</div>' +
+        '<div class="estoque-group">' + group.map(function (p) {
+          if (p.multissabor) {
+            var sab = (p.sabores || []).slice().sort(function (a, b) { return a.estoque - b.estoque; });
+            return '<details class="stock-chip stock-chip-group">' +
+              '<summary><span class="chevron">▸</span>' + p.nome + '<span class="qty">' + p.estoqueTotal + ' un</span></summary>' +
+              '<div class="sabor-list">' + sab.map(function (s) {
+                return '<div class="sabor-row"><span class="dot ' + saborDot(s.estoque) + '"></span><span class="sabor-nome">' + s.sabor + '</span><span class="sabor-qty">' + s.estoque + ' un</span></div>';
+              }).join('') + '</div></details>';
+          }
+          return '<div class="stock-chip"><span class="dot ' + saborDot(p.estoqueTotal) + '"></span>' + p.nome + '<span class="qty">' + p.estoqueTotal + ' un</span></div>';
+        }).join('') + '</div>';
+    }).join('');
+  }
+  document.getElementById('refreshEstoqueBtn').addEventListener('click', async function () {
+    productsCache = decorate(await DupuroCaixa.getProducts());
+    renderShop();
+    renderEstoque();
+  });
+
+  // ---- Carga inicial ----
+  productsCache = decorate(await DupuroCaixa.getProducts());
+  renderShop();
+  renderEstoque();
+  loadVendas();
+
+  // ---- Navegação por abas ----
+  var navItems = document.querySelectorAll('.sidebar-link[data-tab], .sidebar-cta[data-tab]');
+  function goTo(tab) {
+    document.querySelectorAll('.tab-panel').forEach(function (p) { p.classList.add('hidden'); });
+    document.getElementById('tab-' + tab).classList.remove('hidden');
+    document.querySelectorAll('.sidebar-link[data-tab]').forEach(function (l) {
+      l.classList.toggle('active', l.getAttribute('data-tab') === tab);
+    });
+    document.getElementById('sidebar').classList.remove('open');
+    window.scrollTo(0, 0);
+  }
+  navItems.forEach(function (link) {
+    link.addEventListener('click', function (e) { e.preventDefault(); goTo(link.getAttribute('data-tab')); });
+  });
+
+  var mobileBtn = document.getElementById('mobileMenuBtn');
+  if (mobileBtn) mobileBtn.addEventListener('click', function () { document.getElementById('sidebar').classList.toggle('open'); });
+
+  document.getElementById('logoutBtn').addEventListener('click', async function (e) {
+    e.preventDefault();
+    await DupuroCaixa.logout();
+    window.location.href = 'login.html';
+  });
+
+})();
+</script>
+
+</body>
+</html>

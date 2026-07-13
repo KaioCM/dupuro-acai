@@ -314,6 +314,11 @@
     window.location.href = 'admin.html';
     return;
   }
+  // Atendente da loja usa o caixa (PDV), não o painel do revendedor.
+  if (profile.role === 'atendente') {
+    window.location.href = 'caixa.html';
+    return;
+  }
 
   // Se o status deixou de ser 'aprovado' enquanto a sessão existia, encerra.
   if (profile.status && profile.status !== 'aprovado') {

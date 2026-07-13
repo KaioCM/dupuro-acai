@@ -19,7 +19,8 @@ create table if not exists public.profiles (
   telefone text,
   cidade text,
   status text not null default 'pendente' check (status in ('pendente', 'aprovado', 'rejeitado')),
-  role text not null default 'revendedor' check (role in ('revendedor', 'admin')),
+  -- 'atendente' = caixa/PDV da loja: registra vendas presenciais (ver migration_018).
+  role text not null default 'revendedor' check (role in ('revendedor', 'admin', 'atendente')),
   created_at timestamptz not null default now()
 );
 
@@ -35,8 +36,21 @@ returns boolean as $$
   );
 $$ language sql security definer stable set search_path = public;
 
+-- Atendente da loja (caixa/PDV) — ver migration_018.
+create or replace function public.is_atendente()
+returns boolean language sql stable security definer set search_path = public as $$
+  select exists (
+    select 1 from public.profiles
+    where id = auth.uid() and role = 'atendente' and status = 'aprovado'
+  );
+$$;
+
 create policy "profiles_select_own_or_admin" on public.profiles
   for select using (auth.uid() = id or public.is_admin());
+
+-- Atendente lista revendedores aprovados (para vincular uma venda a um revendedor).
+create policy "profiles_select_atendente" on public.profiles
+  for select using (public.is_atendente() and role = 'revendedor' and status = 'aprovado');
 
 create policy "profiles_update_own_or_admin" on public.profiles
   for update using (auth.uid() = id or public.is_admin());
@@ -168,6 +182,11 @@ create table if not exists public.orders (
   -- admin para lançar pedidos antigos de produtos hoje esgotados). O revendedor
   -- não pode usar false — a policy orders_insert_self obriga true.
   usa_estoque boolean not null default true,
+  -- Canal do pedido. 'loja' = venda presencial registrada pela atendente (caixa),
+  -- nasce 'entregue' e baixa estoque na hora (ver migration_018). atendente_id
+  -- registra quem lançou (auditoria/fechamento de caixa).
+  origem text not null default 'revendedor' check (origem in ('revendedor', 'admin', 'loja')),
+  atendente_id uuid references auth.users(id) on delete set null,
   created_at timestamptz not null default now()
 );
 
@@ -182,8 +201,22 @@ create policy "orders_select_own_approved_or_admin" on public.orders
     or public.is_admin()
   );
 
+-- Atendente lê as vendas de loja (fechamento de caixa do dia).
+create policy "orders_select_atendente" on public.orders
+  for select using (public.is_atendente() and origem = 'loja');
+
 create policy "orders_insert_admin" on public.orders
   for insert with check (public.is_admin());
+
+-- Atendente registra venda de loja: sempre origem='loja', consome estoque e já
+-- nasce 'entregue' (venda concluída no balcão). Sem pedido mínimo (venda avulsa).
+create policy "orders_insert_atendente" on public.orders
+  for insert with check (
+    public.is_atendente()
+    and origem = 'loja'
+    and usa_estoque = true
+    and status = 'entregue'
+  );
 
 create policy "orders_insert_self" on public.orders
   for insert with check (

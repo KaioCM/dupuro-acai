@@ -19,6 +19,7 @@ area-cliente/
   login.html              login (revendedor ou admin, redireciona conforme role)
   dashboard.html          painel revendedor (fazer pedido, pedidos, cupons, perfil)
   admin.html              painel admin (aprovações, revendedores, produtos, pedidos, cupons)
+  caixa.html              PDV da loja (papel 'atendente'): registra venda presencial, vendas do dia, estoque
 assets/css/style.css      design system único (variáveis em :root)
 assets/js/
   main.js                 interações da landing
@@ -26,6 +27,7 @@ assets/js/
   supabase-client.js      instância única do cliente Supabase (compartilhada)
   cliente.js              acesso revendedor (auth, perfil, pedidos/cupons leitura, criar pedido)
   admin.js                acesso admin (aprovar, revendedores, produtos, pedidos, cupons)
+  caixa.js                acesso atendente (catálogo c/ estoque, registrar venda de loja, vendas do dia)
   app-ui.js               helpers de UI (DupuroUI.countUp)
 assets/img/brand/         logos PNG oficiais + favicons
 assets/img/fotos/         21 fotos profissionais otimizadas
@@ -42,6 +44,7 @@ Projeto real em `supabase-config.js` (URL `zqadfktfplrbrjmepllh.supabase.co`). D
 - **Cadastro/aprovação**: cliente se cadastra em `index.html#revenda` → `status = 'pendente'`. Login só libera se `aprovado`. Admin aprova/rejeita na aba Aprovações. Login admin pula aprovação e vai direto ao painel admin. **"Confirm email" do Supabase está desativado** — aprovação do admin é o único obstáculo.
 - **Painel admin**: Visão geral (cards + 4 gráficos Chart.js via CDN); Aprovações; Revendedores (listar + editar + remover); Produtos (CRUD, imagem no bucket público `produtos`); Pedidos (select de produto + qtd 1–99, valor auto, campo de data livre, criar/editar/excluir, número `PED-XXXX` auto); Cupons (gerar/excluir — revendedor só vê).
 - **Revendedor lança pedido** (aba Fazer pedido): sempre nasce `status = 'enviado'` — travado no banco pela policy `orders_insert_self` (revendedor_id = auth.uid() + status='enviado' + perfil aprovado).
+- **Atendente (caixa/PDV)**: papel `atendente` (migration_018). Login redireciona pra `caixa.html`. Registra venda presencial (balcão avulso ou revendedor) que nasce `origem='loja'` + `status='entregue'` e **baixa o estoque na hora** — sem análise do admin. RLS `orders_insert_atendente` obriga origem='loja'/entregue/usa_estoque=true; ela não gerencia produtos/revendedores/pedidos. Admin transforma um revendedor em atendente pelo botão "Caixa" (aba Revendedores).
 - **Excluir revendedor** apaga a conta de auth de verdade via Edge Function `admin-delete-reseller` (service role, `verify_jwt: true`, valida role=admin no servidor). Pedidos/cupons do revendedor removido **não somem**: `revendedor_id` é opcional com `on delete set null` (UI mostra "Revendedor removido").
 - Migrações 005+ e a Edge Function são aplicadas via **MCP do Supabase** (acesso concedido); os arquivos `.sql`/`.ts` são só o espelho.
 - Cadastro dispara notificação best-effort via Formspree (`data-formspree-action`), mas o `SEU_FORM_ID` ainda é placeholder — cadastro funciona sem isso.

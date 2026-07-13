@@ -47,11 +47,12 @@ var DupuroCliente = (function () {
       return { error: null, status: 'aprovado', role: 'admin' };
     }
 
+    // Revendedor e atendente exigem status 'aprovado' para entrar.
     if (profile.status !== 'aprovado') {
       await client.auth.signOut();
-      return { error: null, status: profile.status || 'pendente', role: 'revendedor' };
+      return { error: null, status: profile.status || 'pendente', role: profile.role || 'revendedor' };
     }
-    return { error: null, status: 'aprovado', role: 'revendedor' };
+    return { error: null, status: 'aprovado', role: profile.role || 'revendedor' };
   }
 
   async function logout() {

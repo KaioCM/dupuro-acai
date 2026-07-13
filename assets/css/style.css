@@ -1312,6 +1312,14 @@ select:focus-visible,
 .sabor-row .sabor-qty { font-weight: 700; color: var(--text); opacity: 0.7; }
 @media (max-width: 720px) { .stock-summary { grid-template-columns: 1fr; } }
 
+/* Caixa (PDV): alvo da venda (balcão x revendedor) e lista de estoque */
+.sale-target { display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
+.seg { display: inline-flex; background: rgba(96,16,80,0.06); border: 1px solid rgba(96,16,80,0.10); border-radius: 12px; padding: 4px; gap: 4px; }
+.seg-btn { border: none; background: transparent; font-family: inherit; font-size: 13.5px; font-weight: 700; color: var(--text-light); padding: 8px 16px; border-radius: 9px; cursor: pointer; transition: background 0.15s, color 0.15s; }
+.seg-btn:hover { color: var(--roxo-700); }
+.seg-btn.active { background: var(--roxo-700); color: #fff; box-shadow: 0 2px 6px rgba(96,16,80,0.25); }
+.estoque-group { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; margin-bottom: 18px; }
+
 /* Grade de estoque por sabor (formulário de produto multissabor) */
 .flavor-stock-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; }
 .flavor-stock-item { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: rgba(96,16,80,0.04); border: 1.5px solid rgba(96,16,80,0.10); border-radius: var(--radius-sm); padding: 8px 12px; margin: 0; }
