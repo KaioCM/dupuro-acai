@@ -1289,11 +1289,27 @@ select:focus-visible,
 .stock-summary-card.is-danger .stock-summary-count { background: var(--danger); }
 .stock-summary-card.is-warning .stock-summary-count { background: var(--gold-strong); }
 .stock-summary-card.is-green .stock-summary-count { background: var(--verde); }
-.stock-summary-chips { display: flex; flex-wrap: wrap; gap: 6px; }
-.stock-chip { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--text-light); background: rgba(96,16,80,0.05); border: 1px solid rgba(96,16,80,0.08); border-radius: 999px; padding: 4px 10px; }
-.stock-chip .qty { font-weight: 700; color: var(--text); opacity: 0.75; }
-.stock-chip .qty.alert { color: var(--danger); opacity: 1; font-weight: 700; }
+.stock-summary-chips { display: flex; flex-direction: column; gap: 6px; }
+.stock-chip { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; font-size: 12.5px; font-weight: 700; color: var(--text); background: rgba(96,16,80,0.05); border: 1px solid rgba(96,16,80,0.08); border-radius: 10px; padding: 7px 11px; }
+.stock-chip .qty { margin-left: auto; font-weight: 700; color: var(--text-light); }
+.stock-chip .qty.alert { margin-left: 0; color: var(--danger); font-weight: 700; }
 .stock-summary-empty { font-size: 12px; color: var(--text-light); opacity: 0.7; font-style: italic; }
+
+/* Grupo multissabor expansível (setinha abre a lista de sabores) */
+.stock-chip-group { display: block; padding: 0; }
+.stock-chip-group > summary { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; list-style: none; cursor: pointer; padding: 7px 11px; border-radius: 10px; }
+.stock-chip-group > summary::-webkit-details-marker { display: none; }
+.stock-chip-group > summary .chevron { display: inline-block; font-size: 10px; color: var(--text-light); transition: transform 0.18s ease; }
+.stock-chip-group[open] > summary .chevron { transform: rotate(90deg); }
+.stock-chip-group[open] > summary { border-bottom: 1px solid rgba(96,16,80,0.08); border-radius: 10px 10px 0 0; }
+.sabor-list { padding: 4px 11px 8px; }
+.sabor-row { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; color: var(--text-light); padding: 3px 0; }
+.sabor-row .dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+.sabor-row .dot-danger { background: var(--danger); }
+.sabor-row .dot-warning { background: var(--gold-strong); }
+.sabor-row .dot-green { background: var(--verde); }
+.sabor-row .sabor-nome { flex: 1; }
+.sabor-row .sabor-qty { font-weight: 700; color: var(--text); opacity: 0.7; }
 @media (max-width: 720px) { .stock-summary { grid-template-columns: 1fr; } }
 
 /* Grade de estoque por sabor (formulário de produto multissabor) */

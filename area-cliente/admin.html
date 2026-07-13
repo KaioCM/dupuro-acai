@@ -872,10 +872,11 @@
     if (!box) return;
 
     var units = chartProducts.map(function (p) {
-      var faltando = p.multissabor
-        ? p.sabores.filter(function (s) { return s.estoque === 0; }).length
-        : 0;
-      return { nome: p.nome, estoque: p.estoqueTotal, faltando: faltando };
+      var sabores = p.multissabor
+        ? p.sabores.slice().sort(function (a, b) { return a.estoque - b.estoque; })
+        : null;
+      var faltando = sabores ? sabores.filter(function (s) { return s.estoque === 0; }).length : 0;
+      return { nome: p.nome, estoque: p.estoqueTotal, sabores: sabores, faltando: faltando };
     });
 
     var esgotado = [], baixo = [], saudavel = [];
@@ -888,13 +889,32 @@
     function byName(a, b) { return a.nome.localeCompare(b.nome); }
     function byEstoque(a, b) { return a.estoque - b.estoque; }
 
+    function saborDot(estoque) {
+      if (estoque === 0) return 'dot-danger';
+      if (estoque < 5) return 'dot-warning';
+      return 'dot-green';
+    }
+    function saborList(sabores) {
+      return '<div class="sabor-list">' + sabores.map(function (s) {
+        return '<div class="sabor-row"><span class="dot ' + saborDot(s.estoque) + '"></span>' +
+          '<span class="sabor-nome">' + s.sabor + '</span>' +
+          '<span class="sabor-qty">' + s.estoque + ' un</span></div>';
+      }).join('') + '</div>';
+    }
+
     function chips(list, withQty) {
       if (!list.length) return '<div class="stock-summary-empty">Nenhum produto</div>';
       return '<div class="stock-summary-chips">' + list.map(function (u) {
-        var extra = '';
-        if (withQty) extra = '<span class="qty">' + u.estoque + ' un</span>';
-        if (u.faltando > 0) extra += '<span class="qty alert">' + u.faltando + ' sabor' + (u.faltando > 1 ? 'es' : '') + ' esgotado' + (u.faltando > 1 ? 's' : '') + '</span>';
-        return '<span class="stock-chip">' + u.nome + extra + '</span>';
+        var meta = '';
+        if (withQty) meta += '<span class="qty">' + u.estoque + ' un</span>';
+        if (u.faltando > 0) meta += '<span class="qty alert">' + u.faltando + ' sabor' + (u.faltando > 1 ? 'es' : '') + ' esgotado' + (u.faltando > 1 ? 's' : '') + '</span>';
+        // Multissabor: bloco expansível (setinha) com a lista de sabores.
+        if (u.sabores) {
+          return '<details class="stock-chip stock-chip-group">' +
+            '<summary><span class="chevron">▸</span>' + u.nome + meta + '</summary>' +
+            saborList(u.sabores) + '</details>';
+        }
+        return '<span class="stock-chip">' + u.nome + meta + '</span>';
       }).join('') + '</div>';
     }
 
