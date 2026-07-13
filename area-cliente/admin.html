@@ -170,6 +170,7 @@
           <span class="stock-legend-item"><span class="dot dot-warning"></span> Estoque baixo (&lt; 5)</span>
           <span class="stock-legend-item"><span class="dot dot-green"></span> Estoque saudável</span>
         </div>
+        <div class="stock-summary" id="stockSummary"></div>
       </div>
 
       <div class="panel">
@@ -858,6 +859,58 @@
         y: { stacked: true, grid: { display: false }, ticks: { font: { size: 11.5 } } }
       }
     });
+
+    renderStockSummary(chartProducts);
+  }
+
+  // Resumo visual do estoque abaixo do gráfico: uma entrada por produto (mesma
+  // granularidade das barras do gráfico), classificado pelo estoque total.
+  // Multissabor esgotado = todos os sabores zerados; se ainda restar algum
+  // sabor, mostramos quantos sabores estão sem estoque como aviso.
+  function renderStockSummary(chartProducts) {
+    var box = document.getElementById('stockSummary');
+    if (!box) return;
+
+    var units = chartProducts.map(function (p) {
+      var faltando = p.multissabor
+        ? p.sabores.filter(function (s) { return s.estoque === 0; }).length
+        : 0;
+      return { nome: p.nome, estoque: p.estoqueTotal, faltando: faltando };
+    });
+
+    var esgotado = [], baixo = [], saudavel = [];
+    units.forEach(function (u) {
+      if (u.estoque === 0) esgotado.push(u);
+      else if (u.estoque < 5) baixo.push(u);
+      else saudavel.push(u);
+    });
+    esgotado.sort(byName); baixo.sort(byEstoque); saudavel.sort(byEstoque);
+    function byName(a, b) { return a.nome.localeCompare(b.nome); }
+    function byEstoque(a, b) { return a.estoque - b.estoque; }
+
+    function chips(list, withQty) {
+      if (!list.length) return '<div class="stock-summary-empty">Nenhum produto</div>';
+      return '<div class="stock-summary-chips">' + list.map(function (u) {
+        var extra = '';
+        if (withQty) extra = '<span class="qty">' + u.estoque + ' un</span>';
+        if (u.faltando > 0) extra += '<span class="qty alert">' + u.faltando + ' sabor' + (u.faltando > 1 ? 'es' : '') + ' esgotado' + (u.faltando > 1 ? 's' : '') + '</span>';
+        return '<span class="stock-chip">' + u.nome + extra + '</span>';
+      }).join('') + '</div>';
+    }
+
+    function card(mod, icon, titulo, list, withQty) {
+      return '<div class="stock-summary-card ' + mod + '">' +
+        '<div class="stock-summary-head">' +
+          '<span class="ic">' + icon + '</span>' +
+          '<span class="stock-summary-title">' + titulo + '</span>' +
+          '<span class="stock-summary-count">' + list.length + '</span>' +
+        '</div>' + chips(list, withQty) + '</div>';
+    }
+
+    box.innerHTML =
+      card('is-danger', '🚫', 'Esgotado', esgotado, false) +
+      card('is-warning', '⚠️', 'Estoque baixo', baixo, true) +
+      card('is-green', '✅', 'Estoque saudável', saudavel, true);
   }
 
   // ---- Aprovações ----

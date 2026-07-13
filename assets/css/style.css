@@ -1276,6 +1276,26 @@ select:focus-visible,
 .stock-legend .dot-warning { background: var(--gold-strong); }
 .stock-legend .dot-green { background: var(--verde); }
 
+/* Resumo visual do estoque (abaixo do gráfico, aba Produtos) */
+.stock-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 16px; }
+.stock-summary-card { border: 1px solid rgba(96,16,80,0.10); border-radius: 14px; padding: 14px 15px; background: var(--cream, #FFF7EC); border-top-width: 3px; }
+.stock-summary-card.is-danger { border-top-color: var(--danger); }
+.stock-summary-card.is-warning { border-top-color: var(--gold-strong); }
+.stock-summary-card.is-green { border-top-color: var(--verde); }
+.stock-summary-head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.stock-summary-head .ic { font-size: 15px; line-height: 1; }
+.stock-summary-title { font-weight: 800; font-size: 13.5px; color: var(--text); flex: 1; }
+.stock-summary-count { font-weight: 800; font-size: 14px; min-width: 26px; height: 26px; padding: 0 7px; display: inline-flex; align-items: center; justify-content: center; border-radius: 999px; color: #fff; }
+.stock-summary-card.is-danger .stock-summary-count { background: var(--danger); }
+.stock-summary-card.is-warning .stock-summary-count { background: var(--gold-strong); }
+.stock-summary-card.is-green .stock-summary-count { background: var(--verde); }
+.stock-summary-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.stock-chip { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--text-light); background: rgba(96,16,80,0.05); border: 1px solid rgba(96,16,80,0.08); border-radius: 999px; padding: 4px 10px; }
+.stock-chip .qty { font-weight: 700; color: var(--text); opacity: 0.75; }
+.stock-chip .qty.alert { color: var(--danger); opacity: 1; font-weight: 700; }
+.stock-summary-empty { font-size: 12px; color: var(--text-light); opacity: 0.7; font-style: italic; }
+@media (max-width: 720px) { .stock-summary { grid-template-columns: 1fr; } }
+
 /* Grade de estoque por sabor (formulário de produto multissabor) */
 .flavor-stock-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; }
 .flavor-stock-item { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: rgba(96,16,80,0.04); border: 1.5px solid rgba(96,16,80,0.10); border-radius: var(--radius-sm); padding: 8px 12px; margin: 0; }
