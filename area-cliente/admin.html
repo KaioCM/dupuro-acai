@@ -1973,7 +1973,7 @@
   async function updateOrderNumberPreview() {
     if (editingItemId) return; // preserva o número original durante edição
     var numero = await DupuroAdmin.getNextOrderNumber();
-    document.getElementById('orderNumeroPreview').value = numero;
+    document.getElementById('orderNumeroPreview').value = numero || '—';
   }
 
   function todayIso() {

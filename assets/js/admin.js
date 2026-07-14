@@ -188,19 +188,13 @@ var DupuroAdmin = (function () {
     return order;
   }
 
-  // Gera o próximo número de pedido no formato PED-XXXX, olhando o maior
-  // número já usado (evita ter que digitar/controlar isso manualmente).
+  // Próximo número de pedido (PED-XXXX), calculado no banco por next_pedido_numero
+  // (migration_021) — única fonte pros três canais, sem colidir com as vendas de
+  // loja (VND-XXXX). A função é `stable`: dá pra chamar só pra pré-visualizar.
   async function getNextOrderNumber() {
-    var result = await client.from('orders').select('numero');
-    var max = 1000;
-    (result.data || []).forEach(function (o) {
-      var match = /^PED-(\d+)$/.exec(o.numero || '');
-      if (match) {
-        var n = parseInt(match[1], 10);
-        if (n > max) max = n;
-      }
-    });
-    return 'PED-' + (max + 1);
+    var result = await client.rpc('next_pedido_numero');
+    if (result.error || !result.data) return null;
+    return result.data;
   }
 
   async function createOrder(order) {
@@ -219,6 +213,7 @@ var DupuroAdmin = (function () {
   async function createOrderCart(header, items) {
     if (!items || !items.length) return { error: new Error('Carrinho vazio') };
     var numero = await getNextOrderNumber();
+    if (!numero) return { error: new Error('Não foi possível gerar o número do pedido') };
     var usaEstoque = header.usaEstoque !== false;
     var rows = items.map(function (it) {
       return {

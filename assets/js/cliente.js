@@ -176,18 +176,13 @@ var DupuroCliente = (function () {
     });
   }
 
-  // Gera o próximo número de pedido no formato PED-XXXX (mesmo esquema do painel admin).
+  // Próximo número de pedido (PED-XXXX). Vem do banco (next_pedido_numero), que
+  // enxerga TODAS as linhas: o revendedor só enxerga os pedidos dele pelo RLS e
+  // geraria o mesmo número de outro revendedor (ver migration_021).
   async function getNextOrderNumber() {
-    var result = await client.from('orders').select('numero');
-    var max = 1000;
-    (result.data || []).forEach(function (o) {
-      var match = /^PED-(\d+)$/.exec(o.numero || '');
-      if (match) {
-        var n = parseInt(match[1], 10);
-        if (n > max) max = n;
-      }
-    });
-    return 'PED-' + (max + 1);
+    var result = await client.rpc('next_pedido_numero');
+    if (result.error || !result.data) return null;
+    return result.data;
   }
 
   // Pedido lançado pelo próprio revendedor. Status sempre 'enviado'
@@ -206,6 +201,7 @@ var DupuroCliente = (function () {
     if (!session) return { error: new Error('Sem sessão ativa') };
     if (!items || !items.length) return { error: new Error('Carrinho vazio') };
     var numero = await getNextOrderNumber();
+    if (!numero) return { error: new Error('Não foi possível gerar o número do pedido') };
     var data = new Date().toISOString().split('T')[0];
     var rows = items.map(function (it) {
       return {

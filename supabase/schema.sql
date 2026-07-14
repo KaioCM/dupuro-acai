@@ -230,6 +230,30 @@ create table if not exists public.orders (
 
 alter table public.orders enable row level security;
 
+-- Numeração (migration_021). Cada canal tem sua faixa, e o número é calculado no
+-- banco por funções security definer (enxergam TODAS as linhas). Sem isso cada
+-- papel calculava olhando só o que o RLS libera e gerava números repetidos:
+--   pedido de revendedor/admin → PED-XXXX   |   venda de loja (caixa) → VND-XXXX
+-- São `stable` (só leem): dá pra chamar só pra pré-visualizar o número.
+create or replace function public.next_pedido_numero()
+returns text language sql security definer stable set search_path = public as $$
+  select 'PED-' || (
+    coalesce(max((regexp_match(numero, '^PED-(\d+)$'))[1]::int), 1000) + 1
+  )::text
+  from public.orders;
+$$;
+
+create or replace function public.next_venda_numero()
+returns text language sql security definer stable set search_path = public as $$
+  select 'VND-' || lpad((
+    coalesce(max((regexp_match(numero, '^VND-(\d+)$'))[1]::int), 0) + 1
+  )::text, 4, '0')
+  from public.orders;
+$$;
+
+grant execute on function public.next_pedido_numero() to authenticated;
+grant execute on function public.next_venda_numero() to authenticated;
+
 create policy "orders_select_own_approved_or_admin" on public.orders
   for select using (
     (

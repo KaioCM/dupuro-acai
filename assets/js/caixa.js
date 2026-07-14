@@ -118,14 +118,13 @@ var DupuroCaixa = (function () {
     });
   }
 
+  // Número da venda de loja (VND-XXXX). Vem do banco (next_venda_numero), que
+  // enxerga TODAS as linhas: a atendente só enxerga origem='loja' pelo RLS e
+  // calcularia um número que colide com pedido de revendedor (ver migration_021).
   async function getNextOrderNumber() {
-    var result = await client.from('orders').select('numero');
-    var max = 1000;
-    (result.data || []).forEach(function (o) {
-      var match = /^PED-(\d+)$/.exec(o.numero || '');
-      if (match) { var n = parseInt(match[1], 10); if (n > max) max = n; }
-    });
-    return 'PED-' + (max + 1);
+    var result = await client.rpc('next_venda_numero');
+    if (result.error || !result.data) return null;
+    return result.data;
   }
 
   function hojeISO() {
@@ -143,6 +142,7 @@ var DupuroCaixa = (function () {
     var session = await getSession();
     if (!session) return { error: new Error('Sem sessão ativa') };
     var numero = await getNextOrderNumber();
+    if (!numero) return { error: new Error('Não foi possível gerar o número da venda') };
     var rows = items.map(function (it) {
       return {
         revendedor_id: header.revendedorId || null,
