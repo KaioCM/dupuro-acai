@@ -220,6 +220,11 @@ create table if not exists public.orders (
   -- registra quem lançou (auditoria/fechamento de caixa).
   origem text not null default 'revendedor' check (origem in ('revendedor', 'admin', 'loja')),
   atendente_id uuid references auth.users(id) on delete set null,
+  -- Detalhe estruturado da venda de loja (migration_020):
+  --   copo → { acompanhamentos: [{nome, tipo, preco}], gratis_inclusos, extras_cobrados, extra_unitario }
+  --   peso → { peso_kg, preco_kg }
+  -- Base para a comanda impressa e, depois, para a nota fiscal.
+  detalhes jsonb,
   created_at timestamptz not null default now()
 );
 
@@ -241,14 +246,19 @@ create policy "orders_select_atendente" on public.orders
 create policy "orders_insert_admin" on public.orders
   for insert with check (public.is_admin());
 
--- Atendente registra venda de loja: sempre origem='loja', consome estoque e já
--- nasce 'entregue' (venda concluída no balcão). Sem pedido mínimo (venda avulsa).
+-- Atendente registra venda de loja: sempre origem='loja' e já nasce 'entregue'
+-- (venda concluída no balcão), sem pedido mínimo. usa_estoque é amarrado ao modo
+-- do produto (migration_020): 'embalado' obriga true (baixa estoque na hora);
+-- copo/self-service obrigam false (não têm estoque por unidade).
 create policy "orders_insert_atendente" on public.orders
   for insert with check (
     public.is_atendente()
     and origem = 'loja'
-    and usa_estoque = true
     and status = 'entregue'
+    and usa_estoque = coalesce(
+      (select p.modo = 'embalado' from public.products p where p.id = produto_id),
+      true
+    )
   );
 
 create policy "orders_insert_self" on public.orders

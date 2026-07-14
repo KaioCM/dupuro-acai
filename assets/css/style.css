@@ -1320,9 +1320,21 @@ select:focus-visible,
 .seg-btn.active { background: var(--roxo-700); color: #fff; box-shadow: 0 2px 6px rgba(96,16,80,0.25); }
 .estoque-group { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; margin-bottom: 18px; }
 
+/* Caixa: montagem do copo (acompanhamentos) */
+.acomp-counter { font-size: 12.5px; font-weight: 700; color: var(--verde); background: rgba(139,184,49,0.12); border-radius: 8px; padding: 6px 10px; margin-bottom: 8px; }
+.acomp-counter.over { color: var(--roxo-700); background: rgba(245,179,1,0.18); }
+.acomp-list { display: grid; gap: 4px; max-height: 240px; overflow-y: auto; padding-right: 4px; }
+.acomp-item { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border: 1px solid rgba(96,16,80,0.10); border-radius: 10px; cursor: pointer; font-size: 13.5px; }
+.acomp-item:hover { background: rgba(96,16,80,0.04); }
+.acomp-item input { width: auto; margin: 0; }
+.acomp-item .acomp-nome { flex: 1; }
+.acomp-tag { font-size: 11px; font-weight: 700; color: var(--text-light); text-transform: uppercase; }
+.acomp-tag.pago { color: var(--roxo-700); }
+.cart-item .ci-detail { color: var(--roxo-500); font-style: italic; }
+
 /* Produto varejo/atacado: seletor de tipo e blocos de preço por tipo */
 .tipo-checks { display: flex; flex-wrap: wrap; gap: 10px 22px; }
-.tipo-price-row { display: grid; grid-template-columns: 2fr 1fr; gap: 12px; padding: 10px 12px; border: 1px solid rgba(96,16,80,0.10); border-radius: 12px; background: rgba(96,16,80,0.03); }
+.tipo-price-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; padding: 10px 12px; border: 1px solid rgba(96,16,80,0.10); border-radius: 12px; background: rgba(96,16,80,0.03); }
 
 /* Grade de estoque por sabor (formulário de produto multissabor) */
 .flavor-stock-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; }

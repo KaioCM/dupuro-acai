@@ -38,10 +38,7 @@ var DupuroCaixa = (function () {
   async function getProducts() {
     var result = await client
       .from('products')
-      .select('id, nome, preco, imagem_url, tipo, multissabor, multissabor_incluir_acai, estoque, estoque_ref, estoque_ref_sabor, product_flavor_stock(sabor, estoque)')
-      // Copo e self-service ainda não têm fluxo próprio no PDV (acompanhamentos /
-      // balança) — entram quando a venda de copo for implementada.
-      .eq('modo', 'embalado')
+      .select('id, nome, preco, imagem_url, tipo, multissabor, multissabor_incluir_acai, estoque, estoque_ref, estoque_ref_sabor, modo, acomp_gratis, acomp_extra_preco, product_flavor_stock(sabor, estoque)')
       .order('nome', { ascending: true });
     if (result.error) return [];
     var raw = result.data || [];
@@ -49,6 +46,18 @@ var DupuroCaixa = (function () {
     raw.forEach(function (p) { byId[p.id] = p; });
 
     return raw.map(function (p) {
+      var modo = p.modo || 'embalado';
+      // Copo e self-service não têm estoque por unidade: sempre vendáveis.
+      if (modo !== 'embalado') {
+        return {
+          id: p.id, nome: p.nome, preco: Number(p.preco), imagemUrl: p.imagem_url,
+          tipo: p.tipo || 'varejo', modo: modo,
+          multissabor: false, multissaborIncluirAcai: true,
+          sabores: [], estoqueTotal: null, compartilhado: false,
+          acompGratis: Number(p.acomp_gratis) || 0,
+          acompExtraPreco: Number(p.acomp_extra_preco) || 0
+        };
+      }
       var multissabor = !!p.multissabor;
       var incluiAcai = p.multissabor_incluir_acai !== false;
       var shared = !!p.estoque_ref;
@@ -72,11 +81,26 @@ var DupuroCaixa = (function () {
 
       return {
         id: p.id, nome: p.nome, preco: Number(p.preco), imagemUrl: p.imagem_url,
-        tipo: p.tipo || 'varejo', multissabor: multissabor,
+        tipo: p.tipo || 'varejo', modo: modo, multissabor: multissabor,
         multissaborIncluirAcai: incluiAcai,
         sabores: sabores, estoqueTotal: estoqueTotal,
-        compartilhado: shared
+        compartilhado: shared,
+        acompGratis: 0, acompExtraPreco: 0
       };
+    });
+  }
+
+  // Acompanhamentos ativos (lista da loja, usada na montagem do copo).
+  async function getAcompanhamentos() {
+    var result = await client
+      .from('acompanhamentos')
+      .select('id, nome, tipo, preco, ordem')
+      .eq('ativo', true)
+      .order('ordem', { ascending: true })
+      .order('nome', { ascending: true });
+    if (result.error) return [];
+    return (result.data || []).map(function (a) {
+      return { id: a.id, nome: a.nome, tipo: a.tipo || 'gratuito', preco: Number(a.preco) || 0 };
     });
   }
 
@@ -130,7 +154,10 @@ var DupuroCaixa = (function () {
         produto_id: it.produtoId || null,
         quantidade: it.quantidade || null,
         sabor: it.sabor || null,
-        usa_estoque: true,
+        // Só produto embalado baixa estoque; copo/self-service não têm estoque
+        // por unidade (a policy orders_insert_atendente exige essa coerência).
+        usa_estoque: (it.modo || 'embalado') === 'embalado',
+        detalhes: it.detalhes || null,
         origem: 'loja',
         atendente_id: session.user.id
       };
@@ -179,6 +206,7 @@ var DupuroCaixa = (function () {
     logout: logout,
     requireCaixa: requireCaixa,
     getProducts: getProducts,
+    getAcompanhamentos: getAcompanhamentos,
     getResellers: getResellers,
     registerSale: registerSale,
     getTodaySales: getTodaySales

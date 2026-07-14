@@ -85,7 +85,22 @@
                 <select id="summarySabor"></select>
               </div>
 
-              <div class="field" style="margin-bottom:0;">
+              <!-- Copo: monta os acompanhamentos (N grátis, excedente cobrado) -->
+              <div class="field hidden" id="summaryAcompField">
+                <label>Acompanhamentos</label>
+                <div class="acomp-counter" id="acompCounter" role="status" aria-live="polite">—</div>
+                <div class="acomp-list" id="acompList"></div>
+              </div>
+
+              <!-- Self-service: peso pesado na balança -->
+              <div class="field hidden" id="summaryPesoField">
+                <label for="summaryPeso">Peso (kg)</label>
+                <!-- texto (não number): a balança/atendente usa vírgula decimal -->
+                <input type="text" id="summaryPeso" placeholder="0,450" inputmode="decimal" autocomplete="off">
+                <div class="qty-hint" id="pesoHint" role="status" aria-live="polite">Digite o peso mostrado na balança.</div>
+              </div>
+
+              <div class="field" style="margin-bottom:0;" id="summaryQtyField">
                 <label for="summaryQty">Quantidade</label>
                 <div class="qty-stepper">
                   <button type="button" id="qtyMinus" aria-label="Diminuir quantidade">−</button>
@@ -193,11 +208,16 @@
 
   // ---- Catálogo com disponibilidade derivada do estoque numérico ----
   var productsCache = [];
+  var acompCache = [];
   var selectedProduct = null;
   var cart = [];
 
   function decorate(list) {
     return list.map(function (p) {
+      // Copo e self-service não têm estoque por unidade — sempre disponíveis.
+      if (p.modo !== 'embalado') {
+        return Object.assign({}, p, { sabores: [], emEstoque: true, saboresDisponiveis: [], pedidoMinimo: 1 });
+      }
       var sabores = (p.sabores || []).map(function (s) {
         return { sabor: s.sabor, estoque: s.estoque, disponivel: s.estoque > 0 };
       });
@@ -208,6 +228,39 @@
         pedidoMinimo: 1
       });
     });
+  }
+
+  // Peso digitado (kg). Aceita vírgula (teclado da loja).
+  function getPeso() {
+    var raw = String(document.getElementById('summaryPeso').value).replace(',', '.');
+    var v = parseFloat(raw);
+    return (isNaN(v) || v <= 0) ? null : v;
+  }
+
+  // Acompanhamentos marcados agora (na ordem da lista).
+  function acompSelecionados() {
+    return acompCache.filter(function (a) {
+      var box = document.querySelector('#acompList input[data-acomp="' + a.id + '"]');
+      return box && box.checked;
+    });
+  }
+
+  // Preço de UM copo: preço base + gratuitos além da cota (× preço do extra) +
+  // acompanhamentos pagos (preço próprio de cada um).
+  function copoBreakdown(p) {
+    var marcados = acompSelecionados();
+    var gratuitos = marcados.filter(function (a) { return a.tipo === 'gratuito'; });
+    var pagos = marcados.filter(function (a) { return a.tipo === 'pago'; });
+    var extras = Math.max(0, gratuitos.length - (p.acompGratis || 0));
+    var valorPagos = pagos.reduce(function (s, a) { return s + a.preco; }, 0);
+    return {
+      marcados: marcados,
+      gratuitosMarcados: gratuitos.length,
+      extras: extras,
+      valorExtras: extras * (p.acompExtraPreco || 0),
+      valorPagos: valorPagos,
+      unitario: p.preco + extras * (p.acompExtraPreco || 0) + valorPagos
+    };
   }
 
   var shopCatalog = document.getElementById('shopCatalog');
@@ -224,12 +277,18 @@
 
   function shopCardHtml(p) {
     var oos = !p.emEstoque;
+    var hint;
+    if (oos) hint = '<span class="flavor-hint oos-hint">esgotado</span>';
+    else if (p.modo === 'copo') hint = '<span class="flavor-hint">monte o copo</span>';
+    else if (p.modo === 'peso') hint = '<span class="flavor-hint">pese na balança</span>';
+    else hint = p.multissabor ? '<span class="flavor-hint">escolha o sabor</span>' : '';
+    var icone = p.modo === 'copo' ? '🥤' : (p.modo === 'peso' ? '⚖️' : '🫐');
     return '<button type="button" class="shop-card' + (oos ? ' out-of-stock' : '') + '" data-product-id="' + p.id + '" aria-pressed="false"' + (oos ? ' disabled aria-disabled="true"' : '') + '>' +
-      '<div class="ph">' + (p.imagemUrl ? '<img src="' + p.imagemUrl + '" alt="" loading="lazy">' : '🫐') + '</div>' +
+      '<div class="ph">' + (p.imagemUrl ? '<img src="' + p.imagemUrl + '" alt="" loading="lazy">' : icone) + '</div>' +
       '<div class="body">' +
         '<h4>' + p.nome + '</h4>' +
-        '<div class="price">' + brl(p.preco) + '</div>' +
-        (oos ? '<span class="flavor-hint oos-hint">esgotado</span>' : (p.multissabor ? '<span class="flavor-hint">escolha o sabor</span>' : '')) +
+        '<div class="price">' + brl(p.preco) + (p.modo === 'peso' ? ' / kg' : '') + '</div>' +
+        hint +
       '</div>' +
       '</button>';
   }
@@ -239,12 +298,19 @@
       shopCatalog.innerHTML = '<div class="panel"><div class="empty-state"><div class="icon">🫐</div>Nenhum produto cadastrado.</div></div>';
       return;
     }
-    shopCatalog.innerHTML = ['varejo', 'atacado'].map(function (tipo) {
-      var group = productsCache.filter(function (p) { return (p.tipo || 'varejo') === tipo; });
+    var loja = productsCache.filter(function (p) { return p.modo !== 'embalado'; });
+    var html = '';
+    if (loja.length) {
+      html += '<div class="shop-section-title">🥤 Copo e self-service</div>' +
+        '<div class="shop-grid">' + loja.map(shopCardHtml).join('') + '</div>';
+    }
+    html += ['varejo', 'atacado'].map(function (tipo) {
+      var group = productsCache.filter(function (p) { return p.modo === 'embalado' && (p.tipo || 'varejo') === tipo; });
       if (!group.length) return '';
       return '<div class="shop-section-title">' + (tipo === 'varejo' ? '🛍️' : '📦') + ' ' + TIPO_LABELS[tipo] + '</div>' +
         '<div class="shop-grid">' + group.map(shopCardHtml).join('') + '</div>';
     }).join('');
+    shopCatalog.innerHTML = html;
     shopCatalog.querySelectorAll('.shop-card').forEach(function (card) {
       card.addEventListener('click', function () { selectProduct(card.getAttribute('data-product-id')); });
     });
@@ -253,10 +319,50 @@
   function getQty() { var q = parseInt(summaryQtyInput.value, 10); return isNaN(q) ? null : q; }
 
   function updateTotal() {
-    var qty = getQty();
     var el = document.getElementById('summaryTotal');
-    if (!selectedProduct || !qty || qty < 1 || qty > 99) { el.textContent = '—'; return; }
+    if (!selectedProduct) { el.textContent = '—'; return; }
+
+    if (selectedProduct.modo === 'peso') {
+      var peso = getPeso();
+      el.textContent = peso ? brl(selectedProduct.preco * peso) : '—';
+      return;
+    }
+
+    var qty = getQty();
+    if (!qty || qty < 1 || qty > 99) { el.textContent = '—'; return; }
+
+    if (selectedProduct.modo === 'copo') {
+      var b = copoBreakdown(selectedProduct);
+      var cota = selectedProduct.acompGratis || 0;
+      var counter = document.getElementById('acompCounter');
+      var partes = [b.gratuitosMarcados + ' de ' + cota + ' grátis'];
+      if (b.extras > 0) partes.push('+' + b.extras + ' extra' + (b.extras === 1 ? '' : 's') + ' = ' + brl(b.valorExtras));
+      if (b.valorPagos > 0) partes.push('pagos = ' + brl(b.valorPagos));
+      counter.textContent = partes.join(' · ');
+      counter.classList.toggle('over', b.extras > 0);
+      el.textContent = brl(b.unitario * qty);
+      return;
+    }
+
     el.textContent = brl(selectedProduct.preco * qty);
+  }
+
+  function renderAcompList() {
+    var box = document.getElementById('acompList');
+    if (!acompCache.length) {
+      box.innerHTML = '<div class="qty-hint">Nenhum acompanhamento cadastrado. O admin cadastra na aba Produtos.</div>';
+      return;
+    }
+    box.innerHTML = acompCache.map(function (a) {
+      return '<label class="acomp-item">' +
+        '<input type="checkbox" data-acomp="' + a.id + '">' +
+        '<span class="acomp-nome">' + a.nome + '</span>' +
+        (a.tipo === 'pago' ? '<span class="acomp-tag pago">+' + brl(a.preco) + '</span>' : '<span class="acomp-tag">grátis</span>') +
+        '</label>';
+    }).join('');
+    box.querySelectorAll('input[data-acomp]').forEach(function (i) {
+      i.addEventListener('change', updateTotal);
+    });
   }
 
   function selectProduct(id) {
@@ -272,9 +378,19 @@
     summaryPlaceholder.classList.add('hidden');
     summaryContent.classList.remove('hidden');
 
-    document.getElementById('summaryThumb').innerHTML = selectedProduct.imagemUrl ? '<img src="' + selectedProduct.imagemUrl + '" alt="">' : '🫐';
+    var modo = selectedProduct.modo;
+    var icone = modo === 'copo' ? '🥤' : (modo === 'peso' ? '⚖️' : '🫐');
+    document.getElementById('summaryThumb').innerHTML = selectedProduct.imagemUrl ? '<img src="' + selectedProduct.imagemUrl + '" alt="">' : icone;
     document.getElementById('summaryName').textContent = selectedProduct.nome;
-    document.getElementById('summaryUnit').textContent = brl(selectedProduct.preco) + ' / unidade';
+    document.getElementById('summaryUnit').textContent = brl(selectedProduct.preco) +
+      (modo === 'peso' ? ' / kg' : (modo === 'copo' ? ' / copo' : ' / unidade'));
+
+    // Blocos específicos de cada modo de venda.
+    document.getElementById('summaryAcompField').classList.toggle('hidden', modo !== 'copo');
+    document.getElementById('summaryPesoField').classList.toggle('hidden', modo !== 'peso');
+    document.getElementById('summaryQtyField').classList.toggle('hidden', modo === 'peso');
+    if (modo === 'copo') renderAcompList();
+    if (modo === 'peso') { document.getElementById('summaryPeso').value = ''; }
 
     if (selectedProduct.multissabor) {
       var todos = selectedProduct.sabores || [];
@@ -309,6 +425,7 @@
     updateTotal();
   });
   summaryQtyInput.addEventListener('input', updateTotal);
+  document.getElementById('summaryPeso').addEventListener('input', updateTotal);
 
   function renderCart() {
     var section = document.getElementById('cartSection');
@@ -317,8 +434,12 @@
     if (!cart.length) { section.classList.add('hidden'); return; }
     section.classList.remove('hidden');
     list.innerHTML = cart.map(function (it, i) {
+      var linha = it.modo === 'peso'
+        ? brl(it.preco)
+        : it.quantidade + ' × ' + brl(it.preco) + ' = ' + brl(it.preco * it.quantidade);
       return '<li class="cart-item"><div class="ci-info"><span class="ci-name">' + it.nome + (it.sabor ? ' · ' + it.sabor : '') + '</span>' +
-        '<span class="ci-sub">' + it.quantidade + ' × ' + brl(it.preco) + ' = ' + brl(it.preco * it.quantidade) + '</span></div>' +
+        '<span class="ci-sub">' + linha + '</span>' +
+        (it.sub ? '<span class="ci-sub ci-detail">' + it.sub + '</span>' : '') + '</div>' +
         '<button type="button" class="ci-remove" data-cart-i="' + i + '" aria-label="Remover item">×</button></li>';
     }).join('');
     document.getElementById('cartTotal').textContent = brl(cart.reduce(function (s, it) { return s + it.preco * it.quantidade; }, 0));
@@ -341,17 +462,61 @@
   addBtn.addEventListener('click', function () {
     itemError.classList.remove('show');
     itemError.textContent = 'Confira os dados do item.';
-    var qty = getQty();
-    var sabor = selectedProduct && selectedProduct.multissabor ? summarySabor.value : null;
-    var saborIndisponivel = selectedProduct && selectedProduct.multissabor &&
-      (!sabor || (selectedProduct.saboresDisponiveis || []).indexOf(sabor) === -1);
-    if (!selectedProduct || !qty || qty < 1 || qty > 99 || saborIndisponivel) {
-      itemError.classList.add('show');
+    if (!selectedProduct) { itemError.classList.add('show'); return; }
+    var p = selectedProduct;
+
+    // Self-service: quantidade 1, valor = peso × R$/kg.
+    if (p.modo === 'peso') {
+      var peso = getPeso();
+      if (!peso) {
+        itemError.textContent = 'Digite o peso mostrado na balança.';
+        itemError.classList.add('show');
+        return;
+      }
+      cart.push({
+        productId: p.id, nome: p.nome, modo: 'peso', sabor: null, quantidade: 1,
+        preco: p.preco * peso, pesoKg: peso,
+        sub: peso.toLocaleString('pt-BR', { minimumFractionDigits: 3 }) + ' kg × ' + brl(p.preco) + '/kg',
+        detalhes: { peso_kg: peso, preco_kg: p.preco }
+      });
+      renderCart();
+      deselectProduct();
       return;
     }
-    var existing = cart.filter(function (it) { return it.productId === selectedProduct.id && (it.sabor || null) === (sabor || null); })[0];
+
+    var qty = getQty();
+    if (!qty || qty < 1 || qty > 99) { itemError.classList.add('show'); return; }
+
+    // Copo: preço do copo + excedente de acompanhamentos + acompanhamentos pagos.
+    if (p.modo === 'copo') {
+      var b = copoBreakdown(p);
+      cart.push({
+        productId: p.id, nome: p.nome, modo: 'copo', sabor: null, quantidade: qty,
+        preco: b.unitario,
+        acomps: b.marcados.map(function (a) { return a.nome; }),
+        sub: (b.marcados.length ? b.marcados.map(function (a) { return a.nome; }).join(', ') : 'sem acompanhamentos') +
+             (b.extras > 0 ? ' · +' + b.extras + ' extra' + (b.extras === 1 ? '' : 's') : ''),
+        detalhes: {
+          acompanhamentos: b.marcados.map(function (a) { return { nome: a.nome, tipo: a.tipo, preco: a.preco }; }),
+          gratis_inclusos: p.acompGratis || 0,
+          extras_cobrados: b.extras,
+          extra_unitario: p.acompExtraPreco || 0
+        }
+      });
+      renderCart();
+      deselectProduct();
+      return;
+    }
+
+    // Produto embalado: junta com o item igual que já está na venda.
+    var sabor = p.multissabor ? summarySabor.value : null;
+    var saborIndisponivel = p.multissabor && (!sabor || (p.saboresDisponiveis || []).indexOf(sabor) === -1);
+    if (saborIndisponivel) { itemError.classList.add('show'); return; }
+    var existing = cart.filter(function (it) {
+      return it.modo === 'embalado' && it.productId === p.id && (it.sabor || null) === (sabor || null);
+    })[0];
     if (existing) existing.quantidade = Math.min(99, existing.quantidade + qty);
-    else cart.push({ productId: selectedProduct.id, nome: selectedProduct.nome, preco: selectedProduct.preco, sabor: sabor, quantidade: qty });
+    else cart.push({ productId: p.id, nome: p.nome, modo: 'embalado', preco: p.preco, sabor: sabor, quantidade: qty });
     renderCart();
     deselectProduct();
   });
@@ -392,8 +557,15 @@
       }
     }
     var items = cart.map(function (it) {
-      return { produtoId: it.productId, quantidade: it.quantidade, sabor: it.sabor,
-        itens: it.nome + (it.sabor ? ' - ' + it.sabor : '') + ' x' + it.quantidade, valor: it.preco * it.quantidade };
+      var texto;
+      if (it.modo === 'peso') texto = it.nome + ' ' + it.pesoKg.toLocaleString('pt-BR', { minimumFractionDigits: 3 }) + ' kg';
+      else if (it.modo === 'copo') texto = it.nome + ' x' + it.quantidade + (it.acomps.length ? ' (' + it.acomps.join(', ') + ')' : '');
+      else texto = it.nome + (it.sabor ? ' - ' + it.sabor : '') + ' x' + it.quantidade;
+      return {
+        produtoId: it.productId, quantidade: it.quantidade, sabor: it.sabor,
+        modo: it.modo, detalhes: it.detalhes || null,
+        itens: texto, valor: it.preco * it.quantidade
+      };
     });
     sendBtn.disabled = true; sendBtn.textContent = 'Registrando...';
     var result = await DupuroCaixa.registerSale({ revendedorId: revendedorId }, items);
@@ -453,8 +625,9 @@
   function renderEstoque() {
     var box = document.getElementById('estoqueList');
     if (!productsCache.length) { box.innerHTML = '<div class="empty-state"><div class="icon">📦</div>Nenhum produto.</div>'; return; }
+    // Copo/self-service não entram: não têm estoque por unidade.
     box.innerHTML = ['varejo', 'atacado'].map(function (tipo) {
-      var group = productsCache.filter(function (p) { return (p.tipo || 'varejo') === tipo; });
+      var group = productsCache.filter(function (p) { return p.modo === 'embalado' && (p.tipo || 'varejo') === tipo; });
       if (!group.length) return '';
       return '<div class="shop-section-title">' + (tipo === 'varejo' ? '🛍️' : '📦') + ' ' + TIPO_LABELS[tipo] + '</div>' +
         '<div class="estoque-group">' + group.map(function (p) {
@@ -472,12 +645,14 @@
   }
   document.getElementById('refreshEstoqueBtn').addEventListener('click', async function () {
     productsCache = decorate(await DupuroCaixa.getProducts());
+    acompCache = await DupuroCaixa.getAcompanhamentos();
     renderShop();
     renderEstoque();
   });
 
   // ---- Carga inicial ----
   productsCache = decorate(await DupuroCaixa.getProducts());
+  acompCache = await DupuroCaixa.getAcompanhamentos();
   renderShop();
   renderEstoque();
   loadVendas();
