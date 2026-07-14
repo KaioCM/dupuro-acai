@@ -171,7 +171,7 @@ var DupuroCaixa = (function () {
     var start = new Date(); start.setHours(0, 0, 0, 0);
     var result = await client
       .from('orders')
-      .select('numero, revendedor_id, itens, valor, quantidade, sabor, detalhes, created_at, products(nome, modo)')
+      .select('numero, revendedor_id, produto_id, itens, valor, quantidade, sabor, detalhes, status, cancel_motivo, created_at, products(nome, modo)')
       .eq('origem', 'loja')
       .gte('created_at', start.toISOString())
       .order('created_at', { ascending: false });
@@ -189,19 +189,26 @@ var DupuroCaixa = (function () {
         g = byNum[o.numero] = {
           numero: o.numero,
           hora: o.created_at,
+          revendedorId: o.revendedor_id || null,
           cliente: o.revendedor_id ? (nomeById[o.revendedor_id] || 'Revendedor') : 'Balcão',
-          valor: 0, items: []
+          valor: 0, items: [],
+          cancelada: true, motivo: o.cancel_motivo || null
         };
         ordem.push(g);
       }
+      // A venda só conta como cancelada se TODAS as linhas estiverem canceladas.
+      if (o.status !== 'cancelado') g.cancelada = false;
+      if (o.cancel_motivo && !g.motivo) g.motivo = o.cancel_motivo;
       g.valor += Number(o.valor) || 0;
-      // Item já no formato que a comanda espera (reimpressão do fechamento).
+      // Item já no formato que a comanda e a edição esperam.
       var prod = o.products || {};
       var det = o.detalhes || {};
       g.items.push({
+        produtoId: o.produto_id || null,
         quantidade: o.quantidade, sabor: o.sabor, itens: o.itens, valor: Number(o.valor) || 0,
         nome: prod.nome || o.itens,
         modo: prod.modo || 'embalado',
+        detalhes: o.detalhes || null,
         acompanhamentos: (det.acompanhamentos || []).map(function (a) { return a.nome; }),
         pesoKg: det.peso_kg || null,
         precoKg: det.preco_kg || null
@@ -209,8 +216,36 @@ var DupuroCaixa = (function () {
     });
     // `total` é o nome que a comanda (DupuroPrinter) espera na reimpressão.
     ordem.forEach(function (g) { g.total = g.valor; });
-    var total = ordem.reduce(function (t, g) { return t + g.valor; }, 0);
+    // Vendas canceladas não entram no total do dia.
+    var total = ordem.reduce(function (t, g) { return t + (g.cancelada ? 0 : g.valor); }, 0);
     return { sales: ordem, total: total };
+  }
+
+  // Cancela a venda (mantém o registro como 'cancelado' + motivo). Estoque volta.
+  async function cancelSale(numero, motivo) {
+    var result = await client.rpc('caixa_cancelar_venda', { p_numero: numero, p_motivo: motivo });
+    return { error: result.error };
+  }
+
+  // Substitui os itens da venda (edição), mantendo o mesmo número. rows no mesmo
+  // formato de registerSale (produtoId/quantidade/sabor/itens/valor/modo/detalhes).
+  async function updateSale(numero, header, items, motivo) {
+    if (!items || !items.length) return { error: new Error('Nenhum item na venda') };
+    var rows = items.map(function (it) {
+      return {
+        revendedor_id: header.revendedorId || null,
+        data: null,
+        itens: it.itens,
+        valor: it.valor,
+        produto_id: it.produtoId || null,
+        quantidade: it.quantidade || null,
+        sabor: it.sabor || null,
+        usa_estoque: (it.modo || 'embalado') === 'embalado',
+        detalhes: it.detalhes || null
+      };
+    });
+    var result = await client.rpc('caixa_substituir_venda', { p_numero: numero, p_motivo: motivo, p_rows: rows });
+    return { error: result.error };
   }
 
   return {
@@ -221,7 +256,9 @@ var DupuroCaixa = (function () {
     getAcompanhamentos: getAcompanhamentos,
     getResellers: getResellers,
     registerSale: registerSale,
-    getTodaySales: getTodaySales
+    getTodaySales: getTodaySales,
+    cancelSale: cancelSale,
+    updateSale: updateSale
   };
 
 })();

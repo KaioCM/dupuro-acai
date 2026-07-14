@@ -135,12 +135,20 @@
             </div>
 
             <div id="cartSection" class="hidden">
+              <div id="editBanner" class="edit-banner hidden">
+                ✏️ Editando a venda <strong id="editBannerNum">—</strong>
+                <button type="button" id="cancelEditBtn" class="link-btn">cancelar edição</button>
+              </div>
               <div class="cart-head">🛒 Itens da venda</div>
               <ul class="cart-list" id="cartList"></ul>
               <div class="order-total-row"><span class="lbl">Total</span><span class="val" id="cartTotal">—</span></div>
+              <div class="field hidden" id="editMotivoField" style="margin-top:12px; margin-bottom:0;">
+                <label for="editMotivo">Motivo da alteração</label>
+                <input type="text" id="editMotivo" placeholder="Ex: cliente trocou um item" autocomplete="off">
+              </div>
               <div class="field-note" id="cartError">Não foi possível registrar a venda.</div>
               <button type="button" class="btn btn-primary btn-block" id="sendCartBtn">Registrar venda ✔</button>
-              <p style="font-size:12px; color:var(--text-light); text-align:center; margin-top:12px;">A venda entra como <strong>Entregue</strong> e baixa o estoque na hora.</p>
+              <p style="font-size:12px; color:var(--text-light); text-align:center; margin-top:12px;" id="cartHint">A venda entra como <strong>Entregue</strong> e baixa o estoque na hora.</p>
             </div>
 
             <div id="saleSuccess" class="hidden" style="text-align:center; padding:14px 4px;">
@@ -201,6 +209,23 @@
     </section>
 
   </main>
+</div>
+
+<!-- Modal: motivo do cancelamento -->
+<div class="modal-overlay hidden" id="cancelModal">
+  <div class="modal-card">
+    <h3>Cancelar venda <span id="cancelModalNum">—</span></h3>
+    <p class="subtitle">A venda fica registrada como <strong>cancelada</strong> e o estoque volta. Diga o motivo — a dona consegue ver depois.</p>
+    <div class="field" style="margin-bottom:0;">
+      <label for="cancelMotivo">Motivo do cancelamento</label>
+      <input type="text" id="cancelMotivo" placeholder="Ex: cliente desistiu" autocomplete="off">
+    </div>
+    <div class="field-note" id="cancelModalError">Escreva o motivo (pelo menos 3 letras).</div>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-dark-outline" id="cancelModalClose">Voltar</button>
+      <button type="button" class="btn btn-primary" id="cancelModalConfirm">Cancelar a venda</button>
+    </div>
+  </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -448,8 +473,8 @@
   function renderCart() {
     var section = document.getElementById('cartSection');
     var list = document.getElementById('cartList');
-    sendBtn.textContent = 'Registrar venda' + (cart.length ? ' (' + cart.length + ')' : '') + ' ✔';
-    if (!cart.length) { section.classList.add('hidden'); return; }
+    sendBtn.textContent = (editingSale ? 'Salvar alteração' : 'Registrar venda') + (cart.length ? ' (' + cart.length + ')' : '') + (editingSale ? '' : ' ✔');
+    if (!cart.length && !editingSale) { section.classList.add('hidden'); return; }
     section.classList.remove('hidden');
     list.innerHTML = cart.map(function (it, i) {
       var linha = it.modo === 'peso'
@@ -541,15 +566,18 @@
 
   // ---- Para quem é a venda (balcão x revendedor) ----
   var saleTarget = 'balcao';
+  var editingSale = null; // { numero, revendedorId } quando está editando uma venda
   var resellerField = document.getElementById('resellerField');
   var resellerSelect = document.getElementById('resellerSelect');
-  document.querySelectorAll('.seg-btn').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      document.querySelectorAll('.seg-btn').forEach(function (b) { b.classList.remove('active'); });
-      btn.classList.add('active');
-      saleTarget = btn.getAttribute('data-target');
-      resellerField.classList.toggle('hidden', saleTarget !== 'revendedor');
+  function setTarget(target) {
+    saleTarget = target;
+    document.querySelectorAll('.seg-btn').forEach(function (b) {
+      b.classList.toggle('active', b.getAttribute('data-target') === target);
     });
+    resellerField.classList.toggle('hidden', target !== 'revendedor');
+  }
+  document.querySelectorAll('.seg-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () { setTarget(btn.getAttribute('data-target')); });
   });
 
   DupuroCaixa.getResellers().then(function (resellers) {
@@ -562,9 +590,28 @@
     }).join('');
   });
 
+  // Monta os itens no formato que registerSale/updateSale esperam.
+  function cartToItems() {
+    return cart.map(function (it) {
+      var texto;
+      if (it.modo === 'peso') texto = it.nome + ' ' + it.pesoKg.toLocaleString('pt-BR', { minimumFractionDigits: 3 }) + ' kg';
+      else if (it.modo === 'copo') texto = it.nome + ' x' + it.quantidade + (it.acomps && it.acomps.length ? ' (' + it.acomps.join(', ') + ')' : '');
+      else texto = it.nome + (it.sabor ? ' - ' + it.sabor : '') + ' x' + it.quantidade;
+      return {
+        produtoId: it.productId, quantidade: it.quantidade, sabor: it.sabor,
+        modo: it.modo, detalhes: it.detalhes || null,
+        itens: texto, valor: it.preco * it.quantidade
+      };
+    });
+  }
+
   sendBtn.addEventListener('click', async function () {
     cartError.classList.remove('show');
-    if (!cart.length) return;
+    if (!cart.length) {
+      cartError.textContent = editingSale ? 'A venda precisa de ao menos um item.' : 'Adicione um item à venda.';
+      cartError.classList.add('show');
+      return;
+    }
     var revendedorId = null;
     if (saleTarget === 'revendedor') {
       revendedorId = resellerSelect.value || null;
@@ -574,17 +621,34 @@
         return;
       }
     }
-    var items = cart.map(function (it) {
-      var texto;
-      if (it.modo === 'peso') texto = it.nome + ' ' + it.pesoKg.toLocaleString('pt-BR', { minimumFractionDigits: 3 }) + ' kg';
-      else if (it.modo === 'copo') texto = it.nome + ' x' + it.quantidade + (it.acomps.length ? ' (' + it.acomps.join(', ') + ')' : '');
-      else texto = it.nome + (it.sabor ? ' - ' + it.sabor : '') + ' x' + it.quantidade;
-      return {
-        produtoId: it.productId, quantidade: it.quantidade, sabor: it.sabor,
-        modo: it.modo, detalhes: it.detalhes || null,
-        itens: texto, valor: it.preco * it.quantidade
-      };
-    });
+    var items = cartToItems();
+
+    // --- Edição de uma venda existente ---
+    if (editingSale) {
+      var motivo = document.getElementById('editMotivo').value.trim();
+      if (motivo.length < 3) {
+        cartError.textContent = 'Explique o motivo da alteração (pelo menos 3 letras).';
+        cartError.classList.add('show');
+        return;
+      }
+      sendBtn.disabled = true; sendBtn.textContent = 'Salvando...';
+      var upd = await DupuroCaixa.updateSale(editingSale.numero, { revendedorId: revendedorId }, items, motivo);
+      sendBtn.disabled = false;
+      if (upd.error) {
+        cartError.textContent = upd.error.code === '23514'
+          ? 'Algum item ficou sem estoque suficiente. Revise a venda.'
+          : (upd.error.message || 'Não foi possível salvar a alteração.');
+        cartError.classList.add('show');
+        return;
+      }
+      exitEditMode();
+      productsCache = decorate(await DupuroCaixa.getProducts());
+      renderShop();
+      await loadVendas();
+      goTo('vendas');
+      return;
+    }
+
     sendBtn.disabled = true; sendBtn.textContent = 'Registrando...';
     var result = await DupuroCaixa.registerSale({ revendedorId: revendedorId }, items);
     sendBtn.disabled = false;
@@ -635,6 +699,97 @@
   });
 
   document.getElementById('newSaleBtn').addEventListener('click', deselectProduct);
+
+  // ---- Editar uma venda: recarrega os itens no carrinho ----
+  // Reconstrói cada item do carrinho a partir das linhas da venda (mesmo formato
+  // de quando foi montada), pra atendente ajustar e salvar com um motivo.
+  function saleToCart(sale) {
+    return sale.items.map(function (it) {
+      if (it.modo === 'peso') {
+        var precoKg = it.precoKg || (it.detalhes && it.detalhes.preco_kg) || 0;
+        return {
+          productId: it.produtoId, nome: it.nome, modo: 'peso', sabor: null, quantidade: 1,
+          preco: it.valor, pesoKg: it.pesoKg,
+          sub: Number(it.pesoKg || 0).toLocaleString('pt-BR', { minimumFractionDigits: 3 }) + ' kg × ' + brl(precoKg) + '/kg',
+          detalhes: it.detalhes || { peso_kg: it.pesoKg, preco_kg: precoKg }
+        };
+      }
+      if (it.modo === 'copo') {
+        var qtd = it.quantidade || 1;
+        return {
+          productId: it.produtoId, nome: it.nome, modo: 'copo', sabor: null, quantidade: qtd,
+          preco: it.valor / qtd,
+          acomps: it.acompanhamentos || [],
+          sub: (it.acompanhamentos && it.acompanhamentos.length ? it.acompanhamentos.join(', ') : 'sem acompanhamentos'),
+          detalhes: it.detalhes || null
+        };
+      }
+      var q = it.quantidade || 1;
+      return { productId: it.produtoId, nome: it.nome, modo: 'embalado', preco: it.valor / q, sabor: it.sabor, quantidade: q };
+    });
+  }
+
+  function enterEditMode(sale) {
+    editingSale = { numero: sale.numero, revendedorId: sale.revendedorId || null };
+    cart = saleToCart(sale);
+    setTarget(sale.revendedorId ? 'revendedor' : 'balcao');
+    if (sale.revendedorId) resellerSelect.value = sale.revendedorId;
+    document.getElementById('editBanner').classList.remove('hidden');
+    document.getElementById('editBannerNum').textContent = sale.numero;
+    document.getElementById('editMotivoField').classList.remove('hidden');
+    document.getElementById('editMotivo').value = '';
+    document.getElementById('cartHint').innerHTML = 'Ao salvar, esta venda é <strong>refeita</strong> com os itens abaixo e o estoque é ajustado.';
+    deselectProduct();
+    cartError.classList.remove('show');
+    renderCart();
+    goTo('venda');
+    document.getElementById('cartSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function exitEditMode() {
+    editingSale = null;
+    cart = [];
+    document.getElementById('editBanner').classList.add('hidden');
+    document.getElementById('editMotivoField').classList.add('hidden');
+    document.getElementById('editMotivo').value = '';
+    document.getElementById('cartHint').innerHTML = 'A venda entra como <strong>Entregue</strong> e baixa o estoque na hora.';
+    cartError.classList.remove('show');
+    renderCart();
+  }
+
+  document.getElementById('cancelEditBtn').addEventListener('click', function () {
+    exitEditMode();
+    goTo('vendas');
+  });
+
+  // ---- Cancelar uma venda (modal de motivo) ----
+  var cancelModal = document.getElementById('cancelModal');
+  var pendingCancel = null;
+  function openCancelModal(sale) {
+    pendingCancel = sale.numero;
+    document.getElementById('cancelModalNum').textContent = sale.numero;
+    document.getElementById('cancelMotivo').value = '';
+    document.getElementById('cancelModalError').classList.remove('show');
+    cancelModal.classList.remove('hidden');
+    document.getElementById('cancelMotivo').focus();
+  }
+  function closeCancelModal() { cancelModal.classList.add('hidden'); pendingCancel = null; }
+  document.getElementById('cancelModalClose').addEventListener('click', closeCancelModal);
+  cancelModal.addEventListener('click', function (e) { if (e.target === cancelModal) closeCancelModal(); });
+  document.getElementById('cancelModalConfirm').addEventListener('click', async function () {
+    var motivo = document.getElementById('cancelMotivo').value.trim();
+    var err = document.getElementById('cancelModalError');
+    if (motivo.length < 3) { err.classList.add('show'); return; }
+    var btn = this;
+    btn.disabled = true; btn.textContent = 'Cancelando...';
+    var r = await DupuroCaixa.cancelSale(pendingCancel, motivo);
+    btn.disabled = false; btn.textContent = 'Cancelar a venda';
+    if (r.error) { err.textContent = r.error.message || 'Não foi possível cancelar.'; err.classList.add('show'); return; }
+    closeCancelModal();
+    productsCache = decorate(await DupuroCaixa.getProducts());
+    renderShop();
+    await loadVendas();
+  });
 
   // ---- Impressora da comanda (Sweda / ESC/POS) ----
   // Conectada = comanda sai direto pela porta serial, sem diálogo. Sem conexão,
@@ -705,7 +860,8 @@
 
   async function loadVendas() {
     var data = await DupuroCaixa.getTodaySales();
-    document.getElementById('statVendasCount').textContent = data.sales.length;
+    var validas = data.sales.filter(function (v) { return !v.cancelada; });
+    document.getElementById('statVendasCount').textContent = validas.length;
     document.getElementById('statVendasTotal').textContent = brl(data.total);
     var body = document.getElementById('vendasBody');
     vendasCache = data.sales;
@@ -716,24 +872,39 @@
     body.innerHTML = data.sales.map(function (v) {
       var hora = new Date(v.hora).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
       var itensTxt = v.items.map(function (it) { return it.itens; }).join(', ');
-      return '<tr>' +
-        '<td><strong>' + v.numero + '</strong></td>' +
+      var acoes = v.cancelada
+        ? '<button type="button" class="btn btn-dark-outline btn-sm" data-reimprimir="' + v.numero + '">🖨️</button>'
+        : '<div class="venda-actions">' +
+            '<button type="button" class="btn btn-dark-outline btn-sm" data-editar="' + v.numero + '">Editar</button>' +
+            '<button type="button" class="btn btn-danger-outline btn-sm" data-cancelar="' + v.numero + '">Cancelar</button>' +
+            '<button type="button" class="btn btn-dark-outline btn-sm" data-reimprimir="' + v.numero + '">🖨️</button>' +
+          '</div>';
+      return '<tr' + (v.cancelada ? ' class="venda-cancelada"' : '') + '>' +
+        '<td><strong>' + v.numero + '</strong>' + (v.cancelada ? ' <span class="status-badge cancelado">Cancelada</span>' : '') + '</td>' +
         '<td>' + hora + '</td>' +
         '<td>' + v.cliente + '</td>' +
-        '<td>' + itensTxt + '</td>' +
+        '<td>' + itensTxt + (v.cancelada && v.motivo ? '<span class="venda-motivo">Motivo: ' + v.motivo + '</span>' : '') + '</td>' +
         '<td class="num">' + brl(v.valor) + '</td>' +
-        '<td><button type="button" class="btn btn-dark-outline btn-sm" data-reimprimir="' + v.numero + '">🖨️</button></td>' +
+        '<td>' + acoes + '</td>' +
         '</tr>';
     }).join('');
 
+    function achar(btn, attr) { return vendasCache.filter(function (v) { return v.numero === btn.getAttribute(attr); })[0]; }
+
     body.querySelectorAll('[data-reimprimir]').forEach(function (btn) {
       btn.addEventListener('click', async function () {
-        var venda = vendasCache.filter(function (v) { return v.numero === btn.getAttribute('data-reimprimir'); })[0];
+        var venda = achar(btn, 'data-reimprimir');
         if (!venda) return;
         btn.disabled = true;
         await DupuroPrinter.imprimir(venda);
         btn.disabled = false;
       });
+    });
+    body.querySelectorAll('[data-editar]').forEach(function (btn) {
+      btn.addEventListener('click', function () { var v = achar(btn, 'data-editar'); if (v) enterEditMode(v); });
+    });
+    body.querySelectorAll('[data-cancelar]').forEach(function (btn) {
+      btn.addEventListener('click', function () { var v = achar(btn, 'data-cancelar'); if (v) openCancelModal(v); });
     });
   }
   document.getElementById('refreshVendasBtn').addEventListener('click', loadVendas);

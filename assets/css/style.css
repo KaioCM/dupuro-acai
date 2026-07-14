@@ -1320,6 +1320,24 @@ select:focus-visible,
 .seg-btn.active { background: var(--roxo-700); color: #fff; box-shadow: 0 2px 6px rgba(96,16,80,0.25); }
 .estoque-group { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; margin-bottom: 18px; }
 
+/* Caixa: editar/cancelar venda do dia */
+.venda-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.btn-danger-outline { background: transparent; border: 1.5px solid rgba(214,69,80,0.55); color: #C0392B; }
+.btn-danger-outline:hover { background: rgba(214,69,80,0.10); border-color: #C0392B; }
+tr.venda-cancelada { opacity: 0.72; }
+tr.venda-cancelada td:nth-child(5) { text-decoration: line-through; color: var(--text-light); }
+.venda-motivo { display: block; font-size: 12px; color: #C0392B; margin-top: 3px; }
+.edit-banner { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; background: rgba(245,179,1,0.16); border: 1px solid rgba(245,179,1,0.4); color: var(--roxo-700); border-radius: 12px; padding: 10px 14px; font-size: 13.5px; font-weight: 600; margin-bottom: 14px; }
+.link-btn { background: none; border: none; color: var(--roxo-500); font: inherit; font-weight: 700; text-decoration: underline; cursor: pointer; padding: 0; }
+
+/* Modal genérico (motivo do cancelamento) */
+.modal-overlay { position: fixed; inset: 0; background: rgba(51,18,43,0.5); display: flex; align-items: center; justify-content: center; padding: 20px; z-index: 1000; }
+.modal-card { background: var(--cream, #FFF7EC); border-radius: 18px; padding: 24px; max-width: 420px; width: 100%; box-shadow: 0 20px 60px rgba(51,18,43,0.35); }
+.modal-card h3 { font-family: var(--font-display); color: var(--roxo-700); text-transform: uppercase; margin-bottom: 6px; }
+.modal-card .subtitle { margin-bottom: 16px; }
+.modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 18px; }
+.modal-actions .btn { flex: 0 0 auto; }
+
 /* Caixa: barra da impressora da comanda */
 .printer-bar { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
 .printer-status { display: flex; align-items: center; gap: 12px; }

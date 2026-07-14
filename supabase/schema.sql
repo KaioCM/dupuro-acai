@@ -225,6 +225,9 @@ create table if not exists public.orders (
   --   peso → { peso_kg, preco_kg }
   -- Base para a comanda impressa e, depois, para a nota fiscal.
   detalhes jsonb,
+  -- Motivo do cancelamento de uma venda de loja (migration_022). Fica à vista no
+  -- fechamento do dia; a trilha completa vai em order_audits.
+  cancel_motivo text,
   created_at timestamptz not null default now()
 );
 
@@ -299,6 +302,105 @@ create policy "orders_update_admin" on public.orders
 
 create policy "orders_delete_admin" on public.orders
   for delete using (public.is_admin());
+
+-- ---------- Caixa edita/cancela venda do dia (migration_022) ----------
+-- Trilha durável de alterações/cancelamentos de venda de loja (a dona audita).
+create table if not exists public.order_audits (
+  id bigint generated always as identity primary key,
+  numero text not null,
+  acao text not null check (acao in ('cancelou', 'editou')),
+  motivo text not null,
+  snapshot jsonb,
+  atendente_id uuid references auth.users(id) on delete set null,
+  created_at timestamptz not null default now()
+);
+
+alter table public.order_audits enable row level security;
+
+create policy "order_audits_select_admin" on public.order_audits
+  for select using (public.is_admin());
+
+-- Quem pode mexer numa venda: admin (qualquer data) ou atendente, desde que
+-- TODAS as linhas do número sejam de loja e do dia de hoje (fuso da loja).
+create or replace function public.caixa_pode_mexer(p_numero text)
+returns boolean language sql stable security definer set search_path = public as $$
+  select exists (
+      select 1 from public.orders o where o.numero = p_numero and o.origem = 'loja'
+    ) and (
+      public.is_admin() or (
+        public.is_atendente() and not exists (
+          select 1 from public.orders o
+          where o.numero = p_numero and o.origem = 'loja'
+            and (o.created_at at time zone 'America/Cuiaba')::date
+                <> (now() at time zone 'America/Cuiaba')::date
+        )
+      )
+    );
+$$;
+
+-- Cancela a venda (status 'cancelado' + motivo; estoque volta pelo gatilho).
+create or replace function public.caixa_cancelar_venda(p_numero text, p_motivo text)
+returns void language plpgsql security definer set search_path = public as $$
+declare v_snap jsonb;
+begin
+  if coalesce(length(btrim(p_motivo)), 0) < 3 then
+    raise exception 'Informe o motivo do cancelamento.';
+  end if;
+  if not public.caixa_pode_mexer(p_numero) then
+    raise exception 'Sem permissão para cancelar esta venda.';
+  end if;
+  select jsonb_agg(to_jsonb(o)) into v_snap
+    from public.orders o where o.numero = p_numero and o.origem = 'loja';
+  update public.orders set status = 'cancelado', cancel_motivo = p_motivo
+   where numero = p_numero and origem = 'loja' and status <> 'cancelado';
+  insert into public.order_audits (numero, acao, motivo, snapshot, atendente_id)
+  values (p_numero, 'cancelou', p_motivo, v_snap, auth.uid());
+end;
+$$;
+
+-- Substitui os itens da venda (edição), mantendo o mesmo número. Atômico: o
+-- gatilho devolve o estoque das linhas apagadas e consome o das novas.
+create or replace function public.caixa_substituir_venda(p_numero text, p_motivo text, p_rows jsonb)
+returns void language plpgsql security definer set search_path = public as $$
+declare v_snap jsonb; r jsonb;
+begin
+  if coalesce(length(btrim(p_motivo)), 0) < 3 then
+    raise exception 'Informe o motivo da alteração.';
+  end if;
+  if not public.caixa_pode_mexer(p_numero) then
+    raise exception 'Sem permissão para editar esta venda.';
+  end if;
+  if p_rows is null or jsonb_array_length(p_rows) = 0 then
+    raise exception 'A venda precisa ter ao menos um item.';
+  end if;
+  select jsonb_agg(to_jsonb(o)) into v_snap
+    from public.orders o where o.numero = p_numero and o.origem = 'loja';
+  delete from public.orders where numero = p_numero and origem = 'loja';
+  for r in select * from jsonb_array_elements(p_rows) loop
+    insert into public.orders (
+      revendedor_id, numero, data, itens, valor, status,
+      produto_id, quantidade, sabor, usa_estoque, detalhes, origem, atendente_id
+    ) values (
+      nullif(r->>'revendedor_id', '')::uuid,
+      p_numero,
+      coalesce(nullif(r->>'data', ''), (now() at time zone 'America/Cuiaba')::date::text)::date,
+      r->>'itens', (r->>'valor')::numeric, 'entregue',
+      nullif(r->>'produto_id', '')::bigint,
+      nullif(r->>'quantidade', '')::int,
+      nullif(r->>'sabor', ''),
+      coalesce((r->>'usa_estoque')::boolean, true),
+      case when r ? 'detalhes' then r->'detalhes' else null end,
+      'loja', auth.uid()
+    );
+  end loop;
+  insert into public.order_audits (numero, acao, motivo, snapshot, atendente_id)
+  values (p_numero, 'editou', p_motivo, v_snap, auth.uid());
+end;
+$$;
+
+grant execute on function public.caixa_pode_mexer(text) to authenticated;
+grant execute on function public.caixa_cancelar_venda(text, text) to authenticated;
+grant execute on function public.caixa_substituir_venda(text, text, jsonb) to authenticated;
 
 -- Ajusta o estoque a cada pedido criado/editado/excluído, seja pelo revendedor
 -- ou pelo admin. Decrementa o estoque do SABOR (produto multissabor + sabor no
