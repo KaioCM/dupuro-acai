@@ -1320,6 +1320,10 @@ select:focus-visible,
 .seg-btn.active { background: var(--roxo-700); color: #fff; box-shadow: 0 2px 6px rgba(96,16,80,0.25); }
 .estoque-group { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; margin-bottom: 18px; }
 
+/* Produto varejo/atacado: seletor de tipo e blocos de preço por tipo */
+.tipo-checks { display: flex; flex-wrap: wrap; gap: 10px 22px; }
+.tipo-price-row { display: grid; grid-template-columns: 2fr 1fr; gap: 12px; padding: 10px 12px; border: 1px solid rgba(96,16,80,0.10); border-radius: 12px; background: rgba(96,16,80,0.03); }
+
 /* Grade de estoque por sabor (formulário de produto multissabor) */
 .flavor-stock-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; }
 .flavor-stock-item { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: rgba(96,16,80,0.04); border: 1.5px solid rgba(96,16,80,0.10); border-radius: var(--radius-sm); padding: 8px 12px; margin: 0; }

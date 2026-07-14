@@ -314,7 +314,8 @@ var DupuroAdmin = (function () {
         multissaborIncluirAcai: incluiAcai,
         estoque: Number(p.estoque) || 0, sabores: sabores, estoqueTotal: estoqueTotal,
         pedidoMinimo: Number(p.pedido_minimo) || 1,
-        compartilhado: shared, donoNome: donoNome
+        compartilhado: shared, donoNome: donoNome,
+        estoqueRefId: p.estoque_ref || null, estoqueRefSabor: p.estoque_ref_sabor || null
       };
     });
   }
@@ -382,6 +383,100 @@ var DupuroAdmin = (function () {
     }
     var result = await client.from('products').delete().eq('id', product.id);
     return { error: result.error };
+  }
+
+  // Exclui uma linha de produto por id (usado para remover a linha parceira de um
+  // par varejo/atacado). Não mexe em imagem (é compartilhada com a linha dona).
+  async function deleteProductById(id) {
+    var result = await client.from('products').delete().eq('id', id);
+    return { error: result.error };
+  }
+
+  // ---------- Produto varejo+atacado (estoque compartilhado) ----------
+  // Salva um produto que pode existir como varejo, atacado ou AMBOS. Quando é
+  // "ambos", vira DUAS linhas em products com o MESMO estoque: uma "dona" (guarda
+  // o estoque, estoque_ref null) e uma "parceira" do outro tipo (estoque_ref → dona).
+  // Preço e pedido mínimo são próprios de cada tipo; nome/imagem/multissabor são
+  // compartilhados. Reconcilia criação, edição e conversões (add/remove um tipo),
+  // movendo o estoque de dona quando o tipo que a guardava é desmarcado.
+  //
+  // spec = {
+  //   existing: { ownerId, ownerTipo, partnerId, partnerTipo } | null,
+  //   nome, multissabor, incluirAcai, estoque, flavorEntries,
+  //   varejo: { on, preco, pedidoMinimo }, atacado: { on, preco, pedidoMinimo },
+  //   file, currentImageUrl
+  // }
+  async function saveDualProduct(spec) {
+    var vOn = spec.varejo.on, aOn = spec.atacado.on;
+    if (!vOn && !aOn) return { error: new Error('Selecione varejo, atacado ou ambos.') };
+
+    // Imagem: sobe uma vez e usa nas duas linhas; troca a antiga se veio arquivo novo.
+    var imagemUrl = spec.currentImageUrl || null;
+    if (spec.file) {
+      var path = Date.now() + '-' + spec.file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+      var upload = await client.storage.from('produtos').upload(path, spec.file);
+      if (upload.error) return { error: upload.error };
+      imagemUrl = client.storage.from('produtos').getPublicUrl(path).data.publicUrl;
+      if (spec.currentImageUrl) {
+        var marker = '/produtos/';
+        var idx = spec.currentImageUrl.indexOf(marker);
+        if (idx !== -1) await client.storage.from('produtos').remove([decodeURIComponent(spec.currentImageUrl.substring(idx + marker.length))]);
+      }
+    }
+
+    var ex = spec.existing || {};
+    var byTipo = {};
+    if (ex.ownerTipo) byTipo[ex.ownerTipo] = ex.ownerId;
+    if (ex.partnerTipo) byTipo[ex.partnerTipo] = ex.partnerId;
+
+    // Tipo dono do estoque: mantém o atual se ainda estiver ligado; senão, o que sobrou.
+    var ownerTipo;
+    if (ex.ownerTipo && ((ex.ownerTipo === 'varejo' && vOn) || (ex.ownerTipo === 'atacado' && aOn))) ownerTipo = ex.ownerTipo;
+    else ownerTipo = vOn ? 'varejo' : 'atacado';
+    var partnerTipo = ownerTipo === 'varejo' ? 'atacado' : 'varejo';
+    var partnerOn = ownerTipo === 'varejo' ? aOn : vOn;
+    function td(t) { return t === 'varejo' ? spec.varejo : spec.atacado; }
+
+    // 1) Linha DONA (guarda o estoque). Reaproveita a linha existente do tipo dono
+    //    (pode ser a antiga parceira "promovida" a dona — estoque_ref volta a null).
+    var od = td(ownerTipo);
+    var ownerPayload = {
+      nome: spec.nome, preco: od.preco, imagem_url: imagemUrl,
+      tipo: ownerTipo, multissabor: !!spec.multissabor, multissabor_incluir_acai: !!spec.incluirAcai,
+      estoque: spec.multissabor ? 0 : spec.estoque, pedido_minimo: od.pedidoMinimo || 1,
+      estoque_ref: null, estoque_ref_sabor: null
+    };
+    var ownerId = byTipo[ownerTipo] || null;
+    var res;
+    if (ownerId) res = await client.from('products').update(ownerPayload).eq('id', ownerId).select('id').single();
+    else res = await client.from('products').insert(ownerPayload).select('id').single();
+    if (res.error) return { error: res.error };
+    ownerId = res.data.id;
+    var fs = await saveFlavorStock(ownerId, spec.multissabor ? spec.flavorEntries : []);
+    if (fs.error) return { error: fs.error };
+
+    // 2) Linha PARCEIRA (outro tipo), se ligado — divide o estoque (estoque_ref → dona).
+    var partnerId = byTipo[partnerTipo] || null;
+    if (partnerOn) {
+      var pd = td(partnerTipo);
+      var partnerPayload = {
+        nome: spec.nome, preco: pd.preco, imagem_url: imagemUrl,
+        tipo: partnerTipo, multissabor: !!spec.multissabor, multissabor_incluir_acai: !!spec.incluirAcai,
+        estoque: 0, pedido_minimo: pd.pedidoMinimo || 1,
+        estoque_ref: ownerId, estoque_ref_sabor: null
+      };
+      var pres;
+      if (partnerId) pres = await client.from('products').update(partnerPayload).eq('id', partnerId).select('id').single();
+      else pres = await client.from('products').insert(partnerPayload).select('id').single();
+      if (pres.error) return { error: pres.error };
+      // Parceira nunca guarda estoque próprio (lê o da dona).
+      if (spec.multissabor) { var pfs = await saveFlavorStock(pres.data.id, []); if (pfs.error) return { error: pfs.error }; }
+    } else if (partnerId) {
+      // Tipo parceiro foi desmarcado: remove a linha dele.
+      await client.from('products').delete().eq('id', partnerId);
+    }
+
+    return { error: null, ownerId: ownerId };
   }
 
   // ---------- Cupons ----------
@@ -460,7 +555,9 @@ var DupuroAdmin = (function () {
     getProducts: getProducts,
     createProduct: createProduct,
     updateProduct: updateProduct,
+    saveDualProduct: saveDualProduct,
     deleteProduct: deleteProduct,
+    deleteProductById: deleteProductById,
     saveFlavorStock: saveFlavorStock
   };
 

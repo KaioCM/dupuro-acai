@@ -189,28 +189,33 @@
         </div>
         <form id="productForm" class="order-form-grid">
           <input type="hidden" id="productEditingId">
-          <div class="field" style="margin-bottom:0;">
+          <div class="field" style="margin-bottom:0; grid-column:1/-1;">
             <label for="productNome">Nome do produto</label>
-            <input type="text" id="productNome" placeholder="Ex: Açaí Puro 10L">
+            <input type="text" id="productNome" placeholder="Ex: Caixa de 1 Litro">
           </div>
-          <div class="field" style="margin-bottom:0;">
-            <label for="productPreco">Preço (R$)</label>
-            <input type="number" id="productPreco" min="0" step="0.01" placeholder="190.00">
+          <div class="field" style="margin-bottom:0; grid-column:1/-1;">
+            <label>Vender como</label>
+            <div class="tipo-checks">
+              <label class="checkbox-line"><input type="checkbox" id="productTipoVarejo" checked><span>🛍️ Varejo</span></label>
+              <label class="checkbox-line"><input type="checkbox" id="productTipoAtacado"><span>📦 Atacado</span></label>
+            </div>
+            <div class="field-note-inline">Marque os dois para vender o mesmo produto nos dois preços — eles dividem o mesmo estoque.</div>
           </div>
-          <div class="field" style="margin-bottom:0;">
-            <label for="productTipo">Tipo</label>
-            <select id="productTipo">
-              <option value="varejo">Varejo</option>
-              <option value="atacado">Atacado</option>
-            </select>
+          <div class="field hidden" id="productVarejoBlock" style="margin-bottom:0; grid-column:1/-1;">
+            <div class="tipo-price-row">
+              <div class="field" style="margin-bottom:0;"><label for="productPrecoVarejo">Preço varejo (R$)</label><input type="number" id="productPrecoVarejo" min="0" step="0.01" placeholder="25.00"></div>
+              <div class="field" style="margin-bottom:0;"><label for="productMinVarejo">Pedido mín. varejo</label><input type="number" id="productMinVarejo" min="1" max="99" step="1" value="1"></div>
+            </div>
+          </div>
+          <div class="field hidden" id="productAtacadoBlock" style="margin-bottom:0; grid-column:1/-1;">
+            <div class="tipo-price-row">
+              <div class="field" style="margin-bottom:0;"><label for="productPrecoAtacado">Preço atacado (R$)</label><input type="number" id="productPrecoAtacado" min="0" step="0.01" placeholder="20.80"></div>
+              <div class="field" style="margin-bottom:0;"><label for="productMinAtacado">Pedido mín. atacado</label><input type="number" id="productMinAtacado" min="1" max="99" step="1" value="1"></div>
+            </div>
           </div>
           <div class="field" style="margin-bottom:0;" id="productEstoqueField">
             <label for="productEstoque">Estoque</label>
             <input type="number" id="productEstoque" min="0" step="1" placeholder="0">
-          </div>
-          <div class="field" style="margin-bottom:0;">
-            <label for="productPedidoMinimo">Pedido mínimo</label>
-            <input type="number" id="productPedidoMinimo" min="1" max="99" step="1" placeholder="1">
           </div>
           <div class="field" style="margin-bottom:0;">
             <label for="productImagem" id="productImagemLabel">Imagem (opcional)</label>
@@ -1221,25 +1226,42 @@
     if (!productsCache.length) {
       grid.innerHTML = '<div class="empty-state" style="grid-column: 1/-1;"><div class="icon">🧺</div>Nenhum produto cadastrado ainda.</div>';
     } else {
-      grid.innerHTML = productsCache.map(function (p) {
+      var precoBRL = function (v) { return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); };
+      grid.innerHTML = productCards().map(function (card) {
+        var p = card.main, partner = card.partner;
+        var tipoBadge = function (t) { return '<span class="status-badge ' + (t === 'atacado' ? 'processando' : 'entregue') + '">' + (t === 'atacado' ? 'Atacado' : 'Varejo') + '</span>'; };
+        var badges;
+        if (partner) badges = tipoBadge('varejo') + ' ' + tipoBadge('atacado');
+        else badges = tipoBadge(p.tipo) + (p.compartilhado ? ' <span class="status-badge" style="background:rgba(96,16,80,0.1);color:var(--roxo-700);">🔗 ' + (p.donoNome || 'compartilhado') + '</span>' : '');
+        // Preço(s)
+        var priceHtml;
+        if (partner) {
+          var v = p.tipo === 'varejo' ? p : partner, a = p.tipo === 'atacado' ? p : partner;
+          priceHtml = '<div class="price">Varejo ' + precoBRL(v.preco) + ' · Atacado ' + precoBRL(a.preco) + '</div>';
+        } else priceHtml = '<div class="price">' + precoBRL(p.preco) + '</div>';
+        // Pedido mínimo (badge por tipo quando é par)
+        var minHtml = '';
+        if (partner) {
+          var vv = p.tipo === 'varejo' ? p : partner, aa = p.tipo === 'atacado' ? p : partner;
+          if (vv.pedidoMinimo > 1) minHtml += ' <span class="status-badge processando">Mín. varejo ' + vv.pedidoMinimo + '</span>';
+          if (aa.pedidoMinimo > 1) minHtml += ' <span class="status-badge processando">Mín. atacado ' + aa.pedidoMinimo + '</span>';
+        } else if (p.pedidoMinimo > 1) minHtml = ' <span class="status-badge processando">Pedido mín. ' + p.pedidoMinimo + '</span>';
+        var stockHtml = (function () {
+          var total = p.estoqueTotal;
+          if (p.multissabor) {
+            var disp = p.sabores.filter(function (s) { return s.estoque > 0; }).length;
+            return ' <span class="status-badge ' + (total > 0 ? 'aprovado' : 'cancelado') + '">' + (total > 0 ? total + ' un · ' + disp + ' sabor' + (disp === 1 ? '' : 'es') : 'Esgotado') + '</span>';
+          }
+          return ' <span class="status-badge ' + (total > 0 ? 'aprovado' : 'cancelado') + '">' + (total > 0 ? total + ' em estoque' : 'Esgotado') + '</span>';
+        })();
         return '<div class="admin-product-card">' +
           '<div class="ph">' + (p.imagemUrl ? '<img src="' + p.imagemUrl + '" alt="' + p.nome + '" loading="lazy">' : '🫐') + '</div>' +
           '<div class="body">' +
-            '<span class="status-badge ' + (p.tipo === 'atacado' ? 'processando' : 'entregue') + '">' + (p.tipo === 'atacado' ? 'Atacado' : 'Varejo') + '</span>' +
+            badges +
             (p.multissabor ? ' <span class="status-badge enviado">Sabor no pedido</span>' : '') +
-            (p.pedidoMinimo > 1 ? ' <span class="status-badge processando">Pedido mín. ' + p.pedidoMinimo + '</span>' : '') +
-            (p.compartilhado ? ' <span class="status-badge" style="background:rgba(96,16,80,0.1);color:var(--roxo-700);">🔗 ' + (p.donoNome || 'compartilhado') + '</span>' : '') +
-            (function () {
-              var total = p.estoqueTotal;
-              if (p.multissabor) {
-                var disp = p.sabores.filter(function (s) { return s.estoque > 0; }).length;
-                return ' <span class="status-badge ' + (total > 0 ? 'aprovado' : 'cancelado') + '">' +
-                  (total > 0 ? total + ' un · ' + disp + ' sabor' + (disp === 1 ? '' : 'es') : 'Esgotado') + '</span>';
-              }
-              return ' <span class="status-badge ' + (total > 0 ? 'aprovado' : 'cancelado') + '">' + (total > 0 ? total + ' em estoque' : 'Esgotado') + '</span>';
-            })() +
+            minHtml + stockHtml +
             '<h4>' + p.nome + '</h4>' +
-            '<div class="price">' + p.preco.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) + '</div>' +
+            priceHtml +
             '<div class="admin-table-actions">' +
               '<button class="btn btn-dark-outline btn-sm" data-edit-product="' + p.id + '">Editar</button>' +
               '<button class="btn btn-dark-outline btn-sm" data-delete-product="' + p.id + '">Excluir</button>' +
@@ -1250,33 +1272,38 @@
 
       grid.querySelectorAll('[data-edit-product]').forEach(function (btn) {
         btn.addEventListener('click', function () {
-          var product = productsCache.find(function (p) { return String(p.id) === btn.getAttribute('data-edit-product'); });
-          if (!product) return;
-          editingProductId = product.id;
-          document.getElementById('productEditingId').value = product.id;
-          document.getElementById('productFormTitle').textContent = 'Editar produto';
-          document.getElementById('productFormSubtitle').textContent = 'Altere os dados e salve — deixe a imagem em branco para manter a atual';
-          document.getElementById('productSubmitBtn').textContent = 'Salvar alterações';
-          document.getElementById('productEditCancel').classList.remove('hidden');
-          document.getElementById('productNome').value = product.nome;
-          document.getElementById('productPreco').value = product.preco;
-          document.getElementById('productTipo').value = product.tipo || 'varejo';
-          document.getElementById('productEstoque').value = product.estoque;
-          document.getElementById('productPedidoMinimo').value = product.pedidoMinimo || 1;
-          document.getElementById('productMultissabor').checked = !!product.multissabor;
-          document.getElementById('productIncluirAcai').checked = product.multissaborIncluirAcai !== false;
-          syncProductStockUI(product);
-          document.getElementById('productImagem').value = '';
+          var p = productsCache.find(function (x) { return String(x.id) === btn.getAttribute('data-edit-product'); });
+          if (!p) return;
+          if (p.estoqueRefId != null) {
+            var owner = productsCache.find(function (x) { return x.id === p.estoqueRefId; });
+            var cl = owner ? classifyOwner(owner) : null;
+            if (cl && cl.kind === 'pair' && cl.partner.id === p.id) openDualEditor(owner, p);
+            else openLegacyEditor(p, true);
+          } else {
+            var c = classifyOwner(p);
+            if (c.kind === 'pair') openDualEditor(p, c.partner);
+            else if (c.kind === 'single') openDualEditor(p, null);
+            else openLegacyEditor(p, false);
+          }
           document.querySelector('#productForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
         });
       });
 
       grid.querySelectorAll('[data-delete-product]').forEach(function (btn) {
         btn.addEventListener('click', async function () {
+          var p = productsCache.find(function (x) { return String(x.id) === btn.getAttribute('data-delete-product'); });
+          if (!p) return;
+          var partner = null;
+          if (p.estoqueRefId == null) { var c = classifyOwner(p); if (c.kind === 'pair') partner = c.partner; }
+          var msg = partner
+            ? 'Excluir "' + p.nome + '" (varejo e atacado)? As duas versões serão removidas.'
+            : 'Excluir "' + p.nome + '"?';
+          if (!window.confirm(msg)) return;
           btn.disabled = true;
-          var product = productsCache.find(function (p) { return String(p.id) === btn.getAttribute('data-delete-product'); });
-          if (product) await DupuroAdmin.deleteProduct(product);
-          if (editingProductId === (product && product.id)) resetProductForm();
+          if (partner) await DupuroAdmin.deleteProductById(partner.id);
+          if (p.estoqueRefId == null) await DupuroAdmin.deleteProduct(p);
+          else await DupuroAdmin.deleteProductById(p.id);
+          if (editingProductId === p.id || editingPartnerId === p.id) resetProductForm();
           await renderProducts();
           populateProductSelect();
         });
@@ -1286,27 +1313,143 @@
     renderStockChart();
   }
 
+  // Estado da edição de produto. editingProductId = linha DONA do estoque (ou a
+  // única linha no modo complexo). editingPartnerId = a outra linha do par
+  // varejo/atacado. editingComplex = edição de um compartilhamento "especial"
+  // (sabor-específico ou dono com vários referenciadores) — não reestrutura.
   var editingProductId = null;
+  var editingPartnerId = null;
+  var editingComplex = false;
+  var editingReferrer = false;
+  var editingImageUrl = null;
+
+  // Referenciadores de estoque de uma linha (quem tem estoque_ref = id dela).
+  function productReferrers(ownerId) {
+    return productsCache.filter(function (x) { return x.estoqueRefId === ownerId; });
+  }
+  // Classifica uma linha DONA (estoque_ref null): 'single' (só ela), 'pair'
+  // (varejo↔atacado simples do mesmo produto, dividem estoque) ou 'complex'
+  // (compartilhamento especial que não deve ser mexido pela UI de "ambos").
+  function classifyOwner(p) {
+    var refs = productReferrers(p.id);
+    if (!refs.length) return { kind: 'single', owner: p };
+    if (refs.length === 1) {
+      var r = refs[0];
+      if (!r.estoqueRefSabor && r.multissabor === p.multissabor && r.tipo !== p.tipo &&
+          (p.tipo === 'varejo' || p.tipo === 'atacado') && (r.tipo === 'varejo' || r.tipo === 'atacado')) {
+        return { kind: 'pair', owner: p, partner: r };
+      }
+    }
+    return { kind: 'complex', owner: p };
+  }
+  // Monta a lista de cards do catálogo: um card por produto lógico. A linha
+  // parceira de um par simples não vira card próprio (aparece no card do dono).
+  function productCards() {
+    var cards = [];
+    productsCache.forEach(function (p) {
+      if (p.estoqueRefId != null) {
+        var owner = productsCache.find(function (x) { return x.id === p.estoqueRefId; });
+        if (owner) { var cl = classifyOwner(owner); if (cl.kind === 'pair' && cl.partner.id === p.id) return; }
+        cards.push({ main: p });
+        return;
+      }
+      var c = classifyOwner(p);
+      cards.push(c.kind === 'pair' ? { main: p, partner: c.partner } : { main: p });
+    });
+    return cards;
+  }
+
+  function setEditHeader(titulo, subtitulo) {
+    document.getElementById('productFormTitle').textContent = titulo;
+    document.getElementById('productFormSubtitle').textContent = subtitulo;
+    document.getElementById('productSubmitBtn').textContent = 'Salvar alterações';
+    document.getElementById('productEditCancel').classList.remove('hidden');
+  }
+  function setTipoChecks(varejoOn, atacadoOn, disabled) {
+    var v = document.getElementById('productTipoVarejo'), a = document.getElementById('productTipoAtacado');
+    v.checked = varejoOn; a.checked = atacadoOn;
+    v.disabled = !!disabled; a.disabled = !!disabled;
+  }
+  function fillTipoPrices(varejoRow, atacadoRow) {
+    document.getElementById('productPrecoVarejo').value = varejoRow ? varejoRow.preco : '';
+    document.getElementById('productMinVarejo').value = varejoRow ? (varejoRow.pedidoMinimo || 1) : 1;
+    document.getElementById('productPrecoAtacado').value = atacadoRow ? atacadoRow.preco : '';
+    document.getElementById('productMinAtacado').value = atacadoRow ? (atacadoRow.pedidoMinimo || 1) : 1;
+  }
+
+  // Editor de produto varejo/atacado com estoque compartilhado (produto simples
+  // ou par). owner = dona do estoque; partner = a outra versão (ou null).
+  function openDualEditor(owner, partner) {
+    editingProductId = owner.id;
+    editingPartnerId = partner ? partner.id : null;
+    editingComplex = false;
+    editingReferrer = false;
+    editingImageUrl = owner.imagemUrl || null;
+    document.getElementById('productEditingId').value = owner.id;
+    setEditHeader('Editar produto', 'Altere os dados e salve — deixe a imagem em branco para manter a atual');
+    document.getElementById('productNome').value = owner.nome;
+    var varejoRow = owner.tipo === 'varejo' ? owner : (partner && partner.tipo === 'varejo' ? partner : null);
+    var atacadoRow = owner.tipo === 'atacado' ? owner : (partner && partner.tipo === 'atacado' ? partner : null);
+    setTipoChecks(!!varejoRow, !!atacadoRow, false);
+    fillTipoPrices(varejoRow, atacadoRow);
+    document.getElementById('productMultissabor').checked = !!owner.multissabor;
+    document.getElementById('productIncluirAcai').checked = owner.multissaborIncluirAcai !== false;
+    document.getElementById('productEstoque').value = owner.estoque;
+    document.getElementById('productImagem').value = '';
+    syncTipoBlocks();
+    syncProductStockUI();
+  }
+
+  // Editor "legado" de UMA linha de um compartilhamento especial (não deixa
+  // reestruturar tipos — só edita nome/preço/mín./estoque daquela linha).
+  function openLegacyEditor(p, isReferrer) {
+    editingProductId = p.id;
+    editingPartnerId = null;
+    editingComplex = true;
+    editingReferrer = !!isReferrer;
+    editingImageUrl = p.imagemUrl || null;
+    document.getElementById('productEditingId').value = p.id;
+    setEditHeader('Editar produto', 'Compartilhamento especial — edite nome, preço, mínimo e (se for a linha dona) o estoque');
+    document.getElementById('productNome').value = p.nome;
+    setTipoChecks(p.tipo === 'varejo', p.tipo === 'atacado', true);
+    fillTipoPrices(p.tipo === 'varejo' ? p : null, p.tipo === 'atacado' ? p : null);
+    document.getElementById('productMultissabor').checked = !!p.multissabor;
+    document.getElementById('productIncluirAcai').checked = p.multissaborIncluirAcai !== false;
+    document.getElementById('productEstoque').value = p.estoque;
+    document.getElementById('productImagem').value = '';
+    syncTipoBlocks();
+    syncProductStockUI();
+  }
 
   function resetProductForm() {
     editingProductId = null;
+    editingPartnerId = null;
+    editingComplex = false;
+    editingReferrer = false;
+    editingImageUrl = null;
     document.getElementById('productEditingId').value = '';
     document.getElementById('productFormTitle').textContent = 'Novo produto';
-    document.getElementById('productFormSubtitle').textContent = 'Nome, preço e uma foto opcional';
+    document.getElementById('productFormSubtitle').textContent = 'Nome, preço(s) e uma foto opcional';
     document.getElementById('productSubmitBtn').textContent = 'Adicionar produto';
     document.getElementById('productEditCancel').classList.add('hidden');
     document.getElementById('productNome').value = '';
-    document.getElementById('productPreco').value = '';
-    document.getElementById('productTipo').value = 'varejo';
+    setTipoChecks(true, false, false);
+    fillTipoPrices(null, null);
     document.getElementById('productEstoque').value = '0';
-    document.getElementById('productPedidoMinimo').value = '1';
     document.getElementById('productMultissabor').checked = false;
     document.getElementById('productIncluirAcai').checked = true;
     document.getElementById('productImagem').value = '';
-    syncProductStockUI(null);
+    syncTipoBlocks();
+    syncProductStockUI();
   }
 
   document.getElementById('productEditCancel').addEventListener('click', resetProductForm);
+
+  // Mostra os blocos de preço/mínimo conforme os tipos marcados.
+  function syncTipoBlocks() {
+    document.getElementById('productVarejoBlock').classList.toggle('hidden', !document.getElementById('productTipoVarejo').checked);
+    document.getElementById('productAtacadoBlock').classList.toggle('hidden', !document.getElementById('productTipoAtacado').checked);
+  }
 
   // Sabores aplicáveis a um produto multissabor (Açaí só se "incluir açaí").
   function applicableFlavors(incluirAcai) {
@@ -1323,15 +1466,20 @@
     return map;
   }
 
+  function currentEditingProduct() {
+    return editingProductId ? productsCache.find(function (p) { return p.id === editingProductId; }) : null;
+  }
+
   // Mostra estoque único (produto comum) OU a grade por sabor (multissabor), e
-  // (re)constrói os inputs de sabor. Se o produto compartilha estoque de outro,
-  // esconde tudo isso e mostra só o aviso — o estoque é gerenciado no dono.
-  function syncProductStockUI(product) {
-    var shared = !!(product && product.compartilhado);
+  // (re)constrói os inputs de sabor. No modo compartilhamento-especial de uma
+  // linha referenciadora, esconde tudo e mostra só o aviso (estoque vive na dona).
+  function syncProductStockUI() {
+    var product = currentEditingProduct();
+    var shared = editingComplex && editingReferrer;
     var multi = document.getElementById('productMultissabor').checked;
     var incluirAcai = document.getElementById('productIncluirAcai').checked;
     document.getElementById('productSharedStockNote').classList.toggle('hidden', !shared);
-    if (shared) document.getElementById('productSharedOwner').textContent = product.donoNome || 'produto de varejo';
+    if (shared) document.getElementById('productSharedOwner').textContent = (product && product.donoNome) || 'a linha dona';
     document.getElementById('productEstoqueField').classList.toggle('hidden', shared || multi);
     document.getElementById('productIncluirAcaiField').classList.toggle('hidden', !multi);
     document.getElementById('productFlavorStockField').classList.toggle('hidden', shared || !multi);
@@ -1348,16 +1496,10 @@
     }).join('');
   }
 
-  function currentEditingProduct() {
-    return editingProductId ? productsCache.find(function (p) { return p.id === editingProductId; }) : null;
-  }
-
-  document.getElementById('productMultissabor').addEventListener('change', function () {
-    syncProductStockUI(currentEditingProduct());
-  });
-  document.getElementById('productIncluirAcai').addEventListener('change', function () {
-    syncProductStockUI(currentEditingProduct());
-  });
+  document.getElementById('productTipoVarejo').addEventListener('change', syncTipoBlocks);
+  document.getElementById('productTipoAtacado').addEventListener('change', syncTipoBlocks);
+  document.getElementById('productMultissabor').addEventListener('change', syncProductStockUI);
+  document.getElementById('productIncluirAcai').addEventListener('change', syncProductStockUI);
 
   function populateProductSelect() {
     var select = document.getElementById('orderProduto');
@@ -1381,58 +1523,89 @@
     updateOrderSaborField();
   }
 
+  function clampMin(v) { var n = parseInt(v, 10); if (isNaN(n) || n < 1) n = 1; if (n > 99) n = 99; return n; }
+
   document.getElementById('productForm').addEventListener('submit', async function (e) {
     e.preventDefault();
     var errorNote = document.getElementById('productError');
     errorNote.classList.remove('show');
+    errorNote.textContent = 'Não foi possível salvar o produto. Confira os dados.';
 
     var nome = document.getElementById('productNome').value.trim();
-    var preco = parseFloat(document.getElementById('productPreco').value);
-    var tipo = document.getElementById('productTipo').value;
     var multissabor = document.getElementById('productMultissabor').checked;
     var incluirAcai = document.getElementById('productIncluirAcai').checked;
-    var pedidoMinimo = parseInt(document.getElementById('productPedidoMinimo').value, 10);
-    if (isNaN(pedidoMinimo) || pedidoMinimo < 1) pedidoMinimo = 1;
-    if (pedidoMinimo > 99) pedidoMinimo = 99;
-    // Produto que compartilha estoque de outro não edita estoque aqui.
-    var editingProd = editingProductId ? productsCache.find(function (p) { return p.id === editingProductId; }) : null;
-    var isShared = !!(editingProd && editingProd.compartilhado);
-    // Produto comum usa o estoque único; multissabor usa o estoque por sabor.
+    var vOn = document.getElementById('productTipoVarejo').checked;
+    var aOn = document.getElementById('productTipoAtacado').checked;
+    var precoVarejo = parseFloat(document.getElementById('productPrecoVarejo').value);
+    var precoAtacado = parseFloat(document.getElementById('productPrecoAtacado').value);
+    var minVarejo = clampMin(document.getElementById('productMinVarejo').value);
+    var minAtacado = clampMin(document.getElementById('productMinAtacado').value);
+    var fileInput = document.getElementById('productImagem');
+    var file = fileInput.files.length ? fileInput.files[0] : null;
+
+    // Estoque vem do formulário; no modo compartilhamento-especial referenciador
+    // o estoque vive na linha dona e não é editado aqui.
+    var stockLocked = editingComplex && editingReferrer;
     var estoque = multissabor ? 0 : parseInt(document.getElementById('productEstoque').value, 10);
     var flavorEntries = [];
-    if (multissabor && !isShared) {
+    if (multissabor && !stockLocked) {
       document.querySelectorAll('#productFlavorGrid input[data-sabor]').forEach(function (inp) {
         var v = parseInt(inp.value, 10);
         flavorEntries.push({ sabor: inp.getAttribute('data-sabor'), estoque: (isNaN(v) || v < 0) ? 0 : v });
       });
     }
-    var fileInput = document.getElementById('productImagem');
-    var file = fileInput.files.length ? fileInput.files[0] : null;
 
-    if (!nome || isNaN(preco) || preco < 0 || (!multissabor && !isShared && (isNaN(estoque) || estoque < 0))) {
+    // Validação
+    if (!nome || (!vOn && !aOn) ||
+        (vOn && (isNaN(precoVarejo) || precoVarejo < 0)) ||
+        (aOn && (isNaN(precoAtacado) || precoAtacado < 0)) ||
+        (!multissabor && !stockLocked && (isNaN(estoque) || estoque < 0))) {
       errorNote.classList.add('show');
       return;
     }
 
+    var isEditing = !!editingProductId;
     var submitBtn = document.getElementById('productSubmitBtn');
     submitBtn.disabled = true;
     submitBtn.textContent = 'Salvando...';
-    // Produto compartilhado mantém o estoque atual do banco (não sobrescreve).
-    var estoquePayload = isShared ? editingProd.estoque : estoque;
-    var result = editingProductId
-      ? await DupuroAdmin.updateProduct(productsCache.find(function (p) { return p.id === editingProductId; }), nome, preco, tipo, multissabor, incluirAcai, estoquePayload, pedidoMinimo, file)
-      : await DupuroAdmin.createProduct(nome, preco, file, tipo, multissabor, incluirAcai, estoque, pedidoMinimo);
 
-    // Salva o estoque por sabor (multissabor) ou limpa as linhas de sabor. NUNCA
-    // mexe em estoque de produto compartilhado (o estoque vive no dono).
-    if (!result.error && result.id && !isShared) {
-      var fsRes = await DupuroAdmin.saveFlavorStock(result.id, multissabor ? flavorEntries : []);
-      if (fsRes.error) result = fsRes;
+    var result;
+    if (editingComplex) {
+      // Compartilhamento especial: edita só a linha atual, sem reestruturar tipos.
+      var p = currentEditingProduct();
+      var tipo = p.tipo;
+      var preco = tipo === 'varejo' ? precoVarejo : precoAtacado;
+      var pedidoMinimo = tipo === 'varejo' ? minVarejo : minAtacado;
+      var estoquePayload = stockLocked ? p.estoque : estoque;
+      result = await DupuroAdmin.updateProduct(p, nome, preco, tipo, multissabor, incluirAcai, estoquePayload, pedidoMinimo, file);
+      if (!result.error && result.id && !stockLocked) {
+        var fsRes = await DupuroAdmin.saveFlavorStock(result.id, multissabor ? flavorEntries : []);
+        if (fsRes.error) result = fsRes;
+      }
+    } else {
+      // Produto simples ou par varejo/atacado com estoque compartilhado.
+      var existing = null;
+      if (editingProductId) {
+        var ownerRow = productsCache.find(function (x) { return x.id === editingProductId; });
+        var partnerRow = editingPartnerId ? productsCache.find(function (x) { return x.id === editingPartnerId; }) : null;
+        existing = {
+          ownerId: ownerRow.id, ownerTipo: ownerRow.tipo,
+          partnerId: partnerRow ? partnerRow.id : null, partnerTipo: partnerRow ? partnerRow.tipo : null
+        };
+      }
+      result = await DupuroAdmin.saveDualProduct({
+        existing: existing,
+        nome: nome, multissabor: multissabor, incluirAcai: incluirAcai,
+        estoque: estoque, flavorEntries: flavorEntries,
+        varejo: { on: vOn, preco: precoVarejo, pedidoMinimo: minVarejo },
+        atacado: { on: aOn, preco: precoAtacado, pedidoMinimo: minAtacado },
+        file: file, currentImageUrl: editingImageUrl
+      });
     }
-    submitBtn.disabled = false;
 
+    submitBtn.disabled = false;
     if (result.error) {
-      submitBtn.textContent = editingProductId ? 'Salvar alterações' : 'Adicionar produto';
+      submitBtn.textContent = isEditing ? 'Salvar alterações' : 'Adicionar produto';
       errorNote.classList.add('show');
       return;
     }
@@ -1916,6 +2089,7 @@
 
   // ---- Carga inicial ----
   document.getElementById('orderData').value = todayIso();
+  resetProductForm();
   await renderOverview();
   await renderPending();
   await renderResellers();
