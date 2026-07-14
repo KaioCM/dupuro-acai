@@ -39,6 +39,9 @@ var DupuroCaixa = (function () {
     var result = await client
       .from('products')
       .select('id, nome, preco, imagem_url, tipo, multissabor, multissabor_incluir_acai, estoque, estoque_ref, estoque_ref_sabor, product_flavor_stock(sabor, estoque)')
+      // Copo e self-service ainda não têm fluxo próprio no PDV (acompanhamentos /
+      // balança) — entram quando a venda de copo for implementada.
+      .eq('modo', 'embalado')
       .order('nome', { ascending: true });
     if (result.error) return [];
     var raw = result.data || [];

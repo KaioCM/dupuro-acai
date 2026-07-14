@@ -194,6 +194,32 @@
             <input type="text" id="productNome" placeholder="Ex: Caixa de 1 Litro">
           </div>
           <div class="field" style="margin-bottom:0; grid-column:1/-1;">
+            <label for="productModo">Tipo de venda</label>
+            <select id="productModo">
+              <option value="embalado">📦 Produto embalado (caixa, pote, bebida)</option>
+              <option value="copo">🥤 Copo / tigela com acompanhamentos (loja)</option>
+              <option value="peso">⚖️ Self-service por peso (loja)</option>
+            </select>
+            <div class="field-note-inline">Copo e self-service são vendidos só no balcão (caixa) — não aparecem para o revendedor.</div>
+          </div>
+          <div class="field hidden" id="productStoreBlock" style="margin-bottom:0; grid-column:1/-1;">
+            <div class="tipo-price-row">
+              <div class="field" style="margin-bottom:0;">
+                <label for="productPrecoLoja" id="productPrecoLojaLabel">Preço do copo (R$)</label>
+                <input type="number" id="productPrecoLoja" min="0" step="0.01" placeholder="12.00">
+              </div>
+              <div class="field hidden" style="margin-bottom:0;" id="productAcompGratisField">
+                <label for="productAcompGratis">Acompanhamentos grátis</label>
+                <input type="number" id="productAcompGratis" min="0" max="20" step="1" value="3">
+              </div>
+              <div class="field hidden" style="margin-bottom:0;" id="productAcompExtraField">
+                <label for="productAcompExtraPreco">Preço do extra (R$)</label>
+                <input type="number" id="productAcompExtraPreco" min="0" step="0.01" value="1.00">
+              </div>
+            </div>
+            <div class="field-note-inline" id="productStoreNote">O cliente escolhe até N acompanhamentos da lista de gratuitos sem custo; cada um a mais soma o preço do extra. Acompanhamentos pagos (ex: Nutella) cobram sempre o preço próprio.</div>
+          </div>
+          <div class="field" style="margin-bottom:0; grid-column:1/-1;" id="productTipoField">
             <label>Vender como</label>
             <div class="tipo-checks">
               <label class="checkbox-line"><input type="checkbox" id="productTipoVarejo" checked><span>🛍️ Varejo</span></label>
@@ -221,7 +247,7 @@
             <label for="productImagem" id="productImagemLabel">Imagem (opcional)</label>
             <input type="file" id="productImagem" accept="image/*">
           </div>
-          <div class="field" style="margin-bottom:0; display:flex; align-items:center; gap:8px;">
+          <div class="field" style="margin-bottom:0; display:flex; align-items:center; gap:8px;" id="productMultissaborField">
             <input type="checkbox" id="productMultissabor" style="width:auto;">
             <label for="productMultissabor" style="margin-bottom:0;">Sabor escolhido no pedido (açaí ou um dos cremes)</label>
           </div>
@@ -246,6 +272,40 @@
       <div class="panel">
         <div class="panel-header"><h3>Catálogo</h3></div>
         <div class="admin-products-grid" id="productsGrid"></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <h3 id="acompFormTitle">Acompanhamentos da loja</h3>
+            <div class="subtitle">Lista usada nos copos: os <strong>gratuitos</strong> entram na cota do copo (o excedente cobra o preço do extra); os <strong>pagos</strong> cobram sempre o preço próprio.</div>
+          </div>
+        </div>
+        <form id="acompForm" class="order-form-grid">
+          <input type="hidden" id="acompEditingId">
+          <div class="field" style="margin-bottom:0;">
+            <label for="acompNome">Nome</label>
+            <input type="text" id="acompNome" placeholder="Ex: Leite condensado">
+          </div>
+          <div class="field" style="margin-bottom:0;">
+            <label for="acompTipo">Cobrança</label>
+            <select id="acompTipo">
+              <option value="gratuito">Gratuito (entra na cota do copo)</option>
+              <option value="pago">Pago (preço próprio, fora da cota)</option>
+            </select>
+          </div>
+          <div class="field hidden" style="margin-bottom:0;" id="acompPrecoField">
+            <label for="acompPreco">Preço (R$)</label>
+            <input type="number" id="acompPreco" min="0" step="0.01" placeholder="3.00">
+          </div>
+          <button type="submit" class="btn btn-primary" id="acompSubmitBtn">Adicionar acompanhamento</button>
+          <button type="button" class="btn btn-dark-outline hidden" id="acompEditCancel">Cancelar edição</button>
+        </form>
+        <div class="field-note" id="acompError">Não foi possível salvar o acompanhamento. Confira os dados.</div>
+        <table class="data-table" style="margin-top:18px;">
+          <thead><tr><th>Acompanhamento</th><th>Cobrança</th><th>Situação</th><th>Ações</th></tr></thead>
+          <tbody id="acompBody"></tbody>
+        </table>
       </div>
     </section>
 
@@ -777,7 +837,8 @@
     var wrap = document.getElementById('chartStockWrap');
     if (!wrap) return;
 
-    var chartProducts = productsCache.filter(function (p) { return !p.compartilhado; });
+    // Copo/self-service não têm estoque por unidade — ficam fora do gráfico.
+    var chartProducts = productsCache.filter(function (p) { return !p.compartilhado && p.modo === 'embalado'; });
     if (!chartProducts.length) {
       if (chartInstances.chartStock) { chartInstances.chartStock.destroy(); delete chartInstances.chartStock; }
       wrap.style.height = '';
@@ -1229,6 +1290,28 @@
       var precoBRL = function (v) { return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); };
       grid.innerHTML = productCards().map(function (card) {
         var p = card.main, partner = card.partner;
+        // Produto da loja (copo / self-service): sem tipo, sem estoque por unidade.
+        if (p.modo !== 'embalado') {
+          var lojaBadge = p.modo === 'copo'
+            ? '<span class="status-badge enviado">🥤 Copo</span>' +
+              (p.acompGratis > 0
+                ? ' <span class="status-badge processando">' + p.acompGratis + ' acomp. grátis · extra ' + precoBRL(p.acompExtraPreco) + '</span>'
+                : ' <span class="status-badge processando">Sem acompanhamento grátis</span>')
+            : '<span class="status-badge enviado">⚖️ Self-service</span>';
+          return '<div class="admin-product-card">' +
+            '<div class="ph">' + (p.imagemUrl ? '<img src="' + p.imagemUrl + '" alt="' + p.nome + '" loading="lazy">' : '🥤') + '</div>' +
+            '<div class="body">' +
+              lojaBadge +
+              '<span class="status-badge" style="background:rgba(96,16,80,0.1);color:var(--roxo-700);">Só na loja</span>' +
+              '<h4>' + p.nome + '</h4>' +
+              '<div class="price">' + precoBRL(p.preco) + (p.modo === 'peso' ? ' / kg' : '') + '</div>' +
+              '<div class="admin-table-actions">' +
+                '<button class="btn btn-dark-outline btn-sm" data-edit-product="' + p.id + '">Editar</button>' +
+                '<button class="btn btn-dark-outline btn-sm" data-delete-product="' + p.id + '">Excluir</button>' +
+              '</div>' +
+            '</div>' +
+            '</div>';
+        }
         var tipoBadge = function (t) { return '<span class="status-badge ' + (t === 'atacado' ? 'processando' : 'entregue') + '">' + (t === 'atacado' ? 'Atacado' : 'Varejo') + '</span>'; };
         var badges;
         if (partner) badges = tipoBadge('varejo') + ' ' + tipoBadge('atacado');
@@ -1274,7 +1357,9 @@
         btn.addEventListener('click', function () {
           var p = productsCache.find(function (x) { return String(x.id) === btn.getAttribute('data-edit-product'); });
           if (!p) return;
-          if (p.estoqueRefId != null) {
+          if (p.modo !== 'embalado') {
+            openStoreEditor(p);
+          } else if (p.estoqueRefId != null) {
             var owner = productsCache.find(function (x) { return x.id === p.estoqueRefId; });
             var cl = owner ? classifyOwner(owner) : null;
             if (cl && cl.kind === 'pair' && cl.partner.id === p.id) openDualEditor(owner, p);
@@ -1379,7 +1464,31 @@
 
   // Editor de produto varejo/atacado com estoque compartilhado (produto simples
   // ou par). owner = dona do estoque; partner = a outra versão (ou null).
+  // Editor de produto da loja (copo ou self-service por peso): linha única.
+  function openStoreEditor(p) {
+    editingProductId = p.id;
+    editingPartnerId = null;
+    editingComplex = false;
+    editingReferrer = false;
+    editingImageUrl = p.imagemUrl || null;
+    document.getElementById('productEditingId').value = p.id;
+    setEditHeader('Editar produto', p.modo === 'copo'
+      ? 'Copo da loja — preço e regra de acompanhamentos'
+      : 'Self-service — preço por quilo');
+    document.getElementById('productModo').value = p.modo;
+    document.getElementById('productNome').value = p.nome;
+    document.getElementById('productPrecoLoja').value = p.preco;
+    document.getElementById('productAcompGratis').value = p.acompGratis;
+    document.getElementById('productAcompExtraPreco').value = p.acompExtraPreco.toFixed(2);
+    document.getElementById('productImagem').value = '';
+    setTipoChecks(true, false, false);
+    fillTipoPrices(null, null);
+    document.getElementById('productMultissabor').checked = false;
+    syncModoUI();
+  }
+
   function openDualEditor(owner, partner) {
+    document.getElementById('productModo').value = 'embalado';
     editingProductId = owner.id;
     editingPartnerId = partner ? partner.id : null;
     editingComplex = false;
@@ -1396,13 +1505,13 @@
     document.getElementById('productIncluirAcai').checked = owner.multissaborIncluirAcai !== false;
     document.getElementById('productEstoque').value = owner.estoque;
     document.getElementById('productImagem').value = '';
-    syncTipoBlocks();
-    syncProductStockUI();
+    syncModoUI();
   }
 
   // Editor "legado" de UMA linha de um compartilhamento especial (não deixa
   // reestruturar tipos — só edita nome/preço/mín./estoque daquela linha).
   function openLegacyEditor(p, isReferrer) {
+    document.getElementById('productModo').value = 'embalado';
     editingProductId = p.id;
     editingPartnerId = null;
     editingComplex = true;
@@ -1417,8 +1526,7 @@
     document.getElementById('productIncluirAcai').checked = p.multissaborIncluirAcai !== false;
     document.getElementById('productEstoque').value = p.estoque;
     document.getElementById('productImagem').value = '';
-    syncTipoBlocks();
-    syncProductStockUI();
+    syncModoUI();
   }
 
   function resetProductForm() {
@@ -1432,23 +1540,47 @@
     document.getElementById('productFormSubtitle').textContent = 'Nome, preço(s) e uma foto opcional';
     document.getElementById('productSubmitBtn').textContent = 'Adicionar produto';
     document.getElementById('productEditCancel').classList.add('hidden');
+    document.getElementById('productModo').value = 'embalado';
     document.getElementById('productNome').value = '';
     setTipoChecks(true, false, false);
     fillTipoPrices(null, null);
+    document.getElementById('productPrecoLoja').value = '';
+    document.getElementById('productAcompGratis').value = '3';
+    document.getElementById('productAcompExtraPreco').value = '1.00';
     document.getElementById('productEstoque').value = '0';
     document.getElementById('productMultissabor').checked = false;
     document.getElementById('productIncluirAcai').checked = true;
     document.getElementById('productImagem').value = '';
-    syncTipoBlocks();
-    syncProductStockUI();
+    syncModoUI();
   }
 
   document.getElementById('productEditCancel').addEventListener('click', resetProductForm);
 
-  // Mostra os blocos de preço/mínimo conforme os tipos marcados.
+  // Mostra os blocos de preço/mínimo conforme os tipos marcados (só no modo embalado).
   function syncTipoBlocks() {
-    document.getElementById('productVarejoBlock').classList.toggle('hidden', !document.getElementById('productTipoVarejo').checked);
-    document.getElementById('productAtacadoBlock').classList.toggle('hidden', !document.getElementById('productTipoAtacado').checked);
+    var embalado = currentModo() === 'embalado';
+    document.getElementById('productVarejoBlock').classList.toggle('hidden', !embalado || !document.getElementById('productTipoVarejo').checked);
+    document.getElementById('productAtacadoBlock').classList.toggle('hidden', !embalado || !document.getElementById('productTipoAtacado').checked);
+  }
+
+  function currentModo() { return document.getElementById('productModo').value; }
+
+  // Troca o formulário conforme o tipo de venda: 'embalado' mostra tipos/estoque/
+  // multissabor; 'copo' e 'peso' são produtos só da loja (preço único, sem estoque
+  // por unidade) — o copo ainda ganha a regra de acompanhamentos.
+  function syncModoUI() {
+    var modo = currentModo();
+    var loja = modo !== 'embalado';
+    var copo = modo === 'copo';
+    document.getElementById('productStoreBlock').classList.toggle('hidden', !loja);
+    document.getElementById('productAcompGratisField').classList.toggle('hidden', !copo);
+    document.getElementById('productAcompExtraField').classList.toggle('hidden', !copo);
+    document.getElementById('productPrecoLojaLabel').textContent = copo ? 'Preço do copo (R$)' : 'Preço por kg (R$)';
+    document.getElementById('productStoreNote').classList.toggle('hidden', !copo);
+    document.getElementById('productTipoField').classList.toggle('hidden', loja);
+    document.getElementById('productMultissaborField').classList.toggle('hidden', loja);
+    syncTipoBlocks();
+    syncProductStockUI();
   }
 
   // Sabores aplicáveis a um produto multissabor (Açaí só se "incluir açaí").
@@ -1475,12 +1607,14 @@
   // linha referenciadora, esconde tudo e mostra só o aviso (estoque vive na dona).
   function syncProductStockUI() {
     var product = currentEditingProduct();
-    var shared = editingComplex && editingReferrer;
-    var multi = document.getElementById('productMultissabor').checked;
+    // Produto de loja (copo/peso) não tem estoque por unidade nem sabores.
+    var loja = currentModo() !== 'embalado';
+    var shared = !loja && editingComplex && editingReferrer;
+    var multi = !loja && document.getElementById('productMultissabor').checked;
     var incluirAcai = document.getElementById('productIncluirAcai').checked;
     document.getElementById('productSharedStockNote').classList.toggle('hidden', !shared);
     if (shared) document.getElementById('productSharedOwner').textContent = (product && product.donoNome) || 'a linha dona';
-    document.getElementById('productEstoqueField').classList.toggle('hidden', shared || multi);
+    document.getElementById('productEstoqueField').classList.toggle('hidden', loja || shared || multi);
     document.getElementById('productIncluirAcaiField').classList.toggle('hidden', !multi);
     document.getElementById('productFlavorStockField').classList.toggle('hidden', shared || !multi);
     var grid = document.getElementById('productFlavorGrid');
@@ -1496,20 +1630,26 @@
     }).join('');
   }
 
+  document.getElementById('productModo').addEventListener('change', syncModoUI);
   document.getElementById('productTipoVarejo').addEventListener('change', syncTipoBlocks);
   document.getElementById('productTipoAtacado').addEventListener('change', syncTipoBlocks);
   document.getElementById('productMultissabor').addEventListener('change', syncProductStockUI);
   document.getElementById('productIncluirAcai').addEventListener('change', syncProductStockUI);
 
+  // Pedidos de revendedor só usam produtos embalados (copo/self-service são da loja).
+  function orderableProducts() {
+    return productsCache.filter(function (p) { return p.modo === 'embalado'; });
+  }
+
   function populateProductSelect() {
     var select = document.getElementById('orderProduto');
     var noProductsNote = document.getElementById('orderNoProducts');
-    if (!productsCache.length) {
+    if (!orderableProducts().length) {
       select.innerHTML = '<option value="">Nenhum produto cadastrado</option>';
       noProductsNote.classList.add('show');
     } else {
       select.innerHTML = ['varejo', 'atacado'].map(function (tipo) {
-        var group = productsCache.filter(function (p) { return p.tipo === tipo; });
+        var group = orderableProducts().filter(function (p) { return p.tipo === tipo; });
         if (!group.length) return '';
         return '<optgroup label="' + (tipo === 'atacado' ? 'Atacado' : 'Varejo') + '">' +
           group.map(function (p) {
@@ -1532,6 +1672,39 @@
     errorNote.textContent = 'Não foi possível salvar o produto. Confira os dados.';
 
     var nome = document.getElementById('productNome').value.trim();
+    var modo = currentModo();
+
+    // Copo / self-service: produto de loja, linha única.
+    if (modo !== 'embalado') {
+      var precoLoja = parseFloat(document.getElementById('productPrecoLoja').value);
+      var acompGratis = parseInt(document.getElementById('productAcompGratis').value, 10);
+      var acompExtra = parseFloat(document.getElementById('productAcompExtraPreco').value);
+      if (isNaN(acompGratis) || acompGratis < 0) acompGratis = 0;
+      if (isNaN(acompExtra) || acompExtra < 0) acompExtra = 0;
+      if (!nome || isNaN(precoLoja) || precoLoja < 0) { errorNote.classList.add('show'); return; }
+
+      var storeBtn = document.getElementById('productSubmitBtn');
+      var wasEditingStore = !!editingProductId;
+      storeBtn.disabled = true;
+      storeBtn.textContent = 'Salvando...';
+      var storeRes = await DupuroAdmin.saveStoreProduct({
+        existing: editingProductId ? { ownerId: editingProductId, partnerId: editingPartnerId } : null,
+        modo: modo, nome: nome, preco: precoLoja,
+        acompGratis: acompGratis, acompExtraPreco: acompExtra,
+        file: document.getElementById('productImagem').files[0] || null,
+        currentImageUrl: editingImageUrl
+      });
+      storeBtn.disabled = false;
+      if (storeRes.error) {
+        storeBtn.textContent = wasEditingStore ? 'Salvar alterações' : 'Adicionar produto';
+        errorNote.classList.add('show');
+        return;
+      }
+      resetProductForm();
+      await renderProducts();
+      return;
+    }
+
     var multissabor = document.getElementById('productMultissabor').checked;
     var incluirAcai = document.getElementById('productIncluirAcai').checked;
     var vOn = document.getElementById('productTipoVarejo').checked;
@@ -1611,6 +1784,119 @@
     }
     resetProductForm();
     await renderProducts();
+  });
+
+  // ---- Acompanhamentos (lista usada nos copos da loja) ----
+  var acompCache = [];
+
+  async function renderAcompanhamentos() {
+    acompCache = await DupuroAdmin.getAcompanhamentos();
+    var body = document.getElementById('acompBody');
+    if (!acompCache.length) {
+      body.innerHTML = '<tr><td colspan="4"><div class="empty-state"><div class="icon">🍫</div>Nenhum acompanhamento cadastrado ainda.</div></td></tr>';
+      return;
+    }
+    var precoBRL = function (v) { return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); };
+    body.innerHTML = acompCache.map(function (a) {
+      return '<tr>' +
+        '<td><strong>' + a.nome + '</strong></td>' +
+        '<td>' + (a.tipo === 'pago'
+          ? '<span class="status-badge processando">Pago · ' + precoBRL(a.preco) + '</span>'
+          : '<span class="status-badge aprovado">Gratuito (na cota)</span>') + '</td>' +
+        '<td>' + (a.ativo
+          ? '<span class="status-badge entregue">Ativo</span>'
+          : '<span class="status-badge cancelado">Inativo</span>') + '</td>' +
+        '<td><div class="admin-table-actions">' +
+          '<button class="btn btn-dark-outline btn-sm" data-edit-acomp="' + a.id + '">Editar</button>' +
+          '<button class="btn btn-dark-outline btn-sm" data-toggle-acomp="' + a.id + '">' + (a.ativo ? 'Desativar' : 'Ativar') + '</button>' +
+          '<button class="btn btn-dark-outline btn-sm" data-delete-acomp="' + a.id + '">Excluir</button>' +
+        '</div></td>' +
+        '</tr>';
+    }).join('');
+
+    body.querySelectorAll('[data-edit-acomp]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var a = acompCache.find(function (x) { return String(x.id) === btn.getAttribute('data-edit-acomp'); });
+        if (!a) return;
+        document.getElementById('acompEditingId').value = a.id;
+        document.getElementById('acompNome').value = a.nome;
+        document.getElementById('acompTipo').value = a.tipo;
+        document.getElementById('acompPreco').value = a.tipo === 'pago' ? a.preco : '';
+        document.getElementById('acompFormTitle').textContent = 'Editar acompanhamento';
+        document.getElementById('acompSubmitBtn').textContent = 'Salvar alterações';
+        document.getElementById('acompEditCancel').classList.remove('hidden');
+        syncAcompPreco();
+        document.getElementById('acompForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      });
+    });
+
+    body.querySelectorAll('[data-toggle-acomp]').forEach(function (btn) {
+      btn.addEventListener('click', async function () {
+        var a = acompCache.find(function (x) { return String(x.id) === btn.getAttribute('data-toggle-acomp'); });
+        if (!a) return;
+        btn.disabled = true;
+        await DupuroAdmin.setAcompanhamentoAtivo(a.id, !a.ativo);
+        await renderAcompanhamentos();
+      });
+    });
+
+    body.querySelectorAll('[data-delete-acomp]').forEach(function (btn) {
+      btn.addEventListener('click', async function () {
+        var a = acompCache.find(function (x) { return String(x.id) === btn.getAttribute('data-delete-acomp'); });
+        if (!a || !window.confirm('Excluir o acompanhamento "' + a.nome + '"?')) return;
+        btn.disabled = true;
+        await DupuroAdmin.deleteAcompanhamento(a.id);
+        if (document.getElementById('acompEditingId').value === String(a.id)) resetAcompForm();
+        await renderAcompanhamentos();
+      });
+    });
+  }
+
+  function syncAcompPreco() {
+    var pago = document.getElementById('acompTipo').value === 'pago';
+    document.getElementById('acompPrecoField').classList.toggle('hidden', !pago);
+  }
+
+  function resetAcompForm() {
+    document.getElementById('acompEditingId').value = '';
+    document.getElementById('acompNome').value = '';
+    document.getElementById('acompTipo').value = 'gratuito';
+    document.getElementById('acompPreco').value = '';
+    document.getElementById('acompFormTitle').textContent = 'Acompanhamentos da loja';
+    document.getElementById('acompSubmitBtn').textContent = 'Adicionar acompanhamento';
+    document.getElementById('acompEditCancel').classList.add('hidden');
+    syncAcompPreco();
+  }
+
+  document.getElementById('acompTipo').addEventListener('change', syncAcompPreco);
+  document.getElementById('acompEditCancel').addEventListener('click', resetAcompForm);
+
+  document.getElementById('acompForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    var errorNote = document.getElementById('acompError');
+    errorNote.classList.remove('show');
+
+    var id = document.getElementById('acompEditingId').value;
+    var nome = document.getElementById('acompNome').value.trim();
+    var tipo = document.getElementById('acompTipo').value;
+    var preco = parseFloat(document.getElementById('acompPreco').value);
+    if (!nome || (tipo === 'pago' && (isNaN(preco) || preco < 0))) {
+      errorNote.classList.add('show');
+      return;
+    }
+
+    var atual = id ? acompCache.find(function (x) { return String(x.id) === id; }) : null;
+    var btn = document.getElementById('acompSubmitBtn');
+    btn.disabled = true;
+    var result = await DupuroAdmin.saveAcompanhamento({
+      id: id ? Number(id) : null, nome: nome, tipo: tipo,
+      preco: tipo === 'pago' ? preco : 0,
+      ativo: atual ? atual.ativo : true
+    });
+    btn.disabled = false;
+    if (result.error) { errorNote.classList.add('show'); return; }
+    resetAcompForm();
+    await renderAcompanhamentos();
   });
 
   // ---- Pedidos ----
@@ -2090,10 +2376,12 @@
   // ---- Carga inicial ----
   document.getElementById('orderData').value = todayIso();
   resetProductForm();
+  resetAcompForm();
   await renderOverview();
   await renderPending();
   await renderResellers();
   await renderProducts();
+  await renderAcompanhamentos();
   await populateResellerSelect();
   await updateOrderNumberPreview();
   await renderOrders();

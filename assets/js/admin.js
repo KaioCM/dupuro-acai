@@ -277,7 +277,7 @@ var DupuroAdmin = (function () {
   async function getProducts() {
     var result = await client
       .from('products')
-      .select('id, nome, preco, imagem_url, tipo, multissabor, multissabor_incluir_acai, estoque, pedido_minimo, estoque_ref, estoque_ref_sabor, product_flavor_stock(sabor, estoque)')
+      .select('id, nome, preco, imagem_url, tipo, multissabor, multissabor_incluir_acai, estoque, pedido_minimo, estoque_ref, estoque_ref_sabor, modo, acomp_gratis, acomp_extra_preco, product_flavor_stock(sabor, estoque)')
       .order('nome', { ascending: true });
     if (result.error) return [];
     var raw = result.data || [];
@@ -315,7 +315,10 @@ var DupuroAdmin = (function () {
         estoque: Number(p.estoque) || 0, sabores: sabores, estoqueTotal: estoqueTotal,
         pedidoMinimo: Number(p.pedido_minimo) || 1,
         compartilhado: shared, donoNome: donoNome,
-        estoqueRefId: p.estoque_ref || null, estoqueRefSabor: p.estoque_ref_sabor || null
+        estoqueRefId: p.estoque_ref || null, estoqueRefSabor: p.estoque_ref_sabor || null,
+        modo: p.modo || 'embalado',
+        acompGratis: Number(p.acomp_gratis) || 0,
+        acompExtraPreco: Number(p.acomp_extra_preco) || 0
       };
     });
   }
@@ -444,7 +447,8 @@ var DupuroAdmin = (function () {
       nome: spec.nome, preco: od.preco, imagem_url: imagemUrl,
       tipo: ownerTipo, multissabor: !!spec.multissabor, multissabor_incluir_acai: !!spec.incluirAcai,
       estoque: spec.multissabor ? 0 : spec.estoque, pedido_minimo: od.pedidoMinimo || 1,
-      estoque_ref: null, estoque_ref_sabor: null
+      estoque_ref: null, estoque_ref_sabor: null,
+      modo: 'embalado', acomp_gratis: 0, acomp_extra_preco: 0
     };
     var ownerId = byTipo[ownerTipo] || null;
     var res;
@@ -463,7 +467,8 @@ var DupuroAdmin = (function () {
         nome: spec.nome, preco: pd.preco, imagem_url: imagemUrl,
         tipo: partnerTipo, multissabor: !!spec.multissabor, multissabor_incluir_acai: !!spec.incluirAcai,
         estoque: 0, pedido_minimo: pd.pedidoMinimo || 1,
-        estoque_ref: ownerId, estoque_ref_sabor: null
+        estoque_ref: ownerId, estoque_ref_sabor: null,
+        modo: 'embalado', acomp_gratis: 0, acomp_extra_preco: 0
       };
       var pres;
       if (partnerId) pres = await client.from('products').update(partnerPayload).eq('id', partnerId).select('id').single();
@@ -477,6 +482,89 @@ var DupuroAdmin = (function () {
     }
 
     return { error: null, ownerId: ownerId };
+  }
+
+  // ---------- Produto da loja: copo e self-service (migration_019) ----------
+  // Copo e self-service são vendidos só no balcão (caixa): uma única linha em
+  // products, sem tipo atacado/varejo duplo, sem multissabor e sem estoque por
+  // unidade. No 'copo', preco = valor do copo + regra de acompanhamentos; no
+  // 'peso', preco = R$/kg.
+  //
+  // spec = { existing: { ownerId, partnerId } | null, modo: 'copo'|'peso',
+  //          nome, preco, acompGratis, acompExtraPreco, file, currentImageUrl }
+  async function saveStoreProduct(spec) {
+    var imagemUrl = spec.currentImageUrl || null;
+    if (spec.file) {
+      var path = Date.now() + '-' + spec.file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+      var upload = await client.storage.from('produtos').upload(path, spec.file);
+      if (upload.error) return { error: upload.error };
+      imagemUrl = client.storage.from('produtos').getPublicUrl(path).data.publicUrl;
+      if (spec.currentImageUrl) {
+        var marker = '/produtos/';
+        var idx = spec.currentImageUrl.indexOf(marker);
+        if (idx !== -1) await client.storage.from('produtos').remove([decodeURIComponent(spec.currentImageUrl.substring(idx + marker.length))]);
+      }
+    }
+
+    var ex = spec.existing || {};
+    var payload = {
+      nome: spec.nome, preco: spec.preco, imagem_url: imagemUrl,
+      tipo: 'varejo', multissabor: false, multissabor_incluir_acai: true,
+      estoque: 0, pedido_minimo: 1, estoque_ref: null, estoque_ref_sabor: null,
+      modo: spec.modo,
+      acomp_gratis: spec.modo === 'copo' ? (spec.acompGratis || 0) : 0,
+      acomp_extra_preco: spec.modo === 'copo' ? (spec.acompExtraPreco || 0) : 0
+    };
+
+    var res = ex.ownerId
+      ? await client.from('products').update(payload).eq('id', ex.ownerId).select('id').single()
+      : await client.from('products').insert(payload).select('id').single();
+    if (res.error) return { error: res.error };
+
+    // Virou produto de loja: some com o que só fazia sentido no modo embalado
+    // (linha parceira varejo/atacado e estoque por sabor).
+    if (ex.partnerId) await client.from('products').delete().eq('id', ex.partnerId);
+    if (ex.ownerId) await saveFlavorStock(res.data.id, []);
+
+    return { error: null, ownerId: res.data.id };
+  }
+
+  // ---------- Acompanhamentos (migration_019) ----------
+  async function getAcompanhamentos() {
+    var result = await client
+      .from('acompanhamentos')
+      .select('id, nome, tipo, preco, ativo, ordem')
+      .order('ordem', { ascending: true })
+      .order('nome', { ascending: true });
+    if (result.error) return [];
+    return (result.data || []).map(function (a) {
+      return {
+        id: a.id, nome: a.nome, tipo: a.tipo || 'gratuito',
+        preco: Number(a.preco) || 0, ativo: a.ativo !== false, ordem: Number(a.ordem) || 0
+      };
+    });
+  }
+
+  async function saveAcompanhamento(spec) {
+    var payload = {
+      nome: spec.nome, tipo: spec.tipo,
+      preco: spec.tipo === 'pago' ? (spec.preco || 0) : 0,
+      ativo: spec.ativo !== false, ordem: spec.ordem || 0
+    };
+    var result = spec.id
+      ? await client.from('acompanhamentos').update(payload).eq('id', spec.id)
+      : await client.from('acompanhamentos').insert(payload);
+    return { error: result.error };
+  }
+
+  async function setAcompanhamentoAtivo(id, ativo) {
+    var result = await client.from('acompanhamentos').update({ ativo: !!ativo }).eq('id', id);
+    return { error: result.error };
+  }
+
+  async function deleteAcompanhamento(id) {
+    var result = await client.from('acompanhamentos').delete().eq('id', id);
+    return { error: result.error };
   }
 
   // ---------- Cupons ----------
@@ -556,9 +644,14 @@ var DupuroAdmin = (function () {
     createProduct: createProduct,
     updateProduct: updateProduct,
     saveDualProduct: saveDualProduct,
+    saveStoreProduct: saveStoreProduct,
     deleteProduct: deleteProduct,
     deleteProductById: deleteProductById,
-    saveFlavorStock: saveFlavorStock
+    saveFlavorStock: saveFlavorStock,
+    getAcompanhamentos: getAcompanhamentos,
+    saveAcompanhamento: saveAcompanhamento,
+    setAcompanhamentoAtivo: setAcompanhamentoAtivo,
+    deleteAcompanhamento: deleteAcompanhamento
   };
 
 })();

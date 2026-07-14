@@ -106,8 +106,41 @@ create table if not exists public.products (
   -- Quando o produto que puxa não é multissabor mas o dono é, fixa qual sabor do
   -- dono ele consome (ex: "Açaí 10L" atacado sempre baixa o sabor "Açaí" do dono).
   estoque_ref_sabor text,
+  -- Modo de venda (migration_019). 'embalado' = caixas/potes/bebidas (o padrão,
+  -- vendido também ao revendedor). 'copo' = açaí no copo da loja, com direito a
+  -- `acomp_gratis` acompanhamentos grátis e `acomp_extra_preco` por excedente.
+  -- 'peso' = self-service (o cliente monta e pesa); aqui `preco` é o R$/kg.
+  -- 'copo' e 'peso' são exclusivos da loja (não aparecem para o revendedor).
+  modo text not null default 'embalado' check (modo in ('embalado', 'copo', 'peso')),
+  acomp_gratis integer not null default 0 check (acomp_gratis >= 0 and acomp_gratis <= 20),
+  acomp_extra_preco numeric(10,2) not null default 0 check (acomp_extra_preco >= 0),
   created_at timestamptz not null default now()
 );
+
+-- ---------- Acompanhamentos (migration_019) ----------
+-- Lista única da loja (leite condensado, granola, Nutella...). 'gratuito' entra
+-- na cota do copo (excedente cobra products.acomp_extra_preco); 'pago' cobra
+-- sempre o próprio `preco`, fora da cota.
+create table if not exists public.acompanhamentos (
+  id bigint generated always as identity primary key,
+  nome text not null,
+  tipo text not null default 'gratuito' check (tipo in ('gratuito', 'pago')),
+  preco numeric(10,2) not null default 0 check (preco >= 0),
+  ativo boolean not null default true,
+  ordem integer not null default 0,
+  created_at timestamptz not null default now()
+);
+
+alter table public.acompanhamentos enable row level security;
+
+create policy "acompanhamentos_select_authenticated" on public.acompanhamentos
+  for select using (auth.uid() is not null);
+create policy "acompanhamentos_insert_admin" on public.acompanhamentos
+  for insert with check (public.is_admin());
+create policy "acompanhamentos_update_admin" on public.acompanhamentos
+  for update using (public.is_admin());
+create policy "acompanhamentos_delete_admin" on public.acompanhamentos
+  for delete using (public.is_admin());
 
 alter table public.products enable row level security;
 

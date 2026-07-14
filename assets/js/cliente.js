@@ -130,6 +130,8 @@ var DupuroCliente = (function () {
     var result = await client
       .from('products')
       .select('id, nome, preco, imagem_url, tipo, multissabor, multissabor_incluir_acai, estoque, pedido_minimo, estoque_ref, estoque_ref_sabor, product_flavor_stock(sabor, estoque)')
+      // Copo e self-service são exclusivos da loja física — o revendedor não os vê.
+      .eq('modo', 'embalado')
       .order('nome', { ascending: true });
     if (result.error) return [];
     var raw = result.data || [];
