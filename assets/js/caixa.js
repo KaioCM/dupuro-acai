@@ -171,7 +171,7 @@ var DupuroCaixa = (function () {
     var start = new Date(); start.setHours(0, 0, 0, 0);
     var result = await client
       .from('orders')
-      .select('numero, revendedor_id, itens, valor, quantidade, sabor, created_at')
+      .select('numero, revendedor_id, itens, valor, quantidade, sabor, detalhes, created_at, products(nome, modo)')
       .eq('origem', 'loja')
       .gte('created_at', start.toISOString())
       .order('created_at', { ascending: false });
@@ -195,8 +195,20 @@ var DupuroCaixa = (function () {
         ordem.push(g);
       }
       g.valor += Number(o.valor) || 0;
-      g.items.push({ quantidade: o.quantidade, sabor: o.sabor, itens: o.itens, valor: Number(o.valor) || 0 });
+      // Item já no formato que a comanda espera (reimpressão do fechamento).
+      var prod = o.products || {};
+      var det = o.detalhes || {};
+      g.items.push({
+        quantidade: o.quantidade, sabor: o.sabor, itens: o.itens, valor: Number(o.valor) || 0,
+        nome: prod.nome || o.itens,
+        modo: prod.modo || 'embalado',
+        acompanhamentos: (det.acompanhamentos || []).map(function (a) { return a.nome; }),
+        pesoKg: det.peso_kg || null,
+        precoKg: det.preco_kg || null
+      });
     });
+    // `total` é o nome que a comanda (DupuroPrinter) espera na reimpressão.
+    ordem.forEach(function (g) { g.total = g.valor; });
     var total = ordem.reduce(function (t, g) { return t + g.valor; }, 0);
     return { sales: ordem, total: total };
   }

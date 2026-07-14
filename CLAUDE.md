@@ -28,6 +28,7 @@ assets/js/
   cliente.js              acesso revendedor (auth, perfil, pedidos/cupons leitura, criar pedido)
   admin.js                acesso admin (aprovar, revendedores, produtos, pedidos, cupons)
   caixa.js                acesso atendente (catálogo c/ estoque, registrar venda de loja, vendas do dia)
+  printer.js              comanda da venda: ESC/POS via Web Serial (Sweda) + fallback de impressão pelo Windows
   app-ui.js               helpers de UI (DupuroUI.countUp)
 assets/img/brand/         logos PNG oficiais + favicons
 assets/img/fotos/         21 fotos profissionais otimizadas
@@ -47,6 +48,7 @@ Projeto real em `supabase-config.js` (URL `zqadfktfplrbrjmepllh.supabase.co`). D
 - **Venda de copo/self-service no PDV** (migration_020): no caixa, copo abre a lista de acompanhamentos (cota grátis + excedente cobrado + pagos somados) e self-service pede o peso em kg (campo texto, aceita vírgula). Essas linhas nascem com `usa_estoque = false` (não têm estoque por unidade) e `orders.detalhes` (jsonb) guarda acompanhamentos/peso — base pra comanda impressa e nota fiscal. A policy `orders_insert_atendente` amarra `usa_estoque` ao `modo` do produto: embalado obriga `true`, copo/peso obrigam `false`.
 - **Revendedor lança pedido** (aba Fazer pedido): sempre nasce `status = 'enviado'` — travado no banco pela policy `orders_insert_self` (revendedor_id = auth.uid() + status='enviado' + perfil aprovado).
 - **Atendente (caixa/PDV)**: papel `atendente` (migration_018). Login redireciona pra `caixa.html`. Registra venda presencial (balcão avulso ou revendedor) que nasce `origem='loja'` + `status='entregue'` e **baixa o estoque na hora** — sem análise do admin. RLS `orders_insert_atendente` obriga origem='loja'/entregue/usa_estoque=true; ela não gerencia produtos/revendedores/pedidos. Admin transforma um revendedor em atendente pelo botão "Caixa" (aba Revendedores).
+- **Comanda impressa** (`printer.js`): impressora térmica **Sweda** (ESC/POS, papel 80mm = 48 colunas, acentos convertidos p/ CP850). Caminho 1: **Web Serial** (Chrome/Edge) — a atendente autoriza a porta uma vez e o navegador relembra (`navigator.serial.getPorts()` no load); a comanda sai sozinha. Caminho 2 (fallback automático, sem porta serial): a MESMA comanda em HTML de 80mm pelo diálogo de impressão do Windows. Barra da impressora fica na aba Nova venda (conectar/desconectar + "imprimir ao registrar", lembrado no localStorage); reimpressão por venda na aba Vendas do dia.
 - **Excluir revendedor** apaga a conta de auth de verdade via Edge Function `admin-delete-reseller` (service role, `verify_jwt: true`, valida role=admin no servidor). Pedidos/cupons do revendedor removido **não somem**: `revendedor_id` é opcional com `on delete set null` (UI mostra "Revendedor removido").
 - Migrações 005+ e a Edge Function são aplicadas via **MCP do Supabase** (acesso concedido); os arquivos `.sql`/`.ts` são só o espelho.
 - Cadastro dispara notificação best-effort via Formspree (`data-formspree-action`), mas o `SEU_FORM_ID` ainda é placeholder — cadastro funciona sem isso.

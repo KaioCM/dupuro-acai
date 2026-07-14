@@ -57,6 +57,21 @@
         </div>
       </div>
 
+      <!-- Impressora da comanda -->
+      <div class="panel printer-bar" style="margin-bottom:18px;">
+        <div class="printer-status">
+          <span class="printer-dot" id="printerDot"></span>
+          <div>
+            <strong id="printerState">Impressora não conectada</strong>
+            <div class="subtitle" id="printerHint">Conecte a Sweda para a comanda sair sozinha a cada venda.</div>
+          </div>
+        </div>
+        <div class="printer-actions">
+          <label class="checkbox-line" style="margin:0;"><input type="checkbox" id="autoPrint" checked><span>Imprimir a comanda ao registrar</span></label>
+          <button type="button" class="btn btn-dark-outline btn-sm" id="connectPrinterBtn">🖨️ Conectar impressora</button>
+        </div>
+      </div>
+
       <div class="order-flow">
         <div id="shopCatalog">
           <div class="empty-state"><div class="icon">🫐</div>Carregando o catálogo...</div>
@@ -131,7 +146,9 @@
             <div id="saleSuccess" class="hidden" style="text-align:center; padding:14px 4px;">
               <div style="width:64px; height:64px; margin:0 auto 14px; background:rgba(139,184,49,0.18); border-radius:20px; display:flex; align-items:center; justify-content:center; font-size:30px;">✅</div>
               <h4 style="font-family:var(--font-display); color:var(--roxo-700); font-size:19px; text-transform:uppercase; margin-bottom:6px;">Venda registrada!</h4>
-              <p style="font-size:13.5px; color:var(--text-light); margin-bottom:18px;" id="saleSuccessDetail">—</p>
+              <p style="font-size:13.5px; color:var(--text-light); margin-bottom:6px;" id="saleSuccessDetail">—</p>
+              <p style="font-size:12.5px; color:var(--text-light); margin-bottom:14px;" id="printResult"></p>
+              <button type="button" class="btn btn-dark-outline btn-block" id="reprintBtn" style="margin-bottom:10px;">🖨️ Imprimir comanda de novo</button>
               <button type="button" class="btn btn-green btn-block" id="newSaleBtn">Nova venda</button>
             </div>
 
@@ -163,9 +180,9 @@
       <div class="panel">
         <div class="admin-table-wrap">
           <table class="admin-table">
-            <thead><tr><th>Nº</th><th>Hora</th><th>Cliente</th><th>Itens</th><th class="num">Total</th></tr></thead>
+            <thead><tr><th>Nº</th><th>Hora</th><th>Cliente</th><th>Itens</th><th class="num">Total</th><th></th></tr></thead>
             <tbody id="vendasBody">
-              <tr><td colspan="5"><div class="empty-state"><div class="icon">🧾</div>Carregando...</div></td></tr>
+              <tr><td colspan="6"><div class="empty-state"><div class="icon">🧾</div>Carregando...</div></td></tr>
             </tbody>
           </table>
         </div>
@@ -191,6 +208,7 @@
 <script src="../assets/js/supabase-client.js"></script>
 <script src="../assets/js/app-ui.js"></script>
 <script src="../assets/js/caixa.js"></script>
+<script src="../assets/js/printer.js"></script>
 <script>
 (async function () {
   var auth = await DupuroCaixa.requireCaixa('login.html');
@@ -582,12 +600,34 @@
     }
     var total = cart.reduce(function (s, it) { return s + it.preco * it.quantidade; }, 0);
     var n = cart.length;
+
+    // Comanda desta venda (guardada pra impressão e reimpressão).
+    ultimaVenda = {
+      numero: result.numero,
+      cliente: saleTarget === 'revendedor'
+        ? (resellerSelect.options[resellerSelect.selectedIndex] || {}).text || 'Revendedor'
+        : 'Balcão',
+      hora: Date.now(),
+      total: total,
+      items: cart.map(function (it) {
+        return {
+          nome: it.nome, quantidade: it.quantidade, sabor: it.sabor, modo: it.modo,
+          valor: it.modo === 'peso' ? it.preco : it.preco * it.quantidade,
+          acompanhamentos: it.acomps || [],
+          pesoKg: it.pesoKg || null,
+          precoKg: (it.detalhes && it.detalhes.preco_kg) || null
+        };
+      })
+    };
+
     cart = [];
     renderCart();
     document.getElementById('saleSuccessDetail').textContent = result.numero + ' · ' + n + (n === 1 ? ' item' : ' itens') + ' · ' + brl(total);
     summaryContent.classList.add('hidden');
     summaryPlaceholder.classList.add('hidden');
     saleSuccess.classList.remove('hidden');
+    if (document.getElementById('autoPrint').checked) imprimirComanda(ultimaVenda);
+    else document.getElementById('printResult').textContent = '';
     // Atualiza estoque e vendas do dia em segundo plano.
     productsCache = decorate(await DupuroCaixa.getProducts());
     renderShop();
@@ -596,14 +636,81 @@
 
   document.getElementById('newSaleBtn').addEventListener('click', deselectProduct);
 
+  // ---- Impressora da comanda (Sweda / ESC/POS) ----
+  // Conectada = comanda sai direto pela porta serial, sem diálogo. Sem conexão,
+  // cai no diálogo de impressão do Windows com a mesma comanda de 80mm.
+  var ultimaVenda = null;
+  var printerDot = document.getElementById('printerDot');
+  var printerState = document.getElementById('printerState');
+  var printerHint = document.getElementById('printerHint');
+  var connectPrinterBtn = document.getElementById('connectPrinterBtn');
+  var autoPrint = document.getElementById('autoPrint');
+
+  var AUTO_PRINT_KEY = 'dupuro.autoPrint';
+  autoPrint.checked = window.localStorage.getItem(AUTO_PRINT_KEY) !== 'false';
+  autoPrint.addEventListener('change', function () {
+    window.localStorage.setItem(AUTO_PRINT_KEY, autoPrint.checked ? 'true' : 'false');
+  });
+
+  function syncPrinterUI() {
+    var ok = DupuroPrinter.conectado();
+    printerDot.classList.toggle('on', ok);
+    if (ok) {
+      printerState.textContent = 'Impressora conectada';
+      printerHint.textContent = 'A comanda sai direto na Sweda ao registrar a venda.';
+      connectPrinterBtn.textContent = '🔌 Desconectar';
+    } else if (DupuroPrinter.suportaSerial()) {
+      printerState.textContent = 'Impressora não conectada';
+      printerHint.textContent = 'Sem conexão, a comanda sai pelo diálogo de impressão do Windows.';
+      connectPrinterBtn.textContent = '🖨️ Conectar impressora';
+    } else {
+      printerState.textContent = 'Impressão pelo Windows';
+      printerHint.textContent = 'Este navegador não fala direto com a impressora. Use o Chrome ou o Edge para a comanda sair sozinha.';
+      connectPrinterBtn.classList.add('hidden');
+    }
+  }
+
+  connectPrinterBtn.addEventListener('click', async function () {
+    if (DupuroPrinter.conectado()) {
+      await DupuroPrinter.desconectar();
+      syncPrinterUI();
+      return;
+    }
+    connectPrinterBtn.disabled = true;
+    var r = await DupuroPrinter.conectar();
+    connectPrinterBtn.disabled = false;
+    syncPrinterUI();
+    if (r.error && r.error.name !== 'NotFoundError') {
+      printerHint.textContent = 'Não deu pra conectar: ' + (r.error.message || 'porta indisponível') + '. A comanda ainda sai pelo Windows.';
+    }
+  });
+
+  async function imprimirComanda(venda) {
+    var nota = document.getElementById('printResult');
+    if (!venda) return;
+    nota.textContent = 'Imprimindo a comanda...';
+    var r = await DupuroPrinter.imprimir(venda);
+    syncPrinterUI();
+    if (r.error) {
+      nota.textContent = '⚠️ A impressora não respondeu. Use "Imprimir comanda de novo".';
+      return;
+    }
+    nota.textContent = r.via === 'serial' ? '🖨️ Comanda impressa.' : '🖨️ Comanda enviada para a impressora do Windows.';
+  }
+
+  document.getElementById('reprintBtn').addEventListener('click', function () { imprimirComanda(ultimaVenda); });
+
   // ---- Vendas do dia ----
+  var vendasCache = [];
+
   async function loadVendas() {
     var data = await DupuroCaixa.getTodaySales();
     document.getElementById('statVendasCount').textContent = data.sales.length;
     document.getElementById('statVendasTotal').textContent = brl(data.total);
     var body = document.getElementById('vendasBody');
+    vendasCache = data.sales;
     if (!data.sales.length) {
-      body.innerHTML = '<tr><td colspan="5"><div class="empty-state"><div class="icon">🧾</div>Nenhuma venda registrada hoje ainda.</div></td></tr>';
+      body.innerHTML = '<tr><td colspan="6"><div class="empty-state"><div class="icon">🧾</div>Nenhuma venda registrada hoje ainda.</div></td></tr>';
       return;
     }
     body.innerHTML = data.sales.map(function (v) {
@@ -615,8 +722,19 @@
         '<td>' + v.cliente + '</td>' +
         '<td>' + itensTxt + '</td>' +
         '<td class="num">' + brl(v.valor) + '</td>' +
+        '<td><button type="button" class="btn btn-dark-outline btn-sm" data-reimprimir="' + v.numero + '">🖨️</button></td>' +
         '</tr>';
     }).join('');
+
+    body.querySelectorAll('[data-reimprimir]').forEach(function (btn) {
+      btn.addEventListener('click', async function () {
+        var venda = vendasCache.filter(function (v) { return v.numero === btn.getAttribute('data-reimprimir'); })[0];
+        if (!venda) return;
+        btn.disabled = true;
+        await DupuroPrinter.imprimir(venda);
+        btn.disabled = false;
+      });
+    });
   }
   document.getElementById('refreshVendasBtn').addEventListener('click', loadVendas);
 
@@ -651,6 +769,8 @@
   });
 
   // ---- Carga inicial ----
+  await DupuroPrinter.autoConectar(); // reusa a porta já autorizada, sem perguntar
+  syncPrinterUI();
   productsCache = decorate(await DupuroCaixa.getProducts());
   acompCache = await DupuroCaixa.getAcompanhamentos();
   renderShop();
