@@ -80,9 +80,11 @@
           <button type="button" class="link-btn" id="printerHelpClose">fechar</button></div>
         <ol class="help-steps">
           <li><strong>Deixe a Sweda como impressora padrão</strong> no Windows (Configurações → Bluetooth e dispositivos → Impressoras e scanners → Sweda → <em>Definir como padrão</em>). Confira o papel: 80&nbsp;mm.</li>
-          <li><strong>Crie um atalho do Chrome (ou Edge) na área de trabalho.</strong> Clique com o botão direito no atalho → <em>Propriedades</em> → no campo <em>Destino</em>, cole exatamente isto:
+          <li><strong>Crie um atalho na área de trabalho.</strong> Clique com o botão direito no atalho → <em>Propriedades</em> → no campo <em>Destino</em>, cole exatamente o comando do navegador que você usa:
+            <div class="help-label">Microsoft Edge:</div>
+            <div class="help-code" id="helpEdge">"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe" --kiosk-printing --user-data-dir="C:\Users\Public\DupuroCaixa" https://www.dupuroacai.com/area-cliente/caixa.html</div>
+            <div class="help-label">Google Chrome:</div>
             <div class="help-code" id="helpChrome">"C:\Program Files\Google\Chrome\Application\chrome.exe" --kiosk-printing --user-data-dir="C:\Users\Public\DupuroCaixa" https://www.dupuroacai.com/area-cliente/caixa.html</div>
-            <div class="help-note">No Edge, troque só o começo por: <code>"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"</code> (o resto fica igual).</div>
           </li>
           <li><strong>Abra o caixa sempre por esse atalho.</strong> Na primeira vez, faça o login do caixa nessa janela — ela lembra depois. A comanda passa a sair direto na Sweda, <strong>sem janela nenhuma</strong>. Deixe <em>“Imprimir a comanda ao registrar”</em> marcado e teste no botão <em>“Imprimir teste”</em>.</li>
         </ol>
