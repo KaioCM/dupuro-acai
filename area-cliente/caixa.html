@@ -80,13 +80,13 @@
           <button type="button" class="link-btn" id="printerHelpClose">fechar</button></div>
         <ol class="help-steps">
           <li><strong>Deixe a Sweda como impressora padrão</strong> no Windows (Configurações → Bluetooth e dispositivos → Impressoras e scanners → Sweda → <em>Definir como padrão</em>). Confira o papel: 80&nbsp;mm.</li>
-          <li><strong>Crie um atalho do Chrome (ou Edge) na área de trabalho.</strong> Clique com o botão direito no atalho → <em>Propriedades</em> → no campo <em>Destino</em>, deixe assim (o endereço do caixa no fim):
-            <div class="help-code" id="helpChrome">"C:\Program Files\Google\Chrome\Application\chrome.exe" --kiosk-printing https://www.dupuroacai.com/area-cliente/caixa.html</div>
-            <div class="help-note">No Edge, troque o começo por: <code>"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe" --kiosk-printing …</code></div>
+          <li><strong>Crie um atalho do Chrome (ou Edge) na área de trabalho.</strong> Clique com o botão direito no atalho → <em>Propriedades</em> → no campo <em>Destino</em>, cole exatamente isto:
+            <div class="help-code" id="helpChrome">"C:\Program Files\Google\Chrome\Application\chrome.exe" --kiosk-printing --user-data-dir="C:\Users\Public\DupuroCaixa" https://www.dupuroacai.com/area-cliente/caixa.html</div>
+            <div class="help-note">No Edge, troque só o começo por: <code>"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"</code> (o resto fica igual).</div>
           </li>
-          <li><strong>Abra o caixa sempre por esse atalho.</strong> O <code>--kiosk-printing</code> faz a comanda sair direto na impressora padrão, sem janela nenhuma. Deixe a opção <em>“Imprimir a comanda ao registrar”</em> marcada.</li>
+          <li><strong>Abra o caixa sempre por esse atalho.</strong> Na primeira vez, faça o login do caixa nessa janela — ela lembra depois. A comanda passa a sair direto na Sweda, <strong>sem janela nenhuma</strong>. Deixe <em>“Imprimir a comanda ao registrar”</em> marcado e teste no botão <em>“Imprimir teste”</em>.</li>
         </ol>
-        <div class="help-note">Por que assim? A Sweda está instalada como impressora do Windows (não como porta serial), então o caminho certo é o do Windows — o atalho só tira a janela do meio.</div>
+        <div class="help-note"><strong>Por que estava aparecendo a janela?</strong> Se o Chrome já estava aberto, ele reaproveitava a janela e ignorava o modo silencioso. O trecho <code>--user-data-dir</code> abre um Chrome <strong>separado, só do caixa</strong>, que sempre respeita o <code>--kiosk-printing</code> — funciona mesmo com seu Chrome normal aberto ao lado.</div>
       </div>
 
       <div class="order-flow">
