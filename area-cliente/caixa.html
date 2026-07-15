@@ -62,14 +62,31 @@
         <div class="printer-status">
           <span class="printer-dot" id="printerDot"></span>
           <div>
-            <strong id="printerState">Impressora não conectada</strong>
-            <div class="subtitle" id="printerHint">Conecte a Sweda para a comanda sair sozinha a cada venda.</div>
+            <strong id="printerState">Impressão pela impressora do Windows</strong>
+            <div class="subtitle" id="printerHint">A comanda sai na impressora padrão do computador (a Sweda).</div>
           </div>
         </div>
         <div class="printer-actions">
           <label class="checkbox-line" style="margin:0;"><input type="checkbox" id="autoPrint" checked><span>Imprimir a comanda ao registrar</span></label>
-          <button type="button" class="btn btn-dark-outline btn-sm" id="connectPrinterBtn">🖨️ Conectar impressora</button>
+          <button type="button" class="btn btn-dark-outline btn-sm" id="testPrintBtn">🖨️ Imprimir teste</button>
+          <button type="button" class="link-btn" id="printerHelpBtn">Fazer sair sem a janela</button>
         </div>
+      </div>
+
+      <!-- Ajuda: impressão automática (silenciosa) sem a janela do navegador -->
+      <div class="panel printer-help hidden" id="printerHelp" style="margin-bottom:18px;">
+        <div class="panel-header"><div><h3>Fazer a comanda sair sozinha (sem a janela)</h3>
+          <div class="subtitle">Configuração de uma vez só, no computador da loja. Some com a janela de impressão a cada venda.</div></div>
+          <button type="button" class="link-btn" id="printerHelpClose">fechar</button></div>
+        <ol class="help-steps">
+          <li><strong>Deixe a Sweda como impressora padrão</strong> no Windows (Configurações → Bluetooth e dispositivos → Impressoras e scanners → Sweda → <em>Definir como padrão</em>). Confira o papel: 80&nbsp;mm.</li>
+          <li><strong>Crie um atalho do Chrome (ou Edge) na área de trabalho.</strong> Clique com o botão direito no atalho → <em>Propriedades</em> → no campo <em>Destino</em>, deixe assim (o endereço do caixa no fim):
+            <div class="help-code" id="helpChrome">"C:\Program Files\Google\Chrome\Application\chrome.exe" --kiosk-printing https://www.dupuroacai.com/area-cliente/caixa.html</div>
+            <div class="help-note">No Edge, troque o começo por: <code>"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe" --kiosk-printing …</code></div>
+          </li>
+          <li><strong>Abra o caixa sempre por esse atalho.</strong> O <code>--kiosk-printing</code> faz a comanda sair direto na impressora padrão, sem janela nenhuma. Deixe a opção <em>“Imprimir a comanda ao registrar”</em> marcada.</li>
+        </ol>
+        <div class="help-note">Por que assim? A Sweda está instalada como impressora do Windows (não como porta serial), então o caminho certo é o do Windows — o atalho só tira a janela do meio.</div>
       </div>
 
       <div class="order-flow">
@@ -791,14 +808,14 @@
     await loadVendas();
   });
 
-  // ---- Impressora da comanda (Sweda / ESC/POS) ----
-  // Conectada = comanda sai direto pela porta serial, sem diálogo. Sem conexão,
-  // cai no diálogo de impressão do Windows com a mesma comanda de 80mm.
+  // ---- Impressora da comanda (Sweda, via impressora do Windows) ----
+  // A Sweda da loja está instalada como impressora do Windows, então a comanda
+  // sai pela impressão do navegador (o mesmo caminho que já funciona). Com o
+  // Chrome/Edge abertos em modo --kiosk-printing, sai sem a janela de impressão.
   var ultimaVenda = null;
   var printerDot = document.getElementById('printerDot');
   var printerState = document.getElementById('printerState');
   var printerHint = document.getElementById('printerHint');
-  var connectPrinterBtn = document.getElementById('connectPrinterBtn');
   var autoPrint = document.getElementById('autoPrint');
 
   var AUTO_PRINT_KEY = 'dupuro.autoPrint';
@@ -808,52 +825,47 @@
   });
 
   function syncPrinterUI() {
-    var ok = DupuroPrinter.conectado();
-    printerDot.classList.toggle('on', ok);
-    if (ok) {
-      printerState.textContent = 'Impressora conectada';
-      printerHint.textContent = 'A comanda sai direto na Sweda ao registrar a venda.';
-      connectPrinterBtn.textContent = '🔌 Desconectar';
-    } else if (DupuroPrinter.suportaSerial()) {
-      printerState.textContent = 'Impressora não conectada';
-      printerHint.textContent = 'Sem conexão, a comanda sai pelo diálogo de impressão do Windows.';
-      connectPrinterBtn.textContent = '🖨️ Conectar impressora';
-    } else {
-      printerState.textContent = 'Impressão pelo Windows';
-      printerHint.textContent = 'Este navegador não fala direto com a impressora. Use o Chrome ou o Edge para a comanda sair sozinha.';
-      connectPrinterBtn.classList.add('hidden');
-    }
+    // A Sweda da loja está instalada como impressora do Windows (não como porta
+    // serial), então o caminho padrão é sempre o do Windows.
+    printerDot.classList.add('on');
+    printerState.textContent = 'Impressão pela impressora do Windows';
+    printerHint.textContent = 'A comanda sai na impressora padrão do computador (a Sweda). Para sair sem a janela, veja "Fazer sair sem a janela".';
   }
-
-  connectPrinterBtn.addEventListener('click', async function () {
-    if (DupuroPrinter.conectado()) {
-      await DupuroPrinter.desconectar();
-      syncPrinterUI();
-      return;
-    }
-    connectPrinterBtn.disabled = true;
-    var r = await DupuroPrinter.conectar();
-    connectPrinterBtn.disabled = false;
-    syncPrinterUI();
-    if (r.error && r.error.name !== 'NotFoundError') {
-      printerHint.textContent = 'Não deu pra conectar: ' + (r.error.message || 'porta indisponível') + '. A comanda ainda sai pelo Windows.';
-    }
-  });
 
   async function imprimirComanda(venda) {
     var nota = document.getElementById('printResult');
     if (!venda) return;
     nota.textContent = 'Imprimindo a comanda...';
     var r = await DupuroPrinter.imprimir(venda);
-    syncPrinterUI();
     if (r.error) {
-      nota.textContent = '⚠️ A impressora não respondeu. Use "Imprimir comanda de novo".';
+      nota.textContent = '⚠️ Não foi possível imprimir. Tente "Imprimir comanda de novo".';
       return;
     }
-    nota.textContent = r.via === 'serial' ? '🖨️ Comanda impressa.' : '🖨️ Comanda enviada para a impressora do Windows.';
+    nota.textContent = '🖨️ Comanda enviada para a impressora.';
   }
 
   document.getElementById('reprintBtn').addEventListener('click', function () { imprimirComanda(ultimaVenda); });
+
+  // Ajuda: como fazer a comanda sair sem a janela do navegador.
+  document.getElementById('printerHelpBtn').addEventListener('click', function () {
+    var help = document.getElementById('printerHelp');
+    help.classList.toggle('hidden');
+    if (!help.classList.contains('hidden')) help.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+  document.getElementById('printerHelpClose').addEventListener('click', function () {
+    document.getElementById('printerHelp').classList.add('hidden');
+  });
+
+  // Imprime uma comanda de exemplo (pra testar a impressora/configuração).
+  document.getElementById('testPrintBtn').addEventListener('click', function () {
+    DupuroPrinter.imprimir({
+      numero: 'TESTE', cliente: 'Balcão', hora: Date.now(), total: 18.50,
+      items: [
+        { nome: 'Copo 400ml', quantidade: 1, modo: 'copo', valor: 15.00, acompanhamentos: ['Leite condensado', 'Granola'] },
+        { nome: 'Água c/ gás', quantidade: 1, modo: 'embalado', valor: 3.50 }
+      ]
+    });
+  });
 
   // ---- Vendas do dia ----
   var vendasCache = [];
@@ -940,7 +952,6 @@
   });
 
   // ---- Carga inicial ----
-  await DupuroPrinter.autoConectar(); // reusa a porta já autorizada, sem perguntar
   syncPrinterUI();
   productsCache = decorate(await DupuroCaixa.getProducts());
   acompCache = await DupuroCaixa.getAcompanhamentos();
