@@ -386,6 +386,20 @@
           <tbody id="ordersBody"></tbody>
         </table>
       </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <h3>Alterações e cancelamentos da loja (caixa)</h3>
+            <div class="subtitle">Registro de quem editou ou cancelou vendas presenciais, quando e por quê</div>
+          </div>
+          <button type="button" class="btn btn-dark-outline btn-sm" id="refreshAuditsBtn">↻ Atualizar</button>
+        </div>
+        <table class="data-table">
+          <thead><tr><th>Quando</th><th>Venda</th><th>Ação</th><th>Atendente</th><th>Motivo</th><th>Antes</th></tr></thead>
+          <tbody id="auditsBody"></tbody>
+        </table>
+      </div>
     </section>
 
     <!-- ============ CUPONS ============ -->
@@ -2168,6 +2182,33 @@
     });
   }
 
+  // ---- Trilha de alterações/cancelamentos da loja (auditoria da caixa) ----
+  async function renderAudits() {
+    var audits = await DupuroAdmin.getOrderAudits();
+    var body = document.getElementById('auditsBody');
+    if (!audits.length) {
+      body.innerHTML = '<tr><td colspan="6"><div class="empty-state"><div class="icon">📋</div>Nenhuma alteração ou cancelamento de venda registrado.</div></td></tr>';
+      return;
+    }
+    var brl = function (v) { return (Number(v) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); };
+    body.innerHTML = audits.map(function (a) {
+      var quando = new Date(a.quando).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+      var badge = a.acao === 'cancelou'
+        ? '<span class="status-badge cancelado">Cancelou</span>'
+        : '<span class="status-badge processando">Editou</span>';
+      var antes = (a.itensAntes || '—') + (a.valorAntes ? ' · ' + brl(a.valorAntes) : '');
+      return '<tr>' +
+        '<td>' + quando + '</td>' +
+        '<td><strong>' + a.numero + '</strong></td>' +
+        '<td>' + badge + '</td>' +
+        '<td>' + a.quem + '</td>' +
+        '<td>' + a.motivo + '</td>' +
+        '<td class="audit-antes">' + antes + '</td>' +
+        '</tr>';
+    }).join('');
+  }
+  document.getElementById('refreshAuditsBtn').addEventListener('click', renderAudits);
+
   document.getElementById('orderEditCancel').addEventListener('click', resetOrderForm);
 
   document.getElementById('orderForm').addEventListener('submit', async function (e) {
@@ -2385,6 +2426,7 @@
   await populateResellerSelect();
   await updateOrderNumberPreview();
   await renderOrders();
+  await renderAudits();
   await renderCoupons();
 
 })();

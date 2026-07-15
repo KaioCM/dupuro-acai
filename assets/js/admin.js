@@ -268,6 +268,36 @@ var DupuroAdmin = (function () {
     return { error: result.error };
   }
 
+  // Trilha de alterações/cancelamentos de venda de loja (migration_022). Só o
+  // admin lê (RLS). Resolve o nome de quem fez a ação e resume o estado anterior.
+  async function getOrderAudits() {
+    var result = await client
+      .from('order_audits')
+      .select('id, numero, acao, motivo, snapshot, atendente_id, created_at')
+      .order('created_at', { ascending: false });
+    if (result.error) return [];
+
+    var ids = [];
+    (result.data || []).forEach(function (a) { if (a.atendente_id && ids.indexOf(a.atendente_id) === -1) ids.push(a.atendente_id); });
+    var nomeById = {};
+    if (ids.length) {
+      var profs = await client.from('profiles').select('id, nome, email').in('id', ids);
+      (profs.data || []).forEach(function (p) { nomeById[p.id] = p.nome || p.email || 'Atendente'; });
+    }
+
+    return (result.data || []).map(function (a) {
+      var snap = a.snapshot || [];
+      var itensAntes = snap.map(function (o) { return o.itens; }).filter(Boolean).join(', ');
+      var valorAntes = snap.reduce(function (s, o) { return s + (Number(o.valor) || 0); }, 0);
+      return {
+        id: a.id, numero: a.numero, acao: a.acao, motivo: a.motivo,
+        quem: a.atendente_id ? (nomeById[a.atendente_id] || 'Atendente') : 'Atendente',
+        quando: a.created_at,
+        itensAntes: itensAntes, valorAntes: valorAntes
+      };
+    });
+  }
+
   // ---------- Produtos ----------
   async function getProducts() {
     var result = await client
@@ -632,6 +662,7 @@ var DupuroAdmin = (function () {
     updateOrderStatusByNumero: updateOrderStatusByNumero,
     deleteOrder: deleteOrder,
     deleteOrderByNumero: deleteOrderByNumero,
+    getOrderAudits: getOrderAudits,
     getAllCoupons: getAllCoupons,
     generateCoupon: generateCoupon,
     deleteCoupon: deleteCoupon,

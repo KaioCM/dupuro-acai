@@ -1320,6 +1320,9 @@ select:focus-visible,
 .seg-btn.active { background: var(--roxo-700); color: #fff; box-shadow: 0 2px 6px rgba(96,16,80,0.25); }
 .estoque-group { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; margin-bottom: 18px; }
 
+/* Admin: coluna "antes" da trilha de auditoria da caixa */
+.audit-antes { font-size: 12.5px; color: var(--text-light); }
+
 /* Caixa: editar/cancelar venda do dia */
 .venda-actions { display: flex; gap: 6px; flex-wrap: wrap; }
 .btn-danger-outline { background: transparent; border: 1.5px solid rgba(214,69,80,0.55); color: #C0392B; }
