@@ -129,7 +129,7 @@ var DupuroCliente = (function () {
   async function getProducts() {
     var result = await client
       .from('products')
-      .select('id, nome, preco, imagem_url, tipo, multissabor, multissabor_incluir_acai, estoque, pedido_minimo, estoque_ref, estoque_ref_sabor, product_flavor_stock(sabor, estoque)')
+      .select('id, nome, preco, imagem_url, tipo, multissabor, multissabor_incluir_acai, estoque, pedido_minimo, litros, estoque_ref, estoque_ref_sabor, product_flavor_stock(sabor, estoque)')
       // Copo e self-service são exclusivos da loja física — o revendedor não os vê.
       .eq('modo', 'embalado')
       .order('nome', { ascending: true });
@@ -171,7 +171,8 @@ var DupuroCliente = (function () {
         tipo: p.tipo || 'varejo', multissabor: multissabor,
         multissaborIncluirAcai: incluiAcai,
         emEstoque: emEstoque, saboresDisponiveis: saboresDisponiveis, sabores: sabores,
-        pedidoMinimo: Number(p.pedido_minimo) || 1
+        pedidoMinimo: Number(p.pedido_minimo) || 1,
+        litros: Number(p.litros) || 0
       };
     });
   }
@@ -193,31 +194,34 @@ var DupuroCliente = (function () {
     return createOrderCart([{ productId: productId, quantidade: quantidade, itens: itens, valor: valor, sabor: sabor }]);
   }
 
+  // Litros que dispensam o pedido mínimo dos itens (migration_023). Padrão 50.
+  async function getLitrosDispensaMinimo() {
+    var result = await client.rpc('litros_dispensa_minimo');
+    if (result.error || result.data == null) return 50;
+    return Number(result.data);
+  }
+
   // Pedido com vários itens ("carrinho"): grava N linhas com o MESMO numero.
-  // O insert do array é atômico — se um item ficar sem estoque, o pedido inteiro
-  // é revertido (nenhuma linha criada). Status sempre 'enviado' (trava na RLS).
+  // Vai pela função criar_pedido_revendedor (migration_023), que valida o
+  // carrinho INTEIRO — inclusive a dispensa do pedido mínimo quando o volume do
+  // pedido atinge o limite. A policy orders_insert_self valida linha a linha e
+  // não enxergaria os outros itens, por isso a criação passa pela função.
+  // Tudo numa transação só: se um item faltar estoque, nada é criado.
   async function createOrderCart(items) {
     var session = await getSession();
     if (!session) return { error: new Error('Sem sessão ativa') };
     if (!items || !items.length) return { error: new Error('Carrinho vazio') };
-    var numero = await getNextOrderNumber();
-    if (!numero) return { error: new Error('Não foi possível gerar o número do pedido') };
-    var data = new Date().toISOString().split('T')[0];
     var rows = items.map(function (it) {
       return {
-        revendedor_id: session.user.id,
-        numero: numero,
-        data: data,
-        itens: it.itens,
-        valor: it.valor,
-        status: 'enviado',
         produto_id: it.productId,
         quantidade: it.quantidade,
-        sabor: it.sabor || null
+        sabor: it.sabor || null,
+        itens: it.itens,
+        valor: it.valor
       };
     });
-    var result = await client.from('orders').insert(rows);
-    return { error: result.error, numero: numero };
+    var result = await client.rpc('criar_pedido_revendedor', { p_rows: rows });
+    return { error: result.error, numero: result.data || null };
   }
 
   // Agrupa linhas de orders por numero. Retorna 1 objeto por pedido, com a lista
@@ -286,6 +290,7 @@ var DupuroCliente = (function () {
     requestPasswordReset: requestPasswordReset,
     createOrder: createOrder,
     createOrderCart: createOrderCart,
+    getLitrosDispensaMinimo: getLitrosDispensaMinimo,
     getOrders: getOrders,
     getCoupons: getCoupons
   };

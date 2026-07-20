@@ -189,6 +189,7 @@
               <div class="cart-head">🛒 Itens do pedido</div>
               <ul class="cart-list" id="cartList"></ul>
               <div class="order-total-row"><span class="lbl">Total</span><span class="val" id="cartTotal">—</span></div>
+              <div class="cart-volume-note hidden" id="cartVolumeNote"></div>
               <div class="field-note" id="cartError">Não foi possível enviar o pedido.</div>
               <button type="button" class="btn btn-primary btn-block" id="sendCartBtn">Enviar pedido ✔</button>
               <p style="font-size:12px; color:var(--text-light); text-align:center; margin-top:12px;">O pedido chega direto para o time Dupuro, com status <strong>Enviado</strong>. Você acompanha em <em>Meus pedidos</em>.</p>
@@ -623,8 +624,23 @@
     return qty;
   }
 
-  // Pedido mínimo do produto selecionado (1 = sem mínimo).
+  // Dispensa do pedido mínimo por volume (migration_023): quando o pedido atinge
+  // o limite de litros, os mínimos de cada item deixam de valer — é o cliente que
+  // puxa volume podendo completar com 1 unidade de qualquer coisa.
+  var LIMITE_LITROS = 50; // recarregado do banco na carga inicial
+
+  function cartLitros() {
+    return cart.reduce(function (s, it) { return s + (it.litros || 0) * it.quantidade; }, 0);
+  }
+  function dispensaMinimo() { return cartLitros() >= LIMITE_LITROS; }
+  function litrosFaltando() { return Math.max(0, LIMITE_LITROS - cartLitros()); }
+  function fmtLitros(v) {
+    return (Math.round(v * 100) / 100).toLocaleString('pt-BR') + ' L';
+  }
+
+  // Pedido mínimo do produto selecionado (1 = sem mínimo, ou dispensado por volume).
   function minQty() {
+    if (dispensaMinimo()) return 1;
     return selectedProduct ? (selectedProduct.pedidoMinimo || 1) : 1;
   }
 
@@ -656,8 +672,7 @@
     var thumb = document.getElementById('summaryThumb');
     thumb.innerHTML = selectedProduct.imagemUrl ? '<img src="' + selectedProduct.imagemUrl + '" alt="">' : '🫐';
     document.getElementById('summaryName').textContent = selectedProduct.nome;
-    document.getElementById('summaryUnit').textContent = brl(selectedProduct.preco) + ' / unidade' + (minQty() > 1 ? ' · pedido mín. ' + minQty() : '');
-    summaryQtyInput.min = minQty();
+    refreshMinUI();
 
     if (selectedProduct.multissabor) {
       // Mostra TODOS os sabores do produto; os esgotados aparecem na lista, mas
@@ -688,10 +703,24 @@
     updateTotal();
   }
 
+  // Linha de preço/mínimo do item selecionado. Precisa ser reavaliada sempre que
+  // o carrinho muda: o pedido mínimo pode ter sido dispensado pelo volume.
+  function refreshMinUI() {
+    if (!selectedProduct) return;
+    var min = minQty();
+    var original = selectedProduct.pedidoMinimo || 1;
+    var txt = brl(selectedProduct.preco) + ' / unidade';
+    if (min > 1) txt += ' · pedido mín. ' + min;
+    else if (original > 1) txt += ' · pedido mín. dispensado ✅';
+    document.getElementById('summaryUnit').textContent = txt;
+    summaryQtyInput.min = min;
+  }
+
   // Explica por que a quantidade não desce além do pedido mínimo do produto.
   var qtyHint = document.getElementById('qtyHint');
   function showQtyHint() {
-    qtyHint.textContent = 'A quantidade mínima para este produto é ' + minQty() + ' unidades.';
+    qtyHint.textContent = 'A quantidade mínima para este produto é ' + minQty() + ' unidades.' +
+      ' Complete ' + fmtLitros(litrosFaltando()) + ' no pedido para liberar.';
     qtyHint.classList.add('show');
   }
   function hideQtyHint() { qtyHint.classList.remove('show'); }
@@ -738,6 +767,26 @@
     list.querySelectorAll('[data-cart-i]').forEach(function (b) {
       b.addEventListener('click', function () { cart.splice(parseInt(b.getAttribute('data-cart-i'), 10), 1); renderCart(); });
     });
+    renderVolumeNote();
+    // O carrinho mudou: a dispensa do mínimo pode ter ligado/desligado.
+    refreshMinUI();
+  }
+
+  // Avisa quando o pedido liberou (ou está perto de liberar) os pedidos mínimos.
+  function renderVolumeNote() {
+    var nota = document.getElementById('cartVolumeNote');
+    if (!nota) return;
+    var litros = cartLitros();
+    if (!cart.length || litros <= 0) { nota.classList.add('hidden'); return; }
+    nota.classList.remove('hidden');
+    if (dispensaMinimo()) {
+      nota.className = 'cart-volume-note ok';
+      nota.innerHTML = '✅ <strong>' + fmtLitros(litros) + '</strong> no pedido — pedido mínimo dispensado. Pode incluir 1 unidade de qualquer produto.';
+    } else {
+      nota.className = 'cart-volume-note';
+      nota.innerHTML = '<strong>' + fmtLitros(litros) + '</strong> no pedido · faltam <strong>' + fmtLitros(litrosFaltando()) +
+        '</strong> para dispensar o pedido mínimo dos itens.';
+    }
   }
 
   function deselectProduct() {
@@ -761,14 +810,17 @@
     var saborIndisponivel = selectedProduct && selectedProduct.multissabor &&
       (!sabor || (selectedProduct.saboresDisponiveis || []).indexOf(sabor) === -1);
     if (!selectedProduct || !qty || qty < minQty() || qty > 99 || saborIndisponivel) {
-      if (selectedProduct && qty && qty < minQty()) errorNote.textContent = 'O pedido mínimo deste produto é ' + minQty() + ' unidades.';
+      if (selectedProduct && qty && qty < minQty()) {
+        errorNote.textContent = 'O pedido mínimo deste produto é ' + minQty() + ' unidades — ' +
+          'ou complete ' + fmtLitros(litrosFaltando()) + ' no pedido para liberar o mínimo de todos os itens.';
+      }
       errorNote.classList.add('show');
       return;
     }
 
     var existing = cart.filter(function (it) { return it.productId === selectedProduct.id && (it.sabor || null) === (sabor || null); })[0];
     if (existing) existing.quantidade = Math.min(99, existing.quantidade + qty);
-    else cart.push({ productId: selectedProduct.id, nome: selectedProduct.nome, preco: selectedProduct.preco, sabor: sabor, quantidade: qty });
+    else cart.push({ productId: selectedProduct.id, nome: selectedProduct.nome, preco: selectedProduct.preco, sabor: sabor, quantidade: qty, litros: selectedProduct.litros || 0 });
     renderCart();
     deselectProduct();
   });
@@ -785,12 +837,19 @@
     var result = await DupuroCliente.createOrderCart(items);
     sendBtn.disabled = false;
     if (result.error) {
-      cartError.textContent = result.error.code === '23514'
-        ? 'Algum item ficou sem estoque. Revise o pedido.'
-        : 'Não foi possível enviar o pedido. Tente novamente.';
+      var msg = result.error.message || '';
+      if (result.error.code === '23514' || /estoque/i.test(msg)) {
+        cartError.textContent = 'Algum item ficou sem estoque. Revise o pedido.';
+        productsCache = await DupuroCliente.getProducts();
+        renderShop();
+      } else if (/Pedido m[íi]nimo/i.test(msg)) {
+        // Mensagem vinda da função do banco (criar_pedido_revendedor).
+        cartError.textContent = msg.replace(/^.*?Pedido m/i, 'Pedido m');
+      } else {
+        cartError.textContent = 'Não foi possível enviar o pedido. Tente novamente.';
+      }
       cartError.classList.add('show');
       renderCart();
-      if (result.error.code === '23514') { productsCache = await DupuroCliente.getProducts(); renderShop(); }
       return;
     }
     var total = cart.reduce(function (s, it) { return s + it.preco * it.quantidade; }, 0);
@@ -832,6 +891,7 @@
       if (!product) return null;
       if (product.multissabor && it.sabor && (product.saboresDisponiveis || []).indexOf(it.sabor) === -1) return null;
       return { productId: product.id, nome: product.nome, preco: product.preco, sabor: it.sabor || null,
+        litros: product.litros || 0,
         quantidade: Math.min(99, Math.max(product.pedidoMinimo || 1, it.quantidade || 1)) };
     }).filter(Boolean);
     if (!repeatable.length) return;
@@ -842,7 +902,7 @@
       repeatable.forEach(function (r) {
         var existing = cart.filter(function (it) { return it.productId === r.productId && (it.sabor || null) === (r.sabor || null); })[0];
         if (existing) existing.quantidade = Math.min(99, existing.quantidade + r.quantidade);
-        else cart.push({ productId: r.productId, nome: r.nome, preco: r.preco, sabor: r.sabor, quantidade: r.quantidade });
+        else cart.push({ productId: r.productId, nome: r.nome, preco: r.preco, sabor: r.sabor, quantidade: r.quantidade, litros: r.litros || 0 });
       });
       renderCart();
     });
@@ -851,6 +911,12 @@
   productsCache = produtos;
   renderShop();
   setupRepeatButton();
+  // Limite de litros que dispensa os pedidos mínimos (configurável pelo admin).
+  DupuroCliente.getLitrosDispensaMinimo().then(function (litros) {
+    LIMITE_LITROS = litros;
+    renderVolumeNote();
+    refreshMinUI();
+  });
 
   // ---- Cupons ----
   async function renderCoupons() {

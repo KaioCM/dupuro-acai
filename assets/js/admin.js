@@ -302,7 +302,7 @@ var DupuroAdmin = (function () {
   async function getProducts() {
     var result = await client
       .from('products')
-      .select('id, nome, preco, imagem_url, tipo, multissabor, multissabor_incluir_acai, estoque, pedido_minimo, estoque_ref, estoque_ref_sabor, modo, acomp_gratis, acomp_extra_preco, product_flavor_stock(sabor, estoque)')
+      .select('id, nome, preco, imagem_url, tipo, multissabor, multissabor_incluir_acai, estoque, pedido_minimo, litros, estoque_ref, estoque_ref_sabor, modo, acomp_gratis, acomp_extra_preco, product_flavor_stock(sabor, estoque)')
       .order('nome', { ascending: true });
     if (result.error) return [];
     var raw = result.data || [];
@@ -343,7 +343,8 @@ var DupuroAdmin = (function () {
         estoqueRefId: p.estoque_ref || null, estoqueRefSabor: p.estoque_ref_sabor || null,
         modo: p.modo || 'embalado',
         acompGratis: Number(p.acomp_gratis) || 0,
-        acompExtraPreco: Number(p.acomp_extra_preco) || 0
+        acompExtraPreco: Number(p.acomp_extra_preco) || 0,
+        litros: Number(p.litros) || 0
       };
     });
   }
@@ -371,11 +372,11 @@ var DupuroAdmin = (function () {
 
   // Atualiza um produto; se houver novo arquivo de imagem, sobe pro bucket e
   // apaga a imagem antiga (best-effort). Sem arquivo novo, mantém a imagem atual.
-  function updateProduct(product, nome, preco, tipo, multissabor, multissaborIncluirAcai, estoque, pedidoMinimo, file) {
-    return uploadAndSaveProduct(product, nome, preco, tipo, multissabor, multissaborIncluirAcai, estoque, pedidoMinimo, file);
+  function updateProduct(product, nome, preco, tipo, multissabor, multissaborIncluirAcai, estoque, pedidoMinimo, file, litros) {
+    return uploadAndSaveProduct(product, nome, preco, tipo, multissabor, multissaborIncluirAcai, estoque, pedidoMinimo, file, litros);
   }
 
-  async function uploadAndSaveProduct(product, nome, preco, tipo, multissabor, multissaborIncluirAcai, estoque, pedidoMinimo, file) {
+  async function uploadAndSaveProduct(product, nome, preco, tipo, multissabor, multissaborIncluirAcai, estoque, pedidoMinimo, file, litros) {
     var imagemUrl = product ? product.imagemUrl : null;
     if (file) {
       var path = Date.now() + '-' + file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
@@ -393,6 +394,7 @@ var DupuroAdmin = (function () {
       }
     }
     var payload = { nome: nome, preco: preco, imagem_url: imagemUrl, tipo: tipo || 'varejo', multissabor: !!multissabor, multissabor_incluir_acai: !!multissaborIncluirAcai, estoque: estoque, pedido_minimo: pedidoMinimo || 1 };
+    if (litros != null) payload.litros = litros;
     var result = product
       ? await client.from('products').update(payload).eq('id', product.id).select('id').single()
       : await client.from('products').insert(payload).select('id').single();
@@ -473,7 +475,8 @@ var DupuroAdmin = (function () {
       tipo: ownerTipo, multissabor: !!spec.multissabor, multissabor_incluir_acai: !!spec.incluirAcai,
       estoque: spec.multissabor ? 0 : spec.estoque, pedido_minimo: od.pedidoMinimo || 1,
       estoque_ref: null, estoque_ref_sabor: null,
-      modo: 'embalado', acomp_gratis: 0, acomp_extra_preco: 0
+      modo: 'embalado', acomp_gratis: 0, acomp_extra_preco: 0,
+      litros: spec.litros || 0
     };
     var ownerId = byTipo[ownerTipo] || null;
     var res;
@@ -493,7 +496,8 @@ var DupuroAdmin = (function () {
         tipo: partnerTipo, multissabor: !!spec.multissabor, multissabor_incluir_acai: !!spec.incluirAcai,
         estoque: 0, pedido_minimo: pd.pedidoMinimo || 1,
         estoque_ref: ownerId, estoque_ref_sabor: null,
-        modo: 'embalado', acomp_gratis: 0, acomp_extra_preco: 0
+        modo: 'embalado', acomp_gratis: 0, acomp_extra_preco: 0,
+        litros: spec.litros || 0
       };
       var pres;
       if (partnerId) pres = await client.from('products').update(partnerPayload).eq('id', partnerId).select('id').single();
@@ -552,6 +556,20 @@ var DupuroAdmin = (function () {
     if (ex.ownerId) await saveFlavorStock(res.data.id, []);
 
     return { error: null, ownerId: res.data.id };
+  }
+
+  // ---------- Configurações (migration_023) ----------
+  // Litros no pedido que dispensam o pedido mínimo dos itens.
+  async function getLitrosDispensaMinimo() {
+    var result = await client.from('app_settings').select('valor').eq('chave', 'litros_dispensa_minimo').maybeSingle();
+    if (result.error || !result.data) return 50;
+    return Number(result.data.valor);
+  }
+
+  async function setLitrosDispensaMinimo(litros) {
+    var result = await client.from('app_settings')
+      .upsert({ chave: 'litros_dispensa_minimo', valor: litros, atualizado_em: new Date().toISOString() }, { onConflict: 'chave' });
+    return { error: result.error };
   }
 
   // ---------- Acompanhamentos (migration_019) ----------
@@ -674,6 +692,8 @@ var DupuroAdmin = (function () {
     deleteProduct: deleteProduct,
     deleteProductById: deleteProductById,
     saveFlavorStock: saveFlavorStock,
+    getLitrosDispensaMinimo: getLitrosDispensaMinimo,
+    setLitrosDispensaMinimo: setLitrosDispensaMinimo,
     getAcompanhamentos: getAcompanhamentos,
     saveAcompanhamento: saveAcompanhamento,
     setAcompanhamentoAtivo: setAcompanhamentoAtivo,

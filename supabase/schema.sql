@@ -99,7 +99,11 @@ create table if not exists public.products (
   -- o número, só é bloqueado de pedir quando chega a 0 (ver trigger abaixo).
   estoque integer not null default 0 check (estoque >= 0),
   -- Quantidade mínima que o revendedor pode pedir deste produto (1 = sem mínimo).
+  -- Dispensado quando o pedido atinge o volume de app_settings (ver migration_023).
   pedido_minimo integer not null default 1 check (pedido_minimo between 1 and 99),
+  -- Volume por unidade, em litros (migration_023). Alimenta a regra que dispensa
+  -- o pedido mínimo em pedidos grandes. 0 = não conta volume (granola, bebida).
+  litros numeric(10,3) not null default 0 check (litros >= 0),
   -- Estoque compartilhado: produto que "puxa" o estoque de outro (o dono). Assim
   -- atacado e varejo do mesmo item usam o mesmo estoque, com preços diferentes.
   estoque_ref bigint references public.products(id) on delete set null,
@@ -302,6 +306,96 @@ create policy "orders_update_admin" on public.orders
 
 create policy "orders_delete_admin" on public.orders
   for delete using (public.is_admin());
+
+-- ---------- Dispensa do pedido mínimo por volume (migration_023) ----------
+-- Pedido grande dispensa o pedido mínimo de TODOS os itens: volume do pedido =
+-- soma(products.litros × quantidade); ao atingir o limite (padrão 50 L), os
+-- mínimos deixam de valer. 5 caixas de 10 L e 10 de 5 L dão o mesmo volume, e
+-- misturas também contam.
+create table if not exists public.app_settings (
+  chave text primary key,
+  valor numeric not null,
+  atualizado_em timestamptz not null default now()
+);
+
+alter table public.app_settings enable row level security;
+
+create policy "app_settings_select_authenticated" on public.app_settings
+  for select using (auth.uid() is not null);
+create policy "app_settings_write_admin" on public.app_settings
+  for all using (public.is_admin()) with check (public.is_admin());
+
+insert into public.app_settings (chave, valor)
+values ('litros_dispensa_minimo', 50)
+on conflict (chave) do nothing;
+
+create or replace function public.litros_dispensa_minimo()
+returns numeric language sql stable security definer set search_path = public as $$
+  select coalesce((select valor from public.app_settings where chave = 'litros_dispensa_minimo'), 50);
+$$;
+
+create or replace function public.volume_do_pedido(p_rows jsonb)
+returns numeric language sql stable security definer set search_path = public as $$
+  select coalesce(sum(p.litros * (e->>'quantidade')::int), 0)
+  from jsonb_array_elements(p_rows) e
+  join public.products p on p.id = (e->>'produto_id')::bigint;
+$$;
+
+-- Criação do pedido do revendedor. A policy orders_insert_self valida o mínimo
+-- LINHA A LINHA e não enxergaria que o pedido inteiro passou do volume — por
+-- isso o pedido do revendedor passa por esta função, que valida o carrinho todo.
+create or replace function public.criar_pedido_revendedor(p_rows jsonb)
+returns text language plpgsql security definer set search_path = public as $$
+declare
+  v_uid uuid := auth.uid();
+  v_numero text; v_volume numeric; v_dispensa boolean; v_falta record; r jsonb;
+begin
+  if v_uid is null then raise exception 'Sem sessão ativa.'; end if;
+  if not exists (
+    select 1 from public.profiles where id = v_uid and status = 'aprovado' and role = 'revendedor'
+  ) then raise exception 'Cadastro não aprovado para fazer pedidos.'; end if;
+  if p_rows is null or jsonb_array_length(p_rows) = 0 then
+    raise exception 'O pedido precisa ter ao menos um item.';
+  end if;
+  if exists (
+    select 1 from jsonb_array_elements(p_rows) e
+    left join public.products p on p.id = (e->>'produto_id')::bigint
+    where p.id is null or (e->>'quantidade')::int < 1 or (e->>'quantidade')::int > 99
+  ) then raise exception 'Item inválido no pedido.'; end if;
+
+  v_volume := public.volume_do_pedido(p_rows);
+  v_dispensa := v_volume >= public.litros_dispensa_minimo();
+
+  if not v_dispensa then
+    select p.nome, p.pedido_minimo into v_falta
+    from jsonb_array_elements(p_rows) e
+    join public.products p on p.id = (e->>'produto_id')::bigint
+    where (e->>'quantidade')::int < coalesce(p.pedido_minimo, 1)
+    limit 1;
+    if found then
+      raise exception 'Pedido mínimo de % é % unidades.', v_falta.nome, v_falta.pedido_minimo;
+    end if;
+  end if;
+
+  v_numero := public.next_pedido_numero();
+  for r in select * from jsonb_array_elements(p_rows) loop
+    insert into public.orders (
+      revendedor_id, numero, data, itens, valor, status,
+      produto_id, quantidade, sabor, usa_estoque, origem
+    ) values (
+      v_uid, v_numero, (now() at time zone 'America/Cuiaba')::date,
+      r->>'itens', (r->>'valor')::numeric, 'enviado',
+      (r->>'produto_id')::bigint, (r->>'quantidade')::int,
+      nullif(r->>'sabor', ''), true, 'revendedor'
+    );
+  end loop;
+  return v_numero;
+end;
+$$;
+
+grant execute on function public.litros_dispensa_minimo() to authenticated;
+grant execute on function public.volume_do_pedido(jsonb) to authenticated;
+grant execute on function public.criar_pedido_revendedor(jsonb) to authenticated;
 
 -- ---------- Caixa edita/cancela venda do dia (migration_022) ----------
 -- Trilha durável de alterações/cancelamentos de venda de loja (a dona audita).
