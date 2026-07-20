@@ -85,7 +85,7 @@
 
       <div class="panel chart-card">
         <h3>Revendedores por faturamento</h3>
-        <div class="subtitle">Top 5 revendedores em valor total de pedidos</div>
+        <div class="subtitle">Faturamento por mês — top 5 revendedores</div>
         <div class="chart-wrap"><canvas id="chartTopResellers"></canvas></div>
       </div>
     </section>
@@ -566,11 +566,6 @@
     if (Math.abs(v) >= 1000) return 'R$' + (v / 1000).toFixed(1).replace('.', ',') + 'k';
     return DupuroUI.brl(v);
   }
-  function withAlpha(hex, alpha) {
-    var h = hex.replace('#', '');
-    var r = parseInt(h.substring(0, 2), 16), g = parseInt(h.substring(2, 4), 16), b = parseInt(h.substring(4, 6), 16);
-    return 'rgba(' + r + ',' + g + ',' + b + ',' + alpha + ')';
-  }
   function verticalGradient(ctx, area, colorTop, colorBottom) {
     var g = ctx.createLinearGradient(0, area.top, 0, area.bottom);
     g.addColorStop(0, colorTop);
@@ -673,19 +668,6 @@
             ctx.fillText(brlShort(val), bar.x, bar.y - 8);
           });
 
-        } else if (id === 'chartTopResellers') {
-          // Linha: o valor vai ACIMA de cada ponto (antes era barra horizontal).
-          var meta2 = chart.getDatasetMeta(0);
-          ctx.font = "800 11px 'Inter', sans-serif";
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'bottom';
-          ctx.fillStyle = PALETTE.primary;
-          meta2.data.forEach(function (point, i) {
-            var val = chart.data.datasets[0].data[i];
-            if (!val) return;
-            ctx.fillText(brlShort(val), point.x, point.y - 10);
-          });
-
         } else if (id === 'chartOrderStatus') {
           var meta3 = chart.getDatasetMeta(0);
           var dataArr = chart.data.datasets[0].data;
@@ -745,6 +727,12 @@
   var chartInstances = {};
   // Paleta clara dos gráficos.
   var CHART = { gold: '#FFD166', purple: '#C08AB0', green: '#A8D06A', coral: '#EF9A9A', amber: '#F6C177', blue: '#90C2E7' };
+  // Paleta das SÉRIES (um revendedor = uma cor, nos gráficos de linha/coluna).
+  // Mais forte que a CHART pastel de propósito: os pastéis verde e âmbar ficavam
+  // quase idênticos lado a lado (e viravam a MESMA cor para quem tem daltonismo).
+  // Esta ordem foi validada — nenhum par vizinho se confunde. Não trocar por
+  // tons mais claros sem revalidar.
+  var SERIES = ['#7B3F72', '#1F9E8E', '#D98C00', '#C0392B', '#2E6FA3', '#7BA428'];
 
   // Cria o gráfico UMA vez (só com o canvas visível — criado escondido nasce com
   // tamanho 0). Nas próximas chamadas só ATUALIZA os dados; nunca destrói/recria.
@@ -833,67 +821,91 @@
       plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 12 } } }
     });
 
-    // Top 5 revendedores por faturamento — linha com área (tipo trocado a pedido)
-    var byReseller = {};
-    orders.forEach(function (o) {
-      byReseller[o.revendedorNome] = (byReseller[o.revendedorNome] || 0) + o.valor;
-    });
-    var topResellers = Object.keys(byReseller)
-      .map(function (name) { return { name: name, value: byReseller[name] }; })
-      .sort(function (a, b) { return b.value - a.value; })
-      .slice(0, 5);
-    upsertChart('chartTopResellers', 'line', {
-      labels: topResellers.map(function (r) { return truncateLabel(r.name, 16); }),
-      datasets: [{
-        label: 'Faturamento',
-        data: topResellers.map(function (r) { return r.value; }),
-        borderColor: CHART.purple, backgroundColor: withAlpha(CHART.purple, 0.16),
-        fill: true, tension: 0.3, borderWidth: 2.5,
-        pointRadius: 4, pointHoverRadius: 6, pointBackgroundColor: CHART.purple, pointBorderColor: '#FFFFFF', pointBorderWidth: 2
-      }]
-    }, {
-      layout: { padding: { top: 22 } }, // espaço para o valor escrito acima do ponto
-      plugins: { legend: { display: false }, tooltip: { callbacks: { label: function (ctx) { return DupuroUI.brl(ctx.parsed.y); } } } },
-      scales: { x: { grid: { display: false } }, y: { beginAtZero: true } }
-    });
-
-    // Pedidos por revendedor ao longo do tempo — colunas agrupadas por mês (tipo
-    // trocado a pedido). Em linha ficava ilegível: cada revendedor costuma ter
-    // pedido em poucos meses, então as séries viravam pontos soltos ligados por
-    // zeros. Em coluna cada mês mostra quantos pedidos cada um fez.
-    var byResellerMonth = {};
+    // Os dois gráficos abaixo são "por revendedor ao longo do tempo": um conta
+    // PEDIDOS (colunas), o outro soma FATURAMENTO (linhas). Agregamos os dois
+    // juntos pra que a cor siga o REVENDEDOR, não a posição no ranking — assim
+    // a mesma pessoa tem a mesma cor nos dois gráficos e continua com ela mesmo
+    // se subir/descer de posição.
+    var porRevendedorMes = {}; // nome -> mês -> { pedidos, valor }
+    var mesesTodos = {};
     orders.forEach(function (o) {
       var month = (o.data || '').slice(0, 7);
       if (!month) return;
-      if (!byResellerMonth[o.revendedorNome]) byResellerMonth[o.revendedorNome] = {};
-      byResellerMonth[o.revendedorNome][month] = (byResellerMonth[o.revendedorNome][month] || 0) + 1;
+      var nome = o.revendedorNome;
+      if (!porRevendedorMes[nome]) porRevendedorMes[nome] = {};
+      if (!porRevendedorMes[nome][month]) porRevendedorMes[nome][month] = { pedidos: 0, valor: 0 };
+      porRevendedorMes[nome][month].pedidos++;
+      porRevendedorMes[nome][month].valor += (o.valor || 0);
+      mesesTodos[month] = true;
     });
-    // Meses próprios (não reaproveita os do faturamento): um pedido sem valor
-    // ainda conta aqui, então as duas listas podem divergir.
-    var mesesPedidos = {};
-    Object.keys(byResellerMonth).forEach(function (nome) {
-      Object.keys(byResellerMonth[nome]).forEach(function (m) { mesesPedidos[m] = true; });
+    var lineMonths = Object.keys(mesesTodos).sort();
+    var monthLabels = lineMonths.map(function (m) {
+      var parts = m.split('-');
+      return MONTH_NAMES[parseInt(parts[1], 10) - 1] + '/' + parts[0].slice(2);
     });
-    var lineMonths = Object.keys(mesesPedidos).sort();
-    var topByCount = Object.keys(byResellerMonth)
-      .map(function (name) {
-        var total = Object.keys(byResellerMonth[name]).reduce(function (sum, m) { return sum + byResellerMonth[name][m]; }, 0);
-        return { name: name, total: total };
-      })
-      .sort(function (a, b) { return b.total - a.total; })
-      .slice(0, 5); // top 5, como diz o subtítulo (antes cortava em 4)
-    var lineColors = [CHART.purple, CHART.green, CHART.amber, CHART.blue, CHART.coral];
-    upsertChart('chartOrdersLine', 'bar', {
-      labels: lineMonths.map(function (m) {
-        var parts = m.split('-');
-        return MONTH_NAMES[parseInt(parts[1], 10) - 1] + '/' + parts[0].slice(2);
-      }),
-      datasets: topByCount.map(function (r, i) {
-        var color = lineColors[i % lineColors.length];
+    function totalDe(nome, campo) {
+      var meses = porRevendedorMes[nome];
+      return Object.keys(meses).reduce(function (s, m) { return s + meses[m][campo]; }, 0);
+    }
+    function top5Por(campo) {
+      return Object.keys(porRevendedorMes)
+        .map(function (nome) { return { name: nome, total: totalDe(nome, campo) }; })
+        .filter(function (r) { return r.total > 0; })
+        .sort(function (a, b) { return b.total - a.total; })
+        .slice(0, 5); // top 5, como diz o subtítulo
+    }
+    var topByCount = top5Por('pedidos');
+    var topByValue = top5Por('valor');
+    // Cor fixa por revendedor: ordem estável (faturamento e depois quem só
+    // aparece no de pedidos), nunca reciclada dentro de um mesmo gráfico.
+    var corDoRevendedor = {};
+    topByValue.concat(topByCount).forEach(function (r) {
+      if (corDoRevendedor[r.name]) return;
+      corDoRevendedor[r.name] = SERIES[Object.keys(corDoRevendedor).length % SERIES.length];
+    });
+
+    // Faturamento por revendedor ao longo do tempo — UMA LINHA POR REVENDEDOR.
+    // Meses sem pedido ficam com null (a linha "pula" o mês em vez de mergulhar
+    // até zero, que sugeriria um faturamento zerado que não existiu).
+    upsertChart('chartTopResellers', 'line', {
+      labels: monthLabels,
+      datasets: topByValue.map(function (r) {
+        var color = corDoRevendedor[r.name];
         return {
           label: truncateLabel(r.name, 18),
-          data: lineMonths.map(function (m) { return byResellerMonth[r.name][m] || 0; }),
-          backgroundColor: color, borderRadius: 6, maxBarThickness: 34
+          data: lineMonths.map(function (m) {
+            var celula = porRevendedorMes[r.name][m];
+            return celula ? celula.valor : null;
+          }),
+          spanGaps: true,
+          borderColor: color, backgroundColor: color,
+          fill: false, tension: 0.3, borderWidth: 2.5,
+          pointRadius: 4, pointHoverRadius: 7, pointBackgroundColor: color,
+          pointBorderColor: '#FFFFFF', pointBorderWidth: 2
+        };
+      })
+    }, {
+      interaction: { mode: 'nearest', intersect: false },
+      plugins: {
+        legend: { position: 'bottom', labels: { boxWidth: 12, padding: 12, usePointStyle: true, pointStyle: 'line' } },
+        tooltip: { displayColors: true, callbacks: { label: function (ctx) { return ctx.dataset.label + ': ' + DupuroUI.brl(ctx.parsed.y); } } }
+      },
+      scales: { x: { grid: { display: false } }, y: { beginAtZero: true, ticks: { callback: function (v) { return brlShort(v); } } } }
+    });
+
+    // Pedidos por revendedor ao longo do tempo — colunas agrupadas por mês. Em
+    // linha ficava ilegível: cada revendedor costuma ter pedido em poucos meses,
+    // então as séries viravam pontos soltos ligados por zeros.
+    upsertChart('chartOrdersLine', 'bar', {
+      labels: monthLabels,
+      datasets: topByCount.map(function (r) {
+        return {
+          label: truncateLabel(r.name, 18),
+          data: lineMonths.map(function (m) {
+            var celula = porRevendedorMes[r.name][m];
+            return celula ? celula.pedidos : 0;
+          }),
+          backgroundColor: corDoRevendedor[r.name], borderRadius: 6, maxBarThickness: 34
         };
       })
     }, {
