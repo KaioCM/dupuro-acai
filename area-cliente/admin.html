@@ -674,15 +674,16 @@
           });
 
         } else if (id === 'chartTopResellers') {
+          // Linha: o valor vai ACIMA de cada ponto (antes era barra horizontal).
           var meta2 = chart.getDatasetMeta(0);
           ctx.font = "800 11px 'Inter', sans-serif";
-          ctx.textAlign = 'left';
-          ctx.textBaseline = 'middle';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'bottom';
           ctx.fillStyle = PALETTE.primary;
-          meta2.data.forEach(function (bar, i) {
+          meta2.data.forEach(function (point, i) {
             var val = chart.data.datasets[0].data[i];
             if (!val) return;
-            ctx.fillText(brlShort(val), bar.x + 8, bar.y);
+            ctx.fillText(brlShort(val), point.x, point.y - 10);
           });
 
         } else if (id === 'chartOrderStatus') {
@@ -707,12 +708,21 @@
           ctx.fillText(total === 1 ? 'PEDIDO' : 'PEDIDOS', cx, cy + 18);
 
         } else if (id === 'chartOrdersLine') {
+          // Colunas agrupadas: a quantidade vai acima de cada coluna. (Quando era
+          // linha, aqui ia um chip com o nome do revendedor na ponta da série —
+          // agora quem identifica cada cor é a legenda.)
           ctx.font = "800 10.5px 'Inter', sans-serif";
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'bottom';
+          ctx.fillStyle = PALETTE.primary;
           chart.data.datasets.forEach(function (ds, i) {
             var meta4 = chart.getDatasetMeta(i);
-            if (ds.hidden || !meta4.data.length) return;
-            var last = meta4.data[meta4.data.length - 1];
-            drawChip(ctx, last.x + 28, last.y, truncateLabel(ds.label, 14), { bg: withAlpha(ds.borderColor, 0.12), color: ds.borderColor, padX: 8 });
+            if (meta4.hidden || !meta4.data.length) return;
+            meta4.data.forEach(function (bar, j) {
+              var val = ds.data[j];
+              if (!val) return;
+              ctx.fillText(String(val), bar.x, bar.y - 5);
+            });
           });
 
         } else if (id === 'chartStock') {
@@ -744,9 +754,15 @@
     var canvas = document.getElementById(canvasId);
     if (!canvas) return;
     if (chartInstances[canvasId]) {
-      chartInstances[canvasId].data = data;
-      chartInstances[canvasId].update();
-      return;
+      // Trocar o TIPO exige recriar (só trocar os dados manteria o tipo antigo).
+      if (chartInstances[canvasId].config.type !== type) {
+        chartInstances[canvasId].destroy();
+        delete chartInstances[canvasId];
+      } else {
+        chartInstances[canvasId].data = data;
+        chartInstances[canvasId].update();
+        return;
+      }
     }
     if (canvas.offsetParent === null) return; // aba escondida: cria quando aparecer
     chartInstances[canvasId] = new Chart(canvas.getContext('2d'), {
@@ -817,7 +833,7 @@
       plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 12 } } }
     });
 
-    // Top 5 revendedores por faturamento — barra horizontal em gradiente roxo
+    // Top 5 revendedores por faturamento — linha com área (tipo trocado a pedido)
     var byReseller = {};
     orders.forEach(function (o) {
       byReseller[o.revendedorNome] = (byReseller[o.revendedorNome] || 0) + o.valor;
@@ -826,17 +842,25 @@
       .map(function (name) { return { name: name, value: byReseller[name] }; })
       .sort(function (a, b) { return b.value - a.value; })
       .slice(0, 5);
-    upsertChart('chartTopResellers', 'bar', {
-      labels: topResellers.map(function (r) { return r.name; }),
-      datasets: [{ label: 'Faturamento', data: topResellers.map(function (r) { return r.value; }), backgroundColor: CHART.purple, borderRadius: 8, maxBarThickness: 30 }]
+    upsertChart('chartTopResellers', 'line', {
+      labels: topResellers.map(function (r) { return truncateLabel(r.name, 16); }),
+      datasets: [{
+        label: 'Faturamento',
+        data: topResellers.map(function (r) { return r.value; }),
+        borderColor: CHART.purple, backgroundColor: withAlpha(CHART.purple, 0.16),
+        fill: true, tension: 0.3, borderWidth: 2.5,
+        pointRadius: 4, pointHoverRadius: 6, pointBackgroundColor: CHART.purple, pointBorderColor: '#FFFFFF', pointBorderWidth: 2
+      }]
     }, {
-      indexAxis: 'y',
-      plugins: { legend: { display: false }, tooltip: { callbacks: { label: function (ctx) { return DupuroUI.brl(ctx.parsed.x); } } } },
-      scales: { x: { beginAtZero: true }, y: { grid: { display: false } } }
+      layout: { padding: { top: 22 } }, // espaço para o valor escrito acima do ponto
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: function (ctx) { return DupuroUI.brl(ctx.parsed.y); } } } },
+      scales: { x: { grid: { display: false } }, y: { beginAtZero: true } }
     });
 
-    // Linha do tempo: quantidade de pedidos por mês, top 4 revendedores — capado
-    // em 4 (não 5) pra usar a mesma paleta categórica validada do resto do painel.
+    // Pedidos por revendedor ao longo do tempo — colunas agrupadas por mês (tipo
+    // trocado a pedido). Em linha ficava ilegível: cada revendedor costuma ter
+    // pedido em poucos meses, então as séries viravam pontos soltos ligados por
+    // zeros. Em coluna cada mês mostra quantos pedidos cada um fez.
     var byResellerMonth = {};
     orders.forEach(function (o) {
       var month = (o.data || '').slice(0, 7);
@@ -844,16 +868,22 @@
       if (!byResellerMonth[o.revendedorNome]) byResellerMonth[o.revendedorNome] = {};
       byResellerMonth[o.revendedorNome][month] = (byResellerMonth[o.revendedorNome][month] || 0) + 1;
     });
-    var lineMonths = months; // reaproveita os meses ordenados do gráfico de faturamento
+    // Meses próprios (não reaproveita os do faturamento): um pedido sem valor
+    // ainda conta aqui, então as duas listas podem divergir.
+    var mesesPedidos = {};
+    Object.keys(byResellerMonth).forEach(function (nome) {
+      Object.keys(byResellerMonth[nome]).forEach(function (m) { mesesPedidos[m] = true; });
+    });
+    var lineMonths = Object.keys(mesesPedidos).sort();
     var topByCount = Object.keys(byResellerMonth)
       .map(function (name) {
         var total = Object.keys(byResellerMonth[name]).reduce(function (sum, m) { return sum + byResellerMonth[name][m]; }, 0);
         return { name: name, total: total };
       })
       .sort(function (a, b) { return b.total - a.total; })
-      .slice(0, 4);
-    var lineColors = [CHART.purple, CHART.green, CHART.amber, CHART.blue];
-    upsertChart('chartOrdersLine', 'line', {
+      .slice(0, 5); // top 5, como diz o subtítulo (antes cortava em 4)
+    var lineColors = [CHART.purple, CHART.green, CHART.amber, CHART.blue, CHART.coral];
+    upsertChart('chartOrdersLine', 'bar', {
       labels: lineMonths.map(function (m) {
         var parts = m.split('-');
         return MONTH_NAMES[parseInt(parts[1], 10) - 1] + '/' + parts[0].slice(2);
@@ -861,10 +891,9 @@
       datasets: topByCount.map(function (r, i) {
         var color = lineColors[i % lineColors.length];
         return {
-          label: r.name,
+          label: truncateLabel(r.name, 18),
           data: lineMonths.map(function (m) { return byResellerMonth[r.name][m] || 0; }),
-          borderColor: color, backgroundColor: color,
-          tension: 0.3, borderWidth: 2.5, pointRadius: 3, pointBackgroundColor: color
+          backgroundColor: color, borderRadius: 6, maxBarThickness: 34
         };
       })
     }, {
