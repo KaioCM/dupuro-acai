@@ -2025,6 +2025,7 @@
   document.getElementById('orderUsaEstoque').addEventListener('change', function () {
     updateOrderSaborField();
     renderOrderVolumeNote(); // lançamento retroativo também dispensa o mínimo
+    applyOrderMin();
   });
 
   function updateOrderValuePreview() {
@@ -2040,11 +2041,22 @@
 
   // Ao trocar de produto, ajusta o mínimo do campo de quantidade e já preenche
   // com o pedido mínimo do produto.
-  function applyOrderMin() {
+  // Pedido mínimo em vigor para o item sendo montado (1 quando dispensado).
+  function effectiveOrderMin() {
+    if (orderDispensaMinimo()) return 1;
     var product = getSelectedProduct();
-    var min = product ? (product.pedidoMinimo || 1) : 1;
+    return product ? (product.pedidoMinimo || 1) : 1;
+  }
+
+  function applyOrderMin() {
     var input = document.getElementById('orderQtd');
-    input.min = min;
+    var min = effectiveOrderMin();
+    // O campo de quantidade é do MONTADOR de item, não do pedido — mas vive
+    // dentro do #orderForm. Um `min` nativo acima de 1 fazia o navegador barrar
+    // o "Criar pedido" ("O valor deve ser maior ou igual a 6"), mesmo com o item
+    // já no carrinho. O mínimo é regra de negócio: validamos no "Adicionar item",
+    // com mensagem própria, e deixamos o min nativo em 1.
+    input.min = 1;
     if ((parseInt(input.value, 10) || 0) < min) input.value = min;
   }
   document.getElementById('orderProduto').addEventListener('change', function () {
@@ -2090,6 +2102,7 @@
     var submit = document.getElementById('orderSubmitBtn');
     if (editingItemId || !orderCart.length) {
       field.classList.add('hidden');
+      list.innerHTML = ''; // não deixa itens antigos pendurados no DOM
       if (!editingItemId) submit.textContent = 'Criar pedido';
       return;
     }
@@ -2105,6 +2118,7 @@
       b.addEventListener('click', function () { orderCart.splice(parseInt(b.getAttribute('data-oc-i'), 10), 1); renderOrderCart(); });
     });
     renderOrderVolumeNote();
+    applyOrderMin(); // o carrinho mudou: a dispensa pode ter ligado/desligado
   }
 
   // Mostra o volume do pedido e se ele já dispensa os pedidos mínimos.
@@ -2138,7 +2152,7 @@
     var product = getSelectedProduct();
     var qty = getOrderQty();
     var sabor = product && product.multissabor ? document.getElementById('orderSabor').value : null;
-    var min = orderDispensaMinimo() ? 1 : (product ? (product.pedidoMinimo || 1) : 1);
+    var min = effectiveOrderMin();
     if (!product || !qty || qty < min || qty > 99 || (product.multissabor && !sabor)) {
       if (product && qty && qty < min) {
         errorNote.textContent = 'Pedido mínimo deste produto: ' + min + ' un. — ou complete ' +
