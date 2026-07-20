@@ -1407,6 +1407,24 @@ tr.venda-cancelada td:nth-child(5) { text-decoration: line-through; color: var(-
 .order-item-line { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 7px 0; border-bottom: 1px solid rgba(96,16,80,0.06); font-size: 13px; }
 .order-item-line:last-child { border-bottom: none; }
 
+/* Faixa de dia no histórico de pedidos (agrupa os pedidos por data). */
+.day-group > td { padding: 0 !important; background: rgba(96,16,80,0.05); }
+.day-toggle {
+  display: flex; align-items: center; gap: 12px; width: 100%;
+  padding: 11px 14px; border: none; background: none; cursor: pointer;
+  font-family: inherit; font-size: 14px; color: var(--roxo-700); text-align: left;
+}
+.day-toggle:hover { background: rgba(96,16,80,0.07); }
+/* A setinha troca de GLIFO em vez de girar por transform: uma rotação depende de
+   frame de animação e ficava travada no estado inicial em alguns contextos —
+   trocar o caractere é sempre fiel ao estado. */
+.day-caret { display: inline-block; width: 12px; font-size: 12px; line-height: 1; }
+.day-caret::before { content: '\25B8'; }
+.day-group.is-open .day-caret::before { content: '\25BE'; }
+.day-date { font-weight: 800; }
+.day-count { color: var(--text-light); font-size: 13px; }
+.day-total { margin-left: auto; font-weight: 800; font-variant-numeric: tabular-nums; }
+
 .panel-header {
   display: flex; align-items: center; justify-content: space-between;
   margin-bottom: 22px;

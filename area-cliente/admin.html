@@ -2123,6 +2123,7 @@
   function orderLitrosFaltando() { return Math.max(0, LIMITE_LITROS - orderCartLitros()); }
   function fmtLitros(v) { return (Math.round(v * 100) / 100).toLocaleString('pt-BR') + ' L'; }
   var editingItemId = null;  // id da linha (item) sendo editada; null = criando
+  var diasAbertos = null;    // dias expandidos no histórico; null = ainda não renderizou
 
   var moeda = function (v) { return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); };
 
@@ -2234,7 +2235,24 @@
       body.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="icon">📦</div>Nenhum pedido lançado ainda.</div></td></tr>';
       return;
     }
-    body.innerHTML = orders.map(function (o) {
+    // Agrupa por DIA: cada dia vira uma faixa clicável com o faturamento do dia,
+    // e os pedidos daquele dia ficam escondidos até expandir. Só o dia mais
+    // recente já vem aberto — o resto fica recolhido pra lista não virar um
+    // paredão. Cancelados não entram no faturamento do dia (mas contam na
+    // quantidade de pedidos, senão o pedido "some" da faixa).
+    var porDia = {};
+    orders.forEach(function (o) {
+      var dia = o.data || 'sem-data';
+      if (!porDia[dia]) porDia[dia] = [];
+      porDia[dia].push(o);
+    });
+    var dias = Object.keys(porDia).sort().reverse();
+    // Na primeira vez abre só o dia mais recente; depois disso respeita o que o
+    // admin deixou aberto (renderOrders roda de novo a cada edição/exclusão, e
+    // fechar tudo no meio do trabalho seria irritante).
+    if (!diasAbertos) diasAbertos = dias.length ? [dias[0]] : [];
+
+    function linhaPedido(o) {
       var itemsHtml = o.items.map(function (it) {
         return '<div class="order-item-line"><span>' + it.itens + ' · ' + moeda(it.valor) + '</span>' +
           '<span class="admin-table-actions">' +
@@ -2242,7 +2260,7 @@
             '<button class="btn btn-dark-outline btn-sm" data-remove-item="' + it.id + '">Remover</button>' +
           '</span></div>';
       }).join('');
-      return '<tr>' +
+      return '<tr data-dia-row="' + (o.data || 'sem-data') + '">' +
         '<td><strong>' + o.numero + '</strong>' +
           (o.items.length > 1 ? ' <span class="status-badge enviado">' + o.items.length + ' itens</span>' : '') +
           (o.usaEstoque ? '' : ' <span class="status-badge cancelado" title="Este pedido não usa o estoque">sem estoque</span>') +
@@ -2263,8 +2281,54 @@
           '<button class="btn btn-dark-outline btn-sm" data-remove-order="' + o.numero + '">Excluir</button>' +
         '</td>' +
         '</tr>' +
-        '<tr class="order-details hidden" data-details-row="' + o.numero + '"><td colspan="7">' + itemsHtml + '</td></tr>';
+        '<tr class="order-details hidden" data-details-row="' + o.numero + '" data-dia-row="' + (o.data || 'sem-data') + '"><td colspan="7">' + itemsHtml + '</td></tr>';
+    }
+
+    body.innerHTML = dias.map(function (dia, i) {
+      var doDia = porDia[dia];
+      var faturado = doDia.reduce(function (s, o) { return s + (o.status === 'cancelado' ? 0 : o.valor); }, 0);
+      var aberto = diasAbertos.indexOf(dia) !== -1;
+      return '<tr class="day-group' + (aberto ? ' is-open' : '') + '" data-dia="' + dia + '">' +
+          '<td colspan="7">' +
+            '<button type="button" class="day-toggle" data-dia-toggle="' + dia + '" aria-expanded="' + aberto + '">' +
+              '<span class="day-caret" aria-hidden="true"></span>' +
+              '<span class="day-date">' + (dia === 'sem-data' ? 'Sem data' : formatDate(dia)) + '</span>' +
+              '<span class="day-count">' + doDia.length + (doDia.length === 1 ? ' pedido' : ' pedidos') + '</span>' +
+              '<span class="day-total">' + moeda(faturado) + '</span>' +
+            '</button>' +
+          '</td>' +
+        '</tr>' +
+        doDia.map(linhaPedido).join('');
     }).join('');
+
+    // Recolhe todos os dias menos o primeiro. As linhas de detalhe do pedido
+    // continuam com o próprio 'hidden' — expandir o dia não abre os detalhes.
+    dias.forEach(function (dia) {
+      if (diasAbertos.indexOf(dia) !== -1) return;
+      body.querySelectorAll('[data-dia-row="' + dia + '"]').forEach(function (tr) { tr.classList.add('hidden'); });
+    });
+
+    body.querySelectorAll('[data-dia-toggle]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var dia = btn.getAttribute('data-dia-toggle');
+        var faixa = body.querySelector('.day-group[data-dia="' + dia + '"]');
+        var abrindo = !faixa.classList.contains('is-open');
+        faixa.classList.toggle('is-open', abrindo);
+        btn.setAttribute('aria-expanded', String(abrindo));
+        var pos = diasAbertos.indexOf(dia);
+        if (abrindo && pos === -1) diasAbertos.push(dia);
+        if (!abrindo && pos !== -1) diasAbertos.splice(pos, 1);
+        body.querySelectorAll('[data-dia-row="' + dia + '"]').forEach(function (tr) {
+          // Detalhe de item só reaparece se estava aberto antes de recolher o dia.
+          if (tr.classList.contains('order-details')) {
+            if (abrindo) { if (tr.dataset.wasOpen === '1') tr.classList.remove('hidden'); }
+            else { tr.dataset.wasOpen = tr.classList.contains('hidden') ? '0' : '1'; tr.classList.add('hidden'); }
+            return;
+          }
+          tr.classList.toggle('hidden', !abrindo);
+        });
+      });
+    });
 
     // Status do pedido inteiro (todas as linhas do mesmo numero). Confirmar um
     // pedido ('processando'/'entregue') é o que baixa o estoque; cancelar devolve.
