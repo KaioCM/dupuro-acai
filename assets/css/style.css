@@ -1,7 +1,7 @@
-/* ==========================================================================
-   Dupuro Açaí — Design System v2
-   Identidade extraída dos arquivos oficiais da marca (logos, pattern, fonte
-   Klinko Playful Bold e pôsteres de campanha do banco de imagens).
+﻿/* ==========================================================================
+   Dupuro AÃ§aÃ­ â€” Design System v2
+   Identidade extraÃ­da dos arquivos oficiais da marca (logos, pattern, fonte
+   Klinko Playful Bold e pÃ´steres de campanha do banco de imagens).
    Paleta amostrada pixel a pixel do logo oficial (Dupuro_Conceito_001).
    ========================================================================== */
 
@@ -14,7 +14,7 @@
 }
 
 :root {
-  /* Roxos — do vinho do wordmark ao quase-preto dos fundos de campanha */
+  /* Roxos â€” do vinho do wordmark ao quase-preto dos fundos de campanha */
   --roxo-950: #240820;
   --roxo-900: #380C2F;
   --roxo-800: #4A1140;
@@ -22,12 +22,12 @@
   --roxo-500: #7E2065;
   --roxo-300: #A94E8C;
 
-  /* Dourado — gradiente âmbar da elipse do logo */
+  /* Dourado â€” gradiente Ã¢mbar da elipse do logo */
   --gold: #F5B301;
   --gold-strong: #E28F00;
   --gold-soft: #FFD34D;
 
-  /* Verde-limão do anel e das folhas */
+  /* Verde-limÃ£o do anel e das folhas */
   --verde: #8BB831;
   --verde-dark: #628A16;
 
@@ -42,7 +42,7 @@
   --warning: #C77C00;
   --danger: #C0392B;
 
-  /* Aliases legados (mantêm compatibilidade com trechos antigos) */
+  /* Aliases legados (mantÃªm compatibilidade com trechos antigos) */
   --color-primary: var(--roxo-700);
   --color-primary-dark: var(--roxo-900);
   --color-primary-light: var(--roxo-500);
@@ -73,11 +73,11 @@
 
   --container-width: 1180px;
 
-  /* Pattern oficial (cumbuca + açaí) recriado em SVG.
-     Versão clara: quadrados verde/dourado (uso pontual em fundos claros). */
+  /* Pattern oficial (cumbuca + aÃ§aÃ­) recriado em SVG.
+     VersÃ£o clara: quadrados verde/dourado (uso pontual em fundos claros). */
   --pattern-color: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150' viewBox='0 0 150 150'%3E%3Cg%3E%3Crect x='6' y='6' width='60' height='60' rx='16' fill='%238BB831'/%3E%3Ccircle cx='28' cy='40' r='10' fill='%23481038'/%3E%3Ccircle cx='44' cy='36' r='10' fill='%23601050'/%3E%3Ccircle cx='36' cy='48' r='10' fill='%23561046'/%3E%3Cellipse cx='40' cy='22' rx='9' ry='5' transform='rotate(-30 40 22)' fill='%23628A16'/%3E%3Crect x='84' y='6' width='60' height='60' rx='16' fill='%23F5B301'/%3E%3Cpath d='M96 38 h36 a18 14 0 0 1 -36 0 z' fill='%23601050'/%3E%3Cellipse cx='114' cy='32' rx='13' ry='9' fill='%23601050'/%3E%3Crect x='84' y='84' width='60' height='60' rx='16' fill='%238BB831'/%3E%3Ccircle cx='106' cy='118' r='10' fill='%23481038'/%3E%3Ccircle cx='122' cy='114' r='10' fill='%23601050'/%3E%3Ccircle cx='114' cy='126' r='10' fill='%23561046'/%3E%3Cellipse cx='118' cy='100' rx='9' ry='5' transform='rotate(-30 118 100)' fill='%23628A16'/%3E%3Crect x='6' y='84' width='60' height='60' rx='16' fill='%23F5B301'/%3E%3Cpath d='M18 116 h36 a18 14 0 0 1 -36 0 z' fill='%23601050'/%3E%3Cellipse cx='36' cy='110' rx='13' ry='9' fill='%23601050'/%3E%3C/g%3E%3C/svg%3E");
 
-  /* Versão fantasma: ícones brancos p/ fundos roxos (como no pôster oficial). */
+  /* VersÃ£o fantasma: Ã­cones brancos p/ fundos roxos (como no pÃ´ster oficial). */
   --pattern-ghost: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150' viewBox='0 0 150 150'%3E%3Cg fill='none' stroke='%23FFFFFF' stroke-width='3'%3E%3Crect x='6' y='6' width='60' height='60' rx='16'/%3E%3Ccircle cx='28' cy='40' r='9'/%3E%3Ccircle cx='44' cy='36' r='9'/%3E%3Ccircle cx='36' cy='48' r='9'/%3E%3Crect x='84' y='84' width='60' height='60' rx='16'/%3E%3Ccircle cx='106' cy='118' r='9'/%3E%3Ccircle cx='122' cy='114' r='9'/%3E%3Ccircle cx='114' cy='126' r='9'/%3E%3Crect x='84' y='6' width='60' height='60' rx='16'/%3E%3Cpath d='M96 38 h36 a18 14 0 0 1 -36 0 z'/%3E%3Crect x='6' y='84' width='60' height='60' rx='16'/%3E%3Cpath d='M18 116 h36 a18 14 0 0 1 -36 0 z'/%3E%3C/g%3E%3C/svg%3E");
 }
 
@@ -182,7 +182,7 @@ select:focus-visible,
 }
 .section-header .section-subtitle { margin: 0 auto; }
 
-/* ---------- Botões (estilo "candy" da marca: chunky, arredondado, 3D) ---------- */
+/* ---------- BotÃµes (estilo "candy" da marca: chunky, arredondado, 3D) ---------- */
 .btn {
   position: relative;
   display: inline-flex;
@@ -328,7 +328,7 @@ select:focus-visible,
   overflow: hidden;
 }
 
-/* Pattern oficial fantasma, como nos pôsteres de campanha */
+/* Pattern oficial fantasma, como nos pÃ´steres de campanha */
 .hero::before {
   content: "";
   position: absolute;
@@ -443,7 +443,7 @@ select:focus-visible,
 .hero-photo-frame { aspect-ratio: 4 / 5; }
 .hero-photo-frame img:first-child { width: 100%; height: 100%; object-fit: cover; display: block; }
 
-/* Selo "Movimento Puro de Coração" girando sobre a foto */
+/* Selo "Movimento Puro de CoraÃ§Ã£o" girando sobre a foto */
 .hero-selo {
   position: absolute;
   width: 110px; height: 110px;
@@ -622,8 +622,8 @@ select:focus-visible,
     var(--pattern-color);
   background-size: auto, 300px;
 }
-/* Flex (não grid): com auto-fit, colunas vazias e suas calhas continuam contando
-   no cálculo do centro e os cards saem deslocados em telas largas. */
+/* Flex (nÃ£o grid): com auto-fit, colunas vazias e suas calhas continuam contando
+   no cÃ¡lculo do centro e os cards saem deslocados em telas largas. */
 .products-grid {
   display: flex;
   flex-wrap: wrap;
@@ -768,7 +768,7 @@ select:focus-visible,
 }
 .testimonial-card:hover { transform: translateY(-6px) rotate(-0.4deg); box-shadow: var(--shadow-md); }
 .testimonial-card::before {
-  content: "“";
+  content: "â€œ";
   position: absolute;
   top: 6px; right: 20px;
   font-family: var(--font-display);
@@ -789,7 +789,7 @@ select:focus-visible,
 .testimonial-author strong { display: block; font-size: 14px; }
 .testimonial-author span { font-size: 12px; color: var(--text-light); }
 
-/* ---------- Formulário Revenda ---------- */
+/* ---------- FormulÃ¡rio Revenda ---------- */
 .form-section {
   background:
     linear-gradient(rgba(56,12,47,0.95), rgba(36,8,32,0.97)),
@@ -855,11 +855,11 @@ select:focus-visible,
 .field .error-msg { display: none; color: var(--danger); font-size: 12px; margin-top: 5px; }
 /* Sabor esgotado: aparece na lista, em cinza e sem poder ser escolhido. */
 .field select option:disabled { color: #9aa0a6; }
-/* Explica por que a quantidade não desce além do pedido mínimo. */
+/* Explica por que a quantidade nÃ£o desce alÃ©m do pedido mÃ­nimo. */
 .qty-hint { display: none; color: var(--warning); font-size: 12px; font-weight: 600; margin-top: 7px; }
 .qty-hint.show { display: block; }
 
-/* Caixa "Utilizar estoque?" no lançamento de pedidos do admin. */
+/* Caixa "Utilizar estoque?" no lanÃ§amento de pedidos do admin. */
 .checkbox-line {
   display: flex; align-items: center; gap: 8px; cursor: pointer;
   font-weight: 700; color: var(--roxo-700); font-size: 13.5px; margin: 0;
@@ -869,7 +869,7 @@ select:focus-visible,
 }
 .field-note-inline { font-size: 12px; color: var(--text-light); margin-top: 5px; }
 
-/* Seletor de período dos gráficos do revendedor. */
+/* Seletor de perÃ­odo dos grÃ¡ficos do revendedor. */
 .chart-period {
   display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
   gap: 12px; margin-bottom: 16px;
@@ -928,7 +928,7 @@ select:focus-visible,
 .form-success h3 { color: var(--roxo-700); margin-bottom: 8px; text-transform: uppercase; }
 .form-success p { color: var(--text-light); font-size: 14px; }
 
-/* ---------- Localização ---------- */
+/* ---------- LocalizaÃ§Ã£o ---------- */
 .location-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1051,7 +1051,7 @@ select:focus-visible,
 .hidden { display: none !important; }
 
 /* ==========================================================================
-   Área do Revendedor / Admin — app shell
+   Ãrea do Revendedor / Admin â€” app shell
    ========================================================================== */
 
 .app-shell {
@@ -1111,7 +1111,7 @@ select:focus-visible,
 .sidebar-footer .sidebar-link { color: rgba(255,255,255,0.6); }
 .sidebar-footer .sidebar-link:hover { color: var(--white); }
 
-/* CTA fixo da sidebar: fazer pedido é a ação nº 1 */
+/* CTA fixo da sidebar: fazer pedido Ã© a aÃ§Ã£o nÂº 1 */
 .sidebar-cta {
   margin: 10px 4px 14px;
   display: flex;
@@ -1261,9 +1261,9 @@ select:focus-visible,
 .chart-wrap { position: relative; height: 260px; width: 100%; }
 .chart-wrap.short { height: 200px; }
 /* Tira o canvas do fluxo: preso ao wrapper relativo (que tem altura fixa), o
-   canvas não realimenta o tamanho do container. É o padrão recomendado pelo
-   Chart.js para container responsivo — evita o gráfico sumir/crescer/piscar
-   durante animação e redimensionamento (especialmente nos painéis de largura
+   canvas nÃ£o realimenta o tamanho do container. Ã‰ o padrÃ£o recomendado pelo
+   Chart.js para container responsivo â€” evita o grÃ¡fico sumir/crescer/piscar
+   durante animaÃ§Ã£o e redimensionamento (especialmente nos painÃ©is de largura
    total, onde o problema aparecia). */
 .chart-wrap > canvas { position: absolute; top: 0; left: 0; }
 #chartStockWrap { transition: height 0.25s ease; }
@@ -1276,7 +1276,7 @@ select:focus-visible,
 .stock-legend .dot-warning { background: var(--gold-strong); }
 .stock-legend .dot-green { background: var(--verde); }
 
-/* Resumo visual do estoque (abaixo do gráfico, aba Produtos) */
+/* Resumo visual do estoque (abaixo do grÃ¡fico, aba Produtos) */
 .stock-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 16px; }
 .stock-summary-card { border: 1px solid rgba(96,16,80,0.10); border-radius: 14px; padding: 14px 15px; background: var(--cream, #FFF7EC); border-top-width: 3px; }
 .stock-summary-card.is-danger { border-top-color: var(--danger); }
@@ -1295,7 +1295,7 @@ select:focus-visible,
 .stock-chip .qty.alert { margin-left: 0; color: var(--danger); font-weight: 700; }
 .stock-summary-empty { font-size: 12px; color: var(--text-light); opacity: 0.7; font-style: italic; }
 
-/* Grupo multissabor expansível (setinha abre a lista de sabores) */
+/* Grupo multissabor expansÃ­vel (setinha abre a lista de sabores) */
 .stock-chip-group { display: block; padding: 0; }
 .stock-chip-group > summary { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; list-style: none; cursor: pointer; padding: 7px 11px; border-radius: 10px; }
 .stock-chip-group > summary::-webkit-details-marker { display: none; }
@@ -1312,7 +1312,7 @@ select:focus-visible,
 .sabor-row .sabor-qty { font-weight: 700; color: var(--text); opacity: 0.7; }
 @media (max-width: 720px) { .stock-summary { grid-template-columns: 1fr; } }
 
-/* Caixa (PDV): alvo da venda (balcão x revendedor) e lista de estoque */
+/* Caixa (PDV): alvo da venda (balcÃ£o x revendedor) e lista de estoque */
 .sale-target { display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
 .seg { display: inline-flex; background: rgba(96,16,80,0.06); border: 1px solid rgba(96,16,80,0.10); border-radius: 12px; padding: 4px; gap: 4px; }
 .seg-btn { border: none; background: transparent; font-family: inherit; font-size: 13.5px; font-weight: 700; color: var(--text-light); padding: 8px 16px; border-radius: 9px; cursor: pointer; transition: background 0.15s, color 0.15s; }
@@ -1320,14 +1320,14 @@ select:focus-visible,
 .seg-btn.active { background: var(--roxo-700); color: #fff; box-shadow: 0 2px 6px rgba(96,16,80,0.25); }
 .estoque-group { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; margin-bottom: 18px; }
 
-/* Admin: limite de litros que dispensa o pedido mínimo */
+/* Admin: limite de litros que dispensa o pedido mÃ­nimo */
 .limite-row { display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
 .limite-row .field { max-width: 260px; }
 .limite-msg { font-size: 12.5px; font-weight: 600; }
 .limite-msg.ok { color: var(--verde); }
 .limite-msg.erro { color: #C0392B; }
 
-/* Pedido: aviso de volume que dispensa os pedidos mínimos */
+/* Pedido: aviso de volume que dispensa os pedidos mÃ­nimos */
 .cart-volume-note { margin-top: 10px; font-size: 12.5px; line-height: 1.45; color: var(--text-light); background: rgba(96,16,80,0.05); border-radius: 10px; padding: 9px 12px; }
 .cart-volume-note.ok { color: var(--roxo-700); background: rgba(139,184,49,0.16); }
 
@@ -1344,7 +1344,7 @@ tr.venda-cancelada td:nth-child(5) { text-decoration: line-through; color: var(-
 .edit-banner { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; background: rgba(245,179,1,0.16); border: 1px solid rgba(245,179,1,0.4); color: var(--roxo-700); border-radius: 12px; padding: 10px 14px; font-size: 13.5px; font-weight: 600; margin-bottom: 14px; }
 .link-btn { background: none; border: none; color: var(--roxo-500); font: inherit; font-weight: 700; text-decoration: underline; cursor: pointer; padding: 0; }
 
-/* Modal genérico (motivo do cancelamento) */
+/* Modal genÃ©rico (motivo do cancelamento) */
 .modal-overlay { position: fixed; inset: 0; background: rgba(51,18,43,0.5); display: flex; align-items: center; justify-content: center; padding: 20px; z-index: 1000; }
 .modal-card { background: var(--cream, #FFF7EC); border-radius: 18px; padding: 24px; max-width: 420px; width: 100%; box-shadow: 0 20px 60px rgba(51,18,43,0.35); }
 .modal-card h3 { font-family: var(--font-display); color: var(--roxo-700); text-transform: uppercase; margin-bottom: 6px; }
@@ -1352,7 +1352,7 @@ tr.venda-cancelada td:nth-child(5) { text-decoration: line-through; color: var(-
 .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 18px; }
 .modal-actions .btn { flex: 0 0 auto; }
 
-/* Caixa: ajuda da impressão automática (kiosk-printing) */
+/* Caixa: ajuda da impressÃ£o automÃ¡tica (kiosk-printing) */
 .help-steps { margin: 4px 0 0; padding-left: 22px; display: grid; gap: 12px; font-size: 14px; line-height: 1.5; }
 .help-steps li { padding-left: 4px; }
 .help-label { margin-top: 10px; margin-bottom: 4px; font-size: 12.5px; font-weight: 700; color: var(--roxo-700); }
@@ -1382,11 +1382,11 @@ tr.venda-cancelada td:nth-child(5) { text-decoration: line-through; color: var(-
 .acomp-tag.pago { color: var(--roxo-700); }
 .cart-item .ci-detail { color: var(--roxo-500); font-style: italic; }
 
-/* Produto varejo/atacado: seletor de tipo e blocos de preço por tipo */
+/* Produto varejo/atacado: seletor de tipo e blocos de preÃ§o por tipo */
 .tipo-checks { display: flex; flex-wrap: wrap; gap: 10px 22px; }
 .tipo-price-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; padding: 10px 12px; border: 1px solid rgba(96,16,80,0.10); border-radius: 12px; background: rgba(96,16,80,0.03); }
 
-/* Grade de estoque por sabor (formulário de produto multissabor) */
+/* Grade de estoque por sabor (formulÃ¡rio de produto multissabor) */
 .flavor-stock-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; }
 .flavor-stock-item { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: rgba(96,16,80,0.04); border: 1.5px solid rgba(96,16,80,0.10); border-radius: var(--radius-sm); padding: 8px 12px; margin: 0; }
 .flavor-stock-item span { font-size: 13px; font-weight: 600; color: var(--roxo-700); }
@@ -1407,23 +1407,40 @@ tr.venda-cancelada td:nth-child(5) { text-decoration: line-through; color: var(-
 .order-item-line { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 7px 0; border-bottom: 1px solid rgba(96,16,80,0.06); font-size: 13px; }
 .order-item-line:last-child { border-bottom: none; }
 
-/* Faixa de dia no histórico de pedidos (agrupa os pedidos por data). */
-.day-group > td { padding: 0 !important; background: rgba(96,16,80,0.05); }
+/* Faixa de dia no histÃ³rico de pedidos (agrupa os pedidos por data). Precisa
+   LER como um cabeÃ§alho de seÃ§Ã£o, nÃ£o como mais uma linha da tabela: fundo
+   roxo sÃ³lido, sem a borda e sem o hover dourado das linhas normais. */
+.day-group > td { padding: 0 !important; border-bottom: none !important; }
+.data-table tbody tr.day-group:hover { background: none; }
+.day-group + tr > td { border-top: 1px solid rgba(51,18,43,0.06); }
 .day-toggle {
-  display: flex; align-items: center; gap: 12px; width: 100%;
-  padding: 11px 14px; border: none; background: none; cursor: pointer;
-  font-family: inherit; font-size: 14px; color: var(--roxo-700); text-align: left;
+  display: flex; align-items: center; gap: 14px; width: 100%;
+  padding: 13px 16px; border: none; cursor: pointer;
+  background: var(--roxo-700, #601050);
+  font-family: inherit; color: #FFF7EC; text-align: left;
 }
-.day-toggle:hover { background: rgba(96,16,80,0.07); }
-/* A setinha troca de GLIFO em vez de girar por transform: uma rotação depende de
-   frame de animação e ficava travada no estado inicial em alguns contextos —
-   trocar o caractere é sempre fiel ao estado. */
-.day-caret { display: inline-block; width: 12px; font-size: 12px; line-height: 1; }
+.day-toggle:hover { background: var(--roxo-800, #4A1140); }
+.day-toggle:focus-visible { outline: 2px solid var(--gold-soft, #FFD34D); outline-offset: -2px; }
+.day-group:first-child .day-toggle { border-radius: 10px 10px 0 0; }
+/* A setinha troca de GLIFO em vez de girar por transform: uma rotaÃ§Ã£o depende de
+   frame de animaÃ§Ã£o e ficava travada no estado inicial em alguns contextos â€”
+   trocar o caractere Ã© sempre fiel ao estado. */
+.day-caret { width: 12px; font-size: 12px; line-height: 1; opacity: .85; }
 .day-caret::before { content: '\25B8'; }
 .day-group.is-open .day-caret::before { content: '\25BE'; }
-.day-date { font-weight: 800; }
-.day-count { color: var(--text-light); font-size: 13px; }
-.day-total { margin-left: auto; font-weight: 800; font-variant-numeric: tabular-nums; }
+.day-date { font-weight: 800; font-size: 15px; letter-spacing: .01em; }
+.day-count {
+  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
+  padding: 3px 9px; border-radius: 999px; background: rgba(255,255,255,0.16);
+}
+.day-total {
+  margin-left: auto; font-weight: 800; font-size: 15px;
+  font-variant-numeric: tabular-nums; color: var(--gold-soft, #FFD34D);
+}
+@media (max-width: 560px) {
+  .day-toggle { gap: 10px; padding: 12px; flex-wrap: wrap; }
+  .day-total { font-size: 14px; }
+}
 
 .panel-header {
   display: flex; align-items: center; justify-content: space-between;
@@ -1469,7 +1486,7 @@ tr.venda-cancelada td:nth-child(5) { text-decoration: line-through; color: var(-
 .status-badge.aprovado { background: rgba(139,184,49,0.18); color: var(--verde-dark); }
 .status-badge.rejeitado { background: rgba(192,57,43,0.12); color: var(--danger); }
 
-/* ---------- Formulários compactos (admin) ---------- */
+/* ---------- FormulÃ¡rios compactos (admin) ---------- */
 .admin-table-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 .status-select {
   padding: 6px 10px;
@@ -1488,7 +1505,7 @@ tr.venda-cancelada td:nth-child(5) { text-decoration: line-through; color: var(-
 }
 @media (max-width: 700px) { .order-form-grid { grid-template-columns: 1fr 1fr; } }
 
-/* ---------- Catálogo (admin) ---------- */
+/* ---------- CatÃ¡logo (admin) ---------- */
 .admin-products-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -1564,7 +1581,7 @@ tr.venda-cancelada td:nth-child(5) { text-decoration: line-through; color: var(-
 .empty-state .icon { font-size: 40px; margin-bottom: 12px; }
 
 /* ==========================================================================
-   Fazer pedido — vitrine interativa do revendedor
+   Fazer pedido â€” vitrine interativa do revendedor
    ========================================================================== */
 
 .order-flow { display: grid; grid-template-columns: 1fr 340px; gap: 24px; align-items: start; }
@@ -1612,7 +1629,7 @@ tr.venda-cancelada td:nth-child(5) { text-decoration: line-through; color: var(-
   box-shadow: 0 0 0 4px rgba(139,184,49,0.25), var(--shadow-md);
 }
 .shop-card.selected::after {
-  content: "✓";
+  content: "âœ“";
   position: absolute;
   top: 10px; right: 10px;
   width: 30px; height: 30px;
