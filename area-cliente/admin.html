@@ -347,7 +347,7 @@
               <input type="checkbox" id="orderUsaEstoque" checked>
               <span>Utilizar estoque?</span>
             </label>
-            <div class="field-note-inline">Desmarque para lançar pedidos antigos: o pedido não exige estoque disponível nem altera o estoque atual.</div>
+            <div class="field-note-inline">Desmarque para lançar pedidos antigos: o pedido não exige estoque disponível nem altera o estoque atual — e aí <strong>todos os produtos e sabores ficam disponíveis</strong>, mesmo os esgotados.</div>
           </div>
           <div class="field" style="margin-bottom:0; grid-column:1/-1;"><div class="cart-head" style="margin:2px 0 0;">Adicionar item</div></div>
           <div class="field" style="margin-bottom:0;">
@@ -1941,16 +1941,38 @@
     var field = document.getElementById('orderSaborField');
     var select = document.getElementById('orderSabor');
     if (product && product.multissabor) {
-      // Só sabores com estoque — o mesmo que o revendedor enxerga.
-      var opcoes = (product.sabores || []).filter(function (s) { return s.estoque > 0; }).map(function (s) { return s.sabor; });
+      var usaEstoque = document.getElementById('orderUsaEstoque').checked;
+      var sabores = product.sabores || [];
+      var opcoes;
+      if (usaEstoque) {
+        // Só sabores com estoque — o mesmo que o revendedor enxerga.
+        opcoes = sabores.filter(function (s) { return s.estoque > 0; })
+          .map(function (s) { return { sabor: s.sabor, esgotado: false }; });
+      } else {
+        // Pedido antigo (não mexe no estoque): libera todos os sabores, inclusive
+        // os esgotados, só marcando quais estão zerados hoje.
+        opcoes = sabores.map(function (s) { return { sabor: s.sabor, esgotado: s.estoque <= 0 }; });
+        // Produto sem linhas de sabor cadastradas: cai na lista padrão.
+        if (!opcoes.length) {
+          opcoes = applicableFlavors(product.multissaborIncluirAcai !== false).map(function (s) {
+            return { sabor: s, esgotado: false };
+          });
+        }
+      }
       select.innerHTML = opcoes.length
-        ? opcoes.map(function (s) { return '<option value="' + s + '">' + s + '</option>'; }).join('')
+        ? opcoes.map(function (o) {
+            return '<option value="' + o.sabor + '">' + o.sabor + (o.esgotado ? ' (esgotado)' : '') + '</option>';
+          }).join('')
         : '<option value="">Nenhum sabor com estoque</option>';
       field.classList.remove('hidden');
     } else {
       field.classList.add('hidden');
     }
   }
+
+  // Alternar "Utilizar estoque?" muda quais sabores ficam disponíveis (sem
+  // repopular o select de produtos, pra não perder o produto já escolhido).
+  document.getElementById('orderUsaEstoque').addEventListener('change', updateOrderSaborField);
 
   function updateOrderValuePreview() {
     var product = getSelectedProduct();
