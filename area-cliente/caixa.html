@@ -8,7 +8,7 @@
 <link rel="apple-touch-icon" href="../assets/img/brand/favicon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/css/style.css?v=2">
+<link rel="stylesheet" href="../assets/css/style.css?v=3">
 </head>
 <body>
 
@@ -26,6 +26,7 @@
 
     <a href="#" class="sidebar-link active" data-tab="venda"><span class="ic">🛒</span> Nova venda</a>
     <a href="#" class="sidebar-link" data-tab="vendas"><span class="ic">🧾</span> Vendas do dia</a>
+    <a href="#" class="sidebar-link" data-tab="historico"><span class="ic">📅</span> Histórico do mês</a>
     <a href="#" class="sidebar-link" data-tab="estoque"><span class="ic">📦</span> Estoque</a>
 
     <div class="sidebar-footer">
@@ -210,6 +211,44 @@
             <thead><tr><th>Nº</th><th>Hora</th><th>Cliente</th><th>Itens</th><th class="num">Total</th><th></th></tr></thead>
             <tbody id="vendasBody">
               <tr><td colspan="6"><div class="empty-state"><div class="icon">🧾</div>Carregando...</div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ HISTÓRICO DO MÊS ============ -->
+    <section class="tab-panel hidden" id="tab-historico">
+      <div class="app-topbar">
+        <div>
+          <h1>Histórico do mês</h1>
+          <div class="subtitle">Vendas da loja por dia. <strong>Editar e cancelar só valem para as vendas de hoje.</strong></div>
+        </div>
+        <div class="topbar-actions">
+          <input type="month" id="histMes" class="hist-mes">
+          <button type="button" class="btn btn-dark-outline btn-sm" id="refreshHistBtn">↻ Atualizar</button>
+        </div>
+      </div>
+
+      <div class="stat-grid" style="margin-bottom:18px;">
+        <div class="stat-card">
+          <span class="stat-ic">🧾</span>
+          <div class="label">Vendas no mês</div>
+          <div class="value" id="statHistCount">—</div>
+        </div>
+        <div class="stat-card">
+          <span class="stat-ic">💰</span>
+          <div class="label">Total do mês</div>
+          <div class="value" id="statHistTotal">—</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="admin-table-wrap">
+          <table class="admin-table">
+            <thead><tr><th>Nº</th><th>Hora</th><th>Cliente</th><th>Itens</th><th class="num">Total</th><th></th></tr></thead>
+            <tbody id="histBody">
+              <tr><td colspan="6"><div class="empty-state"><div class="icon">📅</div>Carregando...</div></td></tr>
             </tbody>
           </table>
         </div>
@@ -664,6 +703,7 @@
       productsCache = decorate(await DupuroCaixa.getProducts());
       renderShop();
       await loadVendas();
+      await refreshHistoricoSeAberto();
       goTo('vendas');
       return;
     }
@@ -715,6 +755,7 @@
     productsCache = decorate(await DupuroCaixa.getProducts());
     renderShop();
     loadVendas();
+    refreshHistoricoSeAberto();
   });
 
   document.getElementById('newSaleBtn').addEventListener('click', deselectProduct);
@@ -808,6 +849,7 @@
     productsCache = decorate(await DupuroCaixa.getProducts());
     renderShop();
     await loadVendas();
+    await refreshHistoricoSeAberto();
   });
 
   // ---- Impressora da comanda (Sweda, via impressora do Windows) ----
@@ -923,6 +965,137 @@
   }
   document.getElementById('refreshVendasBtn').addEventListener('click', loadVendas);
 
+  // ---- Histórico do mês ----
+  // A atendente enxerga as vendas de qualquer dia, mas EDITAR/CANCELAR só
+  // aparece no dia de hoje — e mesmo que aparecesse, o banco recusaria
+  // (caixa_pode_mexer confere a data no fuso de Cuiabá). Reimprimir vale
+  // sempre: é só papel, não mexe em registro nem em estoque.
+  var histCache = [];
+  var histDiasAbertos = null;
+  var histCarregado = false;
+  // Só recarrega o histórico se ele já tiver sido aberto — quem nunca entrou na
+  // aba não paga a consulta do mês inteiro a cada venda registrada.
+  async function refreshHistoricoSeAberto() { if (histCarregado) await loadHistorico(); }
+
+  function fmtDiaBR(dia) {
+    var p = dia.split('-');
+    return p[2] + '/' + p[1] + '/' + p[0];
+  }
+  function nomeDiaSemana(dia) {
+    var p = dia.split('-');
+    var d = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+    return ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'][d.getDay()];
+  }
+
+  async function loadHistorico() {
+    var body = document.getElementById('histBody');
+    var mesInput = document.getElementById('histMes');
+    body.innerHTML = '<tr><td colspan="6"><div class="empty-state"><div class="icon">📅</div>Carregando...</div></td></tr>';
+    var data = await DupuroCaixa.getMonthSales(mesInput.value || null);
+    if (!mesInput.value) mesInput.value = data.mes;
+    histCarregado = true;
+
+    var totalMes = data.dias.reduce(function (s, d) { return s + d.total; }, 0);
+    var qtdMes = data.dias.reduce(function (s, d) { return s + d.validas; }, 0);
+    document.getElementById('statHistCount').textContent = qtdMes;
+    document.getElementById('statHistTotal').textContent = brl(totalMes);
+
+    histCache = [];
+    data.dias.forEach(function (d) { d.sales.forEach(function (v) { histCache.push(v); }); });
+
+    if (!data.dias.length) {
+      body.innerHTML = '<tr><td colspan="6"><div class="empty-state"><div class="icon">📅</div>Nenhuma venda registrada neste mês.</div></td></tr>';
+      return;
+    }
+    // Na primeira carga abre só o dia mais recente; depois respeita o que a
+    // atendente deixou aberto.
+    if (!histDiasAbertos) histDiasAbertos = [data.dias[0].dia];
+
+    body.innerHTML = data.dias.map(function (d) {
+      var aberto = histDiasAbertos.indexOf(d.dia) !== -1;
+      var faixa = '<tr class="day-group' + (aberto ? ' is-open' : '') + '" data-dia="' + d.dia + '">' +
+          '<td colspan="6">' +
+            '<button type="button" class="day-toggle" data-dia-toggle="' + d.dia + '" aria-expanded="' + aberto + '">' +
+              '<span class="day-caret" aria-hidden="true"></span>' +
+              '<span class="day-date">' + nomeDiaSemana(d.dia) + ', ' + fmtDiaBR(d.dia) + '</span>' +
+              '<span class="day-count">' + d.count + (d.count === 1 ? ' venda' : ' vendas') + '</span>' +
+              (d.ehHoje ? '<span class="day-hoje">hoje</span>' : '') +
+              '<span class="day-total">' + brl(d.total) + '</span>' +
+            '</button>' +
+          '</td>' +
+        '</tr>';
+      return faixa + d.sales.map(function (v) { return linhaVendaHist(v, d.ehHoje, aberto); }).join('');
+    }).join('');
+
+    ligarAcoesHist(body);
+  }
+
+  function linhaVendaHist(v, ehHoje, visivel) {
+    var hora = new Date(v.hora).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    var itensTxt = v.items.map(function (it) { return it.itens; }).join(', ');
+    var acoes = '<button type="button" class="btn btn-dark-outline btn-sm" data-hist-reimprimir="' + v.numero + '">🖨️</button>';
+    if (ehHoje && !v.cancelada) {
+      acoes = '<div class="venda-actions">' +
+          '<button type="button" class="btn btn-dark-outline btn-sm" data-hist-editar="' + v.numero + '">Editar</button>' +
+          '<button type="button" class="btn btn-danger-outline btn-sm" data-hist-cancelar="' + v.numero + '">Cancelar</button>' +
+          acoes +
+        '</div>';
+    }
+    var classes = [];
+    if (!visivel) classes.push('hidden');
+    if (v.cancelada) classes.push('venda-cancelada');
+    return '<tr data-hist-row="' + v.dia + '"' + (classes.length ? ' class="' + classes.join(' ') + '"' : '') + '>' +
+      '<td><strong>' + v.numero + '</strong>' + (v.cancelada ? ' <span class="status-badge cancelado">Cancelada</span>' : '') + '</td>' +
+      '<td>' + hora + '</td>' +
+      '<td>' + v.cliente + '</td>' +
+      '<td>' + itensTxt + (v.cancelada && v.motivo ? '<span class="venda-motivo">Motivo: ' + v.motivo + '</span>' : '') + '</td>' +
+      '<td class="num">' + brl(v.valor) + '</td>' +
+      '<td>' + acoes + '</td>' +
+      '</tr>';
+  }
+
+  function ligarAcoesHist(body) {
+    function achar(btn, attr) { return histCache.filter(function (v) { return v.numero === btn.getAttribute(attr); })[0]; }
+
+    body.querySelectorAll('[data-dia-toggle]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var dia = btn.getAttribute('data-dia-toggle');
+        var faixa = body.querySelector('.day-group[data-dia="' + dia + '"]');
+        var abrindo = !faixa.classList.contains('is-open');
+        faixa.classList.toggle('is-open', abrindo);
+        btn.setAttribute('aria-expanded', String(abrindo));
+        var pos = histDiasAbertos.indexOf(dia);
+        if (abrindo && pos === -1) histDiasAbertos.push(dia);
+        if (!abrindo && pos !== -1) histDiasAbertos.splice(pos, 1);
+        body.querySelectorAll('[data-hist-row="' + dia + '"]').forEach(function (tr) {
+          tr.classList.toggle('hidden', !abrindo);
+        });
+      });
+    });
+
+    body.querySelectorAll('[data-hist-reimprimir]').forEach(function (btn) {
+      btn.addEventListener('click', async function () {
+        var venda = achar(btn, 'data-hist-reimprimir');
+        if (!venda) return;
+        btn.disabled = true;
+        await DupuroPrinter.imprimir(venda);
+        btn.disabled = false;
+      });
+    });
+    body.querySelectorAll('[data-hist-editar]').forEach(function (btn) {
+      btn.addEventListener('click', function () { var v = achar(btn, 'data-hist-editar'); if (v) enterEditMode(v); });
+    });
+    body.querySelectorAll('[data-hist-cancelar]').forEach(function (btn) {
+      btn.addEventListener('click', function () { var v = achar(btn, 'data-hist-cancelar'); if (v) openCancelModal(v); });
+    });
+  }
+
+  document.getElementById('refreshHistBtn').addEventListener('click', loadHistorico);
+  document.getElementById('histMes').addEventListener('change', function () {
+    histDiasAbertos = null; // mês novo, começa abrindo só o dia mais recente dele
+    loadHistorico();
+  });
+
   // ---- Estoque ----
   function saborDot(estoque) { return estoque === 0 ? 'dot-danger' : (estoque < 5 ? 'dot-warning' : 'dot-green'); }
   function renderEstoque() {
@@ -971,6 +1144,8 @@
     });
     document.getElementById('sidebar').classList.remove('open');
     window.scrollTo(0, 0);
+    // O histórico é carregado sob demanda (consulta o mês inteiro).
+    if (tab === 'historico' && !histCarregado) loadHistorico();
   }
   navItems.forEach(function (link) {
     link.addEventListener('click', function (e) { e.preventDefault(); goTo(link.getAttribute('data-tab')); });

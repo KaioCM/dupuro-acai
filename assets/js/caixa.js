@@ -166,15 +166,18 @@ var DupuroCaixa = (function () {
     return { error: result.error, numero: numero };
   }
 
-  // Vendas de loja de hoje (fechamento de caixa), agrupadas por numero.
-  async function getTodaySales() {
-    var start = new Date(); start.setHours(0, 0, 0, 0);
-    var result = await client
+  // Vendas de loja num intervalo, agrupadas por numero. O RLS
+  // (orders_select_atendente) libera a atendente a LER qualquer venda de loja,
+  // de qualquer data — quem barra editar/cancelar fora do dia é a funcao
+  // caixa_pode_mexer, no banco.
+  async function getSalesBetween(startDate, endDate) {
+    var query = client
       .from('orders')
       .select('numero, revendedor_id, produto_id, itens, valor, quantidade, sabor, detalhes, status, cancel_motivo, created_at, products(nome, modo)')
       .eq('origem', 'loja')
-      .gte('created_at', start.toISOString())
-      .order('created_at', { ascending: false });
+      .gte('created_at', startDate.toISOString());
+    if (endDate) query = query.lt('created_at', endDate.toISOString());
+    var result = await query.order('created_at', { ascending: false });
     if (result.error) return { sales: [], total: 0 };
 
     var resellers = await getResellers();
@@ -189,6 +192,7 @@ var DupuroCaixa = (function () {
         g = byNum[o.numero] = {
           numero: o.numero,
           hora: o.created_at,
+          dia: diaLocal(o.created_at),
           revendedorId: o.revendedor_id || null,
           cliente: o.revendedor_id ? (nomeById[o.revendedor_id] || 'Revendedor') : 'Balcão',
           valor: 0, items: [],
@@ -219,6 +223,47 @@ var DupuroCaixa = (function () {
     // Vendas canceladas não entram no total do dia.
     var total = ordem.reduce(function (t, g) { return t + (g.cancelada ? 0 : g.valor); }, 0);
     return { sales: ordem, total: total };
+  }
+
+  // Data local no formato AAAA-MM-DD (o computador da loja roda no fuso de
+  // Cuiabá, mesmo fuso que o banco usa pra decidir o que é "hoje").
+  function diaLocal(iso) {
+    var d = new Date(iso);
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+  function hojeLocal() { return diaLocal(new Date().toISOString()); }
+
+  // Vendas de hoje (fechamento de caixa).
+  async function getTodaySales() {
+    var start = new Date(); start.setHours(0, 0, 0, 0);
+    return getSalesBetween(start, null);
+  }
+
+  // Vendas de um mês inteiro, já agrupadas por dia (mais recente primeiro).
+  // `mesISO` = 'AAAA-MM'; sem argumento, o mês corrente.
+  async function getMonthSales(mesISO) {
+    var base = mesISO ? new Date(mesISO + '-01T00:00:00') : new Date();
+    var inicio = new Date(base.getFullYear(), base.getMonth(), 1, 0, 0, 0, 0);
+    var fim = new Date(base.getFullYear(), base.getMonth() + 1, 1, 0, 0, 0, 0);
+    var data = await getSalesBetween(inicio, fim);
+    var hoje = hojeLocal();
+    var porDia = {};
+    var dias = [];
+    data.sales.forEach(function (v) {
+      var d = porDia[v.dia];
+      if (!d) {
+        d = porDia[v.dia] = { dia: v.dia, ehHoje: v.dia === hoje, sales: [], total: 0, count: 0, validas: 0 };
+        dias.push(d);
+      }
+      d.sales.push(v);
+      // `count` conta TODAS as vendas do dia (é o que aparece ao expandir, e uma
+      // cancelada some da faixa se não contar); `validas`/`total` ignoram as
+      // canceladas — é o dinheiro que de fato entrou.
+      d.count++;
+      if (!v.cancelada) { d.total += v.valor; d.validas++; }
+    });
+    dias.sort(function (a, b) { return a.dia < b.dia ? 1 : -1; });
+    return { mes: inicio.getFullYear() + '-' + String(inicio.getMonth() + 1).padStart(2, '0'), dias: dias, total: data.total };
   }
 
   // Cancela a venda (mantém o registro como 'cancelado' + motivo). Estoque volta.
@@ -257,6 +302,7 @@ var DupuroCaixa = (function () {
     getResellers: getResellers,
     registerSale: registerSale,
     getTodaySales: getTodaySales,
+    getMonthSales: getMonthSales,
     cancelSale: cancelSale,
     updateSale: updateSale
   };

@@ -1446,6 +1446,17 @@ tr.venda-cancelada td:nth-child(5) { text-decoration: line-through; color: var(-
   font-variant-numeric: tabular-nums; color: var(--roxo-700);
 }
 .day-group.is-open .day-total { color: var(--gold-soft); }
+/* Marca o dia de hoje — é o único em que a atendente pode editar/cancelar. */
+.day-hoje {
+  font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .07em;
+  padding: 3px 8px; border-radius: 999px;
+  background: var(--gold); color: var(--roxo-800);
+}
+.hist-mes {
+  padding: 8px 10px; border: 1px solid rgba(96,16,80,0.18); border-radius: 10px;
+  font-family: inherit; font-size: 13px; color: var(--roxo-700); background: #fff;
+}
+.topbar-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 /* Os pedidos do dia aberto ficam "dentro" do cartão. */
 .day-group.is-open + tr > td { border-top: none; }
 @media (max-width: 560px) {
