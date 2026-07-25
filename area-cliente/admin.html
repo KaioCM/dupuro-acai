@@ -8,7 +8,7 @@
 <link rel="apple-touch-icon" href="../assets/img/brand/favicon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/css/style.css?v=3">
+<link rel="stylesheet" href="../assets/css/style.css?v=4">
 </head>
 <body>
 
@@ -28,6 +28,7 @@
     <a href="#" class="sidebar-link" data-tab="revendedores"><span class="ic">👥</span> Revendedores</a>
     <a href="#" class="sidebar-link" data-tab="produtos"><span class="ic">🧺</span> Produtos</a>
     <a href="#" class="sidebar-link" data-tab="pedidos"><span class="ic">📦</span> Pedidos</a>
+    <a href="#" class="sidebar-link" data-tab="producao"><span class="ic">🏭</span> Produção</a>
     <a href="#" class="sidebar-link" data-tab="cupons"><span class="ic">🏷️</span> Cupons</a>
     <a href="#" class="sidebar-link" data-tab="conta"><span class="ic">⚙️</span> Minha conta</a>
 
@@ -441,6 +442,64 @@
         <table class="data-table">
           <thead><tr><th>Quando</th><th>Venda</th><th>Ação</th><th>Atendente</th><th>Motivo</th><th>Antes</th></tr></thead>
           <tbody id="auditsBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============ PRODUÇÃO ============ -->
+    <section class="tab-panel hidden" id="tab-producao">
+      <div class="app-topbar">
+        <div><h1>Custos de produção</h1><div class="subtitle">Registre o gasto de cada leva e veja o custo por litro. Só você (admin) vê isto.</div></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <div><h3 id="prodFormTitle">Nova leva</h3><div class="subtitle" id="prodFormSubtitle">Lance os gastos e o que foi produzido — o custo por litro sai sozinho</div></div>
+          <button type="button" class="btn btn-dark-outline btn-sm hidden" id="prodEditCancel">Cancelar edição</button>
+        </div>
+        <form id="prodForm">
+          <input type="hidden" id="prodEditingId">
+          <div class="order-form-grid" style="margin-bottom:16px;">
+            <div class="field" style="margin-bottom:0;">
+              <label for="prodData">Data da produção</label>
+              <input type="date" id="prodData">
+            </div>
+            <div class="field" style="margin-bottom:0;">
+              <label for="prodRotulo">Rótulo (opcional)</label>
+              <input type="text" id="prodRotulo" placeholder="Ex.: Leva da manhã" maxlength="60">
+            </div>
+          </div>
+
+          <!-- Gastos -->
+          <div class="cart-head">Gastos da leva</div>
+          <div class="field-note-inline" style="margin-bottom:8px;">Adicione uma linha por gasto e escolha a categoria. Some quanto quiser.</div>
+          <div id="prodGastos"></div>
+          <button type="button" class="btn btn-dark-outline btn-sm" id="prodAddGasto">+ Adicionar gasto</button>
+
+          <!-- Produtos produzidos -->
+          <div class="cart-head" style="margin-top:22px;">O que foi produzido</div>
+          <div class="field-note-inline" style="margin-bottom:8px;">Escolha os produtos e a quantidade. O volume (litros) vem do cadastro do produto.</div>
+          <div id="prodItens"></div>
+          <button type="button" class="btn btn-dark-outline btn-sm" id="prodAddItem">+ Adicionar produto</button>
+
+          <!-- Resultado ao vivo -->
+          <div class="calc-result" id="prodResult" aria-live="polite"></div>
+
+          <div style="margin-top:18px; display:flex; gap:10px; flex-wrap:wrap;">
+            <button type="submit" class="btn btn-primary" id="prodSubmitBtn">Salvar leva</button>
+            <span class="limite-msg" id="prodMsg"></span>
+          </div>
+        </form>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <div><h3>Levas registradas</h3><div class="subtitle">Histórico de produções — clique para ver os detalhes</div></div>
+          <button type="button" class="btn btn-dark-outline btn-sm" id="refreshProducoesBtn">↻ Atualizar</button>
+        </div>
+        <table class="data-table">
+          <thead><tr><th>Data</th><th>Leva</th><th>Produzido</th><th class="num">Gasto</th><th class="num">Custo/L</th><th>Ações</th></tr></thead>
+          <tbody id="producoesBody"></tbody>
         </table>
       </div>
     </section>
@@ -2670,6 +2729,246 @@
     window.location.href = 'login.html';
   });
 
+  // ================= CUSTOS DE PRODUÇÃO =================
+  // Uma leva = gastos (linhas por categoria) + produtos produzidos. O custo por
+  // litro é o gasto total ÷ litros totais; cada produto é rateado por volume.
+  var PROD_CATS = [
+    { v: 'materia_prima', l: 'Matéria-prima' },
+    { v: 'embalagem', l: 'Embalagem' },
+    { v: 'mao_de_obra', l: 'Mão de obra' },
+    { v: 'contas_fixos', l: 'Contas e fixos' }
+  ];
+  var PROD_CAT_LABEL = {};
+  PROD_CATS.forEach(function (c) { PROD_CAT_LABEL[c.v] = c.l; });
+
+  var prodGastosData = [];   // [{descricao, categoria, valor}]
+  var prodItensData = [];    // [{produtoId, nome, litrosUnit, quantidade}]
+  var editingProducaoId = null;
+
+  function numBR(v) { return parseFloat(String(v == null ? '' : v).replace(',', '.')) || 0; }
+  // Produtos elegíveis: embalados, com volume, sem duplicar varejo/atacado.
+  function prodProdutosDisponiveis() {
+    return productsCache.filter(function (p) { return !p.compartilhado && p.modo === 'embalado' && p.litros > 0; });
+  }
+
+  function renderGastoRows() {
+    var box = document.getElementById('prodGastos');
+    if (!prodGastosData.length) {
+      box.innerHTML = '<div class="field-note-inline" style="padding:6px 0;">Nenhum gasto ainda.</div>';
+      return;
+    }
+    box.innerHTML = prodGastosData.map(function (g, i) {
+      var opts = PROD_CATS.map(function (c) {
+        return '<option value="' + c.v + '"' + (c.v === g.categoria ? ' selected' : '') + '>' + c.l + '</option>';
+      }).join('');
+      return '<div class="gasto-row" data-i="' + i + '">' +
+          '<input type="text" class="g-desc" data-i="' + i + '" placeholder="Descrição (ex.: Polpa 50 kg)" value="' + (g.descricao || '').replace(/"/g, '&quot;') + '">' +
+          '<select class="g-cat" data-i="' + i + '">' + opts + '</select>' +
+          '<input type="text" inputmode="decimal" class="g-val" data-i="' + i + '" placeholder="R$ 0,00" value="' + (g.valor ? String(g.valor).replace('.', ',') : '') + '">' +
+          '<button type="button" class="link-btn g-del" data-i="' + i + '" title="Remover">✕</button>' +
+        '</div>';
+    }).join('');
+    box.querySelectorAll('.g-desc').forEach(function (el) { el.addEventListener('input', function () { prodGastosData[+el.dataset.i].descricao = el.value; }); });
+    box.querySelectorAll('.g-cat').forEach(function (el) { el.addEventListener('change', function () { prodGastosData[+el.dataset.i].categoria = el.value; recomputeProd(); }); });
+    box.querySelectorAll('.g-val').forEach(function (el) { el.addEventListener('input', function () { prodGastosData[+el.dataset.i].valor = numBR(el.value); recomputeProd(); }); });
+    box.querySelectorAll('.g-del').forEach(function (el) { el.addEventListener('click', function () { prodGastosData.splice(+el.dataset.i, 1); renderGastoRows(); recomputeProd(); }); });
+  }
+
+  function renderItemRows() {
+    var box = document.getElementById('prodItens');
+    var disp = prodProdutosDisponiveis();
+    if (!disp.length) {
+      box.innerHTML = '<div class="field-note-inline" style="padding:6px 0;">Nenhum produto com volume (litros) cadastrado. Defina os litros na aba Produtos.</div>';
+      return;
+    }
+    if (!prodItensData.length) {
+      box.innerHTML = '<div class="field-note-inline" style="padding:6px 0;">Nenhum produto ainda.</div>';
+      return;
+    }
+    box.innerHTML = prodItensData.map(function (it, i) {
+      var opts = '<option value="">Escolha o produto…</option>' + disp.map(function (p) {
+        return '<option value="' + p.id + '"' + (String(p.id) === String(it.produtoId) ? ' selected' : '') + '>' + p.nome + ' (' + fmtLitrosProd(p.litros) + '/un)</option>';
+      }).join('');
+      var litrosTot = (numBR(it.quantidade) * (it.litrosUnit || 0));
+      return '<div class="item-row" data-i="' + i + '">' +
+          '<select class="i-prod" data-i="' + i + '">' + opts + '</select>' +
+          '<input type="text" inputmode="decimal" class="i-qtd" data-i="' + i + '" placeholder="Qtd" value="' + (it.quantidade ? String(it.quantidade).replace('.', ',') : '') + '">' +
+          '<span class="i-litros">' + (litrosTot ? fmtLitrosProd(litrosTot) : '—') + '</span>' +
+          '<button type="button" class="link-btn i-del" data-i="' + i + '" title="Remover">✕</button>' +
+        '</div>';
+    }).join('');
+    box.querySelectorAll('.i-prod').forEach(function (el) {
+      el.addEventListener('change', function () {
+        var p = disp.filter(function (x) { return String(x.id) === el.value; })[0];
+        var it = prodItensData[+el.dataset.i];
+        it.produtoId = p ? p.id : null; it.nome = p ? p.nome : null; it.litrosUnit = p ? p.litros : 0;
+        renderItemRows(); recomputeProd();
+      });
+    });
+    box.querySelectorAll('.i-qtd').forEach(function (el) {
+      el.addEventListener('input', function () {
+        prodItensData[+el.dataset.i].quantidade = numBR(el.value);
+        var row = el.closest('.item-row'); var it = prodItensData[+el.dataset.i];
+        row.querySelector('.i-litros').textContent = (it.quantidade * (it.litrosUnit || 0)) ? fmtLitrosProd(it.quantidade * it.litrosUnit) : '—';
+        recomputeProd();
+      });
+    });
+    box.querySelectorAll('.i-del').forEach(function (el) { el.addEventListener('click', function () { prodItensData.splice(+el.dataset.i, 1); renderItemRows(); recomputeProd(); }); });
+  }
+
+  function fmtLitrosProd(v) { return (Math.round(v * 1000) / 1000).toLocaleString('pt-BR') + ' L'; }
+
+  function recomputeProd() {
+    var gastoTotal = prodGastosData.reduce(function (s, g) { return s + (g.valor || 0); }, 0);
+    var porCat = { materia_prima: 0, embalagem: 0, mao_de_obra: 0, contas_fixos: 0 };
+    prodGastosData.forEach(function (g) { if (porCat[g.categoria] !== undefined) porCat[g.categoria] += (g.valor || 0); });
+    var litrosTotal = prodItensData.reduce(function (s, it) { return s + (numBR(it.quantidade) * (it.litrosUnit || 0)); }, 0);
+    var custoLitro = litrosTotal > 0 ? gastoTotal / litrosTotal : null;
+
+    var catsHtml = PROD_CATS.filter(function (c) { return porCat[c.v] > 0; }).map(function (c) {
+      return '<span class="calc-cat">' + c.l + ': <strong>' + moeda(porCat[c.v]) + '</strong></span>';
+    }).join('');
+
+    var itensHtml = prodItensData.filter(function (it) { return it.produtoId && numBR(it.quantidade) > 0; }).map(function (it) {
+      var lt = numBR(it.quantidade) * (it.litrosUnit || 0);
+      var custoProduto = custoLitro != null ? custoLitro * lt : null;
+      var custoUnidade = custoLitro != null ? custoLitro * (it.litrosUnit || 0) : null;
+      return '<div class="calc-item"><span>' + it.nome + ' · ' + fmtLitrosProd(lt) + '</span>' +
+        '<span>' + (custoProduto != null ? moeda(custoProduto) + ' (' + moeda(custoUnidade) + '/un)' : '—') + '</span></div>';
+    }).join('');
+
+    document.getElementById('prodResult').innerHTML =
+      '<div class="calc-top">' +
+        '<div class="calc-block"><span class="calc-label">Gasto total</span><span class="calc-big">' + moeda(gastoTotal) + '</span></div>' +
+        '<div class="calc-block"><span class="calc-label">Litros produzidos</span><span class="calc-big">' + (litrosTotal ? fmtLitrosProd(litrosTotal) : '—') + '</span></div>' +
+        '<div class="calc-block calc-hl"><span class="calc-label">Custo por litro</span><span class="calc-big">' + (custoLitro != null ? moeda(custoLitro) : '—') + '</span></div>' +
+      '</div>' +
+      (catsHtml ? '<div class="calc-cats">' + catsHtml + '</div>' : '') +
+      (itensHtml ? '<div class="calc-items"><div class="calc-items-head">Custo rateado por produto (por volume)</div>' + itensHtml + '</div>' : '') +
+      (litrosTotal === 0 && gastoTotal > 0 ? '<div class="field-note-inline" style="margin-top:8px;">Adicione os produtos produzidos para ver o custo por litro.</div>' : '');
+  }
+
+  function resetProdForm() {
+    editingProducaoId = null;
+    document.getElementById('prodEditingId').value = '';
+    document.getElementById('prodFormTitle').textContent = 'Nova leva';
+    document.getElementById('prodFormSubtitle').textContent = 'Lance os gastos e o que foi produzido — o custo por litro sai sozinho';
+    document.getElementById('prodSubmitBtn').textContent = 'Salvar leva';
+    document.getElementById('prodEditCancel').classList.add('hidden');
+    document.getElementById('prodData').value = todayIso();
+    document.getElementById('prodRotulo').value = '';
+    document.getElementById('prodMsg').textContent = '';
+    prodGastosData = [{ descricao: '', categoria: 'materia_prima', valor: 0 }];
+    prodItensData = [{ produtoId: null, nome: null, litrosUnit: 0, quantidade: 0 }];
+    renderGastoRows(); renderItemRows(); recomputeProd();
+  }
+
+  document.getElementById('prodAddGasto').addEventListener('click', function () {
+    prodGastosData.push({ descricao: '', categoria: 'materia_prima', valor: 0 });
+    renderGastoRows(); recomputeProd();
+  });
+  document.getElementById('prodAddItem').addEventListener('click', function () {
+    prodItensData.push({ produtoId: null, nome: null, litrosUnit: 0, quantidade: 0 });
+    renderItemRows(); recomputeProd();
+  });
+  document.getElementById('prodEditCancel').addEventListener('click', resetProdForm);
+
+  document.getElementById('prodForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    var msg = document.getElementById('prodMsg');
+    var gastos = prodGastosData.filter(function (g) { return (g.valor || 0) > 0; });
+    var itens = prodItensData.filter(function (it) { return it.produtoId && numBR(it.quantidade) > 0; });
+    if (!gastos.length) { msg.textContent = 'Adicione ao menos um gasto com valor.'; msg.className = 'limite-msg erro'; return; }
+    if (!itens.length) { msg.textContent = 'Adicione ao menos um produto produzido (com quantidade).'; msg.className = 'limite-msg erro'; return; }
+
+    var header = { data: document.getElementById('prodData').value || null, rotulo: document.getElementById('prodRotulo').value.trim() || null };
+    var itensClean = itens.map(function (it) { return { produtoId: it.produtoId, nome: it.nome, quantidade: numBR(it.quantidade), litrosUnit: it.litrosUnit || 0 }; });
+
+    var btn = document.getElementById('prodSubmitBtn');
+    btn.disabled = true;
+    var result = editingProducaoId
+      ? await DupuroAdmin.updateProducao(editingProducaoId, header, gastos, itensClean)
+      : await DupuroAdmin.createProducao(header, gastos, itensClean);
+    btn.disabled = false;
+    if (result.error) { msg.textContent = 'Não foi possível salvar: ' + result.error.message; msg.className = 'limite-msg erro'; return; }
+    msg.textContent = editingProducaoId ? 'Leva atualizada!' : 'Leva registrada!';
+    msg.className = 'limite-msg ok';
+    resetProdForm();
+    await renderProducoes();
+    setTimeout(function () { msg.textContent = ''; }, 2500);
+  });
+
+  function enterEditProducao(leva) {
+    editingProducaoId = leva.id;
+    document.getElementById('prodEditingId').value = leva.id;
+    document.getElementById('prodFormTitle').textContent = 'Editar leva';
+    document.getElementById('prodFormSubtitle').textContent = 'Altere os gastos/produtos e salve';
+    document.getElementById('prodSubmitBtn').textContent = 'Salvar alterações';
+    document.getElementById('prodEditCancel').classList.remove('hidden');
+    document.getElementById('prodData').value = leva.data || todayIso();
+    document.getElementById('prodRotulo').value = leva.rotulo || '';
+    prodGastosData = leva.gastos.length ? leva.gastos.map(function (g) { return { descricao: g.descricao || '', categoria: g.categoria, valor: g.valor }; }) : [{ descricao: '', categoria: 'materia_prima', valor: 0 }];
+    prodItensData = leva.itens.length ? leva.itens.map(function (it) { return { produtoId: it.produtoId, nome: it.nome, litrosUnit: it.litrosUnit, quantidade: it.quantidade }; }) : [{ produtoId: null, nome: null, litrosUnit: 0, quantidade: 0 }];
+    renderGastoRows(); renderItemRows(); recomputeProd();
+    document.getElementById('prodForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  var producoesCache = [];
+  async function renderProducoes() {
+    producoesCache = await DupuroAdmin.getProducoes();
+    var body = document.getElementById('producoesBody');
+    if (!producoesCache.length) {
+      body.innerHTML = '<tr><td colspan="6"><div class="empty-state"><div class="icon">🏭</div>Nenhuma leva registrada ainda.</div></td></tr>';
+      return;
+    }
+    body.innerHTML = producoesCache.map(function (l) {
+      var produzido = l.itens.map(function (it) { return it.nome + ' ×' + (Math.round(it.quantidade * 100) / 100).toLocaleString('pt-BR'); }).join(', ') || '—';
+      var det = '<div class="prod-det-block"><strong>Gastos</strong>' + (l.gastos.length ? l.gastos.map(function (g) {
+        return '<div class="order-item-line"><span>' + (g.descricao || '(sem descrição)') + ' · ' + PROD_CAT_LABEL[g.categoria] + '</span><span>' + moeda(g.valor) + '</span></div>';
+      }).join('') : '<div class="field-note-inline">—</div>') + '</div>' +
+      '<div class="prod-det-block"><strong>Produtos</strong>' + (l.itens.length ? l.itens.map(function (it) {
+        var custoUn = l.custoPorLitro != null ? l.custoPorLitro * it.litrosUnit : null;
+        return '<div class="order-item-line"><span>' + it.nome + ' ×' + (Math.round(it.quantidade * 100) / 100).toLocaleString('pt-BR') + ' · ' + fmtLitrosProd(it.litrosTotal) + '</span><span>' + (custoUn != null ? moeda(custoUn) + '/un' : '—') + '</span></div>';
+      }).join('') : '<div class="field-note-inline">—</div>') + '</div>';
+      return '<tr>' +
+          '<td>' + formatDate(l.data) + '</td>' +
+          '<td>' + (l.rotulo || '<span class="field-note-inline">—</span>') + '</td>' +
+          '<td>' + produzido + '</td>' +
+          '<td class="num">' + moeda(l.gastoTotal) + '</td>' +
+          '<td class="num">' + (l.custoPorLitro != null ? moeda(l.custoPorLitro) : '—') + '</td>' +
+          '<td class="admin-table-actions">' +
+            '<button class="btn btn-dark-outline btn-sm" data-prod-det="' + l.id + '">Detalhes</button>' +
+            '<button class="btn btn-dark-outline btn-sm" data-prod-edit="' + l.id + '">Editar</button>' +
+            '<button class="btn btn-danger-outline btn-sm" data-prod-del="' + l.id + '">Excluir</button>' +
+          '</td>' +
+        '</tr>' +
+        '<tr class="order-details hidden" data-prod-det-row="' + l.id + '"><td colspan="6">' + det + '</td></tr>';
+    }).join('');
+
+    body.querySelectorAll('[data-prod-det]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var row = body.querySelector('[data-prod-det-row="' + btn.getAttribute('data-prod-det') + '"]');
+        if (row) row.classList.toggle('hidden');
+      });
+    });
+    body.querySelectorAll('[data-prod-edit]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var l = producoesCache.filter(function (x) { return String(x.id) === btn.getAttribute('data-prod-edit'); })[0];
+        if (l) enterEditProducao(l);
+      });
+    });
+    body.querySelectorAll('[data-prod-del]').forEach(function (btn) {
+      btn.addEventListener('click', async function () {
+        if (!window.confirm('Excluir esta leva? Essa ação não pode ser desfeita.')) return;
+        btn.disabled = true;
+        await DupuroAdmin.deleteProducao(btn.getAttribute('data-prod-del'));
+        if (String(editingProducaoId) === btn.getAttribute('data-prod-del')) resetProdForm();
+        await renderProducoes();
+      });
+    });
+  }
+  document.getElementById('refreshProducoesBtn').addEventListener('click', renderProducoes);
+
   // ---- Carga inicial ----
   document.getElementById('orderData').value = todayIso();
   resetProductForm();
@@ -2685,6 +2984,8 @@
   await loadLimiteLitros();
   await renderAudits();
   await renderCoupons();
+  resetProdForm();
+  await renderProducoes();
 
 })();
 </script>

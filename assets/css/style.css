@@ -1392,6 +1392,43 @@ tr.venda-cancelada td:nth-child(5) { text-decoration: line-through; color: var(-
 .flavor-stock-item span { font-size: 13px; font-weight: 600; color: var(--roxo-700); }
 .flavor-stock-item input { width: 74px; flex: none; }
 
+/* Custos de produção (aba Produção do admin): linhas de gasto/produto + resultado */
+.gasto-row, .item-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.gasto-row input, .gasto-row select, .item-row input, .item-row select {
+  padding: 9px 10px; border: 1.5px solid rgba(96,16,80,0.16); border-radius: var(--radius-sm);
+  font: inherit; font-size: 13.5px; background: #fff; color: var(--text-dark, #33122b);
+}
+.gasto-row .g-desc { flex: 1 1 auto; min-width: 0; }
+.gasto-row .g-cat { flex: 0 0 auto; }
+.gasto-row .g-val { flex: 0 0 110px; width: 110px; text-align: right; }
+.item-row .i-prod { flex: 1 1 auto; min-width: 0; }
+.item-row .i-qtd { flex: 0 0 90px; width: 90px; text-align: right; }
+.item-row .i-litros { flex: 0 0 auto; min-width: 66px; text-align: right; font-weight: 700; color: var(--roxo-700); font-size: 13px; }
+.gasto-row .g-del, .item-row .i-del { flex: 0 0 auto; color: #C0392B; text-decoration: none; font-size: 15px; }
+
+.calc-result { margin-top: 18px; background: rgba(96,16,80,0.04); border: 1.5px solid rgba(96,16,80,0.12); border-radius: 14px; padding: 16px; }
+.calc-top { display: flex; flex-wrap: wrap; gap: 14px; }
+.calc-block { flex: 1 1 140px; background: #fff; border: 1px solid rgba(96,16,80,0.10); border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; }
+.calc-block.calc-hl { background: var(--roxo-700); border-color: var(--roxo-700); }
+.calc-block.calc-hl .calc-label { color: rgba(255,247,236,0.85); }
+.calc-block.calc-hl .calc-big { color: var(--gold-soft, #FFD34D); }
+.calc-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--text-light, #7A5A72); }
+.calc-big { font-size: 20px; font-weight: 800; color: var(--roxo-700); font-variant-numeric: tabular-nums; }
+.calc-cats { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 12px; font-size: 13px; color: var(--text-dark, #33122b); }
+.calc-cat strong { color: var(--roxo-700); }
+.calc-items { margin-top: 12px; }
+.calc-items-head { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; color: var(--text-light, #7A5A72); margin-bottom: 4px; }
+.calc-item { display: flex; justify-content: space-between; gap: 12px; padding: 5px 0; border-bottom: 1px solid rgba(96,16,80,0.06); font-size: 13.5px; }
+.calc-item:last-child { border-bottom: none; }
+.calc-item span:last-child { font-weight: 700; color: var(--roxo-700); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.prod-det-block { margin-bottom: 12px; }
+.prod-det-block:last-child { margin-bottom: 0; }
+.prod-det-block > strong { display: block; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--text-light, #7A5A72); margin-bottom: 4px; }
+@media (max-width: 560px) {
+  .gasto-row, .item-row { flex-wrap: wrap; }
+  .gasto-row .g-desc, .item-row .i-prod { flex: 1 1 100%; }
+}
+
 /* Carrinho de pedido (montagem multi-itens no cliente e no admin) */
 .cart-head { font-weight: 800; color: var(--roxo-700); font-size: 14px; margin: 6px 0 8px; }
 .cart-list { list-style: none; margin: 0 0 10px; padding: 0; display: flex; flex-direction: column; gap: 8px; }

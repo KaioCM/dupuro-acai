@@ -657,6 +657,113 @@ var DupuroAdmin = (function () {
     return { error: result.error };
   }
 
+  // ---------- Custos de produção (por leva) ----------
+  // Tabelas admin-only (migration_024). Cada leva tem gastos (linhas por
+  // categoria) e itens (produtos que saíram). O custo por litro é o gasto
+  // total dividido pelo total de litros produzidos; o custo de cada produto é
+  // rateado por volume. Os totais são calculados aqui na leitura, não gravados.
+  async function getProducoes() {
+    var prodResult = await client
+      .from('producoes')
+      .select('id, data, rotulo, observacao, created_at')
+      .order('data', { ascending: false })
+      .order('id', { ascending: false });
+    if (prodResult.error) return [];
+    var levas = prodResult.data || [];
+    if (!levas.length) return [];
+
+    var ids = levas.map(function (l) { return l.id; });
+    var gastosResult = await client
+      .from('producao_gastos')
+      .select('id, producao_id, descricao, categoria, valor')
+      .in('producao_id', ids);
+    var itensResult = await client
+      .from('producao_itens')
+      .select('id, producao_id, produto_id, produto_nome, quantidade, litros_unit')
+      .in('producao_id', ids);
+
+    var gastosBy = {};
+    (gastosResult.data || []).forEach(function (g) {
+      (gastosBy[g.producao_id] = gastosBy[g.producao_id] || []).push({
+        id: g.id, descricao: g.descricao, categoria: g.categoria, valor: Number(g.valor) || 0
+      });
+    });
+    var itensBy = {};
+    (itensResult.data || []).forEach(function (it) {
+      var qtd = Number(it.quantidade) || 0;
+      var lu = Number(it.litros_unit) || 0;
+      (itensBy[it.producao_id] = itensBy[it.producao_id] || []).push({
+        id: it.id, produtoId: it.produto_id, nome: it.produto_nome,
+        quantidade: qtd, litrosUnit: lu, litrosTotal: qtd * lu
+      });
+    });
+
+    return levas.map(function (l) {
+      var gastos = gastosBy[l.id] || [];
+      var itens = itensBy[l.id] || [];
+      var gastoTotal = gastos.reduce(function (s, g) { return s + g.valor; }, 0);
+      var porCategoria = { materia_prima: 0, embalagem: 0, mao_de_obra: 0, contas_fixos: 0 };
+      gastos.forEach(function (g) { if (porCategoria[g.categoria] !== undefined) porCategoria[g.categoria] += g.valor; });
+      var litrosTotal = itens.reduce(function (s, it) { return s + it.litrosTotal; }, 0);
+      var custoPorLitro = litrosTotal > 0 ? gastoTotal / litrosTotal : null;
+      return {
+        id: l.id, data: l.data, rotulo: l.rotulo, observacao: l.observacao,
+        gastos: gastos, itens: itens,
+        gastoTotal: gastoTotal, porCategoria: porCategoria,
+        litrosTotal: litrosTotal, custoPorLitro: custoPorLitro
+      };
+    });
+  }
+
+  // header = { data, rotulo, observacao }
+  // gastos = [{ descricao, categoria, valor }]
+  // itens  = [{ produtoId, nome, quantidade, litrosUnit }]
+  async function createProducao(header, gastos, itens) {
+    var ins = await client.from('producoes').insert({
+      data: header.data || null,
+      rotulo: header.rotulo || null,
+      observacao: header.observacao || null
+    }).select('id').single();
+    if (ins.error) return { error: ins.error };
+    var id = ins.data.id;
+    var filhosErro = await inserirFilhosProducao(id, gastos, itens);
+    return { error: filhosErro, id: id };
+  }
+
+  async function updateProducao(id, header, gastos, itens) {
+    var upd = await client.from('producoes').update({
+      data: header.data || null,
+      rotulo: header.rotulo || null,
+      observacao: header.observacao || null
+    }).eq('id', id);
+    if (upd.error) return { error: upd.error };
+    // Recria os filhos: tabela só-admin, então apagar e reinserir é seguro.
+    await client.from('producao_gastos').delete().eq('producao_id', id);
+    await client.from('producao_itens').delete().eq('producao_id', id);
+    var filhosErro = await inserirFilhosProducao(id, gastos, itens);
+    return { error: filhosErro };
+  }
+
+  async function inserirFilhosProducao(id, gastos, itens) {
+    var gRows = (gastos || []).map(function (g) {
+      return { producao_id: id, descricao: g.descricao || null, categoria: g.categoria, valor: g.valor || 0 };
+    });
+    var iRows = (itens || []).map(function (it) {
+      return {
+        producao_id: id, produto_id: it.produtoId || null, produto_nome: it.nome || null,
+        quantidade: it.quantidade || 0, litros_unit: it.litrosUnit || 0
+      };
+    });
+    if (gRows.length) { var gr = await client.from('producao_gastos').insert(gRows); if (gr.error) return gr.error; }
+    if (iRows.length) { var ir = await client.from('producao_itens').insert(iRows); if (ir.error) return ir.error; }
+    return null;
+  }
+
+  async function deleteProducao(id) {
+    var result = await client.from('producoes').delete().eq('id', id);
+    return { error: result.error };
+  }
+
   return {
     requireAdmin: requireAdmin,
     logout: logout,
@@ -697,7 +804,11 @@ var DupuroAdmin = (function () {
     getAcompanhamentos: getAcompanhamentos,
     saveAcompanhamento: saveAcompanhamento,
     setAcompanhamentoAtivo: setAcompanhamentoAtivo,
-    deleteAcompanhamento: deleteAcompanhamento
+    deleteAcompanhamento: deleteAcompanhamento,
+    getProducoes: getProducoes,
+    createProducao: createProducao,
+    updateProducao: updateProducao,
+    deleteProducao: deleteProducao
   };
 
 })();
