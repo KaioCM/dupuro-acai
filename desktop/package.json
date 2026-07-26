@@ -17,10 +17,10 @@
   "build": {
     "appId": "com.dupuroacai.caixa",
     "productName": "Dupuro Caixa",
+    "artifactName": "Dupuro-Caixa-Setup.${ext}",
     "files": ["main.js", "preload.js", "assets/**"],
     "win": {
-      "target": "nsis",
-      "icon": "assets/icon.ico"
+      "target": "nsis"
     },
     "nsis": {
       "oneClick": false,

@@ -8,7 +8,7 @@
 <link rel="apple-touch-icon" href="../assets/img/brand/favicon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/css/style.css?v=5">
+<link rel="stylesheet" href="../assets/css/style.css?v=6">
 <link rel="manifest" href="../manifest.webmanifest">
 <meta name="theme-color" content="#601050">
 </head>
@@ -58,6 +58,19 @@
             <select id="resellerSelect"></select>
           </div>
         </div>
+      </div>
+
+      <!-- Baixar o app do caixa (some quando já está rodando dentro do app) -->
+      <div class="panel app-download-bar" id="appDownloadPanel" style="margin-bottom:18px;">
+        <div class="app-download-info">
+          <span class="app-download-ic">💻</span>
+          <div>
+            <strong>App do caixa para o computador da loja</strong>
+            <div class="subtitle">Imprime a comanda sozinha (sem a janela) e funciona sem internet. Instale uma vez no PC da loja.</div>
+          </div>
+        </div>
+        <a class="btn btn-primary btn-sm" id="appDownloadBtn"
+           href="https://github.com/KaioCM/dupuro-acai/releases/latest/download/Dupuro-Caixa-Setup.exe">⬇️ Baixar o app</a>
       </div>
 
       <!-- Impressora da comanda -->
@@ -1137,6 +1150,12 @@
   renderShop();
   renderEstoque();
   loadVendas();
+
+  // Já rodando dentro do app da loja? Então não faz sentido oferecer o download.
+  if (window.DupuroPrinter && DupuroPrinter.rodandoNoApp()) {
+    var dl = document.getElementById('appDownloadPanel');
+    if (dl) dl.classList.add('hidden');
+  }
 
   // ---- Offline: service worker + sincronização da fila ----
   // Badge fixo mostrando "sem internet" e quantas vendas estão na fila.

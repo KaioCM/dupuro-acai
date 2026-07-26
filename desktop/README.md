@@ -16,7 +16,21 @@ npm install
 npm start
 ```
 
-## Gerar o instalador (.exe) para levar pra loja
+## Jeito fácil: baixar pronto (sem instalar Node)
+
+Toda vez que uma **tag `v*`** é enviada (ex.: `git tag v1.0.1 && git push origin v1.0.1`),
+o GitHub monta o `.exe` sozinho (workflow `.github/workflows/build-desktop.yml`) e publica
+num **Release**. O botão **"⬇️ Baixar o app"** dentro do caixa (aba Nova venda) sempre baixa
+a versão mais recente:
+
+```
+https://github.com/KaioCM/dupuro-acai/releases/latest/download/Dupuro-Caixa-Setup.exe
+```
+
+Para lançar uma nova versão: suba o `version` no `package.json`, crie a tag e faça o push
+da tag. Em poucos minutos o botão passa a servir a versão nova.
+
+## Gerar o instalador (.exe) manualmente (opcional, precisa de Node)
 
 ```bash
 cd desktop

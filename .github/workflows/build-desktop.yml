@@ -1,0 +1,40 @@
+name: Build app do caixa (.exe)
+
+# Monta o instalador do app da loja no Windows da nuvem e publica num Release.
+# Dispara ao criar uma tag "v*" (ex.: v1.0.0) ou manualmente pela aba Actions.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Instalar dependências
+        working-directory: desktop
+        run: npm install
+
+      - name: Gerar o instalador (.exe)
+        working-directory: desktop
+        run: npm run dist
+
+      - name: Publicar no Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: desktop/dist/*.exe
+          tag_name: ${{ github.ref_name }}
+          name: Dupuro Caixa ${{ github.ref_name }}
+          body: Instalador do app de caixa da loja. Baixe o Dupuro-Caixa-Setup.exe.
+          make_latest: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
