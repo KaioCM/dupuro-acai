@@ -1392,6 +1392,17 @@ tr.venda-cancelada td:nth-child(5) { text-decoration: line-through; color: var(-
 .flavor-stock-item span { font-size: 13px; font-weight: 600; color: var(--roxo-700); }
 .flavor-stock-item input { width: 74px; flex: none; }
 
+/* Badge de status offline do caixa (app da loja) */
+.offline-pill {
+  position: fixed; right: 16px; bottom: 16px; z-index: 9999;
+  padding: 10px 16px; border-radius: 999px;
+  background: var(--roxo-700); color: #FFF7EC;
+  font-family: 'Inter', sans-serif; font-weight: 700; font-size: 13px;
+  box-shadow: 0 6px 20px rgba(51,18,43,0.28);
+}
+.offline-pill.is-off { background: #C0392B; }
+.offline-pill.hidden { display: none; }
+
 /* Custos de produção (aba Produção do admin): linhas de gasto/produto + resultado */
 .gasto-row, .item-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
 .gasto-row input, .gasto-row select, .item-row input, .item-row select {

@@ -1,0 +1,14 @@
+{
+  "name": "Dupuro Caixa",
+  "short_name": "Dupuro Caixa",
+  "description": "Caixa da loja Dupuro Açaí — funciona offline e imprime a comanda.",
+  "start_url": "/area-cliente/caixa.html",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#601050",
+  "theme_color": "#601050",
+  "icons": [
+    { "src": "/assets/img/brand/favicon-180.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "/assets/img/brand/favicon-32.png", "sizes": "32x32", "type": "image/png" }
+  ]
+}

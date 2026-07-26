@@ -218,16 +218,16 @@ var DupuroPrinter = (function () {
     }
   }
 
-  // ---------- Caminho 2: impressão pelo Windows (fallback) ----------
-  // Mesma comanda, em HTML de 80mm, pelo diálogo de impressão do navegador.
-  function imprimirNavegador(venda) {
+  // HTML da comanda (80mm) — compartilhado pela impressão do navegador (iframe)
+  // e pela impressão nativa do app (Electron manda esse HTML pra impressora).
+  function htmlDaComanda(venda) {
     var linhas = montarLinhas(venda).map(function (l) {
       if (l.t === '-') return '<div class="hr"></div>';
       var cls = (l.center ? ' center' : '') + (l.bold ? ' bold' : '') + (l.grande ? ' grande' : '');
       return '<div class="l' + cls + '">' + (l.t === '' ? '&nbsp;' : l.t.replace(/&/g, '&amp;').replace(/</g, '&lt;')) + '</div>';
     }).join('');
 
-    var html = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>' + venda.numero + '</title><style>' +
+    return '<!DOCTYPE html><html><head><meta charset="utf-8"><title>' + venda.numero + '</title><style>' +
       '@page { size: 80mm auto; margin: 0; }' +
       'body { margin: 0; padding: 4mm 3mm; font-family: "Courier New", monospace; font-size: 12px; line-height: 1.35; color: #000; width: 74mm; }' +
       '.l { white-space: pre-wrap; }' +
@@ -236,6 +236,28 @@ var DupuroPrinter = (function () {
       '.grande { font-size: 19px; font-weight: 700; letter-spacing: 1px; }' +
       '.hr { border-top: 1px dashed #000; margin: 4px 0; }' +
       '</style></head><body>' + linhas + '</body></html>';
+  }
+
+  // ---------- Caminho 0: app nativo (Electron) — SEM janela ----------
+  // Quando o caixa roda dentro do app da loja, window.DupuroDesktop existe e
+  // imprime o HTML direto na impressora, sem diálogo nenhum. É o preferido.
+  function rodandoNoApp() {
+    return typeof window !== 'undefined' && window.DupuroDesktop && typeof window.DupuroDesktop.imprimir === 'function';
+  }
+  async function imprimirNativo(venda) {
+    try {
+      var r = await window.DupuroDesktop.imprimir(htmlDaComanda(venda));
+      if (r && r.ok) return { error: null };
+      return { error: new Error((r && r.error) || 'Falha na impressão do app') };
+    } catch (e) {
+      return { error: e };
+    }
+  }
+
+  // ---------- Caminho 2: impressão pelo Windows (fallback) ----------
+  // Mesma comanda, em HTML de 80mm, pelo diálogo de impressão do navegador.
+  function imprimirNavegador(venda) {
+    var html = htmlDaComanda(venda);
 
     var frame = document.createElement('iframe');
     frame.style.position = 'fixed';
@@ -254,9 +276,13 @@ var DupuroPrinter = (function () {
     return { error: null };
   }
 
-  // Imprime pelo melhor caminho disponível: serial se estiver conectada,
-  // senão cai no diálogo do Windows.
+  // Imprime pelo melhor caminho disponível: app nativo (sem janela) > serial >
+  // diálogo do Windows.
   async function imprimir(venda) {
+    if (rodandoNoApp()) {
+      var rn = await imprimirNativo(venda);
+      return { error: rn.error, via: 'app' };
+    }
     if (conectado()) {
       var r = await imprimirSerial(venda);
       if (!r.error) return { error: null, via: 'serial' };
@@ -268,13 +294,15 @@ var DupuroPrinter = (function () {
 
   return {
     suportaSerial: suportaSerial,
+    rodandoNoApp: rodandoNoApp,
     conectado: conectado,
     autoConectar: autoConectar,
     conectar: conectar,
     desconectar: desconectar,
     imprimir: imprimir,
     imprimirNavegador: imprimirNavegador,
-    montarLinhas: montarLinhas
+    montarLinhas: montarLinhas,
+    htmlDaComanda: htmlDaComanda
   };
 
 })();

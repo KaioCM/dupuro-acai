@@ -36,16 +36,24 @@ var DupuroCaixa = (function () {
   // Catálogo com estoque numérico por sabor (a atendente é equipe: pode ver o
   // número). Mesma resolução de estoque compartilhado (estoque_ref) do admin.
   async function getProducts() {
+    // Offline: usa o último catálogo que baixou (pra conseguir montar a venda).
+    if (window.DupuroOffline && !DupuroOffline.estaOnline()) {
+      var cacheOff = await DupuroOffline.lerCache('produtos');
+      if (cacheOff) return cacheOff;
+    }
     var result = await client
       .from('products')
       .select('id, nome, preco, imagem_url, tipo, multissabor, multissabor_incluir_acai, estoque, estoque_ref, estoque_ref_sabor, modo, acomp_gratis, acomp_extra_preco, product_flavor_stock(sabor, estoque)')
       .order('nome', { ascending: true });
-    if (result.error) return [];
+    if (result.error) {
+      if (window.DupuroOffline) { var c = await DupuroOffline.lerCache('produtos'); if (c) return c; }
+      return [];
+    }
     var raw = result.data || [];
     var byId = {};
     raw.forEach(function (p) { byId[p.id] = p; });
 
-    return raw.map(function (p) {
+    var mapped = raw.map(function (p) {
       var modo = p.modo || 'embalado';
       // Copo e self-service não têm estoque por unidade: sempre vendáveis.
       if (modo !== 'embalado') {
@@ -88,20 +96,30 @@ var DupuroCaixa = (function () {
         acompGratis: 0, acompExtraPreco: 0
       };
     });
+    if (window.DupuroOffline) DupuroOffline.salvarCache('produtos', mapped);
+    return mapped;
   }
 
   // Acompanhamentos ativos (lista da loja, usada na montagem do copo).
   async function getAcompanhamentos() {
+    if (window.DupuroOffline && !DupuroOffline.estaOnline()) {
+      var co = await DupuroOffline.lerCache('acompanhamentos'); if (co) return co;
+    }
     var result = await client
       .from('acompanhamentos')
       .select('id, nome, tipo, preco, ordem')
       .eq('ativo', true)
       .order('ordem', { ascending: true })
       .order('nome', { ascending: true });
-    if (result.error) return [];
-    return (result.data || []).map(function (a) {
+    if (result.error) {
+      if (window.DupuroOffline) { var c = await DupuroOffline.lerCache('acompanhamentos'); if (c) return c; }
+      return [];
+    }
+    var mapped = (result.data || []).map(function (a) {
       return { id: a.id, nome: a.nome, tipo: a.tipo || 'gratuito', preco: Number(a.preco) || 0 };
     });
+    if (window.DupuroOffline) DupuroOffline.salvarCache('acompanhamentos', mapped);
+    return mapped;
   }
 
   // Revendedores aprovados (para vincular uma venda de balcão a um revendedor).
@@ -140,30 +158,66 @@ var DupuroCaixa = (function () {
   async function registerSale(header, items) {
     if (!items || !items.length) return { error: new Error('Nenhum item na venda') };
     var session = await getSession();
-    if (!session) return { error: new Error('Sem sessão ativa') };
-    var numero = await getNextOrderNumber();
-    if (!numero) return { error: new Error('Não foi possível gerar o número da venda') };
-    var rows = items.map(function (it) {
+
+    // Linhas "base" (sem numero/status/origem/atendente): é o formato que a RPC
+    // de sync espera. Só produto embalado baixa estoque; copo/self-service não
+    // têm estoque por unidade (a policy orders_insert_atendente exige coerência).
+    var base = items.map(function (it) {
       return {
         revendedor_id: header.revendedorId || null,
-        numero: numero,
         data: hojeISO(),
         itens: it.itens,
         valor: it.valor,
-        status: 'entregue',
         produto_id: it.produtoId || null,
         quantidade: it.quantidade || null,
         sabor: it.sabor || null,
-        // Só produto embalado baixa estoque; copo/self-service não têm estoque
-        // por unidade (a policy orders_insert_atendente exige essa coerência).
         usa_estoque: (it.modo || 'embalado') === 'embalado',
-        detalhes: it.detalhes || null,
-        origem: 'loja',
-        atendente_id: session.user.id
+        detalhes: it.detalhes || null
       };
     });
+
+    // Sem sessão ou offline → enfileira e devolve provisório (a comanda imprime
+    // igual; o VND real é atribuído no sync quando a internet voltar).
+    var offline = window.DupuroOffline && !DupuroOffline.estaOnline();
+    if (offline || !session) {
+      if (window.DupuroOffline) {
+        var it2 = await DupuroOffline.enfileirar(base, header);
+        return { error: null, numero: 'PENDENTE', offline: true, client_uuid: it2.client_uuid };
+      }
+      return { error: new Error('Sem sessão ativa') };
+    }
+
+    // Online: numera e insere direto (fluxo estrito de hoje — bloqueia se faltar
+    // estoque). Se a rede cair no meio, cai pra fila.
+    var numero = await getNextOrderNumber();
+    if (!numero) {
+      if (window.DupuroOffline) {
+        var itq = await DupuroOffline.enfileirar(base, header);
+        return { error: null, numero: 'PENDENTE', offline: true, client_uuid: itq.client_uuid };
+      }
+      return { error: new Error('Não foi possível gerar o número da venda') };
+    }
+    var rows = base.map(function (r) {
+      var row = Object.assign({}, r);
+      row.numero = numero; row.status = 'entregue'; row.origem = 'loja'; row.atendente_id = session.user.id;
+      return row;
+    });
     var result = await client.from('orders').insert(rows);
+    if (result.error && window.DupuroOffline && DupuroOffline.ehErroDeRede(result.error)) {
+      var itr = await DupuroOffline.enfileirar(base, header);
+      return { error: null, numero: 'PENDENTE', offline: true, client_uuid: itr.client_uuid };
+    }
     return { error: result.error, numero: numero };
+  }
+
+  // Sincroniza as vendas que ficaram na fila offline. Chamado ao voltar a
+  // conexão e ao abrir o caixa.
+  async function sincronizarOffline() {
+    if (!window.DupuroOffline) return { enviadas: 0, pendentes: 0 };
+    return DupuroOffline.sincronizar(client);
+  }
+  function filaPendente() {
+    return window.DupuroOffline ? DupuroOffline.tamanhoFila() : Promise.resolve(0);
   }
 
   // Vendas de loja num intervalo, agrupadas por numero. O RLS
@@ -303,6 +357,8 @@ var DupuroCaixa = (function () {
     registerSale: registerSale,
     getTodaySales: getTodaySales,
     getMonthSales: getMonthSales,
+    sincronizarOffline: sincronizarOffline,
+    filaPendente: filaPendente,
     cancelSale: cancelSale,
     updateSale: updateSale
   };

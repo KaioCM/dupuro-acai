@@ -1,0 +1,32 @@
+{
+  "name": "dupuro-caixa",
+  "version": "1.0.0",
+  "description": "App de caixa da Dupuro Açaí para o PC da loja: carrega o caixa do site, imprime a comanda direto na Sweda (sem janela) e funciona offline.",
+  "main": "main.js",
+  "author": "Dupuro Açaí",
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win --x64"
+  },
+  "devDependencies": {
+    "electron": "^31.0.0",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.dupuroacai.caixa",
+    "productName": "Dupuro Caixa",
+    "files": ["main.js", "preload.js", "assets/**"],
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "shortcutName": "Dupuro Caixa"
+    }
+  }
+}

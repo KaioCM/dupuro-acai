@@ -232,8 +232,13 @@ create table if not exists public.orders (
   -- Motivo do cancelamento de uma venda de loja (migration_022). Fica à vista no
   -- fechamento do dia; a trilha completa vai em order_audits.
   cancel_motivo text,
+  -- Id gerado no cliente para venda registrada offline (migration_025). Torna o
+  -- reenvio da sincronização idempotente (unique → não duplica).
+  client_uuid uuid,
   created_at timestamptz not null default now()
 );
+
+create unique index if not exists orders_client_uuid_key on public.orders(client_uuid) where client_uuid is not null;
 
 alter table public.orders enable row level security;
 
@@ -549,6 +554,10 @@ grant select, insert, update, delete on public.producao_itens to authenticated;
 -- transação (pedido inteiro) se faltar estoque.
 -- Resolve o dono do estoque (estoque_ref) antes de aplicar a baixa, para que
 -- atacado e varejo do mesmo item compartilhem o estoque.
+-- Durante a sincronização de venda offline (flag dupuro.sync_offline='on', ver
+-- migration_025/026), o estoque é LIMITADO em 0 em vez de ir a negativo — a
+-- venda já aconteceu, então é registrada, mas a trava estoque>=0 é respeitada
+-- (fica "otimista"). Fora do sync, comportamento idêntico ao de sempre.
 create or replace function public.apply_stock_delta(p_produto_id bigint, p_sabor text, p_delta int)
 returns void language plpgsql security definer set search_path = public as $$
 declare
@@ -557,6 +566,7 @@ declare
   v_target bigint;
   v_sabor text;
   is_multi boolean;
+  v_sync boolean := coalesce(current_setting('dupuro.sync_offline', true), 'off') = 'on';
 begin
   if p_produto_id is null or p_delta is null then return; end if;
   select estoque_ref, estoque_ref_sabor into v_ref, v_ref_sabor from public.products where id = p_produto_id;
@@ -564,16 +574,64 @@ begin
   v_sabor := coalesce(v_ref_sabor, p_sabor);
   select multissabor into is_multi from public.products where id = v_target;
   if is_multi is true and v_sabor is not null then
-    update public.product_flavor_stock set estoque = estoque + p_delta
-      where produto_id = v_target and sabor = v_sabor;
-    if not found and p_delta < 0 then
-      raise exception 'Sem estoque para o sabor %', v_sabor using errcode = '23514';
+    if v_sync then
+      update public.product_flavor_stock set estoque = greatest(0, estoque + p_delta)
+        where produto_id = v_target and sabor = v_sabor;
+    else
+      update public.product_flavor_stock set estoque = estoque + p_delta
+        where produto_id = v_target and sabor = v_sabor;
+      if not found and p_delta < 0 then
+        raise exception 'Sem estoque para o sabor %', v_sabor using errcode = '23514';
+      end if;
     end if;
   else
-    update public.products set estoque = estoque + p_delta where id = v_target;
+    if v_sync then
+      update public.products set estoque = greatest(0, estoque + p_delta) where id = v_target;
+    else
+      update public.products set estoque = estoque + p_delta where id = v_target;
+    end if;
   end if;
 end;
 $$;
+
+-- Sincroniza uma venda feita offline (migration_025): numera com o VND real,
+-- insere as linhas (origem loja/entregue) e é idempotente pelo client_uuid.
+-- security definer; checa papel dentro. Estoque limitado em 0 pela flag acima.
+create or replace function public.sincronizar_venda_offline(p_rows jsonb, p_client_uuid uuid)
+returns text language plpgsql security definer set search_path = public as $$
+declare v_numero text; v_existente text; r jsonb; v_primeira boolean := true;
+begin
+  if not (public.is_atendente() or public.is_admin()) then
+    raise exception 'Sem permissão para sincronizar vendas.';
+  end if;
+  if p_client_uuid is null then raise exception 'client_uuid obrigatório.'; end if;
+  select numero into v_existente from public.orders where client_uuid = p_client_uuid limit 1;
+  if v_existente is not null then return v_existente; end if;
+
+  perform set_config('dupuro.sync_offline', 'on', true);
+  v_numero := public.next_venda_numero();
+  for r in select value from jsonb_array_elements(p_rows)
+  loop
+    insert into public.orders (
+      revendedor_id, numero, data, itens, valor, status,
+      produto_id, quantidade, sabor, usa_estoque, detalhes,
+      origem, atendente_id, client_uuid
+    ) values (
+      nullif(r->>'revendedor_id', '')::uuid, v_numero,
+      coalesce(nullif(r->>'data', ''), (now() at time zone 'America/Cuiaba')::date::text)::date,
+      r->>'itens', (r->>'valor')::numeric, 'entregue',
+      nullif(r->>'produto_id', '')::bigint, nullif(r->>'quantidade', '')::int,
+      nullif(r->>'sabor', ''), coalesce((r->>'usa_estoque')::boolean, true),
+      case when r ? 'detalhes' then r->'detalhes' else null end,
+      'loja', auth.uid(),
+      case when v_primeira then p_client_uuid else null end
+    );
+    v_primeira := false;
+  end loop;
+  return v_numero;
+end;
+$$;
+grant execute on function public.sincronizar_venda_offline(jsonb, uuid) to authenticated;
 
 -- Só pedido CONFIRMADO pelo admin consome estoque. O pedido do revendedor nasce
 -- 'enviado' (aguardando análise) e não mexe no estoque; cancelar devolve.

@@ -8,7 +8,9 @@
 <link rel="apple-touch-icon" href="../assets/img/brand/favicon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/css/style.css?v=4">
+<link rel="stylesheet" href="../assets/css/style.css?v=5">
+<link rel="manifest" href="../manifest.webmanifest">
+<meta name="theme-color" content="#601050">
 </head>
 <body>
 
@@ -290,6 +292,7 @@
 <script src="../assets/js/supabase-config.js"></script>
 <script src="../assets/js/supabase-client.js"></script>
 <script src="../assets/js/app-ui.js"></script>
+<script src="../assets/js/offline-queue.js"></script>
 <script src="../assets/js/caixa.js"></script>
 <script src="../assets/js/printer.js"></script>
 <script>
@@ -745,7 +748,8 @@
 
     cart = [];
     renderCart();
-    document.getElementById('saleSuccessDetail').textContent = result.numero + ' · ' + n + (n === 1 ? ' item' : ' itens') + ' · ' + brl(total);
+    document.getElementById('saleSuccessDetail').textContent = (result.offline ? 'Salva offline (sincroniza depois)' : result.numero) + ' · ' + n + (n === 1 ? ' item' : ' itens') + ' · ' + brl(total);
+    if (result.offline) atualizarStatusOffline();
     summaryContent.classList.add('hidden');
     summaryPlaceholder.classList.add('hidden');
     saleSuccess.classList.remove('hidden');
@@ -1133,6 +1137,45 @@
   renderShop();
   renderEstoque();
   loadVendas();
+
+  // ---- Offline: service worker + sincronização da fila ----
+  // Badge fixo mostrando "sem internet" e quantas vendas estão na fila.
+  var statusPill = document.createElement('div');
+  statusPill.id = 'offlineStatus';
+  statusPill.className = 'offline-pill hidden';
+  document.body.appendChild(statusPill);
+
+  async function atualizarStatusOffline() {
+    var online = navigator.onLine !== false;
+    var pend = await DupuroCaixa.filaPendente();
+    if (online && !pend) { statusPill.classList.add('hidden'); return; }
+    statusPill.classList.remove('hidden');
+    statusPill.classList.toggle('is-off', !online);
+    if (!online) statusPill.textContent = '📴 Sem internet' + (pend ? ' · ' + pend + (pend > 1 ? ' vendas na fila' : ' venda na fila') : '');
+    else statusPill.textContent = '🔄 Sincronizando ' + pend + (pend > 1 ? ' vendas...' : ' venda...');
+  }
+
+  var sincronizando = false;
+  async function tentarSincronizar() {
+    await atualizarStatusOffline();
+    if (navigator.onLine === false || sincronizando) return;
+    sincronizando = true;
+    var r = await DupuroCaixa.sincronizarOffline();
+    sincronizando = false;
+    await atualizarStatusOffline();
+    if (r && r.enviadas) {
+      productsCache = decorate(await DupuroCaixa.getProducts());
+      renderShop(); renderEstoque(); loadVendas(); refreshHistoricoSeAberto();
+    }
+  }
+
+  window.addEventListener('online', tentarSincronizar);
+  window.addEventListener('offline', atualizarStatusOffline);
+  atualizarStatusOffline();
+  tentarSincronizar();
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').catch(function () { /* sem SW: segue sem offline */ });
+  }
 
   // ---- Navegação por abas ----
   var navItems = document.querySelectorAll('.sidebar-link[data-tab], .sidebar-cta[data-tab]');
