@@ -8,7 +8,7 @@
 <link rel="apple-touch-icon" href="../assets/img/brand/favicon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/css/style.css?v=8">
+<link rel="stylesheet" href="../assets/css/style.css?v=9">
 <link rel="manifest" href="../manifest.webmanifest">
 <meta name="theme-color" content="#601050">
 </head>
@@ -153,7 +153,6 @@
               <!-- Copo: monta os acompanhamentos (N grátis, excedente cobrado) -->
               <div class="field hidden" id="summaryAcompField">
                 <label>Acompanhamentos</label>
-                <div class="acomp-counter" id="acompCounter" role="status" aria-live="polite">—</div>
                 <div class="acomp-list" id="acompList"></div>
               </div>
 
@@ -511,12 +510,16 @@
     if (selectedProduct.modo === 'copo') {
       var b = copoBreakdown(selectedProduct);
       var cota = selectedProduct.acompGratis || 0;
-      var counter = document.getElementById('acompCounter');
-      var partes = [b.gratuitosMarcados + ' de ' + cota + ' grátis'];
-      if (b.extras > 0) partes.push('+' + b.extras + ' extra' + (b.extras === 1 ? '' : 's') + ' = ' + brl(b.valorExtras));
-      if (b.valorPagos > 0) partes.push('pagos = ' + brl(b.valorPagos));
-      counter.textContent = partes.join(' · ');
-      counter.classList.toggle('over', b.extras > 0);
+      var extraPreco = selectedProduct.acompExtraPreco || 0;
+      var cotaEl = document.getElementById('acompCota');
+      if (cotaEl) {
+        var usados = Math.min(b.gratuitosMarcados, cota);
+        var txt = usados + ' de ' + cota + ' grátis';
+        if (b.extras > 0) txt += ' · +' + b.extras + ' extra' + (b.extras === 1 ? '' : 's') + ' = ' + brl(b.valorExtras);
+        else if (b.gratuitosMarcados >= cota && extraPreco > 0) txt += ' · próximo vira +' + brl(extraPreco);
+        cotaEl.textContent = txt;
+        cotaEl.classList.toggle('over', b.extras > 0);
+      }
       el.textContent = brl(b.unitario * qty);
       return;
     }
@@ -530,16 +533,36 @@
       box.innerHTML = '<div class="qty-hint">Nenhum acompanhamento cadastrado. O admin cadastra na aba Produtos.</div>';
       return;
     }
-    box.innerHTML = acompCache.map(function (a) {
-      return '<label class="acomp-item">' +
+    function chip(a) {
+      return '<label class="acomp-chip' + (a.tipo === 'pago' ? ' pago' : '') + '">' +
         '<input type="checkbox" data-acomp="' + a.id + '">' +
         '<span class="acomp-nome">' + a.nome + '</span>' +
-        (a.tipo === 'pago' ? '<span class="acomp-tag pago">+' + brl(a.preco) + '</span>' : '<span class="acomp-tag">grátis</span>') +
+        (a.tipo === 'pago' ? '<span class="acomp-tag">+' + brl(a.preco) + '</span>' : '') +
         '</label>';
-    }).join('');
+    }
+    var gratis = acompCache.filter(function (a) { return a.tipo !== 'pago'; });
+    var pagos = acompCache.filter(function (a) { return a.tipo === 'pago'; });
+    var html = '';
+    if (gratis.length) {
+      html += '<div class="acomp-group">' +
+        '<div class="acomp-group-head">' +
+          '<span class="acomp-group-title">🎁 Grátis</span>' +
+          '<span class="acomp-cota" id="acompCota" role="status" aria-live="polite">—</span>' +
+        '</div>' +
+        '<div class="acomp-chips">' + gratis.map(chip).join('') + '</div>' +
+      '</div>';
+    }
+    if (pagos.length) {
+      html += '<div class="acomp-group">' +
+        '<div class="acomp-group-head"><span class="acomp-group-title">➕ Adicionais pagos</span></div>' +
+        '<div class="acomp-chips">' + pagos.map(chip).join('') + '</div>' +
+      '</div>';
+    }
+    box.innerHTML = html;
     box.querySelectorAll('input[data-acomp]').forEach(function (i) {
       i.addEventListener('change', updateTotal);
     });
+    updateTotal();
   }
 
   function selectProduct(id) {

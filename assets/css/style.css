@@ -1371,15 +1371,24 @@ tr.venda-cancelada td:nth-child(5) { text-decoration: line-through; color: var(-
 .printer-actions { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
 
 /* Caixa: montagem do copo (acompanhamentos) */
-.acomp-counter { font-size: 12.5px; font-weight: 700; color: var(--verde); background: rgba(139,184,49,0.12); border-radius: 8px; padding: 6px 10px; margin-bottom: 8px; }
-.acomp-counter.over { color: var(--roxo-700); background: rgba(245,179,1,0.18); }
-.acomp-list { display: grid; gap: 4px; max-height: 240px; overflow-y: auto; padding-right: 4px; }
-.acomp-item { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border: 1px solid rgba(96,16,80,0.10); border-radius: 10px; cursor: pointer; font-size: 13.5px; }
-.acomp-item:hover { background: rgba(96,16,80,0.04); }
-.acomp-item input { width: auto; margin: 0; }
-.acomp-item .acomp-nome { flex: 1; }
-.acomp-tag { font-size: 11px; font-weight: 700; color: var(--text-light); text-transform: uppercase; }
-.acomp-tag.pago { color: var(--roxo-700); }
+.acomp-list { display: grid; gap: 16px; max-height: 340px; overflow-y: auto; padding-right: 4px; }
+.acomp-group { display: grid; gap: 9px; }
+.acomp-group-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.acomp-group-title { font-size: 13px; font-weight: 800; color: var(--roxo-700); text-transform: uppercase; letter-spacing: .03em; }
+.acomp-cota { font-size: 12.5px; font-weight: 800; color: var(--verde); background: rgba(139,184,49,0.14); border-radius: 999px; padding: 4px 12px; white-space: nowrap; }
+.acomp-cota.over { color: var(--roxo-700); background: rgba(245,179,1,0.22); }
+.acomp-chips { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 9px; }
+.acomp-list .acomp-chip { display: flex; align-items: center; gap: 9px; margin: 0; padding: 12px 14px; border: 2px solid rgba(96,16,80,0.14); border-radius: 14px; cursor: pointer; font-size: 15px; font-weight: 600; color: var(--text); background: #fff; user-select: none; transition: border-color .12s, background .12s, transform .05s; }
+.acomp-list .acomp-chip input { position: absolute; opacity: 0; width: 0; height: 0; }
+.acomp-list .acomp-chip::before { content: ''; flex: none; width: 20px; height: 20px; border-radius: 6px; border: 2px solid rgba(96,16,80,0.25); display: grid; place-items: center; font-size: 13px; font-weight: 900; color: #fff; line-height: 1; }
+.acomp-list .acomp-chip .acomp-nome { flex: 1; }
+.acomp-list .acomp-chip .acomp-tag { font-size: 13px; font-weight: 800; color: var(--roxo-700); }
+.acomp-list .acomp-chip:hover { border-color: rgba(96,16,80,0.3); background: rgba(96,16,80,0.03); }
+.acomp-list .acomp-chip:active { transform: scale(0.98); }
+.acomp-list .acomp-chip:has(input:checked) { border-color: var(--verde); background: rgba(139,184,49,0.12); }
+.acomp-list .acomp-chip:has(input:checked)::before { content: '✓'; background: var(--verde); border-color: var(--verde); }
+.acomp-list .acomp-chip.pago:has(input:checked) { border-color: var(--roxo-500); background: rgba(96,16,80,0.08); }
+.acomp-list .acomp-chip.pago:has(input:checked)::before { background: var(--roxo-500); border-color: var(--roxo-500); }
 .cart-item .ci-detail { color: var(--roxo-500); font-style: italic; }
 
 /* Produto varejo/atacado: seletor de tipo e blocos de preço por tipo */
