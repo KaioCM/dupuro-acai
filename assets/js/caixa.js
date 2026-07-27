@@ -173,7 +173,8 @@ var DupuroCaixa = (function () {
         sabor: it.sabor || null,
         usa_estoque: (it.modo || 'embalado') === 'embalado',
         detalhes: it.detalhes || null,
-        forma_pagamento: header.formaPagamento || null
+        forma_pagamento: header.formaPagamento || null,
+        caixa_sessao_id: header.caixaSessaoId || null
       };
     });
 
@@ -209,6 +210,39 @@ var DupuroCaixa = (function () {
       return { error: null, numero: 'PENDENTE', offline: true, client_uuid: itr.client_uuid };
     }
     return { error: result.error, numero: numero };
+  }
+
+  // ---------- Sessão de caixa (abrir/fechar) ----------
+  // A sessão aberta é cacheada localmente pra funcionar offline: abrir/fechar
+  // precisam de internet, mas vender com o caixa já aberto funciona offline.
+  async function getCaixaAberto() {
+    if (window.DupuroOffline && !DupuroOffline.estaOnline()) {
+      return (await DupuroOffline.lerCache('caixa_sessao')) || null;
+    }
+    var r = await client.rpc('caixa_sessao_aberta');
+    if (r.error) {
+      return window.DupuroOffline ? ((await DupuroOffline.lerCache('caixa_sessao')) || null) : null;
+    }
+    var s = (r.data && r.data[0]) || null;
+    if (window.DupuroOffline) await DupuroOffline.salvarCache('caixa_sessao', s);
+    return s;
+  }
+  async function abrirCaixa(fundo) {
+    if (window.DupuroOffline && !DupuroOffline.estaOnline()) return { error: new Error('Abrir o caixa precisa de internet.') };
+    var r = await client.rpc('abrir_caixa', { p_fundo: fundo });
+    if (r.error) return { error: r.error };
+    return { error: null, sessao: await getCaixaAberto() };
+  }
+  async function resumoCaixa(sessaoId) {
+    var r = await client.rpc('resumo_caixa', { p_sessao_id: sessaoId });
+    return { error: r.error, resumo: r.data || null };
+  }
+  async function fecharCaixa(sessaoId, contado) {
+    if (window.DupuroOffline && !DupuroOffline.estaOnline()) return { error: new Error('Fechar o caixa precisa de internet.') };
+    var r = await client.rpc('fechar_caixa', { p_sessao_id: sessaoId, p_dinheiro_contado: contado });
+    if (r.error) return { error: r.error };
+    if (window.DupuroOffline) await DupuroOffline.salvarCache('caixa_sessao', null);
+    return { error: null, resumo: r.data };
   }
 
   // Sincroniza as vendas que ficaram na fila offline. Chamado ao voltar a
@@ -361,6 +395,10 @@ var DupuroCaixa = (function () {
     registerSale: registerSale,
     getTodaySales: getTodaySales,
     getMonthSales: getMonthSales,
+    getCaixaAberto: getCaixaAberto,
+    abrirCaixa: abrirCaixa,
+    resumoCaixa: resumoCaixa,
+    fecharCaixa: fecharCaixa,
     sincronizarOffline: sincronizarOffline,
     filaPendente: filaPendente,
     cancelSale: cancelSale,

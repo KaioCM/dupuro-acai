@@ -764,6 +764,36 @@ var DupuroAdmin = (function () {
     return { error: result.error };
   }
 
+  // ---------- Fechamentos de caixa (admin lê tudo) ----------
+  async function getCaixaFechamentos() {
+    var r = await client
+      .from('caixa_sessoes')
+      .select('id, atendente_id, status, fundo_troco, aberta_em, fechada_em, dinheiro_contado, dinheiro_esperado, diferenca, resumo')
+      .order('aberta_em', { ascending: false })
+      .limit(120);
+    if (r.error) return [];
+    var sessoes = r.data || [];
+    var ids = [];
+    sessoes.forEach(function (s) { if (s.atendente_id && ids.indexOf(s.atendente_id) === -1) ids.push(s.atendente_id); });
+    var nomeById = {};
+    if (ids.length) {
+      var profs = await client.from('profiles').select('id, nome, email').in('id', ids);
+      (profs.data || []).forEach(function (p) { nomeById[p.id] = p.nome || p.email || 'Atendente'; });
+    }
+    return sessoes.map(function (s) {
+      return {
+        id: s.id, status: s.status,
+        atendente: s.atendente_id ? (nomeById[s.atendente_id] || 'Atendente') : 'Atendente',
+        fundoTroco: Number(s.fundo_troco) || 0,
+        abertaEm: s.aberta_em, fechadaEm: s.fechada_em,
+        dinheiroContado: s.dinheiro_contado != null ? Number(s.dinheiro_contado) : null,
+        dinheiroEsperado: s.dinheiro_esperado != null ? Number(s.dinheiro_esperado) : null,
+        diferenca: s.diferenca != null ? Number(s.diferenca) : null,
+        resumo: s.resumo || null
+      };
+    });
+  }
+
   return {
     requireAdmin: requireAdmin,
     logout: logout,
@@ -808,7 +838,8 @@ var DupuroAdmin = (function () {
     getProducoes: getProducoes,
     createProducao: createProducao,
     updateProducao: updateProducao,
-    deleteProducao: deleteProducao
+    deleteProducao: deleteProducao,
+    getCaixaFechamentos: getCaixaFechamentos
   };
 
 })();

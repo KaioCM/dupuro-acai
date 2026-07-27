@@ -8,7 +8,7 @@
 <link rel="apple-touch-icon" href="../assets/img/brand/favicon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/css/style.css?v=7">
+<link rel="stylesheet" href="../assets/css/style.css?v=8">
 </head>
 <body>
 
@@ -442,6 +442,20 @@
         <table class="data-table">
           <thead><tr><th>Quando</th><th>Venda</th><th>Ação</th><th>Atendente</th><th>Motivo</th><th>Antes</th></tr></thead>
           <tbody id="auditsBody"></tbody>
+        </table>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <h3>Fechamentos de caixa</h3>
+            <div class="subtitle">Aberturas e fechamentos da loja: totais, fundo de troco, dinheiro conferido e diferença</div>
+          </div>
+          <button type="button" class="btn btn-dark-outline btn-sm" id="refreshCaixaBtn">↻ Atualizar</button>
+        </div>
+        <table class="data-table">
+          <thead><tr><th>Abertura</th><th>Fechamento</th><th>Atendente</th><th class="num">Vendas</th><th class="num">Dinheiro</th><th class="num">Diferença</th><th></th></tr></thead>
+          <tbody id="caixaBody"></tbody>
         </table>
       </div>
     </section>
@@ -2524,6 +2538,53 @@
   }
   document.getElementById('refreshAuditsBtn').addEventListener('click', renderAudits);
 
+  // ---- Fechamentos de caixa ----
+  var CX_FORMA = { dinheiro: 'Dinheiro', debito: 'Débito', credito: 'Crédito', pix: 'Pix', sem: 'Sem forma' };
+  async function renderCaixaFechamentos() {
+    var body = document.getElementById('caixaBody');
+    var lista = await DupuroAdmin.getCaixaFechamentos();
+    if (!lista.length) {
+      body.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="icon">💰</div>Nenhuma sessão de caixa ainda.</div></td></tr>';
+      return;
+    }
+    function dh(iso) { return new Date(iso).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }); }
+    body.innerHTML = lista.map(function (s) {
+      var qtd = (s.resumo && s.resumo.qtd != null) ? s.resumo.qtd : 0;
+      var total = (s.resumo && s.resumo.total != null) ? Number(s.resumo.total) : 0;
+      var dinheiro = (s.dinheiroContado != null) ? (moeda(s.dinheiroContado) + ' / ' + moeda(s.dinheiroEsperado || 0)) : '—';
+      var difTxt = '—', difCls = '';
+      if (s.diferenca != null) {
+        if (Math.abs(s.diferenca) < 0.005) { difTxt = 'OK'; difCls = 'cx-ok'; }
+        else if (s.diferenca > 0) { difTxt = '+' + moeda(s.diferenca); difCls = 'cx-sobra'; }
+        else { difTxt = moeda(s.diferenca); difCls = 'cx-falta'; }
+      }
+      var det = '';
+      if (s.resumo && s.resumo.por_forma) {
+        det = Object.keys(s.resumo.por_forma).map(function (k) {
+          return '<div class="order-item-line"><span>' + (CX_FORMA[k] || k) + '</span><span>' + moeda(Number(s.resumo.por_forma[k]) || 0) + '</span></div>';
+        }).join('');
+        det += '<div class="order-item-line"><span>Fundo de troco</span><span>' + moeda(s.fundoTroco) + '</span></div>';
+      }
+      return '<tr>' +
+        '<td>' + dh(s.abertaEm) + '</td>' +
+        '<td>' + (s.fechadaEm ? dh(s.fechadaEm) : '<span class="status-badge enviado">Aberto</span>') + '</td>' +
+        '<td>' + s.atendente + '</td>' +
+        '<td class="num">' + qtd + ' · ' + moeda(total) + '</td>' +
+        '<td class="num">' + dinheiro + '</td>' +
+        '<td class="num ' + difCls + '">' + difTxt + '</td>' +
+        '<td>' + (det ? '<button class="btn btn-dark-outline btn-sm" data-cx-det="' + s.id + '">Detalhes</button>' : '') + '</td>' +
+        '</tr>' +
+        (det ? '<tr class="order-details hidden" data-cx-det-row="' + s.id + '"><td colspan="7">' + det + '</td></tr>' : '');
+    }).join('');
+    body.querySelectorAll('[data-cx-det]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var row = body.querySelector('[data-cx-det-row="' + btn.getAttribute('data-cx-det') + '"]');
+        if (row) row.classList.toggle('hidden');
+      });
+    });
+  }
+  document.getElementById('refreshCaixaBtn').addEventListener('click', renderCaixaFechamentos);
+
   document.getElementById('orderEditCancel').addEventListener('click', resetOrderForm);
 
   document.getElementById('orderForm').addEventListener('submit', async function (e) {
@@ -2983,6 +3044,7 @@
   await renderOrders();
   await loadLimiteLitros();
   await renderAudits();
+  await renderCaixaFechamentos();
   await renderCoupons();
   resetProdForm();
   await renderProducoes();

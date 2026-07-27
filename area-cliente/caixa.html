@@ -8,7 +8,7 @@
 <link rel="apple-touch-icon" href="../assets/img/brand/favicon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/css/style.css?v=7">
+<link rel="stylesheet" href="../assets/css/style.css?v=8">
 <link rel="manifest" href="../manifest.webmanifest">
 <meta name="theme-color" content="#601050">
 </head>
@@ -44,6 +44,21 @@
       <div class="app-topbar">
         <div><h1>Nova venda</h1><div class="subtitle">Registre a venda da loja — o estoque baixa na hora.</div></div>
         <div class="user-chip"><span class="avatar" id="avatarInitial">A</span> <span id="chipName">Atendente</span></div>
+      </div>
+
+      <!-- Estado do caixa (abrir/fechar sessão) -->
+      <div class="panel caixa-bar" id="caixaBar" style="margin-bottom:18px;">
+        <div class="caixa-status">
+          <span class="caixa-dot" id="caixaDot"></span>
+          <div>
+            <strong id="caixaState">Verificando o caixa...</strong>
+            <div class="subtitle" id="caixaHint">—</div>
+          </div>
+        </div>
+        <div class="caixa-actions">
+          <button type="button" class="btn btn-primary btn-sm hidden" id="abrirCaixaBtn">Abrir caixa</button>
+          <button type="button" class="btn btn-dark-outline btn-sm hidden" id="fecharCaixaBtn">Fechar caixa</button>
+        </div>
       </div>
 
       <!-- Para quem é a venda -->
@@ -307,6 +322,41 @@
     <div class="modal-actions">
       <button type="button" class="btn btn-dark-outline" id="cancelModalClose">Voltar</button>
       <button type="button" class="btn btn-primary" id="cancelModalConfirm">Cancelar a venda</button>
+    </div>
+  </div>
+</div>
+
+<!-- Abrir caixa -->
+<div class="modal-overlay hidden" id="abrirModal">
+  <div class="modal-card">
+    <h3>Abrir o caixa</h3>
+    <p class="subtitle">Informe quanto tem de dinheiro na gaveta pra troco (fundo de troco). No fechamento a gente confere.</p>
+    <div class="field" style="margin-bottom:0;">
+      <label for="fundoTroco">Fundo de troco (R$)</label>
+      <input type="text" inputmode="decimal" id="fundoTroco" placeholder="Ex: 50,00" autocomplete="off">
+    </div>
+    <div class="field-note" id="abrirModalError">Informe um valor válido (pode ser 0).</div>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-dark-outline" id="abrirModalClose">Voltar</button>
+      <button type="button" class="btn btn-primary" id="abrirModalConfirm">Abrir caixa</button>
+    </div>
+  </div>
+</div>
+
+<!-- Fechar caixa -->
+<div class="modal-overlay hidden" id="fecharModal">
+  <div class="modal-card">
+    <h3>Fechar o caixa</h3>
+    <div id="fecharResumo" class="fechar-resumo">Calculando o resumo...</div>
+    <div class="field" style="margin-bottom:0;">
+      <label for="dinheiroContado">Dinheiro contado na gaveta (R$)</label>
+      <input type="text" inputmode="decimal" id="dinheiroContado" placeholder="Conte e digite o total" autocomplete="off">
+    </div>
+    <div class="fechar-diferenca" id="fecharDiferenca"></div>
+    <div class="field-note" id="fecharModalError">Não foi possível fechar o caixa.</div>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-dark-outline" id="fecharModalClose">Voltar</button>
+      <button type="button" class="btn btn-primary" id="fecharModalConfirm">Fechar caixa</button>
     </div>
   </div>
 </div>
@@ -682,6 +732,119 @@
   if (window.DupuroTEF && typeof DupuroTEF.estado === 'function') {
     DupuroTEF.estado().then(function (e) { tefIntegrado = !!(e && e.tipo && e.tipo !== 'manual'); }).catch(function () {});
   }
+
+  // ---- Sessão de caixa (abrir/fechar) ----
+  var caixaSessao = null; // { id, fundo_troco, aberta_em } quando aberto
+  function parseValor(v) {
+    v = String(v == null ? '' : v).trim();
+    if (!v) return 0;
+    if (v.indexOf(',') >= 0) v = v.replace(/\./g, '').replace(',', '.');
+    return parseFloat(v) || 0;
+  }
+  function renderCaixaBar() {
+    var dot = document.getElementById('caixaDot');
+    var state = document.getElementById('caixaState');
+    var hint = document.getElementById('caixaHint');
+    var abrirBtn = document.getElementById('abrirCaixaBtn');
+    var fecharBtn = document.getElementById('fecharCaixaBtn');
+    if (caixaSessao) {
+      var hora = caixaSessao.aberta_em ? new Date(caixaSessao.aberta_em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '';
+      dot.classList.add('on'); dot.classList.remove('off');
+      state.textContent = 'Caixa aberto';
+      hint.textContent = 'Desde ' + hora + ' · fundo de troco ' + brl(Number(caixaSessao.fundo_troco) || 0);
+      abrirBtn.classList.add('hidden');
+      fecharBtn.classList.remove('hidden');
+    } else {
+      dot.classList.add('off'); dot.classList.remove('on');
+      state.textContent = 'Caixa fechado';
+      hint.textContent = 'Abra o caixa para começar a registrar vendas.';
+      abrirBtn.classList.remove('hidden');
+      fecharBtn.classList.add('hidden');
+    }
+  }
+  async function carregarCaixa() {
+    caixaSessao = await DupuroCaixa.getCaixaAberto();
+    renderCaixaBar();
+  }
+
+  // Abrir
+  var abrirModal = document.getElementById('abrirModal');
+  document.getElementById('abrirCaixaBtn').addEventListener('click', function () {
+    document.getElementById('fundoTroco').value = '';
+    document.getElementById('abrirModalError').classList.remove('show');
+    abrirModal.classList.remove('hidden');
+    document.getElementById('fundoTroco').focus();
+  });
+  document.getElementById('abrirModalClose').addEventListener('click', function () { abrirModal.classList.add('hidden'); });
+  abrirModal.addEventListener('click', function (e) { if (e.target === abrirModal) abrirModal.classList.add('hidden'); });
+  document.getElementById('abrirModalConfirm').addEventListener('click', async function () {
+    var fundo = parseValor(document.getElementById('fundoTroco').value);
+    var err = document.getElementById('abrirModalError');
+    if (fundo < 0 || isNaN(fundo)) { err.classList.add('show'); return; }
+    this.disabled = true; this.textContent = 'Abrindo...';
+    var r = await DupuroCaixa.abrirCaixa(fundo);
+    this.disabled = false; this.textContent = 'Abrir caixa';
+    if (r.error) { err.textContent = r.error.message || 'Não foi possível abrir.'; err.classList.add('show'); return; }
+    abrirModal.classList.add('hidden');
+    caixaSessao = r.sessao; renderCaixaBar();
+  });
+
+  // Fechar
+  var fecharModal = document.getElementById('fecharModal');
+  function fmtPorForma(pf) {
+    if (!pf) return '';
+    return Object.keys(pf).map(function (k) {
+      var nome = FORMA_PAG_LABEL[k] || (k === 'sem' ? 'Sem forma' : k);
+      return '<div class="fr-linha"><span>' + nome + '</span><span>' + brl(Number(pf[k]) || 0) + '</span></div>';
+    }).join('');
+  }
+  var fecharEsperadoDinheiro = 0;
+  function atualizarDiferenca() {
+    var contado = parseValor(document.getElementById('dinheiroContado').value);
+    var dif = contado - fecharEsperadoDinheiro;
+    var el = document.getElementById('fecharDiferenca');
+    if (!document.getElementById('dinheiroContado').value.trim()) { el.textContent = ''; el.className = 'fechar-diferenca'; return; }
+    if (Math.abs(dif) < 0.005) { el.textContent = '✔ Bate certinho com o esperado (' + brl(fecharEsperadoDinheiro) + ').'; el.className = 'fechar-diferenca ok'; }
+    else if (dif > 0) { el.textContent = 'Sobra de ' + brl(dif) + ' (esperado ' + brl(fecharEsperadoDinheiro) + ').'; el.className = 'fechar-diferenca sobra'; }
+    else { el.textContent = 'Falta ' + brl(-dif) + ' (esperado ' + brl(fecharEsperadoDinheiro) + ').'; el.className = 'fechar-diferenca falta'; }
+  }
+  document.getElementById('fecharCaixaBtn').addEventListener('click', async function () {
+    if (!caixaSessao) return;
+    document.getElementById('dinheiroContado').value = '';
+    document.getElementById('fecharDiferenca').textContent = '';
+    document.getElementById('fecharModalError').classList.remove('show');
+    document.getElementById('fecharResumo').innerHTML = 'Calculando o resumo...';
+    fecharModal.classList.remove('hidden');
+    var r = await DupuroCaixa.resumoCaixa(caixaSessao.id);
+    if (r.error || !r.resumo) {
+      document.getElementById('fecharResumo').innerHTML = '<div class="field-note show">Não foi possível calcular o resumo (precisa de internet).</div>';
+      fecharEsperadoDinheiro = 0;
+      return;
+    }
+    var res = r.resumo;
+    fecharEsperadoDinheiro = Number(res.dinheiro_esperado) || 0;
+    document.getElementById('fecharResumo').innerHTML =
+      '<div class="fr-linha fr-top"><span>Vendas (' + (res.qtd || 0) + ')</span><span>' + brl(Number(res.total) || 0) + '</span></div>' +
+      fmtPorForma(res.por_forma) +
+      '<div class="fr-linha fr-sep"><span>Fundo de troco</span><span>' + brl(Number(res.fundo_troco) || 0) + '</span></div>' +
+      '<div class="fr-linha fr-forte"><span>Esperado em dinheiro</span><span>' + brl(fecharEsperadoDinheiro) + '</span></div>';
+    atualizarDiferenca();
+  });
+  document.getElementById('dinheiroContado').addEventListener('input', atualizarDiferenca);
+  document.getElementById('fecharModalClose').addEventListener('click', function () { fecharModal.classList.add('hidden'); });
+  fecharModal.addEventListener('click', function (e) { if (e.target === fecharModal) fecharModal.classList.add('hidden'); });
+  document.getElementById('fecharModalConfirm').addEventListener('click', async function () {
+    var contado = parseValor(document.getElementById('dinheiroContado').value);
+    var err = document.getElementById('fecharModalError');
+    if (!document.getElementById('dinheiroContado').value.trim()) { err.textContent = 'Conte o dinheiro e digite o total.'; err.classList.add('show'); return; }
+    this.disabled = true; this.textContent = 'Fechando...';
+    var r = await DupuroCaixa.fecharCaixa(caixaSessao.id, contado);
+    this.disabled = false; this.textContent = 'Fechar caixa';
+    if (r.error) { err.textContent = r.error.message || 'Não foi possível fechar.'; err.classList.add('show'); return; }
+    fecharModal.classList.add('hidden');
+    caixaSessao = null; renderCaixaBar();
+    await loadVendas();
+  });
   payButtons.forEach(function (b) {
     b.addEventListener('click', function () { setForma(b.getAttribute('data-pay')); cartError.classList.remove('show'); });
   });
@@ -769,6 +932,14 @@
       return;
     }
 
+    // Caixa precisa estar aberto pra registrar venda.
+    if (!caixaSessao) {
+      cartError.textContent = 'Abra o caixa antes de registrar vendas.';
+      cartError.classList.add('show');
+      document.getElementById('caixaBar').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+
     // Cartão pela maquininha (quando dentro do app com TEF): cobra antes de
     // registrar; se não aprovar, não registra a venda.
     var totalVenda = cart.reduce(function (s, it) { return s + it.preco * it.quantidade; }, 0);
@@ -786,7 +957,7 @@
     }
 
     sendBtn.disabled = true; sendBtn.textContent = 'Registrando...';
-    var result = await DupuroCaixa.registerSale({ revendedorId: revendedorId, formaPagamento: formaPagamento }, items);
+    var result = await DupuroCaixa.registerSale({ revendedorId: revendedorId, formaPagamento: formaPagamento, caixaSessaoId: caixaSessao.id }, items);
     sendBtn.disabled = false;
     if (result.error) {
       cartError.textContent = result.error.code === '23514'
@@ -1219,6 +1390,7 @@
   renderShop();
   renderEstoque();
   loadVendas();
+  carregarCaixa();
 
   // Já rodando dentro do app da loja? Então não faz sentido oferecer o download.
   if (window.DupuroPrinter && DupuroPrinter.rodandoNoApp()) {
