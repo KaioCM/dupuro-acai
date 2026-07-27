@@ -1,6 +1,6 @@
 {
   "name": "dupuro-caixa",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "App de caixa da Dupuro Açaí para o PC da loja: carrega o caixa do site, imprime a comanda direto na Sweda (sem janela) e funciona offline.",
   "main": "main.js",
   "author": "Dupuro Açaí",
