@@ -172,7 +172,8 @@ var DupuroCaixa = (function () {
         quantidade: it.quantidade || null,
         sabor: it.sabor || null,
         usa_estoque: (it.modo || 'embalado') === 'embalado',
-        detalhes: it.detalhes || null
+        detalhes: it.detalhes || null,
+        forma_pagamento: header.formaPagamento || null
       };
     });
 
@@ -227,7 +228,7 @@ var DupuroCaixa = (function () {
   async function getSalesBetween(startDate, endDate) {
     var query = client
       .from('orders')
-      .select('numero, revendedor_id, produto_id, itens, valor, quantidade, sabor, detalhes, status, cancel_motivo, created_at, products(nome, modo)')
+      .select('numero, revendedor_id, produto_id, itens, valor, quantidade, sabor, detalhes, status, cancel_motivo, forma_pagamento, created_at, products(nome, modo)')
       .eq('origem', 'loja')
       .gte('created_at', startDate.toISOString());
     if (endDate) query = query.lt('created_at', endDate.toISOString());
@@ -250,10 +251,12 @@ var DupuroCaixa = (function () {
           revendedorId: o.revendedor_id || null,
           cliente: o.revendedor_id ? (nomeById[o.revendedor_id] || 'Revendedor') : 'Balcão',
           valor: 0, items: [],
+          formaPagamento: o.forma_pagamento || null,
           cancelada: true, motivo: o.cancel_motivo || null
         };
         ordem.push(g);
       }
+      if (o.forma_pagamento && !g.formaPagamento) g.formaPagamento = o.forma_pagamento;
       // A venda só conta como cancelada se TODAS as linhas estiverem canceladas.
       if (o.status !== 'cancelado') g.cancelada = false;
       if (o.cancel_motivo && !g.motivo) g.motivo = o.cancel_motivo;
@@ -340,7 +343,8 @@ var DupuroCaixa = (function () {
         quantidade: it.quantidade || null,
         sabor: it.sabor || null,
         usa_estoque: (it.modo || 'embalado') === 'embalado',
-        detalhes: it.detalhes || null
+        detalhes: it.detalhes || null,
+        forma_pagamento: header.formaPagamento || null
       };
     });
     var result = await client.rpc('caixa_substituir_venda', { p_numero: numero, p_motivo: motivo, p_rows: rows });

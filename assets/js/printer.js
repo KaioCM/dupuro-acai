@@ -130,6 +130,11 @@ var DupuroPrinter = (function () {
 
     L.push({ t: '-' });
     L.push({ t: linhaDupla('TOTAL', brl(venda.total)), bold: true, grande: false });
+    if (venda.formaPagamento) {
+      var FP = { dinheiro: 'Dinheiro', debito: 'Cartão de débito', credito: 'Cartão de crédito', pix: 'Pix' };
+      L.push({ t: 'Pagamento: ' + (FP[venda.formaPagamento] || venda.formaPagamento) });
+      if (venda.pagamento && venda.pagamento.nsu) L.push({ t: '  NSU: ' + venda.pagamento.nsu });
+    }
     L.push({ t: '' });
     L.push({ t: 'Obrigado pela preferência!', center: true });
     L.push({ t: 'Não é documento fiscal', center: true });

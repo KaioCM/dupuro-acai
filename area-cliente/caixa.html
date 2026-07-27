@@ -8,7 +8,7 @@
 <link rel="apple-touch-icon" href="../assets/img/brand/favicon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/css/style.css?v=6">
+<link rel="stylesheet" href="../assets/css/style.css?v=7">
 <link rel="manifest" href="../manifest.webmanifest">
 <meta name="theme-color" content="#601050">
 </head>
@@ -177,6 +177,16 @@
               <div class="cart-head">🛒 Itens da venda</div>
               <ul class="cart-list" id="cartList"></ul>
               <div class="order-total-row"><span class="lbl">Total</span><span class="val" id="cartTotal">—</span></div>
+              <div class="pay-methods" id="payMethods">
+                <div class="cart-head" style="margin-top:14px;">Forma de pagamento</div>
+                <div class="pay-seg">
+                  <button type="button" class="pay-btn" data-pay="dinheiro">💵 Dinheiro</button>
+                  <button type="button" class="pay-btn" data-pay="debito">💳 Débito</button>
+                  <button type="button" class="pay-btn" data-pay="credito">💳 Crédito</button>
+                  <button type="button" class="pay-btn" data-pay="pix">⨁ Pix</button>
+                </div>
+                <div class="pay-tef-note hidden" id="payTefNote"></div>
+              </div>
               <div class="field hidden" id="editMotivoField" style="margin-top:12px; margin-bottom:0;">
                 <label for="editMotivo">Motivo da alteração</label>
                 <input type="text" id="editMotivo" placeholder="Ex: cliente trocou um item" autocomplete="off">
@@ -654,6 +664,36 @@
     btn.addEventListener('click', function () { setTarget(btn.getAttribute('data-target')); });
   });
 
+  // ---- Forma de pagamento ----
+  var FORMA_PAG_LABEL = { dinheiro: 'Dinheiro', debito: 'Débito', credito: 'Crédito', pix: 'Pix' };
+  var formaPagamento = null;
+  var tefIntegrado = false; // true quando o app tem TEF ativo (simulação ou real)
+  var payButtons = document.querySelectorAll('#payMethods .pay-btn');
+  function setForma(f) {
+    formaPagamento = f;
+    payButtons.forEach(function (b) { b.classList.toggle('active', b.getAttribute('data-pay') === f); });
+    var note = document.getElementById('payTefNote');
+    var cartao = (f === 'debito' || f === 'credito');
+    if (cartao && tefIntegrado) {
+      note.classList.remove('hidden');
+      note.textContent = '💳 Ao registrar, o valor vai direto pra maquininha.';
+    } else { note.classList.add('hidden'); note.textContent = ''; }
+  }
+  if (window.DupuroTEF && typeof DupuroTEF.estado === 'function') {
+    DupuroTEF.estado().then(function (e) { tefIntegrado = !!(e && e.tipo && e.tipo !== 'manual'); }).catch(function () {});
+  }
+  payButtons.forEach(function (b) {
+    b.addEventListener('click', function () { setForma(b.getAttribute('data-pay')); cartError.classList.remove('show'); });
+  });
+
+  // Cobra no cartão pela ponte do TEF (só existe dentro do app). Fora do app,
+  // retorna manual=true: a atendente passou o cartão à parte e só registramos.
+  async function cobrarCartao(valor, tipo) {
+    if (!window.DupuroTEF || typeof DupuroTEF.cobrar !== 'function') return { aprovado: true, manual: true };
+    try { return await DupuroTEF.cobrar({ valor: valor, tipo: tipo }); }
+    catch (e) { return { aprovado: false, erro: (e && e.message) || 'falha na maquininha' }; }
+  }
+
   DupuroCaixa.getResellers().then(function (resellers) {
     if (!resellers.length) {
       resellerSelect.innerHTML = '<option value="">Nenhum revendedor aprovado</option>';
@@ -695,6 +735,11 @@
         return;
       }
     }
+    if (!formaPagamento) {
+      cartError.textContent = 'Escolha a forma de pagamento.';
+      cartError.classList.add('show');
+      return;
+    }
     var items = cartToItems();
 
     // --- Edição de uma venda existente ---
@@ -706,7 +751,7 @@
         return;
       }
       sendBtn.disabled = true; sendBtn.textContent = 'Salvando...';
-      var upd = await DupuroCaixa.updateSale(editingSale.numero, { revendedorId: revendedorId }, items, motivo);
+      var upd = await DupuroCaixa.updateSale(editingSale.numero, { revendedorId: revendedorId, formaPagamento: formaPagamento }, items, motivo);
       sendBtn.disabled = false;
       if (upd.error) {
         cartError.textContent = upd.error.code === '23514'
@@ -724,8 +769,24 @@
       return;
     }
 
+    // Cartão pela maquininha (quando dentro do app com TEF): cobra antes de
+    // registrar; se não aprovar, não registra a venda.
+    var totalVenda = cart.reduce(function (s, it) { return s + it.preco * it.quantidade; }, 0);
+    var pagInfo = null;
+    if (formaPagamento === 'debito' || formaPagamento === 'credito') {
+      sendBtn.disabled = true; sendBtn.textContent = 'Aguardando cartão...';
+      var cob = await cobrarCartao(totalVenda, formaPagamento);
+      if (!cob.aprovado) {
+        sendBtn.disabled = false; renderCart();
+        cartError.textContent = 'Cartão não aprovado: ' + (cob.mensagem || cob.erro || 'tente novamente') + '.';
+        cartError.classList.add('show');
+        return;
+      }
+      if (!cob.manual) pagInfo = { nsu: cob.nsu || null, autorizacao: cob.autorizacao || null, bandeira: cob.bandeira || null };
+    }
+
     sendBtn.disabled = true; sendBtn.textContent = 'Registrando...';
-    var result = await DupuroCaixa.registerSale({ revendedorId: revendedorId }, items);
+    var result = await DupuroCaixa.registerSale({ revendedorId: revendedorId, formaPagamento: formaPagamento }, items);
     sendBtn.disabled = false;
     if (result.error) {
       cartError.textContent = result.error.code === '23514'
@@ -748,6 +809,8 @@
         : 'Balcão',
       hora: Date.now(),
       total: total,
+      formaPagamento: formaPagamento,
+      pagamento: pagInfo,
       items: cart.map(function (it) {
         return {
           nome: it.nome, quantidade: it.quantidade, sabor: it.sabor, modo: it.modo,
@@ -760,6 +823,7 @@
     };
 
     cart = [];
+    setForma(null);
     renderCart();
     document.getElementById('saleSuccessDetail').textContent = (result.offline ? 'Salva offline (sincroniza depois)' : result.numero) + ' · ' + n + (n === 1 ? ' item' : ' itens') + ' · ' + brl(total);
     if (result.offline) atualizarStatusOffline();
@@ -809,6 +873,7 @@
   function enterEditMode(sale) {
     editingSale = { numero: sale.numero, revendedorId: sale.revendedorId || null };
     cart = saleToCart(sale);
+    setForma(sale.formaPagamento || null);
     setTarget(sale.revendedorId ? 'revendedor' : 'balcao');
     if (sale.revendedorId) resellerSelect.value = sale.revendedorId;
     document.getElementById('editBanner').classList.remove('hidden');
@@ -826,6 +891,7 @@
   function exitEditMode() {
     editingSale = null;
     cart = [];
+    setForma(null);
     document.getElementById('editBanner').classList.add('hidden');
     document.getElementById('editMotivoField').classList.add('hidden');
     document.getElementById('editMotivo').value = '';
@@ -930,6 +996,9 @@
 
   // ---- Vendas do dia ----
   var vendasCache = [];
+  function pagTag(v) {
+    return v.formaPagamento ? ' <span class="pay-tag">' + (FORMA_PAG_LABEL[v.formaPagamento] || v.formaPagamento) + '</span>' : '';
+  }
 
   async function loadVendas() {
     var data = await DupuroCaixa.getTodaySales();
@@ -955,7 +1024,7 @@
       return '<tr' + (v.cancelada ? ' class="venda-cancelada"' : '') + '>' +
         '<td><strong>' + v.numero + '</strong>' + (v.cancelada ? ' <span class="status-badge cancelado">Cancelada</span>' : '') + '</td>' +
         '<td>' + hora + '</td>' +
-        '<td>' + v.cliente + '</td>' +
+        '<td>' + v.cliente + pagTag(v) + '</td>' +
         '<td>' + itensTxt + (v.cancelada && v.motivo ? '<span class="venda-motivo">Motivo: ' + v.motivo + '</span>' : '') + '</td>' +
         '<td class="num">' + brl(v.valor) + '</td>' +
         '<td>' + acoes + '</td>' +
@@ -1064,7 +1133,7 @@
     return '<tr data-hist-row="' + v.dia + '"' + (classes.length ? ' class="' + classes.join(' ') + '"' : '') + '>' +
       '<td><strong>' + v.numero + '</strong>' + (v.cancelada ? ' <span class="status-badge cancelado">Cancelada</span>' : '') + '</td>' +
       '<td>' + hora + '</td>' +
-      '<td>' + v.cliente + '</td>' +
+      '<td>' + v.cliente + pagTag(v) + '</td>' +
       '<td>' + itensTxt + (v.cancelada && v.motivo ? '<span class="venda-motivo">Motivo: ' + v.motivo + '</span>' : '') + '</td>' +
       '<td class="num">' + brl(v.valor) + '</td>' +
       '<td>' + acoes + '</td>' +

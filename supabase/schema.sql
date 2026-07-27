@@ -235,6 +235,8 @@ create table if not exists public.orders (
   -- Id gerado no cliente para venda registrada offline (migration_025). Torna o
   -- reenvio da sincronização idempotente (unique → não duplica).
   client_uuid uuid,
+  -- Forma de pagamento da venda de loja (migration_027): dinheiro/débito/crédito/pix.
+  forma_pagamento text check (forma_pagamento in ('dinheiro','debito','credito','pix')),
   created_at timestamptz not null default now()
 );
 
@@ -478,7 +480,7 @@ begin
   for r in select * from jsonb_array_elements(p_rows) loop
     insert into public.orders (
       revendedor_id, numero, data, itens, valor, status,
-      produto_id, quantidade, sabor, usa_estoque, detalhes, origem, atendente_id
+      produto_id, quantidade, sabor, usa_estoque, detalhes, forma_pagamento, origem, atendente_id
     ) values (
       nullif(r->>'revendedor_id', '')::uuid,
       p_numero,
@@ -489,6 +491,7 @@ begin
       nullif(r->>'sabor', ''),
       coalesce((r->>'usa_estoque')::boolean, true),
       case when r ? 'detalhes' then r->'detalhes' else null end,
+      nullif(r->>'forma_pagamento', ''),
       'loja', auth.uid()
     );
   end loop;
@@ -615,7 +618,7 @@ begin
     insert into public.orders (
       revendedor_id, numero, data, itens, valor, status,
       produto_id, quantidade, sabor, usa_estoque, detalhes,
-      origem, atendente_id, client_uuid
+      forma_pagamento, origem, atendente_id, client_uuid
     ) values (
       nullif(r->>'revendedor_id', '')::uuid, v_numero,
       coalesce(nullif(r->>'data', ''), (now() at time zone 'America/Cuiaba')::date::text)::date,
@@ -623,6 +626,7 @@ begin
       nullif(r->>'produto_id', '')::bigint, nullif(r->>'quantidade', '')::int,
       nullif(r->>'sabor', ''), coalesce((r->>'usa_estoque')::boolean, true),
       case when r ? 'detalhes' then r->'detalhes' else null end,
+      nullif(r->>'forma_pagamento', ''),
       'loja', auth.uid(),
       case when v_primeira then p_client_uuid else null end
     );

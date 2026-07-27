@@ -98,6 +98,51 @@ ipcMain.handle('dupuro-config', async (evt, patch) => {
   return cfg;
 });
 
+// ---- TEF (cartão) ----
+// tefTipo (config): 'manual' (PADRÃO), 'simulacao', 'sitef' ou 'paygo'.
+//  - manual    → o app NÃO cobra: a atendente passa o cartão na maquininha como
+//                hoje e o app só registra a forma de pagamento. (retorna manual:true)
+//  - simulacao → finge a cobrança e aprova. SÓ pra testar o fluxo; NUNCA usar
+//                em produção achando que cobrou de verdade.
+//  - sitef/paygo → ponto onde o integrador pluga a lib real (ainda não feito).
+// A assinatura de retorno é sempre a mesma pro caixa:
+//   { aprovado, nsu, autorizacao, bandeira, mensagem, erro, manual, simulacao }
+ipcMain.handle('dupuro-tef-estado', async () => {
+  const cfg = lerConfig();
+  return { tipo: cfg.tefTipo || 'manual', servidor: cfg.tefServidor || null, loja: cfg.tefLoja || null, terminal: cfg.tefTerminal || null };
+});
+
+ipcMain.handle('dupuro-tef-cobrar', async (evt, payload) => {
+  const cfg = lerConfig();
+  const tipo = cfg.tefTipo || 'manual';
+  const valor = Number(payload && payload.valor) || 0;
+  const modalidade = (payload && payload.tipo) || 'credito';
+
+  if (tipo === 'manual') {
+    // App não cobra: cartão é passado à parte, só registramos a forma.
+    return { aprovado: true, manual: true };
+  }
+
+  if (tipo === 'simulacao') {
+    // Finge a conversa com a maquininha (aprova). Serve pra testar o fluxo todo.
+    await new Promise((r) => setTimeout(r, 1200));
+    const nsu = 'SIM' + Date.now().toString().slice(-8);
+    return { aprovado: true, nsu, autorizacao: '000000', bandeira: 'SIMULACAO', mensagem: 'Aprovado (simulação)', simulacao: true };
+  }
+
+  // TODO (integração real): aqui o integrador do TEF pluga a chamada da lib.
+  //  - SiTef  → CliSiTef (via FFI/koffi ou executável auxiliar), usando
+  //             cfg.tefServidor (endereço do servidor SiTef), cfg.tefLoja e
+  //             cfg.tefTerminal fornecidos pela Sicredi/Software Express.
+  //  - PayGo  → PayGo Integrado (protocolo de pasta/porta local).
+  // Enquanto não estiver implementado, avisa em vez de fingir aprovação.
+  return {
+    aprovado: false,
+    erro: 'TEF "' + tipo + '" ainda não integrado. Fale com o técnico ou use o modo manual/simulação.',
+    valor, modalidade
+  };
+});
+
 app.whenReady().then(criarJanela);
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
 app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) criarJanela(); });
