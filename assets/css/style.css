@@ -433,7 +433,6 @@ select:focus-visible,
 .hero-photo-frame {
   width: 380px;
   border-radius: var(--radius-xl);
-  overflow: hidden;
   border: 5px solid rgba(245,179,1,0.85);
   box-shadow: 0 12px 0 rgba(0,0,0,0.22), var(--shadow-lg);
   transform: rotate(-2deg);
@@ -441,7 +440,7 @@ select:focus-visible,
   position: relative;
 }
 .hero-photo-frame { aspect-ratio: 4 / 5; }
-.hero-photo-frame img:first-child { width: 100%; height: 100%; object-fit: cover; display: block; }
+.hero-photo-frame img:first-child { width: 100%; height: 100%; object-fit: cover; object-position: 50% 88%; display: block; border-radius: 30px; }
 
 /* Selo "Movimento Puro de Coração" girando sobre a foto */
 .hero-selo {
