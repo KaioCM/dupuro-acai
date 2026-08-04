@@ -848,6 +848,70 @@ create policy "coupons_insert_admin" on public.coupons
 create policy "coupons_delete_admin" on public.coupons
   for delete using (public.is_admin());
 
+-- ---------- Promoções do dia (caixa/balcão) — migration_029 ----------
+-- Cada dia: até 3 unitárias (de X por Y) + 3 combos (leve N por Y). Vale só nas
+-- vendas de balcão (o preço é aplicado no caixa, client-side; o servidor confia
+-- no `orders.valor`). Reset automático: tudo filtra por dia = hoje (America/
+-- Cuiaba); no dia seguinte não aparece e o preço volta ao normal (histórico fica).
+create table if not exists public.caixa_promocoes (
+  id bigint generated always as identity primary key,
+  produto_id bigint not null references public.products(id) on delete cascade,
+  tipo text not null check (tipo in ('unitario','combo')),
+  preco_promo numeric(10,2) not null check (preco_promo >= 0),
+  combo_qtd int check (combo_qtd is null or combo_qtd >= 2),
+  dia date not null default ((now() at time zone 'America/Cuiaba')::date),
+  criado_por uuid references public.profiles(id) on delete set null,
+  criado_em timestamptz not null default now(),
+  constraint promo_combo_qtd_coerente check (
+    (tipo = 'combo' and combo_qtd is not null)
+    or (tipo = 'unitario' and combo_qtd is null)
+  ),
+  unique (dia, produto_id, tipo)
+);
+
+alter table public.caixa_promocoes enable row level security;
+
+-- Equipe (atendente + admin) lê e gerencia; escrita só no dia de hoje (Cuiabá).
+create policy "promos_select_equipe" on public.caixa_promocoes
+  for select using (public.is_atendente() or public.is_admin());
+create policy "promos_insert_equipe" on public.caixa_promocoes
+  for insert with check (
+    (public.is_atendente() or public.is_admin())
+    and dia = (now() at time zone 'America/Cuiaba')::date
+  );
+create policy "promos_update_equipe" on public.caixa_promocoes
+  for update using (
+    (public.is_atendente() or public.is_admin())
+    and dia = (now() at time zone 'America/Cuiaba')::date
+  ) with check (
+    (public.is_atendente() or public.is_admin())
+    and dia = (now() at time zone 'America/Cuiaba')::date
+  );
+create policy "promos_delete_equipe" on public.caixa_promocoes
+  for delete using (
+    (public.is_atendente() or public.is_admin())
+    and dia = (now() at time zone 'America/Cuiaba')::date
+  );
+
+-- Trava do limite: no máximo 3 promoções de cada tipo por dia.
+create or replace function public.check_limite_promocoes()
+returns trigger language plpgsql as $$
+declare v_qtd int;
+begin
+  select count(*) into v_qtd from public.caixa_promocoes
+    where dia = new.dia and tipo = new.tipo and id <> new.id;
+  if v_qtd >= 3 then
+    raise exception 'Limite de 3 promoções do tipo % por dia atingido.', new.tipo
+      using errcode = 'check_violation';
+  end if;
+  return new;
+end; $$;
+
+drop trigger if exists caixa_promocoes_limite on public.caixa_promocoes;
+create trigger caixa_promocoes_limite
+  before insert or update on public.caixa_promocoes
+  for each row execute function public.check_limite_promocoes();
+
 -- ==========================================================================
 -- Fluxo de aprovação de revendedor:
 -- 1. O cliente se cadastra sozinho pelo site (index.html#revenda), criando uma

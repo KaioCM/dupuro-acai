@@ -8,7 +8,7 @@
 <link rel="apple-touch-icon" href="../assets/img/brand/favicon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/css/style.css?v=9">
+<link rel="stylesheet" href="../assets/css/style.css?v=10">
 </head>
 <body>
 
@@ -330,6 +330,42 @@
         <table class="data-table" style="margin-top:18px;">
           <thead><tr><th>Acompanhamento</th><th>Cobrança</th><th>Situação</th><th>Ações</th></tr></thead>
           <tbody id="acompBody"></tbody>
+        </table>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <h3>Promoções de hoje (caixa)</h3>
+            <div class="subtitle">Descontos só do balcão, válidos <strong>somente hoje</strong> — amanhã o preço volta ao normal sozinho. <span id="admPromoLimits">Unitárias: 0/3 · Combos: 0/3</span></div>
+          </div>
+        </div>
+        <form id="admPromoForm" class="order-form-grid">
+          <div class="field" style="margin-bottom:0;">
+            <label for="admPromoProduto">Produto</label>
+            <select id="admPromoProduto"></select>
+          </div>
+          <div class="field" style="margin-bottom:0;">
+            <label for="admPromoTipo">Tipo de promoção</label>
+            <select id="admPromoTipo">
+              <option value="unitario">Preço unitário (de X por Y)</option>
+              <option value="combo">Combo — leve N por Y</option>
+            </select>
+          </div>
+          <div class="field hidden" style="margin-bottom:0;" id="admPromoQtdField">
+            <label for="admPromoQtd">Quantidade do combo (N)</label>
+            <input type="number" id="admPromoQtd" min="2" max="99" step="1" value="2">
+          </div>
+          <div class="field" style="margin-bottom:0;">
+            <label for="admPromoPreco" id="admPromoPrecoLabel">Preço promocional (Y)</label>
+            <input type="number" id="admPromoPreco" min="0" step="0.01" placeholder="12.00">
+          </div>
+          <button type="submit" class="btn btn-primary" id="admPromoSubmit">Criar promoção</button>
+        </form>
+        <div class="field-note" id="admPromoError">Confira os dados da promoção.</div>
+        <table class="data-table" style="margin-top:18px;">
+          <thead><tr><th>Produto</th><th>Promoção</th><th>Ações</th></tr></thead>
+          <tbody id="admPromoBody"></tbody>
         </table>
       </div>
     </section>
@@ -3030,6 +3066,73 @@
   }
   document.getElementById('refreshProducoesBtn').addEventListener('click', renderProducoes);
 
+  // ---- Promoções do dia (caixa/balcão) ----
+  var admPromoCache = [];
+  function admPrecoProduto(id) { var p = productsCache.filter(function (x) { return String(x.id) === String(id); })[0]; return p ? p.preco : 0; }
+  function admNomeProduto(id) { var p = productsCache.filter(function (x) { return String(x.id) === String(id); })[0]; return p ? p.nome : ('#' + id); }
+  function admFillPromoProdutos() {
+    var sel = document.getElementById('admPromoProduto'); if (!sel) return;
+    var atual = sel.value;
+    var opts = productsCache.slice().sort(function (a, b) { return a.nome < b.nome ? -1 : 1; });
+    sel.innerHTML = opts.map(function (p) { var suf = p.modo === 'peso' ? ' /kg' : ''; return '<option value="' + p.id + '">' + p.nome + ' — ' + moeda(p.preco) + suf + '</option>'; }).join('');
+    if (atual) sel.value = atual;
+  }
+  function admUpdatePromoTipo() {
+    var tipo = document.getElementById('admPromoTipo').value;
+    document.getElementById('admPromoQtdField').classList.toggle('hidden', tipo !== 'combo');
+    document.getElementById('admPromoPrecoLabel').textContent = tipo === 'combo' ? 'Preço do conjunto (Y)' : 'Preço promocional (Y)';
+  }
+  function admRenderPromoList() {
+    var body = document.getElementById('admPromoBody');
+    var uni = admPromoCache.filter(function (p) { return p.tipo === 'unitario'; }).length;
+    var combo = admPromoCache.filter(function (p) { return p.tipo === 'combo'; }).length;
+    document.getElementById('admPromoLimits').textContent = 'Unitárias: ' + uni + '/3 · Combos: ' + combo + '/3';
+    if (!admPromoCache.length) { body.innerHTML = '<tr><td colspan="3"><span class="field-note-inline">Nenhuma promoção hoje.</span></td></tr>'; return; }
+    body.innerHTML = admPromoCache.map(function (pr) {
+      var base = admPrecoProduto(pr.produtoId);
+      var desc = pr.tipo === 'combo' ? 'leve ' + pr.comboQtd + ' por ' + moeda(pr.precoPromo) : 'de ' + moeda(base) + ' por ' + moeda(pr.precoPromo);
+      return '<tr><td>' + admNomeProduto(pr.produtoId) + '</td><td>' + desc + '</td>' +
+        '<td class="admin-table-actions"><button class="btn btn-danger-outline btn-sm" data-adm-promo-del="' + pr.id + '">Remover</button></td></tr>';
+    }).join('');
+    body.querySelectorAll('[data-adm-promo-del]').forEach(function (btn) {
+      btn.addEventListener('click', async function () { btn.disabled = true; await DupuroAdmin.deletePromocao(btn.getAttribute('data-adm-promo-del')); await renderPromocoesAdmin(); });
+    });
+  }
+  async function renderPromocoesAdmin() {
+    admFillPromoProdutos();
+    admPromoCache = await DupuroAdmin.getPromocoesHoje();
+    admRenderPromoList();
+  }
+  document.getElementById('admPromoTipo').addEventListener('change', admUpdatePromoTipo);
+  document.getElementById('admPromoForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    var erro = document.getElementById('admPromoError'); erro.classList.remove('show');
+    var produtoId = document.getElementById('admPromoProduto').value;
+    var tipo = document.getElementById('admPromoTipo').value;
+    var preco = parseFloat(document.getElementById('admPromoPreco').value);
+    if (!produtoId) { erro.textContent = 'Escolha o produto.'; erro.classList.add('show'); return; }
+    if (!(preco > 0)) { erro.textContent = 'Informe o preço promocional (maior que zero).'; erro.classList.add('show'); return; }
+    var base = admPrecoProduto(produtoId); var comboQtd = null;
+    if (tipo === 'combo') {
+      comboQtd = parseInt(document.getElementById('admPromoQtd').value, 10);
+      if (!(comboQtd >= 2)) { erro.textContent = 'No combo, a quantidade (N) precisa ser 2 ou mais.'; erro.classList.add('show'); return; }
+    } else if (preco >= base) {
+      erro.textContent = 'O preço promocional precisa ser menor que o normal (' + moeda(base) + ').'; erro.classList.add('show'); return;
+    }
+    var btn = document.getElementById('admPromoSubmit'); btn.disabled = true; btn.textContent = 'Criando...';
+    var r = await DupuroAdmin.createPromocao({ produtoId: produtoId, tipo: tipo, precoPromo: preco, comboQtd: comboQtd });
+    btn.disabled = false; btn.textContent = 'Criar promoção';
+    if (r.error) {
+      var msg = 'Não foi possível criar a promoção.';
+      if (r.error.code === '23505') msg = 'Esse produto já tem uma promoção desse tipo hoje.';
+      else if (/Limite/.test(r.error.message || '')) msg = r.error.message;
+      else if (r.error.message) msg = r.error.message;
+      erro.textContent = msg; erro.classList.add('show'); return;
+    }
+    document.getElementById('admPromoPreco').value = '';
+    await renderPromocoesAdmin();
+  });
+
   // ---- Carga inicial ----
   document.getElementById('orderData').value = todayIso();
   resetProductForm();
@@ -3039,6 +3142,8 @@
   await renderResellers();
   await renderProducts();
   await renderAcompanhamentos();
+  admUpdatePromoTipo();
+  await renderPromocoesAdmin();
   await populateResellerSelect();
   await updateOrderNumberPreview();
   await renderOrders();

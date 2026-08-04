@@ -122,6 +122,51 @@ var DupuroCaixa = (function () {
     return mapped;
   }
 
+  // ---------- Promoções do dia (só balcão/loja) ----------
+  // Até 3 unitárias + 3 combos por dia; a trava é no banco. Filtra por dia=hoje
+  // (fuso de Cuiabá, o mesmo do PC da loja); no dia seguinte some sozinha.
+  async function getPromocoesHoje() {
+    if (window.DupuroOffline && !DupuroOffline.estaOnline()) {
+      return (await DupuroOffline.lerCache('promocoes')) || [];
+    }
+    var result = await client
+      .from('caixa_promocoes')
+      .select('id, produto_id, tipo, preco_promo, combo_qtd, dia')
+      .eq('dia', hojeLocal())
+      .order('id', { ascending: true });
+    if (result.error) {
+      if (window.DupuroOffline) { var c = await DupuroOffline.lerCache('promocoes'); if (c) return c; }
+      return [];
+    }
+    var mapped = (result.data || []).map(function (p) {
+      return {
+        id: p.id, produtoId: p.produto_id, tipo: p.tipo,
+        precoPromo: Number(p.preco_promo),
+        comboQtd: p.combo_qtd != null ? Number(p.combo_qtd) : null, dia: p.dia
+      };
+    });
+    if (window.DupuroOffline) DupuroOffline.salvarCache('promocoes', mapped);
+    return mapped;
+  }
+  // Cria uma promoção (criar/editar promo exige internet). O `dia` vem do default
+  // do banco (hoje/Cuiabá). A trava de 3-por-tipo e a coerência do combo são do banco.
+  async function definirPromocao(promo) {
+    var session = await getSession();
+    var row = {
+      produto_id: promo.produtoId,
+      tipo: promo.tipo,
+      preco_promo: promo.precoPromo,
+      combo_qtd: promo.tipo === 'combo' ? promo.comboQtd : null,
+      criado_por: session ? session.user.id : null
+    };
+    var result = await client.from('caixa_promocoes').insert(row).select('id').single();
+    return { error: result.error, id: result.data ? result.data.id : null };
+  }
+  async function removerPromocao(id) {
+    var result = await client.from('caixa_promocoes').delete().eq('id', id);
+    return { error: result.error };
+  }
+
   // Revendedores aprovados (para vincular uma venda de balcão a um revendedor).
   async function getResellers() {
     var result = await client
@@ -391,6 +436,9 @@ var DupuroCaixa = (function () {
     requireCaixa: requireCaixa,
     getProducts: getProducts,
     getAcompanhamentos: getAcompanhamentos,
+    getPromocoesHoje: getPromocoesHoje,
+    definirPromocao: definirPromocao,
+    removerPromocao: removerPromocao,
     getResellers: getResellers,
     registerSale: registerSale,
     getTodaySales: getTodaySales,

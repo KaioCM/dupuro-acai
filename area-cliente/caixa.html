@@ -8,7 +8,7 @@
 <link rel="apple-touch-icon" href="../assets/img/brand/favicon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/css/style.css?v=9">
+<link rel="stylesheet" href="../assets/css/style.css?v=10">
 <link rel="manifest" href="../manifest.webmanifest">
 <meta name="theme-color" content="#601050">
 </head>
@@ -27,6 +27,7 @@
     <a href="#" class="sidebar-cta" data-tab="venda">🛒 Nova venda</a>
 
     <a href="#" class="sidebar-link active" data-tab="venda"><span class="ic">🛒</span> Nova venda</a>
+    <a href="#" class="sidebar-link" data-tab="promos"><span class="ic">🏷️</span> Promoções</a>
     <a href="#" class="sidebar-link" data-tab="vendas"><span class="ic">🧾</span> Vendas do dia</a>
     <a href="#" class="sidebar-link" data-tab="historico"><span class="ic">📅</span> Histórico do mês</a>
     <a href="#" class="sidebar-link" data-tab="estoque"><span class="ic">📦</span> Estoque</a>
@@ -294,6 +295,41 @@
       </div>
     </section>
 
+    <!-- ============ PROMOÇÕES DO DIA ============ -->
+    <section class="tab-panel hidden" id="tab-promos">
+      <div class="app-topbar">
+        <div><h1>Promoções de hoje</h1><div class="subtitle">Descontos só do balcão, válidos <strong>somente hoje</strong>. Amanhã o preço volta ao normal sozinho.</div></div>
+        <button type="button" class="btn btn-dark-outline btn-sm" id="refreshPromosBtn">↻ Atualizar</button>
+      </div>
+
+      <div class="panel" style="margin-bottom:18px;">
+        <div class="panel-header"><div><h3>Nova promoção</h3>
+          <div class="subtitle" id="promoLimits">Unitárias: 0/3 · Combos: 0/3</div></div></div>
+        <div class="promo-form">
+          <div class="field"><label for="promoProduto">Produto</label>
+            <select id="promoProduto"></select></div>
+          <div class="field"><label for="promoTipo">Tipo de promoção</label>
+            <select id="promoTipo">
+              <option value="unitario">Preço unitário (de X por Y)</option>
+              <option value="combo">Combo — leve N por Y</option>
+            </select></div>
+          <div class="field hidden" id="promoQtdField"><label for="promoQtd">Quantidade do combo (N)</label>
+            <input type="number" id="promoQtd" min="2" max="99" step="1" value="2" inputmode="numeric"></div>
+          <div class="field"><label for="promoPreco" id="promoPrecoLabel">Preço promocional (Y)</label>
+            <input type="text" id="promoPreco" inputmode="decimal" placeholder="Ex: 12,00" autocomplete="off"></div>
+          <div class="promo-form-actions">
+            <div class="field-note" id="promoErro">Confira os dados da promoção.</div>
+            <button type="button" class="btn btn-green" id="promoAddBtn">➕ Criar promoção</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="cart-head">Promoções ativas hoje</div>
+        <div id="promoList"><div class="empty-state"><div class="icon">🏷️</div>Carregando...</div></div>
+      </div>
+    </section>
+
     <!-- ============ ESTOQUE ============ -->
     <section class="tab-panel hidden" id="tab-estoque">
       <div class="app-topbar">
@@ -421,22 +457,74 @@
     });
   }
 
-  // Preço de UM copo: preço base + gratuitos além da cota (× preço do extra) +
-  // acompanhamentos pagos (preço próprio de cada um).
+  // ---- Promoções do dia (só balcão) ----
+  // promoCache: [{ id, produtoId, tipo:'unitario'|'combo', precoPromo, comboQtd }]
+  var promoCache = [];
+  function promosDoProduto(id) {
+    var r = { uni: null, combo: null };
+    promoCache.forEach(function (pr) {
+      if (String(pr.produtoId) !== String(id)) return;
+      if (pr.tipo === 'unitario') r.uni = pr;
+      else if (pr.tipo === 'combo') r.combo = pr;
+    });
+    return r;
+  }
+  // Preço unitário efetivo: aplica só a promoção unitária (usado em copo/peso e
+  // como preço do "resto" do combo).
+  function precoUnitPromo(id, base) {
+    var u = promosDoProduto(id).uni;
+    return u ? Number(u.precoPromo) : base;
+  }
+  // Total para q unidades aplicando unitária + combo (grupos de N por Y, o que
+  // sobra pelo preço unitário efetivo). Retorna { total, unit, combo, uni }.
+  function calcPromo(id, base, q) {
+    var p = promosDoProduto(id);
+    var unit = p.uni ? Number(p.uni.precoPromo) : base;
+    if (p.combo && Number(p.combo.comboQtd) >= 2) {
+      var N = Number(p.combo.comboQtd), Y = Number(p.combo.precoPromo);
+      var g = Math.floor(q / N), resto = q % N;
+      return { total: g * Y + resto * unit, unit: unit, combo: p.combo, uni: p.uni };
+    }
+    return { total: unit * q, unit: unit, combo: null, uni: p.uni };
+  }
+  // Rótulo curto da promoção de um produto (pra card/carrinho/comanda).
+  function promoLabel(id, base) {
+    var p = promosDoProduto(id);
+    var partes = [];
+    if (p.uni) partes.push('de ' + brl(base) + ' por ' + brl(Number(p.uni.precoPromo)));
+    if (p.combo) partes.push('leve ' + p.combo.comboQtd + ' por ' + brl(Number(p.combo.precoPromo)));
+    return partes.join(' · ');
+  }
+  function temPromo(id) { var p = promosDoProduto(id); return !!(p.uni || p.combo); }
+  // Total de uma linha do carrinho (combo é não-linear, então guardamos `total`).
+  function lineTotal(it) { return it.total != null ? it.total : it.preco * it.quantidade; }
+
+  // Preço de UM copo: preço base (com promoção unitária, se houver) + gratuitos
+  // além da cota (× preço do extra) + acompanhamentos pagos. A promoção mexe só
+  // no valor base do copo; acompanhamentos seguem por cima.
   function copoBreakdown(p) {
     var marcados = acompSelecionados();
     var gratuitos = marcados.filter(function (a) { return a.tipo === 'gratuito'; });
     var pagos = marcados.filter(function (a) { return a.tipo === 'pago'; });
     var extras = Math.max(0, gratuitos.length - (p.acompGratis || 0));
     var valorPagos = pagos.reduce(function (s, a) { return s + a.preco; }, 0);
+    var baseUnit = precoUnitPromo(p.id, p.preco);
+    var acompUnit = extras * (p.acompExtraPreco || 0) + valorPagos;
     return {
       marcados: marcados,
       gratuitosMarcados: gratuitos.length,
       extras: extras,
       valorExtras: extras * (p.acompExtraPreco || 0),
       valorPagos: valorPagos,
-      unitario: p.preco + extras * (p.acompExtraPreco || 0) + valorPagos
+      baseUnit: baseUnit,
+      acompUnit: acompUnit,
+      unitario: baseUnit + acompUnit
     };
+  }
+  // Total da linha de copo pra q copos: combo aplica só na parte base; os
+  // acompanhamentos (extras/pagos) somam por copo, como sempre.
+  function copoLineTotal(p, b, qty) {
+    return calcPromo(p.id, p.preco, qty).total + b.acompUnit * qty;
   }
 
   var shopCatalog = document.getElementById('shopCatalog');
@@ -459,11 +547,20 @@
     else if (p.modo === 'peso') hint = '<span class="flavor-hint">pese na balança</span>';
     else hint = p.multissabor ? '<span class="flavor-hint">escolha o sabor</span>' : '';
     var icone = p.modo === 'copo' ? '🥤' : (p.modo === 'peso' ? '⚖️' : '🫐');
-    return '<button type="button" class="shop-card' + (oos ? ' out-of-stock' : '') + '" data-product-id="' + p.id + '" aria-pressed="false"' + (oos ? ' disabled aria-disabled="true"' : '') + '>' +
+    var pr = promosDoProduto(p.id);
+    var sufixo = p.modo === 'peso' ? ' / kg' : '';
+    var priceHtml = pr.uni
+      ? '<div class="price"><span class="price-old">' + brl(p.preco) + '</span> <span class="price-promo">' + brl(Number(pr.uni.precoPromo)) + sufixo + '</span></div>'
+      : '<div class="price">' + brl(p.preco) + sufixo + '</div>';
+    var comboTag = pr.combo ? '<span class="combo-tag">🏷️ leve ' + pr.combo.comboQtd + ' por ' + brl(Number(pr.combo.precoPromo)) + '</span>' : '';
+    var promoBadge = (pr.uni || pr.combo) ? '<span class="promo-badge">PROMO</span>' : '';
+    return '<button type="button" class="shop-card' + (oos ? ' out-of-stock' : '') + (promoBadge ? ' has-promo' : '') + '" data-product-id="' + p.id + '" aria-pressed="false"' + (oos ? ' disabled aria-disabled="true"' : '') + '>' +
+      promoBadge +
       '<div class="ph">' + (p.imagemUrl ? '<img src="' + p.imagemUrl + '" alt="" loading="lazy">' : icone) + '</div>' +
       '<div class="body">' +
         '<h4>' + p.nome + '</h4>' +
-        '<div class="price">' + brl(p.preco) + (p.modo === 'peso' ? ' / kg' : '') + '</div>' +
+        priceHtml +
+        comboTag +
         hint +
       '</div>' +
       '</button>';
@@ -500,7 +597,7 @@
 
     if (selectedProduct.modo === 'peso') {
       var peso = getPeso();
-      el.textContent = peso ? brl(selectedProduct.preco * peso) : '—';
+      el.textContent = peso ? brl(precoUnitPromo(selectedProduct.id, selectedProduct.preco) * peso) : '—';
       return;
     }
 
@@ -520,11 +617,11 @@
         cotaEl.textContent = txt;
         cotaEl.classList.toggle('over', b.extras > 0);
       }
-      el.textContent = brl(b.unitario * qty);
+      el.textContent = brl(copoLineTotal(selectedProduct, b, qty));
       return;
     }
 
-    el.textContent = brl(selectedProduct.preco * qty);
+    el.textContent = brl(calcPromo(selectedProduct.id, selectedProduct.preco, qty).total);
   }
 
   function renderAcompList() {
@@ -582,8 +679,17 @@
     var icone = modo === 'copo' ? '🥤' : (modo === 'peso' ? '⚖️' : '🫐');
     document.getElementById('summaryThumb').innerHTML = selectedProduct.imagemUrl ? '<img src="' + selectedProduct.imagemUrl + '" alt="">' : icone;
     document.getElementById('summaryName').textContent = selectedProduct.nome;
-    document.getElementById('summaryUnit').textContent = brl(selectedProduct.preco) +
-      (modo === 'peso' ? ' / kg' : (modo === 'copo' ? ' / copo' : ' / unidade'));
+    var sufixoUnit = modo === 'peso' ? ' / kg' : (modo === 'copo' ? ' / copo' : ' / unidade');
+    var unitEl = document.getElementById('summaryUnit');
+    if (temPromo(selectedProduct.id)) {
+      var prU = promosDoProduto(selectedProduct.id);
+      var precoMostra = prU.uni ? brl(Number(prU.uni.precoPromo)) : brl(selectedProduct.preco);
+      var velho = prU.uni ? '<span class="price-old">' + brl(selectedProduct.preco) + '</span> ' : '';
+      var comboTxt = prU.combo ? ' · 🏷️ leve ' + prU.combo.comboQtd + ' por ' + brl(Number(prU.combo.precoPromo)) : '';
+      unitEl.innerHTML = velho + '<span class="price-promo">' + precoMostra + sufixoUnit + '</span>' + comboTxt;
+    } else {
+      unitEl.textContent = brl(selectedProduct.preco) + sufixoUnit;
+    }
 
     // Blocos específicos de cada modo de venda.
     document.getElementById('summaryAcompField').classList.toggle('hidden', modo !== 'copo');
@@ -634,15 +740,22 @@
     if (!cart.length && !editingSale) { section.classList.add('hidden'); return; }
     section.classList.remove('hidden');
     list.innerHTML = cart.map(function (it, i) {
-      var linha = it.modo === 'peso'
-        ? brl(it.preco)
-        : it.quantidade + ' × ' + brl(it.preco) + ' = ' + brl(it.preco * it.quantidade);
+      var linha;
+      if (it.modo === 'peso') {
+        linha = brl(lineTotal(it));
+      } else if (Math.abs(it.preco * it.quantidade - lineTotal(it)) < 0.005) {
+        linha = it.quantidade + ' × ' + brl(it.preco) + ' = ' + brl(lineTotal(it));
+      } else {
+        // combo: preço não-linear (grupos + resto), mostra a quantidade e o total.
+        linha = it.quantidade + ' un = ' + brl(lineTotal(it));
+      }
       return '<li class="cart-item"><div class="ci-info"><span class="ci-name">' + it.nome + (it.sabor ? ' · ' + it.sabor : '') + '</span>' +
         '<span class="ci-sub">' + linha + '</span>' +
-        (it.sub ? '<span class="ci-sub ci-detail">' + it.sub + '</span>' : '') + '</div>' +
+        (it.sub ? '<span class="ci-sub ci-detail">' + it.sub + '</span>' : '') +
+        (it.promoLabel ? '<span class="ci-sub ci-promo">🏷️ ' + it.promoLabel + '</span>' : '') + '</div>' +
         '<button type="button" class="ci-remove" data-cart-i="' + i + '" aria-label="Remover item">×</button></li>';
     }).join('');
-    document.getElementById('cartTotal').textContent = brl(cart.reduce(function (s, it) { return s + it.preco * it.quantidade; }, 0));
+    document.getElementById('cartTotal').textContent = brl(cart.reduce(function (s, it) { return s + lineTotal(it); }, 0));
     list.querySelectorAll('[data-cart-i]').forEach(function (b) {
       b.addEventListener('click', function () { cart.splice(parseInt(b.getAttribute('data-cart-i'), 10), 1); renderCart(); });
     });
@@ -673,11 +786,13 @@
         itemError.classList.add('show');
         return;
       }
+      var precoKgEf = precoUnitPromo(p.id, p.preco);
       cart.push({
         productId: p.id, nome: p.nome, modo: 'peso', sabor: null, quantidade: 1,
-        preco: p.preco * peso, pesoKg: peso,
-        sub: peso.toLocaleString('pt-BR', { minimumFractionDigits: 3 }) + ' kg × ' + brl(p.preco) + '/kg',
-        detalhes: { peso_kg: peso, preco_kg: p.preco }
+        preco: precoKgEf * peso, total: precoKgEf * peso, pesoKg: peso,
+        sub: peso.toLocaleString('pt-BR', { minimumFractionDigits: 3 }) + ' kg × ' + brl(precoKgEf) + '/kg',
+        promoLabel: temPromo(p.id) ? promoLabel(p.id, p.preco) : null,
+        detalhes: { peso_kg: peso, preco_kg: precoKgEf, promo: temPromo(p.id) ? promoLabel(p.id, p.preco) : undefined }
       });
       renderCart();
       deselectProduct();
@@ -692,15 +807,17 @@
       var b = copoBreakdown(p);
       cart.push({
         productId: p.id, nome: p.nome, modo: 'copo', sabor: null, quantidade: qty,
-        preco: b.unitario,
+        preco: b.unitario, total: copoLineTotal(p, b, qty),
         acomps: b.marcados.map(function (a) { return a.nome; }),
         sub: (b.marcados.length ? b.marcados.map(function (a) { return a.nome; }).join(', ') : 'sem acompanhamentos') +
              (b.extras > 0 ? ' · +' + b.extras + ' extra' + (b.extras === 1 ? '' : 's') : ''),
+        promoLabel: temPromo(p.id) ? promoLabel(p.id, p.preco) : null,
         detalhes: {
           acompanhamentos: b.marcados.map(function (a) { return { nome: a.nome, tipo: a.tipo, preco: a.preco }; }),
           gratis_inclusos: p.acompGratis || 0,
           extras_cobrados: b.extras,
-          extra_unitario: p.acompExtraPreco || 0
+          extra_unitario: p.acompExtraPreco || 0,
+          promo: temPromo(p.id) ? promoLabel(p.id, p.preco) : undefined
         }
       });
       renderCart();
@@ -715,8 +832,21 @@
     var existing = cart.filter(function (it) {
       return it.modo === 'embalado' && it.productId === p.id && (it.sabor || null) === (sabor || null);
     })[0];
-    if (existing) existing.quantidade = Math.min(99, existing.quantidade + qty);
-    else cart.push({ productId: p.id, nome: p.nome, modo: 'embalado', preco: p.preco, sabor: sabor, quantidade: qty });
+    if (existing) {
+      existing.quantidade = Math.min(99, existing.quantidade + qty);
+    } else {
+      existing = {
+        productId: p.id, nome: p.nome, modo: 'embalado', precoBase: p.preco,
+        preco: precoUnitPromo(p.id, p.preco), sabor: sabor, quantidade: qty,
+        promoLabel: temPromo(p.id) ? promoLabel(p.id, p.preco) : null,
+        detalhes: temPromo(p.id) ? { promo: promoLabel(p.id, p.preco) } : null
+      };
+      cart.push(existing);
+    }
+    var rcEmb = calcPromo(p.id, p.preco, existing.quantidade);
+    existing.precoBase = p.preco;
+    existing.preco = rcEmb.unit;
+    existing.total = rcEmb.total;
     renderCart();
     deselectProduct();
   });
@@ -900,7 +1030,7 @@
       return {
         produtoId: it.productId, quantidade: it.quantidade, sabor: it.sabor,
         modo: it.modo, detalhes: it.detalhes || null,
-        itens: texto, valor: it.preco * it.quantidade
+        itens: texto, valor: lineTotal(it)
       };
     });
   }
@@ -965,7 +1095,7 @@
 
     // Cartão pela maquininha (quando dentro do app com TEF): cobra antes de
     // registrar; se não aprovar, não registra a venda.
-    var totalVenda = cart.reduce(function (s, it) { return s + it.preco * it.quantidade; }, 0);
+    var totalVenda = cart.reduce(function (s, it) { return s + lineTotal(it); }, 0);
     var pagInfo = null;
     if (formaPagamento === 'debito' || formaPagamento === 'credito') {
       sendBtn.disabled = true; sendBtn.textContent = 'Aguardando cartão...';
@@ -992,7 +1122,7 @@
       renderShop();
       return;
     }
-    var total = cart.reduce(function (s, it) { return s + it.preco * it.quantidade; }, 0);
+    var total = cart.reduce(function (s, it) { return s + lineTotal(it); }, 0);
     var n = cart.length;
 
     // Comanda desta venda (guardada pra impressão e reimpressão).
@@ -1008,7 +1138,7 @@
       items: cart.map(function (it) {
         return {
           nome: it.nome, quantidade: it.quantidade, sabor: it.sabor, modo: it.modo,
-          valor: it.modo === 'peso' ? it.preco : it.preco * it.quantidade,
+          valor: lineTotal(it),
           acompanhamentos: it.acomps || [],
           pesoKg: it.pesoKg || null,
           precoKg: (it.detalhes && it.detalhes.preco_kg) || null
@@ -1044,7 +1174,7 @@
         var precoKg = it.precoKg || (it.detalhes && it.detalhes.preco_kg) || 0;
         return {
           productId: it.produtoId, nome: it.nome, modo: 'peso', sabor: null, quantidade: 1,
-          preco: it.valor, pesoKg: it.pesoKg,
+          preco: it.valor, total: it.valor, pesoKg: it.pesoKg,
           sub: Number(it.pesoKg || 0).toLocaleString('pt-BR', { minimumFractionDigits: 3 }) + ' kg × ' + brl(precoKg) + '/kg',
           detalhes: it.detalhes || { peso_kg: it.pesoKg, preco_kg: precoKg }
         };
@@ -1053,14 +1183,14 @@
         var qtd = it.quantidade || 1;
         return {
           productId: it.produtoId, nome: it.nome, modo: 'copo', sabor: null, quantidade: qtd,
-          preco: it.valor / qtd,
+          preco: it.valor / qtd, total: it.valor,
           acomps: it.acompanhamentos || [],
           sub: (it.acompanhamentos && it.acompanhamentos.length ? it.acompanhamentos.join(', ') : 'sem acompanhamentos'),
           detalhes: it.detalhes || null
         };
       }
       var q = it.quantidade || 1;
-      return { productId: it.produtoId, nome: it.nome, modo: 'embalado', preco: it.valor / q, sabor: it.sabor, quantidade: q };
+      return { productId: it.produtoId, nome: it.nome, modo: 'embalado', preco: it.valor / q, total: it.valor, sabor: it.sabor, quantidade: q };
     });
   }
 
@@ -1406,12 +1536,105 @@
     renderEstoque();
   });
 
+  // ---- Promoções do dia ----
+  function precoDoProduto(id) {
+    var p = productsCache.filter(function (x) { return String(x.id) === String(id); })[0];
+    return p ? p.preco : 0;
+  }
+  function nomeDoProduto(id) {
+    var p = productsCache.filter(function (x) { return String(x.id) === String(id); })[0];
+    return p ? p.nome : ('#' + id);
+  }
+  function fillPromoProdutos() {
+    var sel = document.getElementById('promoProduto');
+    if (!sel) return;
+    var atual = sel.value;
+    var opts = productsCache.slice().sort(function (a, b) { return a.nome < b.nome ? -1 : 1; });
+    sel.innerHTML = opts.map(function (p) {
+      var suf = p.modo === 'peso' ? ' /kg' : '';
+      return '<option value="' + p.id + '">' + p.nome + ' — ' + brl(p.preco) + suf + '</option>';
+    }).join('');
+    if (atual) sel.value = atual;
+  }
+  function updatePromoTipoUI() {
+    var tipo = document.getElementById('promoTipo').value;
+    document.getElementById('promoQtdField').classList.toggle('hidden', tipo !== 'combo');
+    document.getElementById('promoPrecoLabel').textContent = tipo === 'combo' ? 'Preço do conjunto (Y)' : 'Preço promocional (Y)';
+  }
+  function renderPromoList() {
+    var box = document.getElementById('promoList');
+    var uni = promoCache.filter(function (p) { return p.tipo === 'unitario'; }).length;
+    var combo = promoCache.filter(function (p) { return p.tipo === 'combo'; }).length;
+    document.getElementById('promoLimits').textContent = 'Unitárias: ' + uni + '/3 · Combos: ' + combo + '/3';
+    if (!promoCache.length) {
+      box.innerHTML = '<div class="empty-state"><div class="icon">🏷️</div>Nenhuma promoção hoje. Crie acima.</div>';
+      return;
+    }
+    box.innerHTML = promoCache.map(function (pr) {
+      var base = precoDoProduto(pr.produtoId);
+      var desc = pr.tipo === 'combo'
+        ? '🏷️ leve ' + pr.comboQtd + ' por ' + brl(pr.precoPromo)
+        : 'de ' + brl(base) + ' por ' + brl(pr.precoPromo);
+      return '<div class="promo-row"><div><strong>' + nomeDoProduto(pr.produtoId) + '</strong>' +
+        '<div class="subtitle">' + desc + '</div></div>' +
+        '<button type="button" class="btn btn-danger-outline btn-sm" data-promo-del="' + pr.id + '">Remover</button></div>';
+    }).join('');
+    box.querySelectorAll('[data-promo-del]').forEach(function (btn) {
+      btn.addEventListener('click', async function () {
+        btn.disabled = true;
+        var r = await DupuroCaixa.removerPromocao(btn.getAttribute('data-promo-del'));
+        if (r.error) { btn.disabled = false; btn.textContent = 'Tentar de novo'; return; }
+        await loadPromos();
+      });
+    });
+  }
+  async function loadPromos() {
+    promoCache = await DupuroCaixa.getPromocoesHoje();
+    renderPromoList();
+    renderShop(); // os cards do catálogo refletem a promoção
+  }
+  document.getElementById('promoTipo').addEventListener('change', updatePromoTipoUI);
+  document.getElementById('refreshPromosBtn').addEventListener('click', function () { fillPromoProdutos(); loadPromos(); });
+  document.getElementById('promoAddBtn').addEventListener('click', async function () {
+    var erro = document.getElementById('promoErro');
+    erro.classList.remove('show');
+    var produtoId = document.getElementById('promoProduto').value;
+    var tipo = document.getElementById('promoTipo').value;
+    var preco = parseValor(document.getElementById('promoPreco').value);
+    if (!produtoId) { erro.textContent = 'Escolha o produto.'; erro.classList.add('show'); return; }
+    if (!(preco > 0)) { erro.textContent = 'Informe o preço promocional (maior que zero).'; erro.classList.add('show'); return; }
+    var base = precoDoProduto(produtoId);
+    var comboQtd = null;
+    if (tipo === 'combo') {
+      comboQtd = parseInt(document.getElementById('promoQtd').value, 10);
+      if (!(comboQtd >= 2)) { erro.textContent = 'No combo, a quantidade (N) precisa ser 2 ou mais.'; erro.classList.add('show'); return; }
+    } else if (preco >= base) {
+      erro.textContent = 'O preço promocional precisa ser menor que o normal (' + brl(base) + ').'; erro.classList.add('show'); return;
+    }
+    var btn = this; btn.disabled = true; btn.textContent = 'Criando...';
+    var r = await DupuroCaixa.definirPromocao({ produtoId: produtoId, tipo: tipo, precoPromo: preco, comboQtd: comboQtd });
+    btn.disabled = false; btn.textContent = '➕ Criar promoção';
+    if (r.error) {
+      var msg = 'Não foi possível criar a promoção.';
+      if (r.error.code === '23505') msg = 'Esse produto já tem uma promoção desse tipo hoje.';
+      else if (/Limite/.test(r.error.message || '')) msg = r.error.message;
+      else if (r.error.message) msg = r.error.message;
+      erro.textContent = msg; erro.classList.add('show'); return;
+    }
+    document.getElementById('promoPreco').value = '';
+    await loadPromos();
+  });
+
   // ---- Carga inicial ----
   syncPrinterUI();
   productsCache = decorate(await DupuroCaixa.getProducts());
   acompCache = await DupuroCaixa.getAcompanhamentos();
+  promoCache = await DupuroCaixa.getPromocoesHoje();
   renderShop();
   renderEstoque();
+  fillPromoProdutos();
+  updatePromoTipoUI();
+  renderPromoList();
   loadVendas();
   carregarCaixa();
 
@@ -1472,6 +1695,8 @@
     window.scrollTo(0, 0);
     // O histórico é carregado sob demanda (consulta o mês inteiro).
     if (tab === 'historico' && !histCarregado) loadHistorico();
+    // Promoções: recarrega ao abrir (o admin pode ter mudado em outro lugar).
+    if (tab === 'promos') loadPromos();
   }
   navItems.forEach(function (link) {
     link.addEventListener('click', function (e) { e.preventDefault(); goTo(link.getAttribute('data-tab')); });

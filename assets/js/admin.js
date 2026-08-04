@@ -794,6 +794,44 @@ var DupuroAdmin = (function () {
     });
   }
 
+  // ---------- Promoções do dia (caixa/balcão) ----------
+  // Mesma tabela usada pela atendente; o admin também define. Só o dia de hoje.
+  function hojeCuiaba() {
+    var d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+  async function getPromocoesHoje() {
+    var result = await client
+      .from('caixa_promocoes')
+      .select('id, produto_id, tipo, preco_promo, combo_qtd, dia')
+      .eq('dia', hojeCuiaba())
+      .order('id', { ascending: true });
+    if (result.error) return [];
+    return (result.data || []).map(function (p) {
+      return {
+        id: p.id, produtoId: p.produto_id, tipo: p.tipo,
+        precoPromo: Number(p.preco_promo),
+        comboQtd: p.combo_qtd != null ? Number(p.combo_qtd) : null, dia: p.dia
+      };
+    });
+  }
+  async function createPromocao(promo) {
+    var session = await getSession();
+    var row = {
+      produto_id: promo.produtoId,
+      tipo: promo.tipo,
+      preco_promo: promo.precoPromo,
+      combo_qtd: promo.tipo === 'combo' ? promo.comboQtd : null,
+      criado_por: session ? session.user.id : null
+    };
+    var result = await client.from('caixa_promocoes').insert(row).select('id').single();
+    return { error: result.error, id: result.data ? result.data.id : null };
+  }
+  async function deletePromocao(id) {
+    var result = await client.from('caixa_promocoes').delete().eq('id', id);
+    return { error: result.error };
+  }
+
   return {
     requireAdmin: requireAdmin,
     logout: logout,
@@ -839,7 +877,10 @@ var DupuroAdmin = (function () {
     createProducao: createProducao,
     updateProducao: updateProducao,
     deleteProducao: deleteProducao,
-    getCaixaFechamentos: getCaixaFechamentos
+    getCaixaFechamentos: getCaixaFechamentos,
+    getPromocoesHoje: getPromocoesHoje,
+    createPromocao: createPromocao,
+    deletePromocao: deletePromocao
   };
 
 })();
