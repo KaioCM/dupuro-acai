@@ -8,7 +8,7 @@
 <link rel="apple-touch-icon" href="../assets/img/brand/favicon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/css/style.css?v=10">
+<link rel="stylesheet" href="../assets/css/style.css?v=11">
 <link rel="manifest" href="../manifest.webmanifest">
 <meta name="theme-color" content="#601050">
 </head>
@@ -475,29 +475,38 @@
     var u = promosDoProduto(id).uni;
     return u ? Number(u.precoPromo) : base;
   }
-  // Total para q unidades aplicando unitária + combo (grupos de N por Y, o que
-  // sobra pelo preço unitário efetivo). Retorna { total, unit, combo, uni }.
-  function calcPromo(id, base, q) {
-    var p = promosDoProduto(id);
-    var unit = p.uni ? Number(p.uni.precoPromo) : base;
-    if (p.combo && Number(p.combo.comboQtd) >= 2) {
-      var N = Number(p.combo.comboQtd), Y = Number(p.combo.precoPromo);
-      var g = Math.floor(q / N), resto = q % N;
-      return { total: g * Y + resto * unit, unit: unit, combo: p.combo, uni: p.uni };
-    }
-    return { total: unit * q, unit: unit, combo: null, uni: p.uni };
-  }
-  // Rótulo curto da promoção de um produto (pra card/carrinho/comanda).
-  function promoLabel(id, base) {
-    var p = promosDoProduto(id);
-    var partes = [];
-    if (p.uni) partes.push('de ' + brl(base) + ' por ' + brl(Number(p.uni.precoPromo)));
-    if (p.combo) partes.push('leve ' + p.combo.comboQtd + ' por ' + brl(Number(p.combo.precoPromo)));
-    return partes.join(' · ');
+  // Base unitária efetiva do produto (com promoção unitária aplicada). O combo
+  // desconta sobre essa base. (precoDoProduto/nomeDoProduto são declarados adiante.)
+  function baseUnitProduto(id) { return precoUnitPromo(id, precoDoProduto(id)); }
+  // Rótulo só da promoção UNITÁRIA (o combo vira uma linha de desconto no total).
+  function promoLabelUni(id, base) {
+    var u = promosDoProduto(id).uni;
+    return u ? ('de ' + brl(base) + ' por ' + brl(Number(u.precoPromo))) : null;
   }
   function temPromo(id) { var p = promosDoProduto(id); return !!(p.uni || p.combo); }
-  // Total de uma linha do carrinho (combo é não-linear, então guardamos `total`).
   function lineTotal(it) { return it.total != null ? it.total : it.preco * it.quantidade; }
+
+  // Combos são AGREGADOS por produto no carrinho inteiro (não por linha): somam
+  // todas as unidades do produto (linhas separadas OU quantidade) e aplicam os
+  // grupos de N por Y sobre a base — viram uma LINHA DE DESCONTO no total. O que
+  // sobra do múltiplo fica no preço normal. Some sozinho ao cair abaixo de N.
+  function combosCarrinho() {
+    var out = [];
+    promoCache.forEach(function (pr) {
+      if (pr.tipo !== 'combo' || !(Number(pr.comboQtd) >= 2)) return;
+      var N = Number(pr.comboQtd), Y = Number(pr.precoPromo);
+      var unidades = cart.reduce(function (s, it) {
+        return s + (String(it.productId) === String(pr.produtoId) ? (it.quantidade || 0) : 0);
+      }, 0);
+      var grupos = Math.floor(unidades / N);
+      if (grupos < 1) return;
+      var desconto = grupos * (N * baseUnitProduto(pr.produtoId) - Y);
+      if (desconto <= 0.005) return;
+      out.push({ produtoId: pr.produtoId, nome: nomeDoProduto(pr.produtoId), N: N, Y: Y, grupos: grupos, desconto: desconto });
+    });
+    return out;
+  }
+  function descontoCombosTotal() { return combosCarrinho().reduce(function (s, c) { return s + c.desconto; }, 0); }
 
   // Preço de UM copo: preço base (com promoção unitária, se houver) + gratuitos
   // além da cota (× preço do extra) + acompanhamentos pagos. A promoção mexe só
@@ -520,11 +529,6 @@
       acompUnit: acompUnit,
       unitario: baseUnit + acompUnit
     };
-  }
-  // Total da linha de copo pra q copos: combo aplica só na parte base; os
-  // acompanhamentos (extras/pagos) somam por copo, como sempre.
-  function copoLineTotal(p, b, qty) {
-    return calcPromo(p.id, p.preco, qty).total + b.acompUnit * qty;
   }
 
   var shopCatalog = document.getElementById('shopCatalog');
@@ -617,11 +621,11 @@
         cotaEl.textContent = txt;
         cotaEl.classList.toggle('over', b.extras > 0);
       }
-      el.textContent = brl(copoLineTotal(selectedProduct, b, qty));
+      el.textContent = brl(b.unitario * qty);
       return;
     }
 
-    el.textContent = brl(calcPromo(selectedProduct.id, selectedProduct.preco, qty).total);
+    el.textContent = brl(precoUnitPromo(selectedProduct.id, selectedProduct.preco) * qty);
   }
 
   function renderAcompList() {
@@ -739,23 +743,27 @@
     sendBtn.textContent = (editingSale ? 'Salvar alteração' : 'Registrar venda') + (cart.length ? ' (' + cart.length + ')' : '') + (editingSale ? '' : ' ✔');
     if (!cart.length && !editingSale) { section.classList.add('hidden'); return; }
     section.classList.remove('hidden');
-    list.innerHTML = cart.map(function (it, i) {
-      var linha;
-      if (it.modo === 'peso') {
-        linha = brl(lineTotal(it));
-      } else if (Math.abs(it.preco * it.quantidade - lineTotal(it)) < 0.005) {
-        linha = it.quantidade + ' × ' + brl(it.preco) + ' = ' + brl(lineTotal(it));
-      } else {
-        // combo: preço não-linear (grupos + resto), mostra a quantidade e o total.
-        linha = it.quantidade + ' un = ' + brl(lineTotal(it));
-      }
+    var itensHtml = cart.map(function (it, i) {
+      var linha = it.modo === 'peso'
+        ? brl(lineTotal(it))
+        : it.quantidade + ' × ' + brl(it.preco) + ' = ' + brl(lineTotal(it));
       return '<li class="cart-item"><div class="ci-info"><span class="ci-name">' + it.nome + (it.sabor ? ' · ' + it.sabor : '') + '</span>' +
         '<span class="ci-sub">' + linha + '</span>' +
         (it.sub ? '<span class="ci-sub ci-detail">' + it.sub + '</span>' : '') +
         (it.promoLabel ? '<span class="ci-sub ci-promo">🏷️ ' + it.promoLabel + '</span>' : '') + '</div>' +
         '<button type="button" class="ci-remove" data-cart-i="' + i + '" aria-label="Remover item">×</button></li>';
     }).join('');
-    document.getElementById('cartTotal').textContent = brl(cart.reduce(function (s, it) { return s + lineTotal(it); }, 0));
+    // Combos: uma linha de desconto por produto que fechou grupo(s).
+    var combos = combosCarrinho();
+    var descHtml = combos.map(function (c) {
+      return '<li class="cart-item cart-desconto"><div class="ci-info">' +
+        '<span class="ci-name">🏷️ Promoção · ' + c.nome + '</span>' +
+        '<span class="ci-sub">leve ' + c.N + ' por ' + brl(c.Y) + (c.grupos > 1 ? ' ×' + c.grupos : '') + '</span></div>' +
+        '<span class="ci-desc-val">− ' + brl(c.desconto) + '</span></li>';
+    }).join('');
+    list.innerHTML = itensHtml + descHtml;
+    var subtotal = cart.reduce(function (s, it) { return s + lineTotal(it); }, 0);
+    document.getElementById('cartTotal').textContent = brl(subtotal - descontoCombosTotal());
     list.querySelectorAll('[data-cart-i]').forEach(function (b) {
       b.addEventListener('click', function () { cart.splice(parseInt(b.getAttribute('data-cart-i'), 10), 1); renderCart(); });
     });
@@ -789,10 +797,10 @@
       var precoKgEf = precoUnitPromo(p.id, p.preco);
       cart.push({
         productId: p.id, nome: p.nome, modo: 'peso', sabor: null, quantidade: 1,
-        preco: precoKgEf * peso, total: precoKgEf * peso, pesoKg: peso,
+        preco: precoKgEf * peso, pesoKg: peso,
         sub: peso.toLocaleString('pt-BR', { minimumFractionDigits: 3 }) + ' kg × ' + brl(precoKgEf) + '/kg',
-        promoLabel: temPromo(p.id) ? promoLabel(p.id, p.preco) : null,
-        detalhes: { peso_kg: peso, preco_kg: precoKgEf, promo: temPromo(p.id) ? promoLabel(p.id, p.preco) : undefined }
+        promoLabel: promoLabelUni(p.id, p.preco),
+        detalhes: { peso_kg: peso, preco_kg: precoKgEf, promo: promoLabelUni(p.id, p.preco) || undefined }
       });
       renderCart();
       deselectProduct();
@@ -807,17 +815,17 @@
       var b = copoBreakdown(p);
       cart.push({
         productId: p.id, nome: p.nome, modo: 'copo', sabor: null, quantidade: qty,
-        preco: b.unitario, total: copoLineTotal(p, b, qty),
+        preco: b.unitario,
         acomps: b.marcados.map(function (a) { return a.nome; }),
         sub: (b.marcados.length ? b.marcados.map(function (a) { return a.nome; }).join(', ') : 'sem acompanhamentos') +
              (b.extras > 0 ? ' · +' + b.extras + ' extra' + (b.extras === 1 ? '' : 's') : ''),
-        promoLabel: temPromo(p.id) ? promoLabel(p.id, p.preco) : null,
+        promoLabel: promoLabelUni(p.id, p.preco),
         detalhes: {
           acompanhamentos: b.marcados.map(function (a) { return { nome: a.nome, tipo: a.tipo, preco: a.preco }; }),
           gratis_inclusos: p.acompGratis || 0,
           extras_cobrados: b.extras,
           extra_unitario: p.acompExtraPreco || 0,
-          promo: temPromo(p.id) ? promoLabel(p.id, p.preco) : undefined
+          promo: promoLabelUni(p.id, p.preco) || undefined
         }
       });
       renderCart();
@@ -835,18 +843,14 @@
     if (existing) {
       existing.quantidade = Math.min(99, existing.quantidade + qty);
     } else {
-      existing = {
-        productId: p.id, nome: p.nome, modo: 'embalado', precoBase: p.preco,
+      var labelUni = promoLabelUni(p.id, p.preco);
+      cart.push({
+        productId: p.id, nome: p.nome, modo: 'embalado',
         preco: precoUnitPromo(p.id, p.preco), sabor: sabor, quantidade: qty,
-        promoLabel: temPromo(p.id) ? promoLabel(p.id, p.preco) : null,
-        detalhes: temPromo(p.id) ? { promo: promoLabel(p.id, p.preco) } : null
-      };
-      cart.push(existing);
+        promoLabel: labelUni,
+        detalhes: labelUni ? { promo: labelUni } : null
+      });
     }
-    var rcEmb = calcPromo(p.id, p.preco, existing.quantidade);
-    existing.precoBase = p.preco;
-    existing.preco = rcEmb.unit;
-    existing.total = rcEmb.total;
     renderCart();
     deselectProduct();
   });
@@ -1020,17 +1024,36 @@
     }).join('');
   });
 
-  // Monta os itens no formato que registerSale/updateSale esperam.
+  // Monta os itens no formato que registerSale/updateSale esperam. O desconto de
+  // combo é RATEADO entre as linhas do produto (a soma dos `valor` bate com o
+  // total; sem linha fantasma no banco). O resto de centavos vai na última linha.
   function cartToItems() {
+    var combos = combosCarrinho();
+    var descPorProduto = {}, unidadesPorProduto = {}, restante = {}, feitas = {}, totalLinhas = {};
+    combos.forEach(function (c) { descPorProduto[c.produtoId] = c.desconto; restante[c.produtoId] = c.desconto; });
+    cart.forEach(function (it) {
+      if (descPorProduto[it.productId] == null) return;
+      unidadesPorProduto[it.productId] = (unidadesPorProduto[it.productId] || 0) + (it.quantidade || 0);
+      totalLinhas[it.productId] = (totalLinhas[it.productId] || 0) + 1;
+    });
     return cart.map(function (it) {
       var texto;
       if (it.modo === 'peso') texto = it.nome + ' ' + it.pesoKg.toLocaleString('pt-BR', { minimumFractionDigits: 3 }) + ' kg';
       else if (it.modo === 'copo') texto = it.nome + ' x' + it.quantidade + (it.acomps && it.acomps.length ? ' (' + it.acomps.join(', ') + ')' : '');
       else texto = it.nome + (it.sabor ? ' - ' + it.sabor : '') + ' x' + it.quantidade;
+      var valor = lineTotal(it);
+      var pid = it.productId;
+      if (descPorProduto[pid] != null) {
+        feitas[pid] = (feitas[pid] || 0) + 1;
+        var abate;
+        if (feitas[pid] === totalLinhas[pid]) abate = restante[pid];
+        else { abate = Math.round(descPorProduto[pid] * (it.quantidade || 0) / unidadesPorProduto[pid] * 100) / 100; restante[pid] -= abate; }
+        valor = Math.max(0, Math.round((valor - abate) * 100) / 100);
+      }
       return {
         produtoId: it.productId, quantidade: it.quantidade, sabor: it.sabor,
         modo: it.modo, detalhes: it.detalhes || null,
-        itens: texto, valor: lineTotal(it)
+        itens: texto, valor: valor
       };
     });
   }
@@ -1095,7 +1118,7 @@
 
     // Cartão pela maquininha (quando dentro do app com TEF): cobra antes de
     // registrar; se não aprovar, não registra a venda.
-    var totalVenda = cart.reduce(function (s, it) { return s + lineTotal(it); }, 0);
+    var totalVenda = cart.reduce(function (s, it) { return s + lineTotal(it); }, 0) - descontoCombosTotal();
     var pagInfo = null;
     if (formaPagamento === 'debito' || formaPagamento === 'credito') {
       sendBtn.disabled = true; sendBtn.textContent = 'Aguardando cartão...';
@@ -1122,10 +1145,11 @@
       renderShop();
       return;
     }
-    var total = cart.reduce(function (s, it) { return s + lineTotal(it); }, 0);
+    var total = cart.reduce(function (s, it) { return s + lineTotal(it); }, 0) - descontoCombosTotal();
     var n = cart.length;
 
-    // Comanda desta venda (guardada pra impressão e reimpressão).
+    // Comanda desta venda (guardada pra impressão e reimpressão). Os itens ficam
+    // com o preço cheio e o combo aparece como linha de desconto (`descontos`).
     ultimaVenda = {
       numero: result.numero,
       cliente: saleTarget === 'revendedor'
@@ -1135,6 +1159,9 @@
       total: total,
       formaPagamento: formaPagamento,
       pagamento: pagInfo,
+      descontos: combosCarrinho().map(function (c) {
+        return { label: 'Promo ' + c.nome + ' (' + c.N + ' por ' + brl(c.Y) + ')', valor: c.desconto };
+      }),
       items: cart.map(function (it) {
         return {
           nome: it.nome, quantidade: it.quantidade, sabor: it.sabor, modo: it.modo,

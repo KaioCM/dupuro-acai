@@ -129,6 +129,14 @@ var DupuroPrinter = (function () {
     });
 
     L.push({ t: '-' });
+    (venda.descontos || []).forEach(function (d) {
+      if (!d || !(Number(d.valor) > 0)) return;
+      quebrar(d.label || 'Promoção', LARGURA).forEach(function (linha, idx) {
+        // valor do desconto na 1ª linha do rótulo (à direita); continuações à esquerda.
+        if (idx === 0) L.push({ t: linhaDupla(linha, '- ' + brl(d.valor)) });
+        else L.push({ t: linha });
+      });
+    });
     L.push({ t: linhaDupla('TOTAL', brl(venda.total)), bold: true, grande: false });
     if (venda.formaPagamento) {
       var FP = { dinheiro: 'Dinheiro', debito: 'Cartão de débito', credito: 'Cartão de crédito', pix: 'Pix' };

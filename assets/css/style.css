@@ -1402,6 +1402,9 @@ tr.venda-cancelada td:nth-child(5) { text-decoration: line-through; color: var(-
 .promo-form-actions { display: flex; flex-direction: column; gap: 6px; justify-content: flex-end; }
 .promo-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; border: 1px solid rgba(96,16,80,0.10); border-radius: 12px; margin-bottom: 8px; }
 .promo-row .subtitle { margin-top: 2px; }
+.cart-item.cart-desconto { background: rgba(139,184,49,0.10); border-radius: 10px; }
+.cart-item.cart-desconto .ci-name { color: var(--verde); }
+.ci-desc-val { color: var(--verde); font-weight: 800; white-space: nowrap; }
 
 /* Produto varejo/atacado: seletor de tipo e blocos de preço por tipo */
 .tipo-checks { display: flex; flex-wrap: wrap; gap: 10px 22px; }
