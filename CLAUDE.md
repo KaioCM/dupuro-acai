@@ -5,11 +5,11 @@
 - **Site 100% estático** (HTML/CSS/JS puro): sem build, sem framework, sem npm. Editou → recarrega o preview.
 - **Preview**: servidor `dupuro-acai` na porta 8853, raiz serve `dupuro-acai/` (ex.: `/area-cliente/login.html`). Dashboard/admin exigem sessão Supabase — não dá pra clicar através deles sem login.
 - **Orientação de imagem**: as fotos em `assets/img/fotos/` **não têm tag EXIF** de orientação. Cheque orientação pelas dimensões via PowerShell (`System.Drawing`) — não abra o arquivo em tamanho cheio (caro em tokens). Deitada = conteúdo retrato salvo em landscape; corrija com `RotateFlip(Rotate270FlipNone)` (90° anti-horário) e atualize `width`/`height` no HTML.
-- Toda ação de compra leva ao WhatsApp `5566996549545` (sem carrinho/checkout).
+- Toda ação de compra leva ao WhatsApp `5565992888228` (sem carrinho/checkout).
 
 ## Negócio
 
-Fábrica/distribuidora de açaí e cremes em Cuiabá-MT (atendimento presencial, Av. das Torres nº 16, Jardim Imperial II, 78076-001). NÃO tem drive-thru. WhatsApp (66) 99654-9545. 4,8★ no Google (33 aval.). Vende também pelo iFood. Tagline: **"Puro como tem que ser"**. **Sem pedido mínimo.** Dois públicos: (1) quem quer virar revendedor, (2) revendedores ativos que precisam de painel. *Dados extraídos de Instagram/Maps — reconfirmar antes de publicar.*
+Fábrica/distribuidora de açaí e cremes em Cuiabá-MT (atendimento presencial, Av. das Torres nº 16, Jardim Imperial II, 78076-001). NÃO tem drive-thru. WhatsApp (65) 99288-8228. 4,8★ no Google (33 aval.). Vende também pelo iFood. Tagline: **"Puro como tem que ser"**. **Sem pedido mínimo.** Dois públicos: (1) quem quer virar revendedor, (2) revendedores ativos que precisam de painel. *Dados extraídos de Instagram/Maps — reconfirmar antes de publicar.*
 
 ## Estrutura
 

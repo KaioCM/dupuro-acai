@@ -104,7 +104,7 @@ var DupuroPrinter = (function () {
     L.push({ t: 'DUPURO AÇAÍ', center: true, grande: true });
     L.push({ t: 'Puro como tem que ser', center: true });
     L.push({ t: 'Av. das Torres, 16 - Jardim Imperial II', center: true });
-    L.push({ t: '(66) 99654-9545', center: true });
+    L.push({ t: '(65) 99288-8228', center: true });
     L.push({ t: '-' });
     L.push({ t: venda.numero, bold: true });
     L.push({ t: hora });
