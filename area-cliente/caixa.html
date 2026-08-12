@@ -351,6 +351,9 @@
   <div class="modal-card">
     <h3>Cancelar venda <span id="cancelModalNum">—</span></h3>
     <p class="subtitle">A venda fica registrada como <strong>cancelada</strong> e o estoque volta. Diga o motivo — a dona consegue ver depois.</p>
+    <div class="hidden" id="cancelNfceAviso" style="background:rgba(245,179,1,0.14); border:1px solid rgba(245,179,1,0.5); border-radius:12px; padding:10px 12px; margin-bottom:12px; font-size:13px; color:var(--roxo-700);">
+      🧾 <strong>Esta venda tem NFC-e emitida.</strong> O cupom fiscal também será cancelado no SEFAZ (prazo de 30 min após a emissão). A justificativa precisa ter <strong>pelo menos 15 letras</strong>.
+    </div>
     <div class="field" style="margin-bottom:0;">
       <label for="cancelMotivo">Motivo do cancelamento</label>
       <input type="text" id="cancelMotivo" placeholder="Ex: cliente desistiu" autocomplete="off">
@@ -1273,23 +1276,53 @@
   // ---- Cancelar uma venda (modal de motivo) ----
   var cancelModal = document.getElementById('cancelModal');
   var pendingCancel = null;
-  function openCancelModal(sale) {
+  var pendingCancelNfce = null; // emissão autorizada da venda (se houver)
+  async function openCancelModal(sale) {
     pendingCancel = sale.numero;
+    pendingCancelNfce = null;
     document.getElementById('cancelModalNum').textContent = sale.numero;
     document.getElementById('cancelMotivo').value = '';
     document.getElementById('cancelModalError').classList.remove('show');
+    document.getElementById('cancelNfceAviso').classList.add('hidden');
     cancelModal.classList.remove('hidden');
     document.getElementById('cancelMotivo').focus();
+    // Checa se a venda tem NFC-e autorizada — se tiver, o cupom fiscal também
+    // será cancelado e a justificativa precisa de 15+ letras.
+    var em = await DupuroCaixa.getEmissaoAutorizada(sale.numero);
+    if (em && pendingCancel === sale.numero) {
+      pendingCancelNfce = em;
+      document.getElementById('cancelNfceAviso').classList.remove('hidden');
+    }
   }
-  function closeCancelModal() { cancelModal.classList.add('hidden'); pendingCancel = null; }
+  function closeCancelModal() { cancelModal.classList.add('hidden'); pendingCancel = null; pendingCancelNfce = null; }
   document.getElementById('cancelModalClose').addEventListener('click', closeCancelModal);
   cancelModal.addEventListener('click', function (e) { if (e.target === cancelModal) closeCancelModal(); });
   document.getElementById('cancelModalConfirm').addEventListener('click', async function () {
     var motivo = document.getElementById('cancelMotivo').value.trim();
     var err = document.getElementById('cancelModalError');
-    if (motivo.length < 3) { err.classList.add('show'); return; }
+    var minLen = pendingCancelNfce ? 15 : 3;
+    if (motivo.length < minLen) {
+      err.textContent = pendingCancelNfce
+        ? 'A justificativa precisa de pelo menos 15 letras (exigência do SEFAZ).'
+        : 'Escreva o motivo (pelo menos 3 letras).';
+      err.classList.add('show'); return;
+    }
+    err.classList.remove('show');
     var btn = this;
-    btn.disabled = true; btn.textContent = 'Cancelando...';
+    btn.disabled = true;
+    // Tem NFC-e? Cancela o cupom fiscal PRIMEIRO. Se não der (ex.: passou dos 30
+    // min), não cancela a venda — senão ficaria cupom válido de venda cancelada.
+    if (pendingCancelNfce) {
+      btn.textContent = 'Cancelando cupom fiscal...';
+      var cn = await DupuroCaixa.cancelarNfce(pendingCancel, motivo);
+      if (cn.error || !cn.cancelado) {
+        btn.disabled = false; btn.textContent = 'Cancelar a venda';
+        err.textContent = (cn.error && cn.error.message) || cn.mensagem ||
+          'Não deu pra cancelar a NFC-e (talvez o prazo de 30 min tenha passado). A venda NÃO foi cancelada — procure o contador para o cancelamento extemporâneo.';
+        err.classList.add('show'); return;
+      }
+    }
+    btn.textContent = 'Cancelando...';
     var r = await DupuroCaixa.cancelSale(pendingCancel, motivo);
     btn.disabled = false; btn.textContent = 'Cancelar a venda';
     if (r.error) { err.textContent = r.error.message || 'Não foi possível cancelar.'; err.classList.add('show'); return; }

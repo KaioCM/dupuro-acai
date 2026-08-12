@@ -457,6 +457,43 @@ var DupuroCaixa = (function () {
     }
   }
 
+  // Emissão de NFC-e autorizada de uma venda (ou null). Usado pra saber, ao
+  // cancelar, se há um cupom fiscal que também precisa ser cancelado.
+  async function getEmissaoAutorizada(numero) {
+    var result = await client
+      .from('nfce_emissoes')
+      .select('id, numero_nfce, ref, criado_em')
+      .eq('venda_numero', numero).eq('status', 'autorizado')
+      .order('id', { ascending: false }).limit(1);
+    if (result.error || !result.data || !result.data.length) return null;
+    return result.data[0];
+  }
+
+  // Cancela a NFC-e da venda no SEFAZ (via Edge Function). justificativa 15–255.
+  // Retorna { error, cancelado, mensagem, emissao }.
+  async function cancelarNfce(numero, justificativa) {
+    var session = await getSession();
+    if (!session) return { error: new Error('Sem sessão ativa') };
+    if (window.DupuroOffline && !DupuroOffline.estaOnline()) {
+      return { error: new Error('Cancelar NFC-e precisa de internet.') };
+    }
+    try {
+      var response = await fetch(window.DUPURO_SUPABASE_URL + '/functions/v1/cancelar-nfce', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + session.access_token
+        },
+        body: JSON.stringify({ numero: numero, justificativa: justificativa })
+      });
+      var body = await response.json().catch(function () { return {}; });
+      if (!response.ok) return { error: new Error(body.error || 'Falha ao cancelar NFC-e') };
+      return { error: null, cancelado: !!body.cancelado, mensagem: body.mensagem || null, emissao: body.emissao || null };
+    } catch (e) {
+      return { error: e };
+    }
+  }
+
   return {
     getSession: getSession,
     logout: logout,
@@ -478,7 +515,9 @@ var DupuroCaixa = (function () {
     filaPendente: filaPendente,
     cancelSale: cancelSale,
     updateSale: updateSale,
-    emitirNfce: emitirNfce
+    emitirNfce: emitirNfce,
+    getEmissaoAutorizada: getEmissaoAutorizada,
+    cancelarNfce: cancelarNfce
   };
 
 })();

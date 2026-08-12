@@ -103,7 +103,7 @@ Deno.serve(async (req: Request) => {
     // Linhas da venda + dados fiscais do produto.
     const { data: linhas, error: ordErr } = await admin
       .from('orders')
-      .select('numero, quantidade, valor, itens, produto_id, modo, forma_pagamento, ' +
+      .select('numero, quantidade, valor, itens, produto_id, forma_pagamento, ' +
         'products:produto_id (nome, ncm, csosn, cfop, icms_origem)')
       .eq('numero', numero)
     if (ordErr) return json({ error: ordErr.message }, 500)

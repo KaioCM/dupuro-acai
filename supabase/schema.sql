@@ -942,6 +942,9 @@ create table if not exists public.nfce_emissoes (
   valor numeric(10,2),
   payload jsonb,
   retorno jsonb,
+  -- Resultado do cancelamento no SEFAZ (migration_031), quando status='cancelado'.
+  cancelamento jsonb,
+  cancelado_em timestamptz,
   criado_por uuid references auth.users(id) on delete set null,
   criado_em timestamptz not null default now(),
   atualizado_em timestamptz not null default now()
