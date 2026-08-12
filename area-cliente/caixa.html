@@ -216,6 +216,8 @@
               <h4 style="font-family:var(--font-display); color:var(--roxo-700); font-size:19px; text-transform:uppercase; margin-bottom:6px;">Venda registrada!</h4>
               <p style="font-size:13.5px; color:var(--text-light); margin-bottom:6px;" id="saleSuccessDetail">—</p>
               <p style="font-size:12.5px; color:var(--text-light); margin-bottom:14px;" id="printResult"></p>
+              <button type="button" class="btn btn-dark-outline btn-block" id="nfceBtn" style="margin-bottom:8px;">🧾 Emitir NFC-e (cupom fiscal)</button>
+              <p style="font-size:12px; color:var(--text-light); margin-bottom:12px; min-height:1em;" id="nfceResult"></p>
               <button type="button" class="btn btn-dark-outline btn-block" id="reprintBtn" style="margin-bottom:10px;">🖨️ Imprimir comanda de novo</button>
               <button type="button" class="btn btn-green btn-block" id="newSaleBtn">Nova venda</button>
             </div>
@@ -1181,6 +1183,18 @@
     summaryContent.classList.add('hidden');
     summaryPlaceholder.classList.add('hidden');
     saleSuccess.classList.remove('hidden');
+    // Reset do botão de NFC-e a cada venda. Offline não emite (número é PENDENTE).
+    (function () {
+      var nb = document.getElementById('nfceBtn'), nr = document.getElementById('nfceResult');
+      nr.textContent = ''; nr.style.color = 'var(--text-light)';
+      if (result.offline) {
+        nb.disabled = true;
+        nr.textContent = 'NFC-e será emitida quando sincronizar (venda offline).';
+      } else {
+        nb.disabled = false;
+        nb.textContent = '🧾 Emitir NFC-e (cupom fiscal)';
+      }
+    })();
     if (document.getElementById('autoPrint').checked) imprimirComanda(ultimaVenda);
     else document.getElementById('printResult').textContent = '';
     // Atualiza estoque e vendas do dia em segundo plano.
@@ -1323,6 +1337,33 @@
   }
 
   document.getElementById('reprintBtn').addEventListener('click', function () { imprimirComanda(ultimaVenda); });
+
+  // Emitir NFC-e (cupom fiscal) da última venda registrada.
+  document.getElementById('nfceBtn').addEventListener('click', async function () {
+    if (!ultimaVenda || !ultimaVenda.numero || ultimaVenda.numero === 'PENDENTE') return;
+    var btn = this, nr = document.getElementById('nfceResult');
+    btn.disabled = true; btn.textContent = 'Emitindo NFC-e...';
+    nr.style.color = 'var(--text-light)'; nr.textContent = 'Enviando ao SEFAZ...';
+    var r = await DupuroCaixa.emitirNfce(ultimaVenda.numero);
+    if (r.error) {
+      btn.disabled = false; btn.textContent = '🧾 Tentar emitir NFC-e de novo';
+      nr.style.color = '#c0392b'; nr.textContent = r.error.message || 'Falha ao emitir.';
+      return;
+    }
+    var em = r.emissao || {};
+    if (r.status === 'autorizado') {
+      btn.textContent = '✅ NFC-e autorizada';
+      nr.style.color = 'var(--verde-700, #5a7d1e)';
+      nr.innerHTML = 'Cupom fiscal autorizado' + (em.numero_nfce ? ' (nº ' + em.numero_nfce + ')' : '') +
+        (em.url_danfe ? ' · <a href="' + em.url_danfe + '" target="_blank" rel="noopener">ver cupom</a>' : '');
+    } else {
+      // erro/processando: mostra a mensagem do SEFAZ pra diagnóstico.
+      btn.disabled = false; btn.textContent = '🧾 Tentar emitir NFC-e de novo';
+      nr.style.color = '#c0392b';
+      nr.textContent = 'SEFAZ: ' + (em.mensagem_sefaz || r.status || 'não autorizada') +
+        (em.status_sefaz ? ' (' + em.status_sefaz + ')' : '');
+    }
+  });
 
   // Ajuda: como fazer a comanda sair sem a janela do navegador.
   document.getElementById('printerHelpBtn').addEventListener('click', function () {

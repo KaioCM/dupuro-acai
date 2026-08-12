@@ -118,6 +118,14 @@ create table if not exists public.products (
   modo text not null default 'embalado' check (modo in ('embalado', 'copo', 'peso')),
   acomp_gratis integer not null default 0 check (acomp_gratis >= 0 and acomp_gratis <= 20),
   acomp_extra_preco numeric(10,2) not null default 0 check (acomp_extra_preco >= 0),
+  -- Dados fiscais para NFC-e (migration_030). Padrão açaí/complementos (Simples
+  -- Nacional, venda a consumidor dentro de MT): NCM 08119000, CSOSN 102, CFOP
+  -- 5102, origem 0. Bebidas industrializadas podem ser ST (csosn 500 + cest).
+  ncm text not null default '08119000',
+  csosn text not null default '102',
+  cfop text not null default '5102',
+  icms_origem text not null default '0',
+  cest text,
   created_at timestamptz not null default now()
 );
 
@@ -911,6 +919,42 @@ drop trigger if exists caixa_promocoes_limite on public.caixa_promocoes;
 create trigger caixa_promocoes_limite
   before insert or update on public.caixa_promocoes
   for each row execute function public.check_limite_promocoes();
+
+-- ---------- NFC-e: emissões (migration_030) ----------
+-- Uma linha por tentativa de emissão de cupom fiscal de uma venda (VND-XXXX).
+-- Escrita só pela Edge Function `emitir-nfce` (service role, que ignora RLS e
+-- chama o gateway Focus NFe); atendente e admin apenas leem.
+create table if not exists public.nfce_emissoes (
+  id bigint generated always as identity primary key,
+  venda_numero text not null,
+  ref text not null unique,
+  ambiente text not null default 'homologacao' check (ambiente in ('homologacao', 'producao')),
+  status text not null default 'processando' check (status in ('processando', 'autorizado', 'erro', 'cancelado')),
+  status_sefaz text,
+  mensagem_sefaz text,
+  chave text,
+  numero_nfce text,
+  serie text,
+  protocolo text,
+  url_danfe text,
+  url_xml text,
+  qrcode text,
+  valor numeric(10,2),
+  payload jsonb,
+  retorno jsonb,
+  criado_por uuid references auth.users(id) on delete set null,
+  criado_em timestamptz not null default now(),
+  atualizado_em timestamptz not null default now()
+);
+
+create index if not exists nfce_emissoes_venda_idx on public.nfce_emissoes(venda_numero);
+
+alter table public.nfce_emissoes enable row level security;
+
+create policy "nfce_select_caixa_admin" on public.nfce_emissoes
+  for select using (public.is_atendente() or public.is_admin());
+
+grant select on public.nfce_emissoes to authenticated;
 
 -- ==========================================================================
 -- Fluxo de aprovação de revendedor:

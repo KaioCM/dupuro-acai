@@ -430,6 +430,33 @@ var DupuroCaixa = (function () {
     return { error: result.error };
   }
 
+  // Emite a NFC-e (cupom fiscal) de uma venda já registrada, via a Edge Function
+  // `emitir-nfce` (que fala com o gateway Focus NFe). O token do Focus é secret
+  // do servidor — o navegador só manda o número da venda. Precisa de internet.
+  async function emitirNfce(numero) {
+    var session = await getSession();
+    if (!session) return { error: new Error('Sem sessão ativa') };
+    if (window.DupuroOffline && !DupuroOffline.estaOnline()) {
+      return { error: new Error('Emitir NFC-e precisa de internet.') };
+    }
+    try {
+      var response = await fetch(window.DUPURO_SUPABASE_URL + '/functions/v1/emitir-nfce', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + session.access_token
+        },
+        body: JSON.stringify({ numero: numero })
+      });
+      var body = await response.json().catch(function () { return {}; });
+      if (!response.ok) return { error: new Error(body.error || 'Falha ao emitir NFC-e') };
+      // body: { status, emissao } ou { ja_emitida, emissao }
+      return { error: null, status: body.status || (body.emissao && body.emissao.status), emissao: body.emissao || null };
+    } catch (e) {
+      return { error: e };
+    }
+  }
+
   return {
     getSession: getSession,
     logout: logout,
@@ -450,7 +477,8 @@ var DupuroCaixa = (function () {
     sincronizarOffline: sincronizarOffline,
     filaPendente: filaPendente,
     cancelSale: cancelSale,
-    updateSale: updateSale
+    updateSale: updateSale,
+    emitirNfce: emitirNfce
   };
 
 })();
