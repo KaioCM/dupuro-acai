@@ -1516,6 +1516,16 @@ tr.venda-cancelada td:nth-child(5) { text-decoration: line-through; color: var(-
 .cart-item .ci-sub { font-size: 12px; color: var(--text-light); }
 .cart-item .ci-remove { flex: none; width: 26px; height: 26px; border-radius: 50%; border: none; background: rgba(192,57,43,0.12); color: var(--danger); font-size: 18px; line-height: 1; cursor: pointer; }
 .cart-item .ci-remove:hover { background: rgba(192,57,43,0.22); }
+.cart-item .ci-actions { flex: none; display: flex; align-items: center; gap: 6px; }
+.cart-item .ci-edit { flex: none; width: 26px; height: 26px; border-radius: 50%; border: none; background: rgba(96,16,80,0.10); font-size: 13px; line-height: 1; cursor: pointer; }
+.cart-item .ci-edit:hover { background: rgba(96,16,80,0.20); }
+.cart-item .ci-preco-editado { color: var(--roxo-500); font-weight: 700; }
+.ci-linkbtn { background: none; border: none; padding: 0; color: var(--roxo-500); font: inherit; text-decoration: underline; cursor: pointer; }
+.cart-item.cart-edit-preco { background: rgba(96,16,80,0.06); border-color: rgba(96,16,80,0.25); }
+.cart-item .ci-edit-row { display: flex; align-items: center; gap: 6px; margin-top: 4px; }
+.cart-item .ci-edit-input { width: 100px; padding: 6px 8px; border: 1.5px solid rgba(96,16,80,0.25); border-radius: var(--radius-sm); font-size: 14px; }
+.cart-item .ci-edit-ok { flex: none; padding: 6px 12px; border: none; border-radius: var(--radius-sm); background: var(--verde); color: #fff; font-weight: 700; cursor: pointer; }
+.cart-item .ci-edit-cancel { flex: none; width: 30px; height: 30px; border-radius: var(--radius-sm); border: none; background: rgba(96,16,80,0.10); cursor: pointer; }
 
 /* Detalhes (itens) de um pedido na tabela do admin */
 .order-details > td { background: rgba(96,16,80,0.03); padding: 6px 16px 10px; }

@@ -429,6 +429,7 @@
   var acompCache = [];
   var selectedProduct = null;
   var cart = [];
+  var editandoPrecoIdx = -1; // índice da linha do carrinho em edição de preço (-1 = nenhuma)
 
   function decorate(list) {
     return list.map(function (p) {
@@ -502,6 +503,9 @@
       if (pr.tipo !== 'combo' || !(Number(pr.comboQtd) >= 2)) return;
       var N = Number(pr.comboQtd), Y = Number(pr.precoPromo);
       var unidades = cart.reduce(function (s, it) {
+        // Linha com preço editado à mão não entra na promoção (senão empilha
+        // desconto de combo em cima do preço manual).
+        if (it.precoManual) return s;
         return s + (String(it.productId) === String(pr.produtoId) ? (it.quantidade || 0) : 0);
       }, 0);
       var grupos = Math.floor(unidades / N);
@@ -753,11 +757,26 @@
       var linha = it.modo === 'peso'
         ? brl(lineTotal(it))
         : it.quantidade + ' × ' + brl(it.preco) + ' = ' + brl(lineTotal(it));
+      // Linha em edição de preço: mostra o campo no lugar do subtítulo.
+      if (i === editandoPrecoIdx) {
+        var atual = it.modo === 'peso' ? lineTotal(it) : it.preco;
+        var rotulo = it.modo === 'peso' ? 'Valor da linha (R$)' : 'Preço por unidade (R$)';
+        return '<li class="cart-item cart-edit-preco"><div class="ci-info"><span class="ci-name">' + it.nome + (it.sabor ? ' · ' + it.sabor : '') + '</span>' +
+          '<span class="ci-sub">' + rotulo + '</span>' +
+          '<div class="ci-edit-row">' +
+          '<input type="text" inputmode="decimal" class="ci-edit-input" data-edit-input="' + i + '" value="' + String(atual.toFixed(2)).replace('.', ',') + '" autocomplete="off">' +
+          '<button type="button" class="ci-edit-ok" data-edit-ok="' + i + '">OK</button>' +
+          '<button type="button" class="ci-edit-cancel" data-edit-cancel="' + i + '">✕</button>' +
+          '</div></div></li>';
+      }
       return '<li class="cart-item"><div class="ci-info"><span class="ci-name">' + it.nome + (it.sabor ? ' · ' + it.sabor : '') + '</span>' +
         '<span class="ci-sub">' + linha + '</span>' +
         (it.sub ? '<span class="ci-sub ci-detail">' + it.sub + '</span>' : '') +
-        (it.promoLabel ? '<span class="ci-sub ci-promo">🏷️ ' + it.promoLabel + '</span>' : '') + '</div>' +
-        '<button type="button" class="ci-remove" data-cart-i="' + i + '" aria-label="Remover item">×</button></li>';
+        (it.precoManual ? '<span class="ci-sub ci-preco-editado">✏️ preço editado (era ' + brl(it.precoOriginal) + ') · <button type="button" class="ci-linkbtn" data-cart-reset="' + i + '">desfazer</button></span>' : '') +
+        (it.promoLabel && !it.precoManual ? '<span class="ci-sub ci-promo">🏷️ ' + it.promoLabel + '</span>' : '') + '</div>' +
+        '<div class="ci-actions">' +
+        '<button type="button" class="ci-edit" data-cart-edit="' + i + '" aria-label="Editar preço" title="Editar preço">✏️</button>' +
+        '<button type="button" class="ci-remove" data-cart-i="' + i + '" aria-label="Remover item">×</button></div></li>';
     }).join('');
     // Combos: uma linha de desconto por produto que fechou grupo(s).
     var combos = combosCarrinho();
@@ -771,8 +790,57 @@
     var subtotal = cart.reduce(function (s, it) { return s + lineTotal(it); }, 0);
     document.getElementById('cartTotal').textContent = brl(subtotal - descontoCombosTotal());
     list.querySelectorAll('[data-cart-i]').forEach(function (b) {
-      b.addEventListener('click', function () { cart.splice(parseInt(b.getAttribute('data-cart-i'), 10), 1); renderCart(); });
+      b.addEventListener('click', function () { editandoPrecoIdx = -1; cart.splice(parseInt(b.getAttribute('data-cart-i'), 10), 1); renderCart(); });
     });
+    // Abrir edição de preço da linha.
+    list.querySelectorAll('[data-cart-edit]').forEach(function (b) {
+      b.addEventListener('click', function () { editandoPrecoIdx = parseInt(b.getAttribute('data-cart-edit'), 10); renderCart(); });
+    });
+    // Confirmar novo preço.
+    list.querySelectorAll('[data-edit-ok]').forEach(function (b) {
+      b.addEventListener('click', function () { salvarPrecoEditado(parseInt(b.getAttribute('data-edit-ok'), 10)); });
+    });
+    // Cancelar edição.
+    list.querySelectorAll('[data-edit-cancel]').forEach(function (b) {
+      b.addEventListener('click', function () { editandoPrecoIdx = -1; renderCart(); });
+    });
+    // Desfazer preço editado (volta ao original).
+    list.querySelectorAll('[data-cart-reset]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var it = cart[parseInt(b.getAttribute('data-cart-reset'), 10)];
+        if (!it) return;
+        if (it.modo === 'peso') { it.total = it.precoOriginal; } else { it.preco = it.precoOriginal; }
+        delete it.precoManual; delete it.precoOriginal;
+        renderCart();
+      });
+    });
+    // Enter confirma / Esc cancela no campo de edição.
+    var editInput = list.querySelector('[data-edit-input]');
+    if (editInput) {
+      editInput.focus();
+      editInput.select();
+      editInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') { e.preventDefault(); salvarPrecoEditado(parseInt(editInput.getAttribute('data-edit-input'), 10)); }
+        else if (e.key === 'Escape') { editandoPrecoIdx = -1; renderCart(); }
+      });
+    }
+  }
+
+  // Aplica o preço digitado à linha do carrinho. Em copo/unidade edita o preço
+  // unitário; em peso edita o valor total da linha. Guarda o original (1ª vez)
+  // pra permitir desfazer e mostrar "era R$X".
+  function salvarPrecoEditado(i) {
+    var it = cart[i];
+    if (!it) { editandoPrecoIdx = -1; return renderCart(); }
+    var input = document.querySelector('[data-edit-input="' + i + '"]');
+    var novo = parseValor(input ? input.value : '');
+    if (!(novo >= 0)) { if (input) input.focus(); return; }
+    if (!it.precoManual) it.precoOriginal = (it.modo === 'peso' ? lineTotal(it) : it.preco);
+    if (it.modo === 'peso') { it.total = Math.round(novo * 100) / 100; }
+    else { it.preco = Math.round(novo * 100) / 100; delete it.total; }
+    it.precoManual = true;
+    editandoPrecoIdx = -1;
+    renderCart();
   }
 
   function deselectProduct() {
@@ -1039,6 +1107,7 @@
     combos.forEach(function (c) { descPorProduto[c.produtoId] = c.desconto; restante[c.produtoId] = c.desconto; });
     cart.forEach(function (it) {
       if (descPorProduto[it.productId] == null) return;
+      if (it.precoManual) return; // linha com preço editado não entra no rateio do combo
       unidadesPorProduto[it.productId] = (unidadesPorProduto[it.productId] || 0) + (it.quantidade || 0);
       totalLinhas[it.productId] = (totalLinhas[it.productId] || 0) + 1;
     });
@@ -1049,7 +1118,7 @@
       else texto = it.nome + (it.sabor ? ' - ' + it.sabor : '') + ' x' + it.quantidade;
       var valor = lineTotal(it);
       var pid = it.productId;
-      if (descPorProduto[pid] != null) {
+      if (descPorProduto[pid] != null && !it.precoManual) {
         feitas[pid] = (feitas[pid] || 0) + 1;
         var abate;
         if (feitas[pid] === totalLinhas[pid]) abate = restante[pid];
