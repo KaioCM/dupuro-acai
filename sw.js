@@ -7,7 +7,7 @@
 //
 // Suba o CACHE_VER quando mudar a lista de arquivos abaixo, pra forçar refresh.
 // ==========================================================================
-var CACHE_VER = 'dupuro-caixa-v7';
+var CACHE_VER = 'dupuro-caixa-v8';
 
 var SHELL = [
   '/area-cliente/caixa.html',
@@ -16,6 +16,7 @@ var SHELL = [
   '/assets/js/supabase-client.js',
   '/assets/js/app-ui.js',
   '/assets/js/caixa.js',
+  '/assets/js/vendor/qrcode.js',
   '/assets/js/printer.js',
   '/assets/js/offline-queue.js',
   '/assets/img/brand/logo-branco.png',

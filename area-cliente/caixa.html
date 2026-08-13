@@ -407,6 +407,7 @@
 <script src="../assets/js/app-ui.js"></script>
 <script src="../assets/js/offline-queue.js"></script>
 <script src="../assets/js/caixa.js"></script>
+<script src="../assets/js/vendor/qrcode.js"></script>
 <script src="../assets/js/printer.js"></script>
 <script>
 (async function () {
@@ -1371,6 +1372,30 @@
 
   document.getElementById('reprintBtn').addEventListener('click', function () { imprimirComanda(ultimaVenda); });
 
+  // Monta os dados do cupom fiscal a partir da emissão (o payload guarda os
+  // itens exatos que foram pra NFC-e) e imprime na Sweda. Best-effort.
+  function imprimirCupomFiscalDaEmissao(em) {
+    try {
+      if (!em || !window.DupuroPrinter) return;
+      var pay = em.payload || {};
+      var consulta = em.qrcode ? String(em.qrcode).split('?')[0] : 'http://www.sefaz.mt.gov.br/nfce/consultanfce';
+      DupuroPrinter.imprimirCupomFiscal({
+        numero: em.numero_nfce, serie: em.serie, chave: em.chave, protocolo: em.protocolo,
+        ambiente: em.ambiente, dataEmissao: em.criado_em || pay.data_emissao || Date.now(),
+        total: em.valor, valorPago: em.valor, troco: 0,
+        formaPagamento: (ultimaVenda && ultimaVenda.formaPagamento) || null,
+        qrcodeUrl: em.qrcode, consultaUrl: consulta,
+        items: (pay.items || []).map(function (it) {
+          return {
+            codigo: it.codigo_produto, descricao: it.descricao,
+            quantidade: it.quantidade_comercial, unidade: it.unidade_comercial,
+            valorUnit: it.valor_unitario_comercial, valorTotal: it.valor_bruto
+          };
+        })
+      });
+    } catch (e) { /* impressão do cupom é best-effort */ }
+  }
+
   // Emitir NFC-e (cupom fiscal) da última venda registrada.
   document.getElementById('nfceBtn').addEventListener('click', async function () {
     if (!ultimaVenda || !ultimaVenda.numero || ultimaVenda.numero === 'PENDENTE') return;
@@ -1389,6 +1414,8 @@
       nr.style.color = 'var(--verde-700, #5a7d1e)';
       nr.innerHTML = 'Cupom fiscal autorizado' + (em.numero_nfce ? ' (nº ' + em.numero_nfce + ')' : '') +
         (em.url_danfe ? ' · <a href="' + em.url_danfe + '" target="_blank" rel="noopener">ver cupom</a>' : '');
+      // Imprime o cupom fiscal com QR na Sweda (best-effort).
+      imprimirCupomFiscalDaEmissao(em);
     } else {
       // erro/processando: mostra a mensagem do SEFAZ pra diagnóstico.
       btn.disabled = false; btn.textContent = '🧾 Tentar emitir NFC-e de novo';

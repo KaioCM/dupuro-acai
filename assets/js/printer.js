@@ -251,6 +251,116 @@ var DupuroPrinter = (function () {
       '</style></head><body>' + linhas + '</body></html>';
   }
 
+  // ---------- Cupom fiscal (DANFE NFC-e) ----------
+  // Diferente da comanda (cozinha): este é o cupom fiscal, com QR do SEFAZ e
+  // chave de acesso, impresso só quando a NFC-e é autorizada. O QR é gerado da
+  // string fiscal (qrcode_url) pela lib vendorizada (window.qrcode) e vira uma
+  // <img> data-URL — nada externo, imprime offline.
+  function qrDataImg(conteudo, cell, margem) {
+    try {
+      if (typeof window === 'undefined' || typeof window.qrcode !== 'function') return '';
+      var qr = window.qrcode(0, 'M');
+      qr.addData(String(conteudo));
+      qr.make();
+      return qr.createImgTag(cell || 4, margem || 2);
+    } catch (e) { return ''; }
+  }
+
+  function grupos4(s) {
+    return String(s || '').replace(/\D/g, '').replace(/(.{4})/g, '$1 ').trim();
+  }
+
+  function par(label, valor, cls) {
+    return '<div class="' + (cls || '') + '" style="display:flex;justify-content:space-between;gap:6px;">' +
+      '<span>' + label + '</span><span>' + valor + '</span></div>';
+  }
+
+  // d = { numero, serie, chave, protocolo, dataEmissao, ambiente, total,
+  //   valorPago, troco, formaPagamento, qrcodeUrl, consultaUrl,
+  //   items: [{ codigo, descricao, quantidade, unidade, valorUnit, valorTotal }] }
+  function htmlDoCupomFiscal(d) {
+    var esc = function (t) { return String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;'); };
+    var dt = new Date(d.dataEmissao || Date.now())
+      .toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    var FP = { dinheiro: 'Dinheiro', debito: 'Cartão de Débito', credito: 'Cartão de Crédito', pix: 'Pix' };
+    var homolog = d.ambiente === 'homologacao';
+
+    var linhasItens = (d.items || []).map(function (it) {
+      var q = Number(it.quantidade) || 1;
+      return '<tr><td>' + esc(it.codigo || '') + '</td><td>' + esc(it.descricao || '') + '</td>' +
+        '<td class="r">' + q.toLocaleString('pt-BR') + '</td><td>' + esc(it.unidade || 'UN') + '</td>' +
+        '<td class="r">' + brl(it.valorUnit) + '</td><td class="r">' + brl(it.valorTotal) + '</td></tr>';
+    }).join('');
+
+    var qr = qrDataImg(d.qrcodeUrl, 4, 2);
+
+    return '<!DOCTYPE html><html><head><meta charset="utf-8"><title>NFC-e ' + esc(d.numero || '') + '</title><style>' +
+      '@page { size: 80mm auto; margin: 0; }' +
+      'body { margin:0; padding:4mm 3mm; font-family:"Courier New",monospace; font-size:11px; line-height:1.3; color:#000; width:74mm; }' +
+      '.c{text-align:center;} .r{text-align:right;} .b{font-weight:700;}' +
+      '.hr{border-top:1px dashed #000;margin:4px 0;}' +
+      'table{width:100%;border-collapse:collapse;font-size:10.5px;} th,td{text-align:left;padding:1px 2px;vertical-align:top;} thead th{border-bottom:1px solid #000;}' +
+      '.small{font-size:9.5px;} .tot{font-size:12.5px;}' +
+      '.qr{text-align:center;margin:6px 0;} .qr img{width:42mm;height:42mm;image-rendering:pixelated;}' +
+      '.sv{text-align:center;font-weight:700;border:1px solid #000;padding:3px;margin:4px 0;}' +
+      '</style></head><body>' +
+      (homolog ? '<div class="sv">HOMOLOGACAO - SEM VALOR FISCAL</div>' : '') +
+      '<div class="c b" style="font-size:15px;">NFC-e</div>' +
+      '<div class="c b">DUPURO INDUSTRIA E COMERCIO DE ACAI LTDA</div>' +
+      '<div class="c small">CNPJ 39.417.218/0001-81 &nbsp; IE 138379688</div>' +
+      '<div class="c small">Av. Prof. Edna Maria Albuquerque Affi, 16 - Jardim Imperial - Cuiabá/MT</div>' +
+      '<div class="hr"></div>' +
+      '<div class="c small">DANFE NFC-e - Documento Auxiliar da Nota Fiscal de Consumidor Eletrônica</div>' +
+      '<div class="c small">Não permite aproveitamento de crédito de ICMS</div>' +
+      '<div class="hr"></div>' +
+      '<table><thead><tr><th>Cód</th><th>Descrição</th><th class="r">Qtd</th><th>Un</th><th class="r">Vl Un</th><th class="r">Vl Tot</th></tr></thead><tbody>' +
+      linhasItens + '</tbody></table>' +
+      '<div class="hr"></div>' +
+      par('Qtd. total de itens', String((d.items || []).length)) +
+      par('Valor total', brl(d.total), 'b tot') +
+      par('Forma de pagamento', FP[d.formaPagamento] || d.formaPagamento || '') +
+      par('Valor pago', brl(d.valorPago != null ? d.valorPago : d.total)) +
+      (d.troco ? par('Troco', brl(d.troco)) : '') +
+      '<div class="hr"></div>' +
+      '<div class="c small">Número: ' + esc(d.numero) + ' - Série: ' + esc(d.serie) + ' - ' + dt + '</div>' +
+      '<div class="c small b" style="margin-top:3px;">Consulte pela chave de acesso em</div>' +
+      '<div class="c small">' + esc(d.consultaUrl || 'www.sefaz.mt.gov.br/nfce/consultanfce') + '</div>' +
+      '<div class="c small b" style="word-break:break-all;">' + grupos4(d.chave) + '</div>' +
+      '<div class="hr"></div>' +
+      '<div class="c small b">CONSUMIDOR NÃO IDENTIFICADO</div>' +
+      '<div class="c small">Consulta via Leitor de QR Code</div>' +
+      '<div class="qr">' + (qr || '<div class="small">(QR indisponível — consulte pela chave)</div>') + '</div>' +
+      (d.protocolo ? '<div class="c small">Protocolo de autorização: ' + esc(d.protocolo) + '</div>' : '') +
+      '<div class="c small">&nbsp;</div>' +
+      '</body></html>';
+  }
+
+  // Imprime um HTML qualquer (usado pelo cupom fiscal) pelo caminho disponível.
+  async function imprimirHtmlNativo(html) {
+    try {
+      var r = await window.DupuroDesktop.imprimir(html);
+      if (r && r.ok) return { error: null };
+      return { error: new Error((r && r.error) || 'Falha na impressão do app') };
+    } catch (e) { return { error: e }; }
+  }
+  function imprimirHtmlNavegador(html) {
+    var frame = document.createElement('iframe');
+    frame.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;';
+    document.body.appendChild(frame);
+    frame.contentDocument.open();
+    frame.contentDocument.write(html);
+    frame.contentDocument.close();
+    frame.contentWindow.focus();
+    frame.contentWindow.print();
+    setTimeout(function () { frame.remove(); }, 3000);
+    return { error: null };
+  }
+  async function imprimirCupomFiscal(d) {
+    var html = htmlDoCupomFiscal(d);
+    if (rodandoNoApp()) return imprimirHtmlNativo(html);
+    return imprimirHtmlNavegador(html);
+  }
+
   // ---------- Caminho 0: app nativo (Electron) — SEM janela ----------
   // Quando o caixa roda dentro do app da loja, window.DupuroDesktop existe e
   // imprime o HTML direto na impressora, sem diálogo nenhum. É o preferido.
@@ -314,8 +424,10 @@ var DupuroPrinter = (function () {
     desconectar: desconectar,
     imprimir: imprimir,
     imprimirNavegador: imprimirNavegador,
+    imprimirCupomFiscal: imprimirCupomFiscal,
     montarLinhas: montarLinhas,
-    htmlDaComanda: htmlDaComanda
+    htmlDaComanda: htmlDaComanda,
+    htmlDoCupomFiscal: htmlDoCupomFiscal
   };
 
 })();

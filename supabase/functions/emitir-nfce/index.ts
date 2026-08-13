@@ -175,20 +175,33 @@ Deno.serve(async (req: Request) => {
       ? 'autorizado'
       : (st.startsWith('erro') || st === 'denegado' ? 'erro' : 'processando')
 
+    // Autorizado: a consulta traz os dados de impressão (qrcode_url, protocolo,
+    // caminhos) que o POST nem sempre devolve. Falha aqui não é fatal.
+    let consulta: any = {}
+    if (status === 'autorizado') {
+      try {
+        const cr = await fetch(base + '/v2/nfce/' + encodeURIComponent(ref), {
+          headers: { 'Authorization': 'Basic ' + btoa(focusToken + ':') },
+        })
+        consulta = await cr.json().catch(() => ({}))
+      } catch (_e) { /* segue com o que veio no POST */ }
+    }
+
     const registro = {
       venda_numero: numero,
       ref,
       ambiente,
       status,
-      status_sefaz: retorno.status_sefaz ?? null,
-      mensagem_sefaz: retorno.mensagem_sefaz ?? null,
-      chave: retorno.chave_nfe ?? null,
-      numero_nfce: retorno.numero != null ? String(retorno.numero) : null,
-      serie: retorno.serie != null ? String(retorno.serie) : null,
-      protocolo: retorno.protocolo ?? retorno.numero_protocolo ?? null,
-      url_danfe: abs(base, retorno.caminho_danfe) ?? retorno.url ?? null,
-      url_xml: abs(base, retorno.caminho_xml_nota_fiscal),
-      qrcode: retorno.qrcode ?? null,
+      status_sefaz: retorno.status_sefaz ?? consulta.status_sefaz ?? null,
+      mensagem_sefaz: retorno.mensagem_sefaz ?? consulta.mensagem_sefaz ?? null,
+      chave: retorno.chave_nfe ?? consulta.chave_nfe ?? null,
+      numero_nfce: (retorno.numero ?? consulta.numero) != null ? String(retorno.numero ?? consulta.numero) : null,
+      serie: (retorno.serie ?? consulta.serie) != null ? String(retorno.serie ?? consulta.serie) : null,
+      protocolo: retorno.protocolo ?? retorno.numero_protocolo ?? consulta.protocolo ?? null,
+      url_danfe: abs(base, retorno.caminho_danfe ?? consulta.caminho_danfe) ?? retorno.url ?? null,
+      url_xml: abs(base, retorno.caminho_xml_nota_fiscal ?? consulta.caminho_xml_nota_fiscal),
+      // qrcode_url = conteúdo do QR fiscal (usado pra gerar o QR na comanda).
+      qrcode: consulta.qrcode_url ?? retorno.qrcode_url ?? retorno.qrcode ?? null,
       valor: Number(total.toFixed(2)),
       payload,
       retorno,
