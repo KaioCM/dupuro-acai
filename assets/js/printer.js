@@ -138,11 +138,17 @@ var DupuroPrinter = (function () {
       });
     });
     L.push({ t: linhaDupla('TOTAL', brl(venda.total)), bold: true, grande: false });
-    if (venda.formaPagamento) {
-      var FP = { dinheiro: 'Dinheiro', debito: 'Cartão de débito', credito: 'Cartão de crédito', pix: 'Pix' };
+    var FP = { dinheiro: 'Dinheiro', debito: 'Cartão de débito', credito: 'Cartão de crédito', pix: 'Pix' };
+    if (venda.pagamentos && venda.pagamentos.length > 1) {
+      // Venda dividida: uma linha por forma, com o valor de cada uma.
+      L.push({ t: 'Pagamento (dividido):' });
+      venda.pagamentos.forEach(function (p) {
+        L.push({ t: linhaDupla('  ' + (FP[p.forma] || p.forma), brl(p.valor)) });
+      });
+    } else if (venda.formaPagamento) {
       L.push({ t: 'Pagamento: ' + (FP[venda.formaPagamento] || venda.formaPagamento) });
-      if (venda.pagamento && venda.pagamento.nsu) L.push({ t: '  NSU: ' + venda.pagamento.nsu });
     }
+    if (venda.pagamento && venda.pagamento.nsu) L.push({ t: '  NSU: ' + venda.pagamento.nsu });
     L.push({ t: '' });
     L.push({ t: 'Obrigado pela preferência!', center: true });
     L.push({ t: 'Não é documento fiscal', center: true });

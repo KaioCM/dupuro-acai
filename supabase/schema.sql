@@ -244,7 +244,11 @@ create table if not exists public.orders (
   -- reenvio da sincronização idempotente (unique → não duplica).
   client_uuid uuid,
   -- Forma de pagamento da venda de loja (migration_027): dinheiro/débito/crédito/pix.
+  -- Forma "principal" (maior valor) quando a venda é dividida.
   forma_pagamento text check (forma_pagamento in ('dinheiro','debito','credito','pix')),
+  -- Pagamento dividido (migration_032): lista [{forma,valor}] da venda inteira,
+  -- repetida por linha. null = pagamento simples (usa forma_pagamento).
+  pagamentos jsonb,
   created_at timestamptz not null default now()
 );
 
@@ -490,7 +494,7 @@ begin
   for r in select * from jsonb_array_elements(p_rows) loop
     insert into public.orders (
       revendedor_id, numero, data, itens, valor, status,
-      produto_id, quantidade, sabor, usa_estoque, detalhes, forma_pagamento, caixa_sessao_id, origem, atendente_id
+      produto_id, quantidade, sabor, usa_estoque, detalhes, forma_pagamento, pagamentos, caixa_sessao_id, origem, atendente_id
     ) values (
       nullif(r->>'revendedor_id', '')::uuid,
       p_numero,
@@ -501,7 +505,9 @@ begin
       nullif(r->>'sabor', ''),
       coalesce((r->>'usa_estoque')::boolean, true),
       case when r ? 'detalhes' then r->'detalhes' else null end,
-      nullif(r->>'forma_pagamento', ''), v_sessao,
+      nullif(r->>'forma_pagamento', ''),
+      case when r ? 'pagamentos' and jsonb_typeof(r->'pagamentos') = 'array' then r->'pagamentos' else null end,
+      v_sessao,
       'loja', auth.uid()
     );
   end loop;
@@ -555,6 +561,31 @@ begin
 end;
 $$;
 
+-- (forma, valor) de cada fatia de pagamento das vendas de uma sessão (migration_032):
+-- 1 linha por forma em vendas divididas (explode `pagamentos`, deduplicando por
+-- numero); 1 linha (forma única sobre o total) nas vendas simples/antigas.
+create or replace function public.caixa_formas_pagamento(p_sessao_id bigint)
+returns table(forma text, valor numeric)
+language sql stable security definer set search_path = public as $$
+  with vendas as (
+    select numero,
+           max(forma_pagamento) as forma,
+           (array_agg(pagamentos) filter (where pagamentos is not null))[1] as pagamentos,
+           sum(valor) as total
+      from public.orders
+      where caixa_sessao_id = p_sessao_id and status <> 'cancelado'
+      group by numero
+  )
+  select coalesce(p.forma, coalesce(v.forma, 'sem')) as forma,
+         coalesce(p.valor, v.total) as valor
+    from vendas v
+    left join lateral (
+      select el->>'forma' as forma, (el->>'valor')::numeric as valor
+        from jsonb_array_elements(v.pagamentos) el
+    ) p on true;
+$$;
+grant execute on function public.caixa_formas_pagamento(bigint) to authenticated;
+
 create or replace function public.fechar_caixa(p_sessao_id bigint, p_dinheiro_contado numeric)
 returns jsonb language plpgsql security definer set search_path = public as $$
 declare v_fundo numeric; v_total numeric; v_dinheiro numeric; v_qtd int; v_esperado numeric; v_dif numeric; v_por_forma jsonb; v_resumo jsonb;
@@ -562,15 +593,13 @@ begin
   if not (public.is_atendente() or public.is_admin()) then raise exception 'Sem permissão.'; end if;
   select fundo_troco into v_fundo from public.caixa_sessoes where id = p_sessao_id and status = 'aberta';
   if not found then raise exception 'Caixa não está aberto.'; end if;
-  select coalesce(sum(valor), 0),
-         coalesce(sum(valor) filter (where forma_pagamento = 'dinheiro'), 0),
-         count(distinct numero)
-    into v_total, v_dinheiro, v_qtd
+  select coalesce(sum(valor), 0), count(distinct numero)
+    into v_total, v_qtd
     from public.orders where caixa_sessao_id = p_sessao_id and status <> 'cancelado';
+  select coalesce(sum(valor) filter (where forma = 'dinheiro'), 0)
+    into v_dinheiro from public.caixa_formas_pagamento(p_sessao_id);
   select coalesce(jsonb_object_agg(forma, s), '{}'::jsonb) into v_por_forma from (
-    select coalesce(forma_pagamento, 'sem') as forma, sum(valor) as s
-      from public.orders where caixa_sessao_id = p_sessao_id and status <> 'cancelado'
-      group by coalesce(forma_pagamento, 'sem')
+    select forma, sum(valor) as s from public.caixa_formas_pagamento(p_sessao_id) group by forma
   ) t;
   v_esperado := v_fundo + v_dinheiro;
   v_dif := coalesce(p_dinheiro_contado, 0) - v_esperado;
@@ -593,15 +622,13 @@ declare v_fundo numeric; v_total numeric; v_dinheiro numeric; v_qtd int; v_por_f
 begin
   if not (public.is_atendente() or public.is_admin()) then raise exception 'Sem permissão.'; end if;
   select fundo_troco into v_fundo from public.caixa_sessoes where id = p_sessao_id;
-  select coalesce(sum(valor), 0),
-         coalesce(sum(valor) filter (where forma_pagamento = 'dinheiro'), 0),
-         count(distinct numero)
-    into v_total, v_dinheiro, v_qtd
+  select coalesce(sum(valor), 0), count(distinct numero)
+    into v_total, v_qtd
     from public.orders where caixa_sessao_id = p_sessao_id and status <> 'cancelado';
+  select coalesce(sum(valor) filter (where forma = 'dinheiro'), 0)
+    into v_dinheiro from public.caixa_formas_pagamento(p_sessao_id);
   select coalesce(jsonb_object_agg(forma, s), '{}'::jsonb) into v_por_forma from (
-    select coalesce(forma_pagamento, 'sem') as forma, sum(valor) as s
-      from public.orders where caixa_sessao_id = p_sessao_id and status <> 'cancelado'
-      group by coalesce(forma_pagamento, 'sem')
+    select forma, sum(valor) as s from public.caixa_formas_pagamento(p_sessao_id) group by forma
   ) t;
   return jsonb_build_object(
     'total', v_total, 'qtd', v_qtd, 'por_forma', v_por_forma,
@@ -733,7 +760,7 @@ begin
     insert into public.orders (
       revendedor_id, numero, data, itens, valor, status,
       produto_id, quantidade, sabor, usa_estoque, detalhes,
-      forma_pagamento, caixa_sessao_id, origem, atendente_id, client_uuid
+      forma_pagamento, pagamentos, caixa_sessao_id, origem, atendente_id, client_uuid
     ) values (
       nullif(r->>'revendedor_id', '')::uuid, v_numero,
       coalesce(nullif(r->>'data', ''), (now() at time zone 'America/Cuiaba')::date::text)::date,
@@ -741,7 +768,9 @@ begin
       nullif(r->>'produto_id', '')::bigint, nullif(r->>'quantidade', '')::int,
       nullif(r->>'sabor', ''), coalesce((r->>'usa_estoque')::boolean, true),
       case when r ? 'detalhes' then r->'detalhes' else null end,
-      nullif(r->>'forma_pagamento', ''), nullif(r->>'caixa_sessao_id', '')::bigint,
+      nullif(r->>'forma_pagamento', ''),
+      case when r ? 'pagamentos' and jsonb_typeof(r->'pagamentos') = 'array' then r->'pagamentos' else null end,
+      nullif(r->>'caixa_sessao_id', '')::bigint,
       'loja', auth.uid(),
       case when v_primeira then p_client_uuid else null end
     );

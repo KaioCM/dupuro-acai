@@ -193,14 +193,28 @@
               <ul class="cart-list" id="cartList"></ul>
               <div class="order-total-row"><span class="lbl">Total</span><span class="val" id="cartTotal">—</span></div>
               <div class="pay-methods" id="payMethods">
-                <div class="cart-head" style="margin-top:14px;">Forma de pagamento</div>
-                <div class="pay-seg">
+                <div class="cart-head pay-head" style="margin-top:14px;">
+                  <span>Forma de pagamento</span>
+                  <button type="button" id="toggleSplitBtn" class="link-btn">➗ Dividir</button>
+                </div>
+                <div class="pay-seg" id="paySeg">
                   <button type="button" class="pay-btn" data-pay="dinheiro">💵 Dinheiro</button>
                   <button type="button" class="pay-btn" data-pay="debito">💳 Débito</button>
                   <button type="button" class="pay-btn" data-pay="credito">💳 Crédito</button>
                   <button type="button" class="pay-btn" data-pay="pix">⨁ Pix</button>
                 </div>
                 <div class="pay-tef-note hidden" id="payTefNote"></div>
+                <!-- Pagamento dividido: N linhas (forma + valor) que somam o total -->
+                <div id="paySplit" class="pay-split hidden">
+                  <div id="splitRows"></div>
+                  <button type="button" id="addSplitRow" class="link-btn">＋ adicionar forma</button>
+                  <div class="split-summary" id="splitSummary"></div>
+                  <div class="field hidden" id="splitTrocoField" style="margin-top:10px; margin-bottom:0;">
+                    <label for="splitRecebido">Recebido em dinheiro (R$) — pra calcular troco</label>
+                    <input type="text" inputmode="decimal" id="splitRecebido" placeholder="opcional" autocomplete="off">
+                    <div class="split-troco" id="splitTroco"></div>
+                  </div>
+                </div>
               </div>
               <div class="field hidden" id="editMotivoField" style="margin-top:12px; margin-bottom:0;">
                 <label for="editMotivo">Motivo da alteração</label>
@@ -789,6 +803,7 @@
     list.innerHTML = itensHtml + descHtml;
     var subtotal = cart.reduce(function (s, it) { return s + lineTotal(it); }, 0);
     document.getElementById('cartTotal').textContent = brl(subtotal - descontoCombosTotal());
+    atualizarSplitResumo(); // se estiver dividindo, recalcula "faltam/passou" com o novo total
     list.querySelectorAll('[data-cart-i]').forEach(function (b) {
       b.addEventListener('click', function () { editandoPrecoIdx = -1; cart.splice(parseInt(b.getAttribute('data-cart-i'), 10), 1); renderCart(); });
     });
@@ -963,6 +978,107 @@
   if (window.DupuroTEF && typeof DupuroTEF.estado === 'function') {
     DupuroTEF.estado().then(function (e) { tefIntegrado = !!(e && e.tipo && e.tipo !== 'manual'); }).catch(function () {});
   }
+
+  // ---- Pagamento dividido (N formas numa venda) ----
+  // Total da venda (itens - desconto de combo), arredondado.
+  function totalDaVenda() {
+    return Math.round((cart.reduce(function (s, it) { return s + lineTotal(it); }, 0) - descontoCombosTotal()) * 100) / 100;
+  }
+  var pagamentoDividido = false;
+  var FORMA_OPTS = [['dinheiro', '💵 Dinheiro'], ['debito', '💳 Débito'], ['credito', '💳 Crédito'], ['pix', '⨁ Pix']];
+  var paySeg = document.getElementById('paySeg');
+  var paySplit = document.getElementById('paySplit');
+  var splitRowsEl = document.getElementById('splitRows');
+
+  function novaSplitRow(forma, valor) {
+    var div = document.createElement('div');
+    div.className = 'split-row';
+    div.innerHTML =
+      '<select class="split-forma">' + FORMA_OPTS.map(function (o) { return '<option value="' + o[0] + '"' + (o[0] === forma ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select>' +
+      '<input type="text" inputmode="decimal" class="split-valor" placeholder="0,00" value="' + (valor != null ? String(valor.toFixed(2)).replace('.', ',') : '') + '" autocomplete="off">' +
+      '<button type="button" class="split-remove" aria-label="Remover forma">×</button>';
+    splitRowsEl.appendChild(div);
+  }
+
+  // Lê as linhas da divisão: pagamentos válidos, soma, falta e se fecha o total.
+  function lerSplit() {
+    var rows = Array.prototype.slice.call(splitRowsEl.querySelectorAll('.split-row'));
+    var pagamentos = rows.map(function (r) {
+      return { forma: r.querySelector('.split-forma').value, valor: parseValor(r.querySelector('.split-valor').value) };
+    }).filter(function (p) { return p.valor > 0; });
+    var soma = Math.round(pagamentos.reduce(function (s, p) { return s + p.valor; }, 0) * 100) / 100;
+    var total = totalDaVenda();
+    var falta = Math.round((total - soma) * 100) / 100;
+    return { pagamentos: pagamentos, soma: soma, total: total, falta: falta, ok: Math.abs(falta) < 0.005 && pagamentos.length >= 1 };
+  }
+
+  function atualizarSplitResumo() {
+    if (!pagamentoDividido) return;
+    var info = lerSplit();
+    var el = document.getElementById('splitSummary');
+    el.innerHTML = 'Total <strong>' + brl(info.total) + '</strong> · Informado <strong>' + brl(info.soma) + '</strong>' +
+      (Math.abs(info.falta) < 0.005
+        ? ' · <span class="split-ok">✓ fecha</span>'
+        : (info.falta > 0
+          ? ' · <span class="split-falta">faltam ' + brl(info.falta) + '</span>'
+          : ' · <span class="split-falta">passou ' + brl(-info.falta) + '</span>'));
+    // Troco só quando há parte em dinheiro.
+    var somaDin = info.pagamentos.filter(function (p) { return p.forma === 'dinheiro'; }).reduce(function (s, p) { return s + p.valor; }, 0);
+    var trocoField = document.getElementById('splitTrocoField');
+    var te = document.getElementById('splitTroco');
+    if (somaDin > 0) {
+      trocoField.classList.remove('hidden');
+      var recebido = parseValor(document.getElementById('splitRecebido').value);
+      if (recebido > 0) {
+        var troco = Math.round((recebido - somaDin) * 100) / 100;
+        te.textContent = troco >= 0 ? 'Troco: ' + brl(troco) : 'Falta ' + brl(-troco) + ' em dinheiro';
+        te.className = 'split-troco' + (troco < 0 ? ' neg' : '');
+      } else { te.textContent = ''; }
+    } else { trocoField.classList.add('hidden'); document.getElementById('splitRecebido').value = ''; te.textContent = ''; }
+  }
+
+  function setDividido(on) {
+    pagamentoDividido = on;
+    document.getElementById('toggleSplitBtn').textContent = on ? '✕ pagamento simples' : '➗ Dividir';
+    paySeg.classList.toggle('hidden', on);
+    if (on) document.getElementById('payTefNote').classList.add('hidden');
+    paySplit.classList.toggle('hidden', !on);
+    if (on) {
+      setForma(null);
+      splitRowsEl.innerHTML = '';
+      novaSplitRow('dinheiro', totalDaVenda()); // começa com o total todo em dinheiro
+      atualizarSplitResumo();
+    } else {
+      splitRowsEl.innerHTML = '';
+    }
+  }
+
+  // Resolve o pagamento (simples ou dividido) num objeto único pra registrar.
+  function montarPagamento() {
+    if (!pagamentoDividido) {
+      return { ok: !!formaPagamento, formaPagamento: formaPagamento, pagamentos: null, erro: 'Escolha a forma de pagamento.' };
+    }
+    var info = lerSplit();
+    if (!info.ok) {
+      return { ok: false, erro: info.pagamentos.length < 1 ? 'Informe pelo menos uma forma com valor.' : (info.falta > 0 ? ('Faltam ' + brl(info.falta) + ' pra fechar o pagamento.') : ('O pagamento passou ' + brl(-info.falta) + ' do total.')) };
+    }
+    // Forma "principal" = a de maior valor (empate favorece dinheiro).
+    var principal = info.pagamentos.slice().sort(function (a, b) { return (b.valor - a.valor) || (a.forma === 'dinheiro' ? -1 : 1); })[0].forma;
+    return { ok: true, formaPagamento: principal, pagamentos: info.pagamentos, info: info };
+  }
+
+  document.getElementById('toggleSplitBtn').addEventListener('click', function () { setDividido(!pagamentoDividido); });
+  document.getElementById('addSplitRow').addEventListener('click', function () {
+    var info = lerSplit();
+    novaSplitRow('dinheiro', info.falta > 0.005 ? info.falta : null);
+    atualizarSplitResumo();
+  });
+  splitRowsEl.addEventListener('input', atualizarSplitResumo);
+  splitRowsEl.addEventListener('change', atualizarSplitResumo);
+  splitRowsEl.addEventListener('click', function (e) {
+    if (e.target.classList.contains('split-remove')) { e.target.closest('.split-row').remove(); atualizarSplitResumo(); }
+  });
+  document.getElementById('splitRecebido').addEventListener('input', atualizarSplitResumo);
 
   // ---- Sessão de caixa (abrir/fechar) ----
   var caixaSessao = null; // { id, fundo_troco, aberta_em } quando aberto
@@ -1149,8 +1265,9 @@
         return;
       }
     }
-    if (!formaPagamento) {
-      cartError.textContent = 'Escolha a forma de pagamento.';
+    var pag = montarPagamento();
+    if (!pag.ok) {
+      cartError.textContent = pag.erro;
       cartError.classList.add('show');
       return;
     }
@@ -1165,7 +1282,7 @@
         return;
       }
       sendBtn.disabled = true; sendBtn.textContent = 'Salvando...';
-      var upd = await DupuroCaixa.updateSale(editingSale.numero, { revendedorId: revendedorId, formaPagamento: formaPagamento }, items, motivo);
+      var upd = await DupuroCaixa.updateSale(editingSale.numero, { revendedorId: revendedorId, formaPagamento: pag.formaPagamento, pagamentos: pag.pagamentos }, items, motivo);
       sendBtn.disabled = false;
       if (upd.error) {
         cartError.textContent = upd.error.code === '23514'
@@ -1192,23 +1309,29 @@
     }
 
     // Cartão pela maquininha (quando dentro do app com TEF): cobra antes de
-    // registrar; se não aprovar, não registra a venda.
-    var totalVenda = cart.reduce(function (s, it) { return s + lineTotal(it); }, 0) - descontoCombosTotal();
-    var pagInfo = null;
-    if (formaPagamento === 'debito' || formaPagamento === 'credito') {
-      sendBtn.disabled = true; sendBtn.textContent = 'Aguardando cartão...';
-      var cob = await cobrarCartao(totalVenda, formaPagamento);
+    // registrar; se não aprovar, não registra a venda. Numa venda dividida,
+    // cobra CADA fatia de cartão pelo seu valor (fora do app, cobrarCartao
+    // devolve manual e a atendente passa o cartão à parte).
+    var totalVenda = totalDaVenda();
+    var charges = pag.pagamentos
+      ? pag.pagamentos.filter(function (p) { return p.forma === 'debito' || p.forma === 'credito'; })
+      : ((pag.formaPagamento === 'debito' || pag.formaPagamento === 'credito') ? [{ forma: pag.formaPagamento, valor: totalVenda }] : []);
+    var pagInfo = null; var auths = [];
+    for (var ci = 0; ci < charges.length; ci++) {
+      sendBtn.disabled = true; sendBtn.textContent = 'Aguardando cartão...' + (charges.length > 1 ? (' (' + (ci + 1) + '/' + charges.length + ')') : '');
+      var cob = await cobrarCartao(charges[ci].valor, charges[ci].forma);
       if (!cob.aprovado) {
         sendBtn.disabled = false; renderCart();
         cartError.textContent = 'Cartão não aprovado: ' + (cob.mensagem || cob.erro || 'tente novamente') + '.';
         cartError.classList.add('show');
         return;
       }
-      if (!cob.manual) pagInfo = { nsu: cob.nsu || null, autorizacao: cob.autorizacao || null, bandeira: cob.bandeira || null };
+      if (!cob.manual) auths.push({ valor: charges[ci].valor, tipo: charges[ci].forma, nsu: cob.nsu || null, autorizacao: cob.autorizacao || null, bandeira: cob.bandeira || null });
     }
+    if (auths.length) pagInfo = auths.length === 1 ? auths[0] : { multiplas: auths };
 
     sendBtn.disabled = true; sendBtn.textContent = 'Registrando...';
-    var result = await DupuroCaixa.registerSale({ revendedorId: revendedorId, formaPagamento: formaPagamento, caixaSessaoId: caixaSessao.id }, items);
+    var result = await DupuroCaixa.registerSale({ revendedorId: revendedorId, formaPagamento: pag.formaPagamento, pagamentos: pag.pagamentos, caixaSessaoId: caixaSessao.id }, items);
     sendBtn.disabled = false;
     if (result.error) {
       cartError.textContent = result.error.code === '23514'
@@ -1232,7 +1355,8 @@
         : 'Balcão',
       hora: Date.now(),
       total: total,
-      formaPagamento: formaPagamento,
+      formaPagamento: pag.formaPagamento,
+      pagamentos: pag.pagamentos,
       pagamento: pagInfo,
       descontos: combosCarrinho().map(function (c) {
         return { label: 'Promo ' + c.nome + ' (' + c.N + ' por ' + brl(c.Y) + ')', valor: c.desconto };
@@ -1249,6 +1373,7 @@
     };
 
     cart = [];
+    if (pagamentoDividido) setDividido(false);
     setForma(null);
     renderCart();
     document.getElementById('saleSuccessDetail').textContent = (result.offline ? 'Salva offline (sincroniza depois)' : result.numero) + ' · ' + n + (n === 1 ? ' item' : ' itens') + ' · ' + brl(total);
@@ -1311,7 +1436,16 @@
   function enterEditMode(sale) {
     editingSale = { numero: sale.numero, revendedorId: sale.revendedorId || null };
     cart = saleToCart(sale);
-    setForma(sale.formaPagamento || null);
+    // Restaura o pagamento: dividido recria as linhas; simples marca a forma.
+    if (pagamentoDividido) setDividido(false);
+    if (sale.pagamentos && sale.pagamentos.length > 1) {
+      setDividido(true);
+      splitRowsEl.innerHTML = '';
+      sale.pagamentos.forEach(function (p) { novaSplitRow(p.forma, Number(p.valor) || 0); });
+      atualizarSplitResumo();
+    } else {
+      setForma(sale.formaPagamento || null);
+    }
     setTarget(sale.revendedorId ? 'revendedor' : 'balcao');
     if (sale.revendedorId) resellerSelect.value = sale.revendedorId;
     document.getElementById('editBanner').classList.remove('hidden');
@@ -1329,6 +1463,7 @@
   function exitEditMode() {
     editingSale = null;
     cart = [];
+    if (pagamentoDividido) setDividido(false);
     setForma(null);
     document.getElementById('editBanner').classList.add('hidden');
     document.getElementById('editMotivoField').classList.add('hidden');
@@ -1518,6 +1653,10 @@
   // ---- Vendas do dia ----
   var vendasCache = [];
   function pagTag(v) {
+    if (v.pagamentos && v.pagamentos.length > 1) {
+      var formas = v.pagamentos.map(function (p) { return FORMA_PAG_LABEL[p.forma] || p.forma; }).join(' + ');
+      return ' <span class="pay-tag">➗ ' + formas + '</span>';
+    }
     return v.formaPagamento ? ' <span class="pay-tag">' + (FORMA_PAG_LABEL[v.formaPagamento] || v.formaPagamento) + '</span>' : '';
   }
 
