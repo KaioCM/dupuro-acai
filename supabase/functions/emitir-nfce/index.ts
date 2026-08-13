@@ -103,7 +103,7 @@ Deno.serve(async (req: Request) => {
     // Linhas da venda + dados fiscais do produto.
     const { data: linhas, error: ordErr } = await admin
       .from('orders')
-      .select('numero, quantidade, valor, itens, produto_id, detalhes, forma_pagamento, ' +
+      .select('numero, quantidade, valor, itens, produto_id, detalhes, forma_pagamento, pagamentos, ' +
         'products:produto_id (nome, modo, ncm, csosn, cfop, icms_origem)')
       .eq('numero', numero)
     if (ordErr) return json({ error: ordErr.message }, 500)
@@ -111,6 +111,9 @@ Deno.serve(async (req: Request) => {
 
     // Fiscal do adicional (fruta/complemento congelado) — do XML real: NÃO é ST.
     const ADICIONAL = { ncm: '08119000', csosn: '102', cfop: '5102', origem: '0' }
+    // Taxa de entrega: linha sem produto. Orientação do Kayo: mesmos códigos dos
+    // adicionais (08119000/102/5102). Explícito pra não depender do FISCAL_PADRAO.
+    const TAXA = { ncm: '08119000', csosn: '102', cfop: '5102', origem: '0' }
 
     // Um item de NFC-e. CEST não é enviado (a nota autorizada do legado, mesmo
     // item ST, sai sem CEST).
@@ -144,6 +147,13 @@ Deno.serve(async (req: Request) => {
       const qtd = Number(l.quantidade) || 1
       const valor = Number(l.valor) || 0
       const fProd = { ncm: p.ncm, csosn: p.csosn, cfop: p.cfop, origem: p.icms_origem }
+      // Linha de taxa de entrega (sem produto): item de serviço com os códigos
+      // dos adicionais. Não é copo, não separa adicional.
+      if (!l.produto_id && /taxa de entrega/i.test(String(l.itens || ''))) {
+        flat.push(nfceItem('TAXA-ENT', l.itens || 'Taxa de entrega', 1, valor, TAXA))
+        continue
+      }
+
       const det = l.detalhes || {}
       const acomps: any[] = Array.isArray(det.acompanhamentos) ? det.acompanhamentos : []
       const pagos = acomps.filter((a) => a && a.tipo === 'pago')
@@ -177,8 +187,29 @@ Deno.serve(async (req: Request) => {
 
     const items = flat.map((it, i) => ({ numero_item: String(i + 1), ...it }))
 
-    const total = items.reduce((s, it) => s + Number(it.valor_bruto), 0)
-    const forma = linhas[0].forma_pagamento || 'dinheiro'
+    const total = Number(items.reduce((s, it) => s + Number(it.valor_bruto), 0).toFixed(2))
+
+    // Pagamento: dividido (orders.pagamentos = [{forma,valor}]) vira VÁRIOS
+    // detPag (um por forma); simples usa forma_pagamento sobre o total. A soma
+    // dos vPag TEM que bater com o total (senão o SEFAZ rejeita) — ajusta o
+    // resíduo de arredondamento na última forma.
+    const pagamentos: any[] = Array.isArray((linhas[0] as any).pagamentos) ? (linhas[0] as any).pagamentos : []
+    let formasPagamento: any[]
+    if (pagamentos.length) {
+      formasPagamento = pagamentos.map((pg) => ({
+        forma_pagamento: TPAG[pg.forma] || '99',
+        valor_pagamento: Number((Number(pg.valor) || 0).toFixed(2)),
+      }))
+      const somaPg = formasPagamento.reduce((s, f) => s + f.valor_pagamento, 0)
+      const resto = Number((total - somaPg).toFixed(2))
+      if (Math.abs(resto) >= 0.01) {
+        const last = formasPagamento[formasPagamento.length - 1]
+        last.valor_pagamento = Number((last.valor_pagamento + resto).toFixed(2))
+      }
+    } else {
+      const forma = linhas[0].forma_pagamento || 'dinheiro'
+      formasPagamento = [{ forma_pagamento: TPAG[forma] || '99', valor_pagamento: total }]
+    }
 
     const payload = {
       cnpj_emitente: CNPJ_EMITENTE,
@@ -189,9 +220,7 @@ Deno.serve(async (req: Request) => {
       natureza_operacao: 'VENDA AO CONSUMIDOR',
       indicador_inscricao_estadual_destinatario: '9',
       items,
-      formas_pagamento: [
-        { forma_pagamento: TPAG[forma] || '99', valor_pagamento: Number(total.toFixed(2)) },
-      ],
+      formas_pagamento: formasPagamento,
     }
 
     // ref idempotente; em retry (emissão anterior deu erro) muda o sufixo, senão
