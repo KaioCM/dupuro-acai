@@ -103,38 +103,79 @@ Deno.serve(async (req: Request) => {
     // Linhas da venda + dados fiscais do produto.
     const { data: linhas, error: ordErr } = await admin
       .from('orders')
-      .select('numero, quantidade, valor, itens, produto_id, forma_pagamento, ' +
-        'products:produto_id (nome, ncm, csosn, cfop, icms_origem)')
+      .select('numero, quantidade, valor, itens, produto_id, detalhes, forma_pagamento, ' +
+        'products:produto_id (nome, modo, ncm, csosn, cfop, icms_origem)')
       .eq('numero', numero)
     if (ordErr) return json({ error: ordErr.message }, 500)
     if (!linhas || !linhas.length) return json({ error: 'Venda não encontrada' }, 404)
 
-    const items = linhas.map((l: any, i: number) => {
-      const p = l.products || {}
-      const qtd = Number(l.quantidade) || 1
-      const bruto = Number(l.valor) || 0
-      const unit = Number((bruto / qtd).toFixed(10))
-      const item: Record<string, unknown> = {
-        numero_item: String(i + 1),
-        codigo_produto: String(l.produto_id ?? 'SEM-CAD'),
-        descricao: String(l.itens || p.nome || 'Item').slice(0, 120),
-        codigo_ncm: p.ncm || FISCAL_PADRAO.ncm,
-        cfop: p.cfop || FISCAL_PADRAO.cfop,
+    // Fiscal do adicional (fruta/complemento congelado) — do XML real: NÃO é ST.
+    const ADICIONAL = { ncm: '08119000', csosn: '102', cfop: '5102', origem: '0' }
+
+    // Um item de NFC-e. CEST não é enviado (a nota autorizada do legado, mesmo
+    // item ST, sai sem CEST).
+    function nfceItem(codigo: unknown, descricao: string, qtd: number, valorTotal: number, f: any) {
+      const q = qtd || 1
+      const unit = Number((valorTotal / q).toFixed(10))
+      return {
+        codigo_produto: String(codigo ?? 'SEM-CAD'),
+        descricao: String(descricao || 'Item').slice(0, 120),
+        codigo_ncm: f.ncm || FISCAL_PADRAO.ncm,
+        cfop: f.cfop || FISCAL_PADRAO.cfop,
         unidade_comercial: 'UN',
         unidade_tributavel: 'UN',
-        quantidade_comercial: qtd,
-        quantidade_tributavel: qtd,
+        quantidade_comercial: q,
+        quantidade_tributavel: q,
         valor_unitario_comercial: unit,
         valor_unitario_tributavel: unit,
-        valor_bruto: bruto,
+        valor_bruto: Number(valorTotal.toFixed(2)),
         valor_desconto: 0,
-        icms_origem: p.icms_origem || FISCAL_PADRAO.icms_origem,
-        icms_situacao_tributaria: p.csosn || FISCAL_PADRAO.csosn,
+        icms_origem: f.origem || FISCAL_PADRAO.icms_origem,
+        icms_situacao_tributaria: f.csosn || FISCAL_PADRAO.csosn,
       }
-      // CEST não é enviado: a NFC-e autorizada do legado (inclusive item ST) sai
-      // sem CEST, então seguimos igual pra não arriscar rejeição.
-      return item
-    })
+    }
+
+    // Monta os itens (lista plana). Copo COM adicional pago vira: linha base do
+    // copo (sorvete, do cadastro) + uma linha por adicional (08119000/102). A
+    // soma das linhas é sempre igual ao valor da venda (não muda o total).
+    const flat: any[] = []
+    for (const l of linhas as any[]) {
+      const p = l.products || {}
+      const qtd = Number(l.quantidade) || 1
+      const valor = Number(l.valor) || 0
+      const fProd = { ncm: p.ncm, csosn: p.csosn, cfop: p.cfop, origem: p.icms_origem }
+      const det = l.detalhes || {}
+      const acomps: any[] = Array.isArray(det.acompanhamentos) ? det.acompanhamentos : []
+      const pagos = acomps.filter((a) => a && a.tipo === 'pago')
+      const extrasCobrados = Number(det.extras_cobrados) || 0
+      const extraUnit = Number(det.extra_unitario) || 0
+
+      if (p.modo !== 'copo' || (pagos.length === 0 && extrasCobrados === 0)) {
+        flat.push(nfceItem(l.produto_id, l.itens || p.nome, qtd, valor, fProd))
+        continue
+      }
+
+      const adics: any[] = []
+      if (extrasCobrados > 0) {
+        const t = Number((extrasCobrados * extraUnit * qtd).toFixed(2))
+        if (t > 0) adics.push(nfceItem(l.produto_id, 'Acompanhamento adicional', extrasCobrados * qtd, t, ADICIONAL))
+      }
+      for (const a of pagos) {
+        const t = Number(((Number(a.preco) || 0) * qtd).toFixed(2))
+        if (t > 0) adics.push(nfceItem(l.produto_id, 'Adicional ' + (a.nome || ''), qtd, t, ADICIONAL))
+      }
+      const paidTotal = adics.reduce((s, it) => s + Number(it.valor_bruto), 0)
+      const baseTotal = Number((valor - paidTotal).toFixed(2))
+      if (baseTotal <= 0) {
+        // Caso raro (desconto derrubou a base): não separa, mantém o total certo.
+        flat.push(nfceItem(l.produto_id, l.itens || p.nome, qtd, valor, fProd))
+        continue
+      }
+      flat.push(nfceItem(l.produto_id, p.nome || l.itens || 'Copo', qtd, baseTotal, fProd))
+      for (const a of adics) flat.push(a)
+    }
+
+    const items = flat.map((it, i) => ({ numero_item: String(i + 1), ...it }))
 
     const total = items.reduce((s, it) => s + Number(it.valor_bruto), 0)
     const forma = linhas[0].forma_pagamento || 'dinheiro'
