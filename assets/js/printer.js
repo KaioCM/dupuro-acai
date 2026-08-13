@@ -149,6 +149,14 @@ var DupuroPrinter = (function () {
       L.push({ t: 'Pagamento: ' + (FP[venda.formaPagamento] || venda.formaPagamento) });
     }
     if (venda.pagamento && venda.pagamento.nsu) L.push({ t: '  NSU: ' + venda.pagamento.nsu });
+    // Entrega/delivery: destaca pra separar do balcão e mostra nome/endereço.
+    if (venda.entrega) {
+      L.push({ t: '' });
+      L.push({ t: '** ENTREGA **', center: true, bold: true });
+      var ei = venda.entregaInfo || {};
+      if (ei.nome) L.push({ t: 'Cliente: ' + ei.nome });
+      if (ei.endereco) L.push({ t: 'Endereço: ' + ei.endereco });
+    }
     L.push({ t: '' });
     L.push({ t: 'Obrigado pela preferência!', center: true });
     L.push({ t: 'Não é documento fiscal', center: true });

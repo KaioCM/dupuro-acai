@@ -249,6 +249,11 @@ create table if not exists public.orders (
   -- Pagamento dividido (migration_032): lista [{forma,valor}] da venda inteira,
   -- repetida por linha. null = pagamento simples (usa forma_pagamento).
   pagamentos jsonb,
+  -- Entrega/delivery (migration_033): flag da venda (repetido por linha) +
+  -- info opcional {nome, endereco}. A taxa de entrega é uma LINHA (produto_id
+  -- null, itens 'Taxa de entrega', usa_estoque false), não uma coluna.
+  entrega boolean not null default false,
+  entrega_info jsonb,
   created_at timestamptz not null default now()
 );
 
@@ -305,9 +310,11 @@ create policy "orders_insert_atendente" on public.orders
     public.is_atendente()
     and origem = 'loja'
     and status = 'entregue'
+    -- Linha de produto: usa_estoque amarrado ao modo. Linha sem produto (taxa de
+    -- entrega/serviço, migration_033): default false → exige usa_estoque false.
     and usa_estoque = coalesce(
       (select p.modo = 'embalado' from public.products p where p.id = produto_id),
-      true
+      false
     )
   );
 
@@ -494,7 +501,8 @@ begin
   for r in select * from jsonb_array_elements(p_rows) loop
     insert into public.orders (
       revendedor_id, numero, data, itens, valor, status,
-      produto_id, quantidade, sabor, usa_estoque, detalhes, forma_pagamento, pagamentos, caixa_sessao_id, origem, atendente_id
+      produto_id, quantidade, sabor, usa_estoque, detalhes, forma_pagamento, pagamentos,
+      entrega, entrega_info, caixa_sessao_id, origem, atendente_id
     ) values (
       nullif(r->>'revendedor_id', '')::uuid,
       p_numero,
@@ -507,6 +515,8 @@ begin
       case when r ? 'detalhes' then r->'detalhes' else null end,
       nullif(r->>'forma_pagamento', ''),
       case when r ? 'pagamentos' and jsonb_typeof(r->'pagamentos') = 'array' then r->'pagamentos' else null end,
+      coalesce((r->>'entrega')::boolean, false),
+      case when r ? 'entrega_info' and jsonb_typeof(r->'entrega_info') = 'object' then r->'entrega_info' else null end,
       v_sessao,
       'loja', auth.uid()
     );
@@ -760,7 +770,7 @@ begin
     insert into public.orders (
       revendedor_id, numero, data, itens, valor, status,
       produto_id, quantidade, sabor, usa_estoque, detalhes,
-      forma_pagamento, pagamentos, caixa_sessao_id, origem, atendente_id, client_uuid
+      forma_pagamento, pagamentos, entrega, entrega_info, caixa_sessao_id, origem, atendente_id, client_uuid
     ) values (
       nullif(r->>'revendedor_id', '')::uuid, v_numero,
       coalesce(nullif(r->>'data', ''), (now() at time zone 'America/Cuiaba')::date::text)::date,
@@ -770,6 +780,8 @@ begin
       case when r ? 'detalhes' then r->'detalhes' else null end,
       nullif(r->>'forma_pagamento', ''),
       case when r ? 'pagamentos' and jsonb_typeof(r->'pagamentos') = 'array' then r->'pagamentos' else null end,
+      coalesce((r->>'entrega')::boolean, false),
+      case when r ? 'entrega_info' and jsonb_typeof(r->'entrega_info') = 'object' then r->'entrega_info' else null end,
       nullif(r->>'caixa_sessao_id', '')::bigint,
       'loja', auth.uid(),
       case when v_primeira then p_client_uuid else null end

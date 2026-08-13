@@ -220,6 +220,8 @@ var DupuroCaixa = (function () {
         detalhes: it.detalhes || null,
         forma_pagamento: header.formaPagamento || null,
         pagamentos: header.pagamentos || null,
+        entrega: !!header.entrega,
+        entrega_info: header.entregaInfo || null,
         caixa_sessao_id: header.caixaSessaoId || null
       };
     });
@@ -308,7 +310,7 @@ var DupuroCaixa = (function () {
   async function getSalesBetween(startDate, endDate) {
     var query = client
       .from('orders')
-      .select('numero, revendedor_id, produto_id, itens, valor, quantidade, sabor, detalhes, status, cancel_motivo, forma_pagamento, pagamentos, created_at, products(nome, modo)')
+      .select('numero, revendedor_id, produto_id, itens, valor, quantidade, sabor, detalhes, status, cancel_motivo, forma_pagamento, pagamentos, entrega, entrega_info, created_at, products(nome, modo)')
       .eq('origem', 'loja')
       .gte('created_at', startDate.toISOString());
     if (endDate) query = query.lt('created_at', endDate.toISOString());
@@ -333,16 +335,23 @@ var DupuroCaixa = (function () {
           valor: 0, items: [],
           formaPagamento: o.forma_pagamento || null,
           pagamentos: o.pagamentos || null,
+          entrega: !!o.entrega, entregaInfo: o.entrega_info || null, taxa: 0,
           cancelada: true, motivo: o.cancel_motivo || null
         };
         ordem.push(g);
       }
       if (o.forma_pagamento && !g.formaPagamento) g.formaPagamento = o.forma_pagamento;
       if (o.pagamentos && !g.pagamentos) g.pagamentos = o.pagamentos;
+      if (o.entrega) g.entrega = true;
+      if (o.entrega_info && !g.entregaInfo) g.entregaInfo = o.entrega_info;
       // A venda só conta como cancelada se TODAS as linhas estiverem canceladas.
       if (o.status !== 'cancelado') g.cancelada = false;
       if (o.cancel_motivo && !g.motivo) g.motivo = o.cancel_motivo;
       g.valor += Number(o.valor) || 0;
+      // Linha de taxa de entrega: sem produto. Some no total da taxa e vai como
+      // item (isTaxa) — a comanda imprime, a edição a exclui do carrinho.
+      var ehTaxa = !o.produto_id;
+      if (ehTaxa) g.taxa += Number(o.valor) || 0;
       // Item já no formato que a comanda e a edição esperam.
       var prod = o.products || {};
       var det = o.detalhes || {};
@@ -350,7 +359,8 @@ var DupuroCaixa = (function () {
         produtoId: o.produto_id || null,
         quantidade: o.quantidade, sabor: o.sabor, itens: o.itens, valor: Number(o.valor) || 0,
         nome: prod.nome || o.itens,
-        modo: prod.modo || 'embalado',
+        modo: ehTaxa ? 'servico' : (prod.modo || 'embalado'),
+        isTaxa: ehTaxa,
         detalhes: o.detalhes || null,
         acompanhamentos: (det.acompanhamentos || []).map(function (a) { return a.nome; }),
         pesoKg: det.peso_kg || null,
@@ -427,7 +437,9 @@ var DupuroCaixa = (function () {
         usa_estoque: (it.modo || 'embalado') === 'embalado',
         detalhes: it.detalhes || null,
         forma_pagamento: header.formaPagamento || null,
-        pagamentos: header.pagamentos || null
+        pagamentos: header.pagamentos || null,
+        entrega: !!header.entrega,
+        entrega_info: header.entregaInfo || null
       };
     });
     var result = await client.rpc('caixa_substituir_venda', { p_numero: numero, p_motivo: motivo, p_rows: rows });

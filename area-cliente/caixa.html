@@ -191,6 +191,20 @@
               </div>
               <div class="cart-head">🛒 Itens da venda</div>
               <ul class="cart-list" id="cartList"></ul>
+              <!-- Entrega/delivery: marca a venda e soma a taxa no total -->
+              <div class="entrega-box">
+                <button type="button" class="entrega-toggle" id="entregaToggle">🛵 Entrega</button>
+                <div class="entrega-panel hidden" id="entregaPanel">
+                  <div class="field">
+                    <label for="taxaEntregaInput">Taxa de entrega (R$)</label>
+                    <input type="text" inputmode="decimal" id="taxaEntregaInput" placeholder="Ex: 5,00" autocomplete="off">
+                  </div>
+                  <div class="entrega-2col">
+                    <div class="field"><label for="entregaNome">Cliente (opcional)</label><input type="text" id="entregaNome" placeholder="Nome" autocomplete="off"></div>
+                    <div class="field"><label for="entregaEndereco">Endereço (opcional)</label><input type="text" id="entregaEndereco" placeholder="Rua, nº, bairro" autocomplete="off"></div>
+                  </div>
+                </div>
+              </div>
               <div class="order-total-row"><span class="lbl">Total</span><span class="val" id="cartTotal">—</span></div>
               <div class="pay-methods" id="payMethods">
                 <div class="cart-head pay-head" style="margin-top:14px;">
@@ -800,9 +814,11 @@
         '<span class="ci-sub">leve ' + c.N + ' por ' + brl(c.Y) + (c.grupos > 1 ? ' ×' + c.grupos : '') + '</span></div>' +
         '<span class="ci-desc-val">− ' + brl(c.desconto) + '</span></li>';
     }).join('');
-    list.innerHTML = itensHtml + descHtml;
-    var subtotal = cart.reduce(function (s, it) { return s + lineTotal(it); }, 0);
-    document.getElementById('cartTotal').textContent = brl(subtotal - descontoCombosTotal());
+    var taxaHtml = taxaAtual() > 0
+      ? '<li class="cart-item cart-taxa"><div class="ci-info"><span class="ci-name">🛵 Taxa de entrega</span></div><span class="ci-taxa-val">' + brl(taxaAtual()) + '</span></li>'
+      : '';
+    list.innerHTML = itensHtml + descHtml + taxaHtml;
+    document.getElementById('cartTotal').textContent = brl(totalDaVenda());
     atualizarSplitResumo(); // se estiver dividindo, recalcula "faltam/passou" com o novo total
     list.querySelectorAll('[data-cart-i]').forEach(function (b) {
       b.addEventListener('click', function () { editandoPrecoIdx = -1; cart.splice(parseInt(b.getAttribute('data-cart-i'), 10), 1); renderCart(); });
@@ -979,10 +995,21 @@
     DupuroTEF.estado().then(function (e) { tefIntegrado = !!(e && e.tipo && e.tipo !== 'manual'); }).catch(function () {});
   }
 
+  // ---- Entrega (delivery) ----
+  var entregaAtiva = false;
+  var taxaEntrega = 0;
+  function taxaAtual() { return (entregaAtiva && taxaEntrega > 0) ? taxaEntrega : 0; }
+  function entregaInfoAtual() {
+    if (!entregaAtiva) return null;
+    var nome = (document.getElementById('entregaNome').value || '').trim();
+    var end = (document.getElementById('entregaEndereco').value || '').trim();
+    return (nome || end) ? { nome: nome || null, endereco: end || null } : null;
+  }
+
   // ---- Pagamento dividido (N formas numa venda) ----
-  // Total da venda (itens - desconto de combo), arredondado.
+  // Total da venda (itens - desconto de combo + taxa de entrega), arredondado.
   function totalDaVenda() {
-    return Math.round((cart.reduce(function (s, it) { return s + lineTotal(it); }, 0) - descontoCombosTotal()) * 100) / 100;
+    return Math.round((cart.reduce(function (s, it) { return s + lineTotal(it); }, 0) - descontoCombosTotal() + taxaAtual()) * 100) / 100;
   }
   var pagamentoDividido = false;
   var FORMA_OPTS = [['dinheiro', '💵 Dinheiro'], ['debito', '💳 Débito'], ['credito', '💳 Crédito'], ['pix', '⨁ Pix']];
@@ -1079,6 +1106,27 @@
     if (e.target.classList.contains('split-remove')) { e.target.closest('.split-row').remove(); atualizarSplitResumo(); }
   });
   document.getElementById('splitRecebido').addEventListener('input', atualizarSplitResumo);
+
+  // ---- Entrega: botão + campos ----
+  function setEntrega(on) {
+    entregaAtiva = on;
+    document.getElementById('entregaToggle').classList.toggle('active', on);
+    document.getElementById('entregaPanel').classList.toggle('hidden', !on);
+    if (on) {
+      document.getElementById('taxaEntregaInput').focus();
+    } else {
+      taxaEntrega = 0;
+      document.getElementById('taxaEntregaInput').value = '';
+      document.getElementById('entregaNome').value = '';
+      document.getElementById('entregaEndereco').value = '';
+    }
+    renderCart();
+  }
+  document.getElementById('entregaToggle').addEventListener('click', function () { setEntrega(!entregaAtiva); });
+  document.getElementById('taxaEntregaInput').addEventListener('input', function () {
+    taxaEntrega = Math.round(parseValor(this.value) * 100) / 100;
+    renderCart();
+  });
 
   // ---- Sessão de caixa (abrir/fechar) ----
   var caixaSessao = null; // { id, fundo_troco, aberta_em } quando aberto
@@ -1227,7 +1275,7 @@
       unidadesPorProduto[it.productId] = (unidadesPorProduto[it.productId] || 0) + (it.quantidade || 0);
       totalLinhas[it.productId] = (totalLinhas[it.productId] || 0) + 1;
     });
-    return cart.map(function (it) {
+    var linhas = cart.map(function (it) {
       var texto;
       if (it.modo === 'peso') texto = it.nome + ' ' + it.pesoKg.toLocaleString('pt-BR', { minimumFractionDigits: 3 }) + ' kg';
       else if (it.modo === 'copo') texto = it.nome + ' x' + it.quantidade + (it.acomps && it.acomps.length ? ' (' + it.acomps.join(', ') + ')' : '');
@@ -1247,6 +1295,11 @@
         itens: texto, valor: valor
       };
     });
+    // Taxa de entrega: linha própria (sem produto, não baixa estoque).
+    if (taxaAtual() > 0) {
+      linhas.push({ produtoId: null, quantidade: 1, sabor: null, modo: 'servico', detalhes: null, itens: 'Taxa de entrega', valor: taxaAtual() });
+    }
+    return linhas;
   }
 
   sendBtn.addEventListener('click', async function () {
@@ -1282,7 +1335,7 @@
         return;
       }
       sendBtn.disabled = true; sendBtn.textContent = 'Salvando...';
-      var upd = await DupuroCaixa.updateSale(editingSale.numero, { revendedorId: revendedorId, formaPagamento: pag.formaPagamento, pagamentos: pag.pagamentos }, items, motivo);
+      var upd = await DupuroCaixa.updateSale(editingSale.numero, { revendedorId: revendedorId, formaPagamento: pag.formaPagamento, pagamentos: pag.pagamentos, entrega: entregaAtiva, entregaInfo: entregaInfoAtual() }, items, motivo);
       sendBtn.disabled = false;
       if (upd.error) {
         cartError.textContent = upd.error.code === '23514'
@@ -1331,7 +1384,7 @@
     if (auths.length) pagInfo = auths.length === 1 ? auths[0] : { multiplas: auths };
 
     sendBtn.disabled = true; sendBtn.textContent = 'Registrando...';
-    var result = await DupuroCaixa.registerSale({ revendedorId: revendedorId, formaPagamento: pag.formaPagamento, pagamentos: pag.pagamentos, caixaSessaoId: caixaSessao.id }, items);
+    var result = await DupuroCaixa.registerSale({ revendedorId: revendedorId, formaPagamento: pag.formaPagamento, pagamentos: pag.pagamentos, entrega: entregaAtiva, entregaInfo: entregaInfoAtual(), caixaSessaoId: caixaSessao.id }, items);
     sendBtn.disabled = false;
     if (result.error) {
       cartError.textContent = result.error.code === '23514'
@@ -1343,8 +1396,9 @@
       renderShop();
       return;
     }
-    var total = cart.reduce(function (s, it) { return s + lineTotal(it); }, 0) - descontoCombosTotal();
+    var total = totalDaVenda();
     var n = cart.length;
+    var taxaVenda = taxaAtual();
 
     // Comanda desta venda (guardada pra impressão e reimpressão). Os itens ficam
     // com o preço cheio e o combo aparece como linha de desconto (`descontos`).
@@ -1358,6 +1412,8 @@
       formaPagamento: pag.formaPagamento,
       pagamentos: pag.pagamentos,
       pagamento: pagInfo,
+      entrega: entregaAtiva,
+      entregaInfo: entregaInfoAtual(),
       descontos: combosCarrinho().map(function (c) {
         return { label: 'Promo ' + c.nome + ' (' + c.N + ' por ' + brl(c.Y) + ')', valor: c.desconto };
       }),
@@ -1369,11 +1425,12 @@
           pesoKg: it.pesoKg || null,
           precoKg: (it.detalhes && it.detalhes.preco_kg) || null
         };
-      })
+      }).concat(taxaVenda > 0 ? [{ nome: 'Taxa de entrega', quantidade: 1, sabor: null, modo: 'servico', valor: taxaVenda, acompanhamentos: [], pesoKg: null, precoKg: null }] : [])
     };
 
     cart = [];
     if (pagamentoDividido) setDividido(false);
+    if (entregaAtiva) setEntrega(false);
     setForma(null);
     renderCart();
     document.getElementById('saleSuccessDetail').textContent = (result.offline ? 'Salva offline (sincroniza depois)' : result.numero) + ' · ' + n + (n === 1 ? ' item' : ' itens') + ' · ' + brl(total);
@@ -1408,7 +1465,9 @@
   // Reconstrói cada item do carrinho a partir das linhas da venda (mesmo formato
   // de quando foi montada), pra atendente ajustar e salvar com um motivo.
   function saleToCart(sale) {
-    return sale.items.map(function (it) {
+    // A linha de taxa de entrega não vira item do carrinho — é restaurada no
+    // painel de Entrega (enterEditMode); aqui a excluímos.
+    return sale.items.filter(function (it) { return !it.isTaxa; }).map(function (it) {
       if (it.modo === 'peso') {
         var precoKg = it.precoKg || (it.detalhes && it.detalhes.preco_kg) || 0;
         return {
@@ -1446,6 +1505,15 @@
     } else {
       setForma(sale.formaPagamento || null);
     }
+    // Restaura a entrega (flag + taxa + nome/endereço).
+    if (entregaAtiva) setEntrega(false);
+    if (sale.entrega || (sale.taxa || 0) > 0) {
+      setEntrega(true);
+      taxaEntrega = Math.round((sale.taxa || 0) * 100) / 100;
+      document.getElementById('taxaEntregaInput').value = taxaEntrega > 0 ? String(taxaEntrega.toFixed(2)).replace('.', ',') : '';
+      document.getElementById('entregaNome').value = (sale.entregaInfo && sale.entregaInfo.nome) || '';
+      document.getElementById('entregaEndereco').value = (sale.entregaInfo && sale.entregaInfo.endereco) || '';
+    }
     setTarget(sale.revendedorId ? 'revendedor' : 'balcao');
     if (sale.revendedorId) resellerSelect.value = sale.revendedorId;
     document.getElementById('editBanner').classList.remove('hidden');
@@ -1464,6 +1532,7 @@
     editingSale = null;
     cart = [];
     if (pagamentoDividido) setDividido(false);
+    if (entregaAtiva) setEntrega(false);
     setForma(null);
     document.getElementById('editBanner').classList.add('hidden');
     document.getElementById('editMotivoField').classList.add('hidden');
@@ -1653,11 +1722,12 @@
   // ---- Vendas do dia ----
   var vendasCache = [];
   function pagTag(v) {
+    var entrega = v.entrega ? ' <span class="pay-tag entrega-tag">🛵 Entrega</span>' : '';
     if (v.pagamentos && v.pagamentos.length > 1) {
       var formas = v.pagamentos.map(function (p) { return FORMA_PAG_LABEL[p.forma] || p.forma; }).join(' + ');
-      return ' <span class="pay-tag">➗ ' + formas + '</span>';
+      return ' <span class="pay-tag">➗ ' + formas + '</span>' + entrega;
     }
-    return v.formaPagamento ? ' <span class="pay-tag">' + (FORMA_PAG_LABEL[v.formaPagamento] || v.formaPagamento) + '</span>' : '';
+    return (v.formaPagamento ? ' <span class="pay-tag">' + (FORMA_PAG_LABEL[v.formaPagamento] || v.formaPagamento) + '</span>' : '') + entrega;
   }
 
   async function loadVendas() {
