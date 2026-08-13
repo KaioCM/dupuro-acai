@@ -149,6 +149,7 @@ var DupuroPrinter = (function () {
       L.push({ t: 'Pagamento: ' + (FP[venda.formaPagamento] || venda.formaPagamento) });
     }
     if (venda.pagamento && venda.pagamento.nsu) L.push({ t: '  NSU: ' + venda.pagamento.nsu });
+    if (Number(venda.troco) > 0) L.push({ t: linhaDupla('Troco', brl(venda.troco)) });
     // Entrega/delivery: destaca pra separar do balcão e mostra nome/endereço.
     if (venda.entrega) {
       L.push({ t: '' });

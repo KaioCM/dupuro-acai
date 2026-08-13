@@ -218,16 +218,21 @@
                   <button type="button" class="pay-btn" data-pay="pix">⨁ Pix</button>
                 </div>
                 <div class="pay-tef-note hidden" id="payTefNote"></div>
-                <!-- Pagamento dividido: N linhas (forma + valor) que somam o total -->
+                <!-- Troco do pagamento SIMPLES em dinheiro -->
+                <div class="simple-troco hidden" id="simpleTrocoField">
+                  <label for="simpleRecebido">Recebido em dinheiro (R$)</label>
+                  <div class="simple-troco-row">
+                    <input type="text" inputmode="decimal" id="simpleRecebido" placeholder="quanto o cliente deu" autocomplete="off">
+                    <span class="troco-badge" id="simpleTroco"></span>
+                  </div>
+                </div>
+                <!-- Pagamento dividido: N formas. Cartão/Pix = valor de cada um;
+                     Dinheiro = o que o cliente entregou (o troco sai sozinho). -->
                 <div id="paySplit" class="pay-split hidden">
+                  <p class="split-hint">💳 Cartão/Pix: o valor de cada um. 💵 Dinheiro: o que o cliente <strong>entregou</strong> — o troco sai sozinho.</p>
                   <div id="splitRows"></div>
                   <button type="button" id="addSplitRow" class="link-btn">＋ adicionar forma</button>
                   <div class="split-summary" id="splitSummary"></div>
-                  <div class="field hidden" id="splitTrocoField" style="margin-top:10px; margin-bottom:0;">
-                    <label for="splitRecebido">Recebido em dinheiro (R$) — pra calcular troco</label>
-                    <input type="text" inputmode="decimal" id="splitRecebido" placeholder="opcional" autocomplete="off">
-                    <div class="split-troco" id="splitTroco"></div>
-                  </div>
                 </div>
               </div>
               <div class="field hidden" id="editMotivoField" style="margin-top:12px; margin-bottom:0;">
@@ -819,7 +824,8 @@
       : '';
     list.innerHTML = itensHtml + descHtml + taxaHtml;
     document.getElementById('cartTotal').textContent = brl(totalDaVenda());
-    atualizarSplitResumo(); // se estiver dividindo, recalcula "faltam/passou" com o novo total
+    atualizarSplitResumo(); // se estiver dividindo, recalcula com o novo total
+    if (typeof atualizarSimpleTroco === 'function') atualizarSimpleTroco(); // troco do dinheiro simples
     list.querySelectorAll('[data-cart-i]').forEach(function (b) {
       b.addEventListener('click', function () { editandoPrecoIdx = -1; cart.splice(parseInt(b.getAttribute('data-cart-i'), 10), 1); renderCart(); });
     });
@@ -990,6 +996,16 @@
       note.classList.remove('hidden');
       note.textContent = '💳 Ao registrar, o valor vai direto pra maquininha.';
     } else { note.classList.add('hidden'); note.textContent = ''; }
+    // Troco do pagamento simples em dinheiro.
+    var trocoField = document.getElementById('simpleTrocoField');
+    if (f === 'dinheiro' && !pagamentoDividido) {
+      trocoField.classList.remove('hidden');
+      atualizarSimpleTroco();
+    } else {
+      trocoField.classList.add('hidden');
+      document.getElementById('simpleRecebido').value = '';
+      document.getElementById('simpleTroco').textContent = '';
+    }
   }
   if (window.DupuroTEF && typeof DupuroTEF.estado === 'function') {
     DupuroTEF.estado().then(function (e) { tefIntegrado = !!(e && e.tipo && e.tipo !== 'manual'); }).catch(function () {});
@@ -1011,6 +1027,7 @@
   function totalDaVenda() {
     return Math.round((cart.reduce(function (s, it) { return s + lineTotal(it); }, 0) - descontoCombosTotal() + taxaAtual()) * 100) / 100;
   }
+  function round2(v) { return Math.round((Number(v) || 0) * 100) / 100; }
   var pagamentoDividido = false;
   var FORMA_OPTS = [['dinheiro', '💵 Dinheiro'], ['debito', '💳 Débito'], ['credito', '💳 Crédito'], ['pix', '⨁ Pix']];
   var paySeg = document.getElementById('paySeg');
@@ -1022,58 +1039,60 @@
     div.className = 'split-row';
     div.innerHTML =
       '<select class="split-forma">' + FORMA_OPTS.map(function (o) { return '<option value="' + o[0] + '"' + (o[0] === forma ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select>' +
+      '<span class="split-cifrao">R$</span>' +
       '<input type="text" inputmode="decimal" class="split-valor" placeholder="0,00" value="' + (valor != null ? String(valor.toFixed(2)).replace('.', ',') : '') + '" autocomplete="off">' +
       '<button type="button" class="split-remove" aria-label="Remover forma">×</button>';
     splitRowsEl.appendChild(div);
   }
 
-  // Lê as linhas da divisão: pagamentos válidos, soma, falta e se fecha o total.
+  // Modelo intuitivo: Cartão/Pix = a PARTE da conta paga naquela forma; Dinheiro
+  // = o que o cliente ENTREGOU (a nota). A parte da conta em dinheiro é o que
+  // sobra (total - cartão/pix); o troco = dinheiro entregue - essa parte.
+  // `pagamentos` (registro/fiscal) guarda as PARTES da conta (somam o total).
   function lerSplit() {
-    var rows = Array.prototype.slice.call(splitRowsEl.querySelectorAll('.split-row'));
-    var pagamentos = rows.map(function (r) {
-      return { forma: r.querySelector('.split-forma').value, valor: parseValor(r.querySelector('.split-valor').value) };
-    }).filter(function (p) { return p.valor > 0; });
-    var soma = Math.round(pagamentos.reduce(function (s, p) { return s + p.valor; }, 0) * 100) / 100;
+    var linhas = Array.prototype.slice.call(splitRowsEl.querySelectorAll('.split-row'))
+      .map(function (r) { return { forma: r.querySelector('.split-forma').value, valor: parseValor(r.querySelector('.split-valor').value) }; })
+      .filter(function (p) { return p.valor > 0; });
     var total = totalDaVenda();
-    var falta = Math.round((total - soma) * 100) / 100;
-    return { pagamentos: pagamentos, soma: soma, total: total, falta: falta, ok: Math.abs(falta) < 0.005 && pagamentos.length >= 1 };
+    var naoDinheiro = linhas.filter(function (p) { return p.forma !== 'dinheiro'; });
+    var temDinheiro = linhas.some(function (p) { return p.forma === 'dinheiro'; });
+    var somaCartao = round2(naoDinheiro.reduce(function (s, p) { return s + p.valor; }, 0));
+    var dinheiroEntregue = round2(linhas.filter(function (p) { return p.forma === 'dinheiro'; }).reduce(function (s, p) { return s + p.valor; }, 0));
+    var parteDinheiro = round2(total - somaCartao); // quanto da conta é pago em dinheiro
+    var troco = temDinheiro ? round2(dinheiroEntregue - parteDinheiro) : 0;
+
+    var pagamentos = naoDinheiro.map(function (p) { return { forma: p.forma, valor: p.valor }; });
+    if (parteDinheiro > 0.005) pagamentos.push({ forma: 'dinheiro', valor: parteDinheiro });
+
+    var ok = true, erro = '';
+    if (!linhas.length) { ok = false; erro = 'Informe pelo menos uma forma.'; }
+    else if (somaCartao > total + 0.005) { ok = false; erro = 'Cartão/Pix passam ' + brl(somaCartao - total) + ' do total.'; }
+    else if (parteDinheiro > 0.005 && !temDinheiro) { ok = false; erro = 'Faltam ' + brl(parteDinheiro) + ' — adicione a forma Dinheiro.'; }
+    else if (parteDinheiro > 0.005 && dinheiroEntregue < parteDinheiro - 0.005) { ok = false; erro = 'Falta ' + brl(parteDinheiro - dinheiroEntregue) + ' em dinheiro.'; }
+    else if (parteDinheiro <= 0.005 && dinheiroEntregue > 0.005) { ok = false; erro = 'Cartão/Pix já cobrem o total — tire o Dinheiro.'; }
+    return { linhas: linhas, pagamentos: pagamentos, total: total, parteDinheiro: parteDinheiro, dinheiroEntregue: dinheiroEntregue, temDinheiro: temDinheiro, troco: troco, ok: ok, erro: erro };
   }
 
   function atualizarSplitResumo() {
     if (!pagamentoDividido) return;
     var info = lerSplit();
     var el = document.getElementById('splitSummary');
-    el.innerHTML = 'Total <strong>' + brl(info.total) + '</strong> · Informado <strong>' + brl(info.soma) + '</strong>' +
-      (Math.abs(info.falta) < 0.005
-        ? ' · <span class="split-ok">✓ fecha</span>'
-        : (info.falta > 0
-          ? ' · <span class="split-falta">faltam ' + brl(info.falta) + '</span>'
-          : ' · <span class="split-falta">passou ' + brl(-info.falta) + '</span>'));
-    // Troco só quando há parte em dinheiro.
-    var somaDin = info.pagamentos.filter(function (p) { return p.forma === 'dinheiro'; }).reduce(function (s, p) { return s + p.valor; }, 0);
-    var trocoField = document.getElementById('splitTrocoField');
-    var te = document.getElementById('splitTroco');
-    if (somaDin > 0) {
-      trocoField.classList.remove('hidden');
-      var recebido = parseValor(document.getElementById('splitRecebido').value);
-      if (recebido > 0) {
-        var troco = Math.round((recebido - somaDin) * 100) / 100;
-        te.textContent = troco >= 0 ? 'Troco: ' + brl(troco) : 'Falta ' + brl(-troco) + ' em dinheiro';
-        te.className = 'split-troco' + (troco < 0 ? ' neg' : '');
-      } else { te.textContent = ''; }
-    } else { trocoField.classList.add('hidden'); document.getElementById('splitRecebido').value = ''; te.textContent = ''; }
+    var status = info.ok
+      ? '<span class="split-ok">✓ fecha</span>' + (info.troco > 0.005 ? ' <span class="troco-badge">troco ' + brl(info.troco) + '</span>' : '')
+      : '<span class="split-falta">' + (info.erro || '—') + '</span>';
+    el.innerHTML = '<span class="split-total">Total ' + brl(info.total) + '</span>' + status;
   }
 
   function setDividido(on) {
     pagamentoDividido = on;
     document.getElementById('toggleSplitBtn').textContent = on ? '✕ pagamento simples' : '➗ Dividir';
     paySeg.classList.toggle('hidden', on);
-    if (on) document.getElementById('payTefNote').classList.add('hidden');
+    if (on) { document.getElementById('payTefNote').classList.add('hidden'); document.getElementById('simpleTrocoField').classList.add('hidden'); }
     paySplit.classList.toggle('hidden', !on);
     if (on) {
       setForma(null);
       splitRowsEl.innerHTML = '';
-      novaSplitRow('dinheiro', totalDaVenda()); // começa com o total todo em dinheiro
+      novaSplitRow('dinheiro', totalDaVenda()); // começa tudo em dinheiro (troco 0)
       atualizarSplitResumo();
     } else {
       splitRowsEl.innerHTML = '';
@@ -1081,31 +1100,49 @@
   }
 
   // Resolve o pagamento (simples ou dividido) num objeto único pra registrar.
+  // Devolve também o `troco` (só exibição/comanda; não vai pro fiscal).
   function montarPagamento() {
     if (!pagamentoDividido) {
-      return { ok: !!formaPagamento, formaPagamento: formaPagamento, pagamentos: null, erro: 'Escolha a forma de pagamento.' };
+      if (!formaPagamento) return { ok: false, erro: 'Escolha a forma de pagamento.' };
+      var troco = 0;
+      if (formaPagamento === 'dinheiro') {
+        var rec = parseValor(document.getElementById('simpleRecebido').value);
+        if (rec > 0.005) {
+          if (rec < totalDaVenda() - 0.005) return { ok: false, erro: 'O recebido é menor que o total.' };
+          troco = round2(rec - totalDaVenda());
+        }
+      }
+      return { ok: true, formaPagamento: formaPagamento, pagamentos: null, troco: troco };
     }
     var info = lerSplit();
-    if (!info.ok) {
-      return { ok: false, erro: info.pagamentos.length < 1 ? 'Informe pelo menos uma forma com valor.' : (info.falta > 0 ? ('Faltam ' + brl(info.falta) + ' pra fechar o pagamento.') : ('O pagamento passou ' + brl(-info.falta) + ' do total.')) };
-    }
-    // Forma "principal" = a de maior valor (empate favorece dinheiro).
+    if (!info.ok) return { ok: false, erro: info.erro };
     var principal = info.pagamentos.slice().sort(function (a, b) { return (b.valor - a.valor) || (a.forma === 'dinheiro' ? -1 : 1); })[0].forma;
-    return { ok: true, formaPagamento: principal, pagamentos: info.pagamentos, info: info };
+    return { ok: true, formaPagamento: principal, pagamentos: info.pagamentos, troco: info.troco, info: info };
   }
 
   document.getElementById('toggleSplitBtn').addEventListener('click', function () { setDividido(!pagamentoDividido); });
   document.getElementById('addSplitRow').addEventListener('click', function () {
-    var info = lerSplit();
-    novaSplitRow('dinheiro', info.falta > 0.005 ? info.falta : null);
+    novaSplitRow('debito', null); // nova forma vem vazia (cartão/pix é o mais comum de somar)
     atualizarSplitResumo();
+    var ultimo = splitRowsEl.querySelector('.split-row:last-child .split-valor');
+    if (ultimo) ultimo.focus();
   });
   splitRowsEl.addEventListener('input', atualizarSplitResumo);
   splitRowsEl.addEventListener('change', atualizarSplitResumo);
   splitRowsEl.addEventListener('click', function (e) {
     if (e.target.classList.contains('split-remove')) { e.target.closest('.split-row').remove(); atualizarSplitResumo(); }
   });
-  document.getElementById('splitRecebido').addEventListener('input', atualizarSplitResumo);
+
+  // Troco do pagamento SIMPLES em dinheiro.
+  function atualizarSimpleTroco() {
+    var badge = document.getElementById('simpleTroco');
+    var rec = parseValor(document.getElementById('simpleRecebido').value);
+    if (rec <= 0.005) { badge.textContent = ''; return; }
+    var troco = round2(rec - totalDaVenda());
+    badge.textContent = troco >= 0 ? 'Troco ' + brl(troco) : 'Falta ' + brl(-troco);
+    badge.className = 'troco-badge' + (troco < 0 ? ' neg' : '');
+  }
+  document.getElementById('simpleRecebido').addEventListener('input', atualizarSimpleTroco);
 
   // ---- Entrega: botão + campos ----
   function setEntrega(on) {
@@ -1411,6 +1448,7 @@
       total: total,
       formaPagamento: pag.formaPagamento,
       pagamentos: pag.pagamentos,
+      troco: pag.troco || 0,
       pagamento: pagInfo,
       entrega: entregaAtiva,
       entregaInfo: entregaInfoAtual(),
