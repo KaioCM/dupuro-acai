@@ -51,6 +51,24 @@ pro PC da loja e instale normalmente — ele cria o atalho **Dupuro Caixa** na �
 > Se a comanda sair cortada ou com margem errada, é ajuste de `pageSize`/`margins` em
 > `main.js` (o tamanho do papel 80&nbsp;mm às vezes precisa de acerto fino na máquina real).
 
+## Cartão / TEF (maquininha da loja)
+
+O app pode cobrar direto na maquininha (pinpad) que já está cabeada no PC, usando o
+**agente Elgin TEF Web local** — a mesma que o sistema antigo usa. O caixa web não fala com
+`http://localhost` (bloqueio de conteúdo misto do HTTPS); quem fala é o app (Electron).
+
+Modos (em `config.json` na pasta de dados do app — `%AppData%/Dupuro Caixa/config.json`):
+
+- `"tefTipo": "manual"` (padrão) — não cobra; a atendente passa o cartão à parte.
+- `"tefTipo": "elgin"` — cobra pelo agente Elgin TEF Web local.
+  - `"tefUrl"` opcional; padrão `http://localhost:2001/tef/v1`. **Conferir a porta no PC**
+    (o legado da Dupuro usava `60906` → nesse caso `"tefUrl": "http://localhost:60906/tef/v1"`).
+- `"tefTipo": "simulacao"` — só pra testar o fluxo (aprova sozinho; NUNCA em produção).
+
+Para descobrir a porta certa no PC da loja: `netstat -ano | findstr LISTENING | findstr "2001 60906"`
+e ver qual serviço Elgin TEF está rodando. Depois é só setar `tefTipo`/`tefUrl` e testar uma
+venda no crédito/débito pelo caixa.
+
 ## Ícone
 
 Coloque um `assets/icon.ico` (256×256) nesta pasta antes de gerar o `.exe`. Sem ele o

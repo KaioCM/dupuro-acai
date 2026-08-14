@@ -99,17 +99,69 @@ ipcMain.handle('dupuro-config', async (evt, patch) => {
 });
 
 // ---- TEF (cartão) ----
-// tefTipo (config): 'manual' (PADRÃO), 'simulacao', 'sitef' ou 'paygo'.
+// tefTipo (config): 'manual' (PADRÃO), 'simulacao', 'elgin', 'sitef' ou 'paygo'.
 //  - manual    → o app NÃO cobra: a atendente passa o cartão na maquininha como
 //                hoje e o app só registra a forma de pagamento. (retorna manual:true)
 //  - simulacao → finge a cobrança e aprova. SÓ pra testar o fluxo; NUNCA usar
 //                em produção achando que cobrou de verdade.
+//  - elgin     → chama o agente Elgin TEF Web local (HTTP em localhost) — a MESMA
+//                maquininha/pinpad que o sistema legado já usa. Ver ELGIN_TEF_BASE.
 //  - sitef/paygo → ponto onde o integrador pluga a lib real (ainda não feito).
 // A assinatura de retorno é sempre a mesma pro caixa:
 //   { aprovado, nsu, autorizacao, bandeira, mensagem, erro, manual, simulacao }
+
+// Elgin TEF Web (agente local): base configurável por cfg.tefUrl. Padrão da doc
+// atual = http://localhost:2001/tef/v1. O legado da Dupuro apontava pra porta
+// 60906 — CONFERIR no PC da loja e, se for o caso, setar cfg.tefUrl.
+// Doc: POST /venda/debito {valor:"00.00"}; POST /venda/credito {valor,parcelas,
+// financiamento}; cancelamento em /adm/cancelamento. Resposta = JSON do IDH
+// (autorizacao/nsu/administradora/... no sucesso; só {mensagem} em erro/negado).
+const ELGIN_TEF_BASE = 'http://localhost:2001/tef/v1';
+
+async function cobrarElgin(base, valor, modalidade) {
+  // valor no formato "00.00" (reais, ponto decimal) — se o agente da loja pedir
+  // centavos, é aqui que se ajusta.
+  const valorStr = (Number(valor) || 0).toFixed(2);
+  const debito = modalidade === 'debito';
+  const url = base.replace(/\/+$/, '') + (debito ? '/venda/debito' : '/venda/credito');
+  const body = debito
+    ? { valor: valorStr }
+    : { valor: valorStr, parcelas: '1', financiamento: '1' }; // crédito à vista
+
+  // Transação de cartão espera o cliente inserir cartão/senha → timeout longo.
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), 180000);
+  try {
+    const resp = await fetch(url, {
+      method: 'POST',
+      headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+      signal: ctrl.signal,
+    });
+    const r = await resp.json().catch(() => ({}));
+    // Sucesso tem nsu/autorizacao; erro/negado vem só com "mensagem".
+    const aprovado = !!(r && (r.nsu || r.autorizacao));
+    if (!aprovado) {
+      return { aprovado: false, mensagem: (r && r.mensagem) || 'Transação não aprovada.' };
+    }
+    return {
+      aprovado: true,
+      nsu: r.nsu || r.nsuRede || null,
+      autorizacao: r.autorizacao || null,
+      bandeira: r.administradora || null,
+      mensagem: r.mensagem || 'Aprovado',
+    };
+  } catch (e) {
+    const abort = e && e.name === 'AbortError';
+    return { aprovado: false, erro: abort ? 'Tempo esgotado na maquininha.' : ('Falha ao falar com o TEF Elgin: ' + String(e && e.message || e)) };
+  } finally {
+    clearTimeout(t);
+  }
+}
+
 ipcMain.handle('dupuro-tef-estado', async () => {
   const cfg = lerConfig();
-  return { tipo: cfg.tefTipo || 'manual', servidor: cfg.tefServidor || null, loja: cfg.tefLoja || null, terminal: cfg.tefTerminal || null };
+  return { tipo: cfg.tefTipo || 'manual', url: cfg.tefUrl || ELGIN_TEF_BASE, servidor: cfg.tefServidor || null, loja: cfg.tefLoja || null, terminal: cfg.tefTerminal || null };
 });
 
 ipcMain.handle('dupuro-tef-cobrar', async (evt, payload) => {
@@ -128,6 +180,11 @@ ipcMain.handle('dupuro-tef-cobrar', async (evt, payload) => {
     await new Promise((r) => setTimeout(r, 1200));
     const nsu = 'SIM' + Date.now().toString().slice(-8);
     return { aprovado: true, nsu, autorizacao: '000000', bandeira: 'SIMULACAO', mensagem: 'Aprovado (simulação)', simulacao: true };
+  }
+
+  if (tipo === 'elgin') {
+    // Maquininha da loja (pinpad no PC) via agente Elgin TEF Web local.
+    return await cobrarElgin(cfg.tefUrl || ELGIN_TEF_BASE, valor, modalidade);
   }
 
   // TODO (integração real): aqui o integrador do TEF pluga a chamada da lib.
