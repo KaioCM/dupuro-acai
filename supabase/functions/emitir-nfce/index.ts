@@ -89,8 +89,14 @@ Deno.serve(async (req: Request) => {
       return json({ error: 'Apenas caixa/admin podem emitir NFC-e' }, 403)
     }
 
-    const { numero } = await req.json()
+    const { numero, documento } = await req.json()
     if (!numero) return json({ error: 'numero (VND-XXXX) é obrigatório' }, 400)
+
+    // CPF/CNPJ opcional do consumidor (só dígitos). 11 = CPF, 14 = CNPJ.
+    const docDigits = String(documento || '').replace(/\D/g, '')
+    const consumidor: Record<string, string> = {}
+    if (docDigits.length === 11) consumidor.cpf_destinatario = docDigits
+    else if (docDigits.length === 14) consumidor.cnpj_destinatario = docDigits
 
     // Já existe emissão desta venda?
     const { data: existentes } = await admin
@@ -219,6 +225,7 @@ Deno.serve(async (req: Request) => {
       local_destino: '1',
       natureza_operacao: 'VENDA AO CONSUMIDOR',
       indicador_inscricao_estadual_destinatario: '9',
+      ...consumidor, // cpf_destinatario / cnpj_destinatario quando informado
       items,
       formas_pagamento: formasPagamento,
     }

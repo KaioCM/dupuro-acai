@@ -342,7 +342,11 @@ var DupuroPrinter = (function () {
       '<div class="c small">' + esc(d.consultaUrl || 'www.sefaz.mt.gov.br/nfce/consultanfce') + '</div>' +
       '<div class="c small b" style="word-break:break-all;">' + grupos4(d.chave) + '</div>' +
       '<div class="hr"></div>' +
-      '<div class="c small b">CONSUMIDOR NÃO IDENTIFICADO</div>' +
+      (d.docConsumidor
+        ? '<div class="c small b">CONSUMIDOR ' + (d.docConsumidor.tipo === 'cnpj'
+            ? 'CNPJ ' + esc(String(d.docConsumidor.numero).replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5'))
+            : 'CPF ' + esc(String(d.docConsumidor.numero).replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4'))) + '</div>'
+        : '<div class="c small b">CONSUMIDOR NÃO IDENTIFICADO</div>') +
       '<div class="c small">Consulta via Leitor de QR Code</div>' +
       '<div class="qr">' + (qr || '<div class="small">(QR indisponível — consulte pela chave)</div>') + '</div>' +
       (d.protocolo ? '<div class="c small">Protocolo de autorização: ' + esc(d.protocolo) + '</div>' : '') +

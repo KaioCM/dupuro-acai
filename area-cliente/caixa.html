@@ -274,6 +274,10 @@
               <h4 style="font-family:var(--font-display); color:var(--roxo-700); font-size:19px; text-transform:uppercase; margin-bottom:6px;">Venda registrada!</h4>
               <p style="font-size:13.5px; color:var(--text-light); margin-bottom:6px;" id="saleSuccessDetail">—</p>
               <p style="font-size:12.5px; color:var(--text-light); margin-bottom:14px;" id="printResult"></p>
+              <div class="nfce-doc" id="nfceDocField">
+                <input type="text" inputmode="numeric" id="nfceDoc" placeholder="CPF/CNPJ na nota (opcional)" autocomplete="off">
+                <div class="nfce-doc-erro" id="nfceDocErro"></div>
+              </div>
               <button type="button" class="btn btn-dark-outline btn-block" id="nfceBtn" style="margin-bottom:8px;">🧾 Emitir NFC-e (cupom fiscal)</button>
               <p style="font-size:12px; color:var(--text-light); margin-bottom:12px; min-height:1em;" id="nfceResult"></p>
               <button type="button" class="btn btn-dark-outline btn-block" id="reprintBtn" style="margin-bottom:10px;">🖨️ Imprimir comanda de novo</button>
@@ -1505,6 +1509,8 @@
     (function () {
       var nb = document.getElementById('nfceBtn'), nr = document.getElementById('nfceResult');
       nr.textContent = ''; nr.style.color = 'var(--text-light)';
+      document.getElementById('nfceDoc').value = ''; document.getElementById('nfceDocErro').textContent = '';
+      document.getElementById('nfceDocField').classList.toggle('hidden', !!result.offline);
       if (result.offline) {
         nb.disabled = true;
         nr.textContent = 'NFC-e será emitida quando sincronizar (venda offline).';
@@ -1754,6 +1760,39 @@
 
   // Monta os dados do cupom fiscal a partir da emissão (o payload guarda os
   // itens exatos que foram pra NFC-e) e imprime na Sweda. Best-effort.
+  // ---- CPF/CNPJ na nota (consumidor identificado) ----
+  function soDigitos(v) { return String(v == null ? '' : v).replace(/\D/g, ''); }
+  function validaCPF(c) {
+    c = soDigitos(c);
+    if (c.length !== 11 || /^(\d)\1{10}$/.test(c)) return false;
+    var s = 0, r, i;
+    for (i = 0; i < 9; i++) s += parseInt(c[i], 10) * (10 - i);
+    r = (s * 10) % 11; if (r === 10) r = 0; if (r !== parseInt(c[9], 10)) return false;
+    s = 0; for (i = 0; i < 10; i++) s += parseInt(c[i], 10) * (11 - i);
+    r = (s * 10) % 11; if (r === 10) r = 0; return r === parseInt(c[10], 10);
+  }
+  function validaCNPJ(c) {
+    c = soDigitos(c);
+    if (c.length !== 14 || /^(\d)\1{13}$/.test(c)) return false;
+    function dv(base) {
+      var soma = 0, pos = base.length - 7;
+      for (var i = 0; i < base.length; i++) { soma += parseInt(base[i], 10) * pos--; if (pos < 2) pos = 9; }
+      var r = soma % 11; return r < 2 ? 0 : 11 - r;
+    }
+    var d1 = dv(c.substring(0, 12));
+    if (d1 !== parseInt(c[12], 10)) return false;
+    var d2 = dv(c.substring(0, 13));
+    return d2 === parseInt(c[13], 10);
+  }
+  // Lê e valida o campo de CPF/CNPJ da nota. Vazio é OK (nota sem identificação).
+  function lerDocumentoNota() {
+    var d = soDigitos(document.getElementById('nfceDoc').value);
+    if (!d) return { ok: true, tipo: null, digitos: null };
+    if (d.length === 11) return validaCPF(d) ? { ok: true, tipo: 'cpf', digitos: d } : { ok: false, erro: 'CPF inválido — confira os números.' };
+    if (d.length === 14) return validaCNPJ(d) ? { ok: true, tipo: 'cnpj', digitos: d } : { ok: false, erro: 'CNPJ inválido — confira os números.' };
+    return { ok: false, erro: 'Digite um CPF (11 dígitos) ou CNPJ (14 dígitos).' };
+  }
+
   function imprimirCupomFiscalDaEmissao(em) {
     try {
       if (!em || !window.DupuroPrinter) return;
@@ -1764,6 +1803,7 @@
         ambiente: em.ambiente, dataEmissao: em.criado_em || pay.data_emissao || Date.now(),
         total: em.valor, valorPago: em.valor, troco: 0,
         formaPagamento: (ultimaVenda && ultimaVenda.formaPagamento) || null,
+        docConsumidor: pay.cpf_destinatario ? { tipo: 'cpf', numero: pay.cpf_destinatario } : (pay.cnpj_destinatario ? { tipo: 'cnpj', numero: pay.cnpj_destinatario } : null),
         qrcodeUrl: em.qrcode, consultaUrl: consulta,
         items: (pay.items || []).map(function (it) {
           return {
@@ -1780,9 +1820,13 @@
   document.getElementById('nfceBtn').addEventListener('click', async function () {
     if (!ultimaVenda || !ultimaVenda.numero || ultimaVenda.numero === 'PENDENTE') return;
     var btn = this, nr = document.getElementById('nfceResult');
+    var erroDoc = document.getElementById('nfceDocErro');
+    var doc = lerDocumentoNota();
+    erroDoc.textContent = '';
+    if (!doc.ok) { erroDoc.textContent = doc.erro; document.getElementById('nfceDoc').focus(); return; }
     btn.disabled = true; btn.textContent = 'Emitindo NFC-e...';
     nr.style.color = 'var(--text-light)'; nr.textContent = 'Enviando ao SEFAZ...';
-    var r = await DupuroCaixa.emitirNfce(ultimaVenda.numero);
+    var r = await DupuroCaixa.emitirNfce(ultimaVenda.numero, doc.digitos || null);
     if (r.error) {
       btn.disabled = false; btn.textContent = '🧾 Tentar emitir NFC-e de novo';
       nr.style.color = '#c0392b'; nr.textContent = r.error.message || 'Falha ao emitir.';

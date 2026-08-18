@@ -449,7 +449,8 @@ var DupuroCaixa = (function () {
   // Emite a NFC-e (cupom fiscal) de uma venda já registrada, via a Edge Function
   // `emitir-nfce` (que fala com o gateway Focus NFe). O token do Focus é secret
   // do servidor — o navegador só manda o número da venda. Precisa de internet.
-  async function emitirNfce(numero) {
+  // documento (opcional) = CPF/CNPJ do consumidor (só dígitos) pra sair na nota.
+  async function emitirNfce(numero, documento) {
     var session = await getSession();
     if (!session) return { error: new Error('Sem sessão ativa') };
     if (window.DupuroOffline && !DupuroOffline.estaOnline()) {
@@ -462,7 +463,7 @@ var DupuroCaixa = (function () {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer ' + session.access_token
         },
-        body: JSON.stringify({ numero: numero })
+        body: JSON.stringify({ numero: numero, documento: documento || null })
       });
       var body = await response.json().catch(function () { return {}; });
       if (!response.ok) return { error: new Error(body.error || 'Falha ao emitir NFC-e') };
