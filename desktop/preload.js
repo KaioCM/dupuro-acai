@@ -7,7 +7,7 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('DupuroDesktop', {
-  versao: '1.0.0',
+  versao: '1.1.0',
   // Recebe o HTML da comanda (80mm) e imprime sem diálogo. Retorna {ok, error}.
   imprimir: (html) => ipcRenderer.invoke('dupuro-print', html),
   listarImpressoras: () => ipcRenderer.invoke('dupuro-listar-impressoras'),
