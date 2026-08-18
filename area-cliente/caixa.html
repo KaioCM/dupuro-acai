@@ -105,6 +105,31 @@
         </div>
       </div>
 
+      <!-- Cartão / maquininha (TEF) — só aparece dentro do app e pro admin -->
+      <div class="panel printer-bar hidden" id="tefBar" style="margin-bottom:18px;">
+        <div class="printer-status">
+          <span class="printer-dot" id="tefDot"></span>
+          <div>
+            <strong>Maquininha de cartão (TEF)</strong>
+            <div class="subtitle" id="tefHint">—</div>
+          </div>
+        </div>
+        <div class="printer-actions tef-config">
+          <label class="tef-field">Modo
+            <select id="tefModo">
+              <option value="manual">Manual (passa o cartão à parte)</option>
+              <option value="elgin">Maquininha da loja (Elgin)</option>
+              <option value="simulacao">Simulação (só teste)</option>
+            </select>
+          </label>
+          <label class="tef-field hidden" id="tefUrlField">Endereço do TEF
+            <input type="text" id="tefUrl" placeholder="http://localhost:2001/tef/v1" autocomplete="off">
+          </label>
+          <button type="button" class="btn btn-dark-outline btn-sm" id="tefSalvar">Salvar</button>
+          <span class="tef-saved" id="tefSalvoMsg"></span>
+        </div>
+      </div>
+
       <!-- Ajuda: impressão automática (silenciosa) sem a janela do navegador -->
       <div class="panel printer-help hidden" id="printerHelp" style="margin-bottom:18px;">
         <div class="panel-header"><div><h3>Fazer a comanda sair sozinha (sem a janela)</h3>
@@ -1660,6 +1685,50 @@
   autoPrint.addEventListener('change', function () {
     window.localStorage.setItem(AUTO_PRINT_KEY, autoPrint.checked ? 'true' : 'false');
   });
+
+  // ---- Config do TEF (cartão) — só dentro do app (.exe) e pro admin ----
+  (function initTefConfig() {
+    if (!(window.DupuroDesktop && typeof DupuroDesktop.config === 'function')) return; // só no app
+    if (!auth || auth.role !== 'admin') return; // configuração é do dono (admin)
+    var bar = document.getElementById('tefBar');
+    var modo = document.getElementById('tefModo');
+    var urlField = document.getElementById('tefUrlField');
+    var urlInp = document.getElementById('tefUrl');
+    var dot = document.getElementById('tefDot');
+    var hint = document.getElementById('tefHint');
+    var msg = document.getElementById('tefSalvoMsg');
+    bar.classList.remove('hidden');
+    function pintar(tipo) {
+      dot.classList.toggle('on', tipo === 'elgin' || tipo === 'simulacao');
+      hint.textContent = tipo === 'elgin'
+        ? 'Ligada: ao registrar cartão, o valor vai direto pra maquininha.'
+        : (tipo === 'simulacao' ? 'Simulação — aprova sozinho, NÃO cobra de verdade (só teste).'
+          : 'Manual — a atendente passa o cartão na maquininha à parte.');
+    }
+    function toggleUrl() { urlField.classList.toggle('hidden', modo.value !== 'elgin'); }
+    if (window.DupuroTEF && DupuroTEF.estado) {
+      DupuroTEF.estado().then(function (e) {
+        modo.value = (e && e.tipo) || 'manual';
+        urlInp.value = (e && e.url) || 'http://localhost:2001/tef/v1';
+        toggleUrl(); pintar(modo.value);
+      }).catch(function () { toggleUrl(); pintar('manual'); });
+    }
+    modo.addEventListener('change', toggleUrl);
+    document.getElementById('tefSalvar').addEventListener('click', async function () {
+      var patch = { tefTipo: modo.value };
+      if (modo.value === 'elgin') patch.tefUrl = (urlInp.value || '').trim() || 'http://localhost:2001/tef/v1';
+      try {
+        await DupuroDesktop.config(patch);
+        var e = await DupuroTEF.estado();
+        tefIntegrado = !!(e && e.tipo && e.tipo !== 'manual'); // atualiza a nota no pagamento
+        pintar((e && e.tipo) || modo.value);
+        msg.textContent = '✓ salvo'; msg.className = 'tef-saved ok';
+      } catch (err) {
+        msg.textContent = 'falha ao salvar'; msg.className = 'tef-saved erro';
+      }
+      setTimeout(function () { msg.textContent = ''; msg.className = 'tef-saved'; }, 2500);
+    });
+  })();
 
   function syncPrinterUI() {
     // A Sweda da loja está instalada como impressora do Windows (não como porta

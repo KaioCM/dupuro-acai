@@ -1496,6 +1496,14 @@ tr.venda-cancelada td:nth-child(5) { text-decoration: line-through; color: var(-
 .cart-item.cart-taxa .ci-name { color: var(--roxo-700); }
 .ci-taxa-val { flex: none; font-size: 13px; font-weight: 700; color: var(--roxo-700); }
 .pay-tag.entrega-tag { background: rgba(139,184,49,0.16); color: var(--verde); }
+/* Config do TEF (cartão) no app */
+.tef-config { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 10px; }
+.tef-field { display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 700; color: var(--roxo-700); }
+.tef-field select, .tef-field input { height: 38px; padding: 0 8px; border: 1.5px solid rgba(96,16,80,0.18); border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; background: #fff; }
+.tef-field input { min-width: 240px; }
+.tef-saved { font-size: 12.5px; font-weight: 700; align-self: center; }
+.tef-saved.ok { color: var(--verde); }
+.tef-saved.erro { color: var(--danger); }
 
 /* Badge de status offline do caixa (app da loja) */
 .offline-pill {
