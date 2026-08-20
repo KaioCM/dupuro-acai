@@ -27,10 +27,12 @@
     <a href="#" class="sidebar-cta" data-tab="venda">🛒 Nova venda</a>
 
     <a href="#" class="sidebar-link active" data-tab="venda"><span class="ic">🛒</span> Nova venda</a>
+    <a href="#" class="sidebar-link" data-tab="abertos"><span class="ic">📋</span> Pedidos abertos <span class="nav-badge hidden" id="abertosBadge">0</span></a>
     <a href="#" class="sidebar-link" data-tab="promos"><span class="ic">🏷️</span> Promoções</a>
     <a href="#" class="sidebar-link" data-tab="vendas"><span class="ic">🧾</span> Vendas do dia</a>
     <a href="#" class="sidebar-link" data-tab="historico"><span class="ic">📅</span> Histórico do mês</a>
     <a href="#" class="sidebar-link" data-tab="estoque"><span class="ic">📦</span> Estoque</a>
+    <a href="#" class="sidebar-link" data-tab="config"><span class="ic">⚙️</span> Configurações</a>
 
     <div class="sidebar-footer">
       <a href="https://wa.me/5565992888228" target="_blank" rel="noopener" class="sidebar-link"><span class="ic">💬</span> Suporte no WhatsApp</a>
@@ -74,78 +76,6 @@
             <select id="resellerSelect"></select>
           </div>
         </div>
-      </div>
-
-      <!-- Baixar o app do caixa (some quando já está rodando dentro do app) -->
-      <div class="panel app-download-bar" id="appDownloadPanel" style="margin-bottom:18px;">
-        <div class="app-download-info">
-          <span class="app-download-ic">💻</span>
-          <div>
-            <strong>App do caixa para o computador da loja</strong>
-            <div class="subtitle">Imprime a comanda sozinha (sem a janela) e funciona sem internet. Instale uma vez no PC da loja.</div>
-          </div>
-        </div>
-        <a class="btn btn-primary btn-sm" id="appDownloadBtn"
-           href="https://github.com/KaioCM/dupuro-acai/releases/latest/download/Dupuro-Caixa-Setup.exe">⬇️ Baixar o app</a>
-      </div>
-
-      <!-- Impressora da comanda -->
-      <div class="panel printer-bar" style="margin-bottom:18px;">
-        <div class="printer-status">
-          <span class="printer-dot" id="printerDot"></span>
-          <div>
-            <strong id="printerState">Impressão pela impressora do Windows</strong>
-            <div class="subtitle" id="printerHint">A comanda sai na impressora padrão do computador (a Sweda).</div>
-          </div>
-        </div>
-        <div class="printer-actions">
-          <label class="checkbox-line" style="margin:0;"><input type="checkbox" id="autoPrint" checked><span>Imprimir a comanda ao registrar</span></label>
-          <button type="button" class="btn btn-dark-outline btn-sm" id="testPrintBtn">🖨️ Imprimir teste</button>
-          <button type="button" class="link-btn" id="printerHelpBtn">Fazer sair sem a janela</button>
-        </div>
-      </div>
-
-      <!-- Cartão / maquininha (TEF) — só aparece dentro do app e pro admin -->
-      <div class="panel printer-bar hidden" id="tefBar" style="margin-bottom:18px;">
-        <div class="printer-status">
-          <span class="printer-dot" id="tefDot"></span>
-          <div>
-            <strong>Maquininha de cartão (TEF)</strong>
-            <div class="subtitle" id="tefHint">—</div>
-          </div>
-        </div>
-        <div class="printer-actions tef-config">
-          <label class="tef-field">Modo
-            <select id="tefModo">
-              <option value="manual">Manual (passa o cartão à parte)</option>
-              <option value="elgin">Maquininha da loja (Elgin)</option>
-              <option value="simulacao">Simulação (só teste)</option>
-            </select>
-          </label>
-          <label class="tef-field hidden" id="tefUrlField">Endereço do TEF
-            <input type="text" id="tefUrl" placeholder="http://localhost:2001/tef/v1" autocomplete="off">
-          </label>
-          <button type="button" class="btn btn-dark-outline btn-sm" id="tefSalvar">Salvar</button>
-          <span class="tef-saved" id="tefSalvoMsg"></span>
-        </div>
-      </div>
-
-      <!-- Ajuda: impressão automática (silenciosa) sem a janela do navegador -->
-      <div class="panel printer-help hidden" id="printerHelp" style="margin-bottom:18px;">
-        <div class="panel-header"><div><h3>Fazer a comanda sair sozinha (sem a janela)</h3>
-          <div class="subtitle">Configuração de uma vez só, no computador da loja. Some com a janela de impressão a cada venda.</div></div>
-          <button type="button" class="link-btn" id="printerHelpClose">fechar</button></div>
-        <ol class="help-steps">
-          <li><strong>Deixe a Sweda como impressora padrão</strong> no Windows (Configurações → Bluetooth e dispositivos → Impressoras e scanners → Sweda → <em>Definir como padrão</em>). Confira o papel: 80&nbsp;mm.</li>
-          <li><strong>Crie um atalho na área de trabalho.</strong> Clique com o botão direito no atalho → <em>Propriedades</em> → no campo <em>Destino</em>, cole exatamente o comando do navegador que você usa:
-            <div class="help-label">Microsoft Edge:</div>
-            <div class="help-code" id="helpEdge">"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe" --kiosk-printing --user-data-dir="C:\Users\Public\DupuroCaixa" https://www.dupuroacai.com/area-cliente/caixa.html</div>
-            <div class="help-label">Google Chrome:</div>
-            <div class="help-code" id="helpChrome">"C:\Program Files\Google\Chrome\Application\chrome.exe" --kiosk-printing --user-data-dir="C:\Users\Public\DupuroCaixa" https://www.dupuroacai.com/area-cliente/caixa.html</div>
-          </li>
-          <li><strong>Abra o caixa sempre por esse atalho.</strong> Na primeira vez, faça o login do caixa nessa janela — ela lembra depois. A comanda passa a sair direto na Sweda, <strong>sem janela nenhuma</strong>. Deixe <em>“Imprimir a comanda ao registrar”</em> marcado e teste no botão <em>“Imprimir teste”</em>.</li>
-        </ol>
-        <div class="help-note"><strong>Por que estava aparecendo a janela?</strong> Se o Chrome já estava aberto, ele reaproveitava a janela e ignorava o modo silencioso. O trecho <code>--user-data-dir</code> abre um Chrome <strong>separado, só do caixa</strong>, que sempre respeita o <code>--kiosk-printing</code> — funciona mesmo com seu Chrome normal aberto ao lado.</div>
       </div>
 
       <div class="order-flow">
@@ -214,6 +144,10 @@
                 ✏️ Editando a venda <strong id="editBannerNum">—</strong>
                 <button type="button" id="cancelEditBtn" class="link-btn">cancelar edição</button>
               </div>
+              <div id="slotBanner" class="slot-banner hidden">
+                📋 Pedido aberto: <strong id="slotBannerNome">—</strong>
+                <button type="button" id="cancelSlotBtn" class="link-btn">soltar</button>
+              </div>
               <div class="cart-head">🛒 Itens da venda</div>
               <ul class="cart-list" id="cartList"></ul>
               <!-- Entrega/delivery: marca a venda e soma a taxa no total -->
@@ -266,6 +200,7 @@
               </div>
               <div class="field-note" id="cartError">Não foi possível registrar a venda.</div>
               <button type="button" class="btn btn-primary btn-block" id="sendCartBtn">Registrar venda ✔</button>
+              <button type="button" class="btn btn-dark-outline btn-block" id="saveSlotBtn" style="margin-top:10px;">📋 Deixar em aberto (sem pagamento)</button>
               <p style="font-size:12px; color:var(--text-light); text-align:center; margin-top:12px;" id="cartHint">A venda entra como <strong>Entregue</strong> e baixa o estoque na hora.</p>
             </div>
 
@@ -405,6 +340,96 @@
       </div>
     </section>
 
+    <!-- ============ PEDIDOS ABERTOS (slots) ============ -->
+    <section class="tab-panel hidden" id="tab-abertos">
+      <div class="app-topbar">
+        <div><h1>Pedidos abertos</h1><div class="subtitle">Pedidos sem pagamento na hora (entrega, consumo na loja, retirada). Não baixam estoque até finalizar.</div></div>
+        <button type="button" class="btn btn-dark-outline btn-sm" id="refreshAbertosBtn">↻ Atualizar</button>
+      </div>
+      <div id="abertosList">
+        <div class="empty-state"><div class="icon">📋</div>Carregando...</div>
+      </div>
+    </section>
+
+    <!-- ============ CONFIGURAÇÕES ============ -->
+    <section class="tab-panel hidden" id="tab-config">
+      <div class="app-topbar">
+        <div><h1>Configurações</h1><div class="subtitle">Impressora, maquininha e o app do computador da loja.</div></div>
+      </div>
+
+      <!-- Baixar o app do caixa (some quando já está rodando dentro do app) -->
+      <div class="panel app-download-bar" id="appDownloadPanel" style="margin-bottom:18px;">
+        <div class="app-download-info">
+          <span class="app-download-ic">💻</span>
+          <div>
+            <strong>App do caixa para o computador da loja</strong>
+            <div class="subtitle">Imprime a comanda sozinha (sem a janela) e funciona sem internet. Instale uma vez no PC da loja.</div>
+          </div>
+        </div>
+        <a class="btn btn-primary btn-sm" id="appDownloadBtn"
+           href="https://github.com/KaioCM/dupuro-acai/releases/latest/download/Dupuro-Caixa-Setup.exe">⬇️ Baixar o app</a>
+      </div>
+
+      <!-- Impressora da comanda -->
+      <div class="panel printer-bar" style="margin-bottom:18px;">
+        <div class="printer-status">
+          <span class="printer-dot" id="printerDot"></span>
+          <div>
+            <strong id="printerState">Impressão pela impressora do Windows</strong>
+            <div class="subtitle" id="printerHint">A comanda sai na impressora padrão do computador (a Sweda).</div>
+          </div>
+        </div>
+        <div class="printer-actions">
+          <label class="checkbox-line" style="margin:0;"><input type="checkbox" id="autoPrint" checked><span>Imprimir a comanda ao registrar</span></label>
+          <button type="button" class="btn btn-dark-outline btn-sm" id="testPrintBtn">🖨️ Imprimir teste</button>
+          <button type="button" class="link-btn" id="printerHelpBtn">Fazer sair sem a janela</button>
+        </div>
+      </div>
+
+      <!-- Cartão / maquininha (TEF) — só aparece dentro do app e pro admin -->
+      <div class="panel printer-bar hidden" id="tefBar" style="margin-bottom:18px;">
+        <div class="printer-status">
+          <span class="printer-dot" id="tefDot"></span>
+          <div>
+            <strong>Maquininha de cartão (TEF)</strong>
+            <div class="subtitle" id="tefHint">—</div>
+          </div>
+        </div>
+        <div class="printer-actions tef-config">
+          <label class="tef-field">Modo
+            <select id="tefModo">
+              <option value="manual">Manual (passa o cartão à parte)</option>
+              <option value="elgin">Maquininha da loja (Elgin)</option>
+              <option value="simulacao">Simulação (só teste)</option>
+            </select>
+          </label>
+          <label class="tef-field hidden" id="tefUrlField">Endereço do TEF
+            <input type="text" id="tefUrl" placeholder="http://localhost:2001/tef/v1" autocomplete="off">
+          </label>
+          <button type="button" class="btn btn-dark-outline btn-sm" id="tefSalvar">Salvar</button>
+          <span class="tef-saved" id="tefSalvoMsg"></span>
+        </div>
+      </div>
+
+      <!-- Ajuda: impressão automática (silenciosa) sem a janela do navegador -->
+      <div class="panel printer-help hidden" id="printerHelp" style="margin-bottom:18px;">
+        <div class="panel-header"><div><h3>Fazer a comanda sair sozinha (sem a janela)</h3>
+          <div class="subtitle">Configuração de uma vez só, no computador da loja. Some com a janela de impressão a cada venda.</div></div>
+          <button type="button" class="link-btn" id="printerHelpClose">fechar</button></div>
+        <ol class="help-steps">
+          <li><strong>Deixe a Sweda como impressora padrão</strong> no Windows (Configurações → Bluetooth e dispositivos → Impressoras e scanners → Sweda → <em>Definir como padrão</em>). Confira o papel: 80&nbsp;mm.</li>
+          <li><strong>Crie um atalho na área de trabalho.</strong> Clique com o botão direito no atalho → <em>Propriedades</em> → no campo <em>Destino</em>, cole exatamente o comando do navegador que você usa:
+            <div class="help-label">Microsoft Edge:</div>
+            <div class="help-code" id="helpEdge">"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe" --kiosk-printing --user-data-dir="C:\Users\Public\DupuroCaixa" https://www.dupuroacai.com/area-cliente/caixa.html</div>
+            <div class="help-label">Google Chrome:</div>
+            <div class="help-code" id="helpChrome">"C:\Program Files\Google\Chrome\Application\chrome.exe" --kiosk-printing --user-data-dir="C:\Users\Public\DupuroCaixa" https://www.dupuroacai.com/area-cliente/caixa.html</div>
+          </li>
+          <li><strong>Abra o caixa sempre por esse atalho.</strong> Na primeira vez, faça o login do caixa nessa janela — ela lembra depois. A comanda passa a sair direto na Sweda, <strong>sem janela nenhuma</strong>. Deixe <em>“Imprimir a comanda ao registrar”</em> marcado e teste no botão <em>“Imprimir teste”</em>.</li>
+        </ol>
+        <div class="help-note"><strong>Por que estava aparecendo a janela?</strong> Se o Chrome já estava aberto, ele reaproveitava a janela e ignorava o modo silencioso. O trecho <code>--user-data-dir</code> abre um Chrome <strong>separado, só do caixa</strong>, que sempre respeita o <code>--kiosk-printing</code> — funciona mesmo com seu Chrome normal aberto ao lado.</div>
+      </div>
+    </section>
+
   </main>
 </div>
 
@@ -424,6 +449,23 @@
     <div class="modal-actions">
       <button type="button" class="btn btn-dark-outline" id="cancelModalClose">Voltar</button>
       <button type="button" class="btn btn-primary" id="cancelModalConfirm">Cancelar a venda</button>
+    </div>
+  </div>
+</div>
+
+<!-- Deixar pedido em aberto (nome do slot) -->
+<div class="modal-overlay hidden" id="slotModal">
+  <div class="modal-card">
+    <h3 id="slotModalTitle">Deixar pedido em aberto</h3>
+    <p class="subtitle">O pedido fica guardado sem cobrar. O estoque só baixa quando você finalizar o pagamento. Dê um nome pra achar depois.</p>
+    <div class="field" style="margin-bottom:0;">
+      <label for="slotLabel">Nome / referência do cliente</label>
+      <input type="text" id="slotLabel" placeholder="Ex: João, Mesa varanda, Delivery Ana" autocomplete="off" maxlength="60">
+    </div>
+    <div class="field-note" id="slotModalError">Dê um nome pro pedido.</div>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-dark-outline" id="slotModalClose">Voltar</button>
+      <button type="button" class="btn btn-primary" id="slotModalConfirm">Deixar em aberto</button>
     </div>
   </div>
 </div>
@@ -1495,10 +1537,17 @@
       }).concat(taxaVenda > 0 ? [{ nome: 'Taxa de entrega', quantidade: 1, sabor: null, modo: 'servico', valor: taxaVenda, acompanhamentos: [], pesoKg: null, precoKg: null }] : [])
     };
 
+    // Se a venda saiu de um pedido em aberto, o slot cumpriu seu papel: apaga.
+    if (activeSlot) {
+      var slotFinalizado = activeSlot.id;
+      activeSlot = null; setSlotBanner(null);
+      DupuroCaixa.excluirPedidoAberto(slotFinalizado).then(function () { loadAbertos(); });
+    }
     cart = [];
     if (pagamentoDividido) setDividido(false);
     if (entregaAtiva) setEntrega(false);
     setForma(null);
+    document.getElementById('cartHint').innerHTML = 'A venda entra como <strong>Entregue</strong> e baixa o estoque na hora.';
     renderCart();
     document.getElementById('saleSuccessDetail').textContent = (result.offline ? 'Salva offline (sincroniza depois)' : result.numero) + ' · ' + n + (n === 1 ? ' item' : ' itens') + ' · ' + brl(total);
     if (result.offline) atualizarStatusOffline();
@@ -1563,6 +1612,8 @@
 
   function enterEditMode(sale) {
     editingSale = { numero: sale.numero, revendedorId: sale.revendedorId || null };
+    if (activeSlot) { activeSlot = null; setSlotBanner(null); }
+    document.getElementById('saveSlotBtn').classList.add('hidden');
     cart = saleToCart(sale);
     // Restaura o pagamento: dividido recria as linhas; simples marca a forma.
     if (pagamentoDividido) setDividido(false);
@@ -1599,6 +1650,7 @@
 
   function exitEditMode() {
     editingSale = null;
+    document.getElementById('saveSlotBtn').classList.remove('hidden');
     cart = [];
     if (pagamentoDividido) setDividido(false);
     if (entregaAtiva) setEntrega(false);
@@ -1614,6 +1666,195 @@
   document.getElementById('cancelEditBtn').addEventListener('click', function () {
     exitEditMode();
     goTo('vendas');
+  });
+
+  // ---- Pedidos em aberto (slots) ----
+  // Um slot é um CARRINHO GUARDADO (não é venda): a atendente tira o pedido sem
+  // pagamento na hora (entrega, consumo na loja, retirada) e finaliza depois.
+  // Guardado no banco → aparece em qualquer PC. Só ao FINALIZAR baixa estoque.
+  var activeSlot = null;   // { id, label } quando um pedido aberto está no carrinho
+  var abertosCache = [];
+  var abertosCarregado = false;
+  function escSlot(s) {
+    return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+    });
+  }
+  function atualizarAbertosBadge(n) {
+    var b = document.getElementById('abertosBadge');
+    if (!b) return;
+    if (n > 0) { b.textContent = n; b.classList.remove('hidden'); }
+    else b.classList.add('hidden');
+  }
+  // Estado atual do carrinho no formato do slot (itens crus + entrega + destino).
+  function slotPayloadBase() {
+    return {
+      saleTarget: saleTarget,
+      revendedorId: saleTarget === 'revendedor' ? (resellerSelect.value || null) : null,
+      carrinho: cart,
+      entrega: entregaAtiva,
+      entregaInfo: entregaInfoAtual(),
+      taxa: taxaAtual()
+    };
+  }
+  function setSlotBanner(label) {
+    var b = document.getElementById('slotBanner');
+    if (label) {
+      document.getElementById('slotBannerNome').textContent = label;
+      b.classList.remove('hidden');
+      document.getElementById('cartHint').innerHTML = 'Escolha a forma de pagamento e <strong>finalize</strong> — o estoque baixa agora. Ou salve em aberto de novo.';
+    } else {
+      b.classList.add('hidden');
+    }
+  }
+  function limparCarrinhoDepois() {
+    activeSlot = null; setSlotBanner(null);
+    cart = [];
+    if (pagamentoDividido) setDividido(false);
+    if (entregaAtiva) setEntrega(false);
+    setForma(null);
+    document.getElementById('cartHint').innerHTML = 'A venda entra como <strong>Entregue</strong> e baixa o estoque na hora.';
+    renderCart();
+  }
+  // Carrega um pedido aberto no carrinho pra finalizar (ou continuar editando).
+  function abrirSlot(slot) {
+    if (editingSale) exitEditMode();
+    activeSlot = { id: slot.id, label: slot.label };
+    cart = Array.isArray(slot.carrinho) ? slot.carrinho.slice() : [];
+    if (pagamentoDividido) setDividido(false);
+    setForma(null); // pagamento começa em branco: o ponto do slot é decidir agora
+    if (entregaAtiva) setEntrega(false);
+    if (slot.entrega || (slot.taxa || 0) > 0) {
+      setEntrega(true);
+      taxaEntrega = Math.round((slot.taxa || 0) * 100) / 100;
+      document.getElementById('taxaEntregaInput').value = taxaEntrega > 0 ? String(taxaEntrega.toFixed(2)).replace('.', ',') : '';
+      document.getElementById('entregaNome').value = (slot.entrega_info && slot.entrega_info.nome) || '';
+      document.getElementById('entregaEndereco').value = (slot.entrega_info && slot.entrega_info.endereco) || '';
+    }
+    setTarget(slot.sale_target === 'revendedor' ? 'revendedor' : 'balcao');
+    if (slot.revendedor_id) resellerSelect.value = slot.revendedor_id;
+    setSlotBanner(slot.label);
+    deselectProduct();
+    cartError.classList.remove('show');
+    renderCart();
+    goTo('venda');
+    document.getElementById('cartSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  // "Soltar": desgruda o slot do carrinho sem apagá-lo do banco (ele continua aberto).
+  document.getElementById('cancelSlotBtn').addEventListener('click', limparCarrinhoDepois);
+
+  var slotItensResumo = function (carrinho) {
+    if (!Array.isArray(carrinho) || !carrinho.length) return '—';
+    return carrinho.map(function (it) {
+      var q = it.quantidade || 1;
+      var nome = it.nome || 'Item';
+      return (it.modo === 'peso') ? nome : (q + '× ' + nome);
+    }).join(', ');
+  };
+  var slotTotal = function (slot) {
+    var itens = Array.isArray(slot.carrinho) ? slot.carrinho : [];
+    var soma = itens.reduce(function (s, it) {
+      var v = (it.total != null ? it.total : (it.preco || 0) * (it.quantidade || 1));
+      return s + (Number(v) || 0);
+    }, 0);
+    return soma + (Number(slot.taxa) || 0);
+  };
+  async function loadAbertos() {
+    var box = document.getElementById('abertosList');
+    var r = await DupuroCaixa.listPedidosAbertos();
+    abertosCarregado = true;
+    if (r.error) { box.innerHTML = '<div class="empty-state"><div class="icon">⚠️</div>Não foi possível carregar os pedidos.</div>'; return; }
+    abertosCache = r.pedidos || [];
+    atualizarAbertosBadge(abertosCache.length);
+    if (!abertosCache.length) {
+      box.innerHTML = '<div class="empty-state"><div class="icon">📋</div>Nenhum pedido em aberto. Monte uma venda e toque em “Deixar em aberto”.</div>';
+      return;
+    }
+    box.innerHTML = abertosCache.map(function (s) {
+      var hora = new Date(s.criado_em).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+      var qtd = Array.isArray(s.carrinho) ? s.carrinho.reduce(function (a, it) { return a + (it.quantidade || 1); }, 0) : 0;
+      var tags = '';
+      if (s.entrega) tags += '<span class="slot-tag">🛵 Entrega</span>';
+      if (s.sale_target === 'revendedor') tags += '<span class="slot-tag">🤝 Revendedor</span>';
+      return '<div class="slot-card" data-id="' + s.id + '">' +
+        '<div class="slot-card-head"><strong>📋 ' + escSlot(s.label) + '</strong>' + tags + '</div>' +
+        '<div class="slot-card-body">' + escSlot(slotItensResumo(s.carrinho)) + '</div>' +
+        '<div class="slot-card-meta">' + qtd + (qtd === 1 ? ' item' : ' itens') + ' · ' + brl(slotTotal(s)) + ' · ' + hora + '</div>' +
+        '<div class="slot-card-actions">' +
+          '<button type="button" class="btn btn-green btn-sm" data-slot-finalizar="' + s.id + '">Finalizar / cobrar</button>' +
+          '<button type="button" class="btn btn-dark-outline btn-sm" data-slot-excluir="' + s.id + '">Excluir</button>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+  }
+  async function excluirSlotAgora(id) {
+    if (window.DupuroOffline && !DupuroOffline.estaOnline()) return;
+    await DupuroCaixa.excluirPedidoAberto(id);
+    if (activeSlot && String(activeSlot.id) === String(id)) { activeSlot = null; setSlotBanner(null); }
+    await loadAbertos();
+  }
+  // Exclusão com confirmação em 2 toques (Electron não tem window.confirm confiável).
+  function excluirSlotConfirm(id) {
+    var btn = document.querySelector('[data-slot-excluir="' + id + '"]');
+    if (btn && btn.getAttribute('data-confirm') !== '1') {
+      btn.setAttribute('data-confirm', '1');
+      btn.textContent = 'Confirmar exclusão';
+      setTimeout(function () { if (btn) { btn.removeAttribute('data-confirm'); btn.textContent = 'Excluir'; } }, 4000);
+      return;
+    }
+    excluirSlotAgora(id);
+  }
+  document.getElementById('abertosList').addEventListener('click', function (e) {
+    var fin = e.target.closest('[data-slot-finalizar]');
+    var exc = e.target.closest('[data-slot-excluir]');
+    if (fin) {
+      var idf = fin.getAttribute('data-slot-finalizar');
+      var s = abertosCache.filter(function (x) { return String(x.id) === idf; })[0];
+      if (s) abrirSlot(s);
+    } else if (exc) {
+      excluirSlotConfirm(exc.getAttribute('data-slot-excluir'));
+    }
+  });
+  document.getElementById('refreshAbertosBtn').addEventListener('click', loadAbertos);
+
+  // Salvar / atualizar o pedido em aberto (modal do nome).
+  var slotModal = document.getElementById('slotModal');
+  document.getElementById('saveSlotBtn').addEventListener('click', function () {
+    if (!cart.length) {
+      cartError.textContent = 'Adicione itens antes de deixar o pedido em aberto.';
+      cartError.classList.add('show');
+      return;
+    }
+    if (window.DupuroOffline && !DupuroOffline.estaOnline()) {
+      cartError.textContent = 'Pedidos em aberto precisam de internet.';
+      cartError.classList.add('show');
+      return;
+    }
+    document.getElementById('slotModalTitle').textContent = activeSlot ? 'Atualizar pedido aberto' : 'Deixar pedido em aberto';
+    document.getElementById('slotModalConfirm').textContent = activeSlot ? 'Salvar alterações' : 'Deixar em aberto';
+    var info = entregaInfoAtual();
+    document.getElementById('slotLabel').value = activeSlot ? activeSlot.label : ((info && info.nome) || '');
+    document.getElementById('slotModalError').classList.remove('show');
+    slotModal.classList.remove('hidden');
+    document.getElementById('slotLabel').focus();
+  });
+  document.getElementById('slotModalClose').addEventListener('click', function () { slotModal.classList.add('hidden'); });
+  document.getElementById('slotModalConfirm').addEventListener('click', async function () {
+    var label = (document.getElementById('slotLabel').value || '').trim();
+    var errEl = document.getElementById('slotModalError');
+    if (!label) { errEl.textContent = 'Dê um nome pro pedido.'; errEl.classList.add('show'); return; }
+    if (window.DupuroOffline && !DupuroOffline.estaOnline()) { errEl.textContent = 'Pedidos em aberto precisam de internet.'; errEl.classList.add('show'); return; }
+    var btn = this; btn.disabled = true; var txt = btn.textContent; btn.textContent = 'Salvando...';
+    var payload = Object.assign({ label: label }, slotPayloadBase());
+    var r = activeSlot
+      ? await DupuroCaixa.atualizarPedidoAberto(activeSlot.id, payload)
+      : await DupuroCaixa.salvarPedidoAberto(payload);
+    btn.disabled = false; btn.textContent = txt;
+    if (r.error) { errEl.textContent = r.error.message || 'Não foi possível salvar.'; errEl.classList.add('show'); return; }
+    slotModal.classList.add('hidden');
+    limparCarrinhoDepois();
+    await loadAbertos();
+    goTo('abertos');
   });
 
   // ---- Cancelar uma venda (modal de motivo) ----
@@ -2194,6 +2435,7 @@
   renderPromoList();
   loadVendas();
   carregarCaixa();
+  if (!(window.DupuroOffline && !DupuroOffline.estaOnline())) loadAbertos(); // popula o badge
 
   // Já rodando dentro do app da loja? Então não faz sentido oferecer o download.
   if (window.DupuroPrinter && DupuroPrinter.rodandoNoApp()) {
@@ -2254,6 +2496,8 @@
     if (tab === 'historico' && !histCarregado) loadHistorico();
     // Promoções: recarrega ao abrir (o admin pode ter mudado em outro lugar).
     if (tab === 'promos') loadPromos();
+    // Pedidos abertos: recarrega ao abrir (outro PC pode ter mudado).
+    if (tab === 'abertos') loadAbertos();
   }
   navItems.forEach(function (link) {
     link.addEventListener('click', function (e) { e.preventDefault(); goTo(link.getAttribute('data-tab')); });

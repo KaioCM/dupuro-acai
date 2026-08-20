@@ -511,6 +511,52 @@ var DupuroCaixa = (function () {
     }
   }
 
+  // ---- Pedidos em aberto (slots) ----
+  // Carrinho guardado que ainda NÃO é venda (sem pagamento/VND/baixa de estoque).
+  // Vive no banco pra aparecer em qualquer PC da loja. Só ao FINALIZAR vira venda.
+  async function listPedidosAbertos() {
+    var r = await client.from('caixa_pedidos_abertos')
+      .select('id, label, sale_target, revendedor_id, carrinho, entrega, entrega_info, taxa, criado_em, atualizado_em')
+      .order('criado_em', { ascending: true });
+    if (r.error) return { error: r.error, pedidos: [] };
+    return { error: null, pedidos: r.data || [] };
+  }
+  // payload: { label, saleTarget, revendedorId, carrinho, entrega, entregaInfo, taxa }
+  async function salvarPedidoAberto(payload) {
+    var session = await getSession();
+    if (!session) return { error: new Error('Sem sessão ativa') };
+    var row = {
+      label: payload.label,
+      atendente_id: session.user.id,
+      sale_target: payload.saleTarget || 'balcao',
+      revendedor_id: payload.revendedorId || null,
+      carrinho: payload.carrinho || [],
+      entrega: !!payload.entrega,
+      entrega_info: payload.entregaInfo || null,
+      taxa: payload.taxa || 0
+    };
+    var r = await client.from('caixa_pedidos_abertos').insert(row).select('id').single();
+    return { error: r.error, id: r.data ? r.data.id : null };
+  }
+  async function atualizarPedidoAberto(id, payload) {
+    var patch = {
+      label: payload.label,
+      sale_target: payload.saleTarget || 'balcao',
+      revendedor_id: payload.revendedorId || null,
+      carrinho: payload.carrinho || [],
+      entrega: !!payload.entrega,
+      entrega_info: payload.entregaInfo || null,
+      taxa: payload.taxa || 0,
+      atualizado_em: new Date().toISOString()
+    };
+    var r = await client.from('caixa_pedidos_abertos').update(patch).eq('id', id);
+    return { error: r.error };
+  }
+  async function excluirPedidoAberto(id) {
+    var r = await client.from('caixa_pedidos_abertos').delete().eq('id', id);
+    return { error: r.error };
+  }
+
   return {
     getSession: getSession,
     logout: logout,
@@ -534,7 +580,11 @@ var DupuroCaixa = (function () {
     updateSale: updateSale,
     emitirNfce: emitirNfce,
     getEmissaoAutorizada: getEmissaoAutorizada,
-    cancelarNfce: cancelarNfce
+    cancelarNfce: cancelarNfce,
+    listPedidosAbertos: listPedidosAbertos,
+    salvarPedidoAberto: salvarPedidoAberto,
+    atualizarPedidoAberto: atualizarPedidoAberto,
+    excluirPedidoAberto: excluirPedidoAberto
   };
 
 })();

@@ -961,6 +961,35 @@ create trigger caixa_promocoes_limite
   before insert or update on public.caixa_promocoes
   for each row execute function public.check_limite_promocoes();
 
+-- ---------- Pedidos em aberto / slots (migration_035) ----------
+-- Carrinho guardado que ainda NÃO é venda: a atendente tira o pedido sem
+-- pagamento na hora (delivery aguardando, consumo na loja, retirada) e finaliza
+-- depois. NÃO gera VND e NÃO baixa estoque — isso só acontece ao finalizar (o
+-- pedido volta pro carrinho e passa pelo fluxo normal de registro). No banco pra
+-- aparecer em qualquer PC da loja.
+create table if not exists public.caixa_pedidos_abertos (
+  id bigint generated always as identity primary key,
+  label text not null,                        -- nome/apelido do cliente (rótulo do slot)
+  atendente_id uuid references public.profiles(id) on delete set null,
+  sale_target text not null default 'balcao', -- 'balcao' | 'revendedor'
+  revendedor_id uuid references public.profiles(id) on delete set null,
+  carrinho jsonb not null,                    -- itens no formato do carrinho do caixa
+  entrega boolean not null default false,
+  entrega_info jsonb,                         -- { nome, endereco }
+  taxa numeric(10,2) not null default 0,
+  criado_em timestamptz not null default now(),
+  atualizado_em timestamptz not null default now()
+);
+alter table public.caixa_pedidos_abertos enable row level security;
+-- Equipe da loja (atendente + admin) gerencia todos os slots — turnos diferentes
+-- precisam enxergar o mesmo pedido aberto.
+drop policy if exists pedidos_abertos_all on public.caixa_pedidos_abertos;
+create policy pedidos_abertos_all on public.caixa_pedidos_abertos
+  for all to authenticated
+  using (public.is_atendente() or public.is_admin())
+  with check (public.is_atendente() or public.is_admin());
+create index if not exists idx_pedidos_abertos_criado on public.caixa_pedidos_abertos (criado_em);
+
 -- ---------- NFC-e: emissões (migration_030) ----------
 -- Uma linha por tentativa de emissão de cupom fiscal de uma venda (VND-XXXX).
 -- Escrita só pela Edge Function `emitir-nfce` (service role, que ignora RLS e

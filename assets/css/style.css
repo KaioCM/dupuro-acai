@@ -1343,6 +1343,16 @@ tr.venda-cancelada td:nth-child(5) { text-decoration: line-through; color: var(-
 .edit-banner { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; background: rgba(245,179,1,0.16); border: 1px solid rgba(245,179,1,0.4); color: var(--roxo-700); border-radius: 12px; padding: 10px 14px; font-size: 13.5px; font-weight: 600; margin-bottom: 14px; }
 .link-btn { background: none; border: none; color: var(--roxo-500); font: inherit; font-weight: 700; text-decoration: underline; cursor: pointer; padding: 0; }
 
+/* Pedidos em aberto (slots) */
+.nav-badge { display: inline-block; min-width: 18px; padding: 0 5px; margin-left: 6px; border-radius: 999px; background: var(--dourado, #F5B301); color: var(--roxo-900, #33122b); font-size: 11px; font-weight: 800; text-align: center; line-height: 18px; vertical-align: middle; }
+.slot-banner { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; background: rgba(139,184,49,0.16); border: 1px solid rgba(139,184,49,0.5); color: var(--roxo-700); border-radius: 12px; padding: 10px 14px; font-size: 13.5px; font-weight: 600; margin-bottom: 14px; }
+.slot-card { background: #fff; border: 1px solid rgba(96,16,80,0.14); border-radius: 14px; padding: 14px 16px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(51,18,43,0.05); }
+.slot-card-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 15px; color: var(--roxo-700); font-weight: 700; margin-bottom: 4px; }
+.slot-card-body { font-size: 13px; color: var(--text-light); margin-bottom: 6px; }
+.slot-card-meta { font-size: 12px; color: var(--text-light); margin-bottom: 12px; }
+.slot-card-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.slot-tag { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: rgba(96,16,80,0.08); color: var(--roxo-600, #601050); }
+
 /* Modal genérico (motivo do cancelamento) */
 .modal-overlay { position: fixed; inset: 0; background: rgba(51,18,43,0.5); display: flex; align-items: center; justify-content: center; padding: 20px; z-index: 1000; }
 .modal-card { background: var(--cream, #FFF7EC); border-radius: 18px; padding: 24px; max-width: 420px; width: 100%; box-shadow: 0 20px 60px rgba(51,18,43,0.35); }
