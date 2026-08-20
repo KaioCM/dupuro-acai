@@ -297,7 +297,9 @@ var DupuroCaixa = (function () {
   // conexão e ao abrir o caixa.
   async function sincronizarOffline() {
     if (!window.DupuroOffline) return { enviadas: 0, pendentes: 0 };
-    return DupuroOffline.sincronizar(client);
+    var r = await DupuroOffline.sincronizar(client);
+    await DupuroOffline.sincronizarSlots(client); // sobe também os pedidos em aberto
+    return r;
   }
   function filaPendente() {
     return window.DupuroOffline ? DupuroOffline.tamanhoFila() : Promise.resolve(0);
@@ -511,50 +513,93 @@ var DupuroCaixa = (function () {
     }
   }
 
-  // ---- Pedidos em aberto (slots) ----
+  // ---- Pedidos em aberto (slots) — offline-first ----
   // Carrinho guardado que ainda NÃO é venda (sem pagamento/VND/baixa de estoque).
-  // Vive no banco pra aparecer em qualquer PC da loja. Só ao FINALIZAR vira venda.
+  // Fonte de verdade da tela é o store local (DupuroOffline 'slots'); quando há
+  // internet, sobe as pendências e espelha o servidor (pra aparecer em qualquer
+  // PC). Só ao FINALIZAR vira venda. Ver assets/js/offline-queue.js.
+  function _slotsOnline() { return !(window.DupuroOffline && !DupuroOffline.estaOnline()); }
+  var SLOT_COLS = 'id, label, atendente_id, sale_target, revendedor_id, carrinho, entrega, entrega_info, taxa, criado_em, atualizado_em';
+
   async function listPedidosAbertos() {
-    var r = await client.from('caixa_pedidos_abertos')
-      .select('id, label, sale_target, revendedor_id, carrinho, entrega, entrega_info, taxa, criado_em, atualizado_em')
-      .order('criado_em', { ascending: true });
-    if (r.error) return { error: r.error, pedidos: [] };
-    return { error: null, pedidos: r.data || [] };
+    // Sem a lib offline: caminho direto no banco (fallback).
+    if (!window.DupuroOffline) {
+      var r0 = await client.from('caixa_pedidos_abertos').select(SLOT_COLS).order('criado_em', { ascending: true });
+      if (r0.error) return { error: r0.error, pedidos: [] };
+      return { error: null, pedidos: r0.data || [] };
+    }
+    if (_slotsOnline()) {
+      await DupuroOffline.sincronizarSlots(client); // sobe pendências primeiro
+      var r = await client.from('caixa_pedidos_abertos').select(SLOT_COLS).order('criado_em', { ascending: true });
+      if (!r.error) await DupuroOffline.slotMergeServidor(r.data || []);
+    }
+    var locais = await DupuroOffline.slotVisiveis();
+    return {
+      error: null,
+      pedidos: locais.map(function (x) {
+        return {
+          id: (x.server_id != null ? x.server_id : x.lid), _lid: x.lid, pending: x.pending || null,
+          label: x.label, sale_target: x.sale_target, revendedor_id: x.revendedor_id,
+          carrinho: x.carrinho, entrega: x.entrega, entrega_info: x.entrega_info,
+          taxa: x.taxa, criado_em: x.criado_em, atualizado_em: x.atualizado_em
+        };
+      })
+    };
   }
   // payload: { label, saleTarget, revendedorId, carrinho, entrega, entregaInfo, taxa }
   async function salvarPedidoAberto(payload) {
     var session = await getSession();
-    if (!session) return { error: new Error('Sem sessão ativa') };
-    var row = {
-      label: payload.label,
-      atendente_id: session.user.id,
-      sale_target: payload.saleTarget || 'balcao',
-      revendedor_id: payload.revendedorId || null,
-      carrinho: payload.carrinho || [],
-      entrega: !!payload.entrega,
-      entrega_info: payload.entregaInfo || null,
-      taxa: payload.taxa || 0
+    var atendenteId = session ? session.user.id : null;
+    if (!window.DupuroOffline) {
+      var row = { label: payload.label, atendente_id: atendenteId, sale_target: payload.saleTarget || 'balcao', revendedor_id: payload.revendedorId || null, carrinho: payload.carrinho || [], entrega: !!payload.entrega, entrega_info: payload.entregaInfo || null, taxa: payload.taxa || 0 };
+      var r = await client.from('caixa_pedidos_abertos').insert(row).select('id').single();
+      return { error: r.error, id: r.data ? r.data.id : null };
+    }
+    var now = new Date().toISOString();
+    var rec = {
+      lid: DupuroOffline.novoUuid(), server_id: null, label: payload.label, atendente_id: atendenteId,
+      sale_target: payload.saleTarget || 'balcao', revendedor_id: payload.revendedorId || null,
+      carrinho: payload.carrinho || [], entrega: !!payload.entrega, entrega_info: payload.entregaInfo || null,
+      taxa: payload.taxa || 0, criado_em: now, atualizado_em: now, pending: 'create'
     };
-    var r = await client.from('caixa_pedidos_abertos').insert(row).select('id').single();
-    return { error: r.error, id: r.data ? r.data.id : null };
+    await DupuroOffline.slotSalvarLocal(rec);
+    if (_slotsOnline()) {
+      await DupuroOffline.sincronizarSlots(client);
+      var salvo = await DupuroOffline.slotPorId(rec.lid); // pega o server_id atribuído no sync
+      if (salvo) rec = salvo;
+    }
+    return { error: null, id: rec.server_id != null ? rec.server_id : rec.lid, offline: !_slotsOnline() };
   }
   async function atualizarPedidoAberto(id, payload) {
-    var patch = {
-      label: payload.label,
-      sale_target: payload.saleTarget || 'balcao',
-      revendedor_id: payload.revendedorId || null,
-      carrinho: payload.carrinho || [],
-      entrega: !!payload.entrega,
-      entrega_info: payload.entregaInfo || null,
-      taxa: payload.taxa || 0,
-      atualizado_em: new Date().toISOString()
-    };
-    var r = await client.from('caixa_pedidos_abertos').update(patch).eq('id', id);
-    return { error: r.error };
+    if (!window.DupuroOffline) {
+      var patch = { label: payload.label, sale_target: payload.saleTarget || 'balcao', revendedor_id: payload.revendedorId || null, carrinho: payload.carrinho || [], entrega: !!payload.entrega, entrega_info: payload.entregaInfo || null, taxa: payload.taxa || 0, atualizado_em: new Date().toISOString() };
+      var r = await client.from('caixa_pedidos_abertos').update(patch).eq('id', id);
+      return { error: r.error };
+    }
+    var rec = await DupuroOffline.slotPorId(id);
+    if (!rec) return { error: new Error('Pedido não encontrado') };
+    rec.label = payload.label; rec.sale_target = payload.saleTarget || 'balcao'; rec.revendedor_id = payload.revendedorId || null;
+    rec.carrinho = payload.carrinho || []; rec.entrega = !!payload.entrega; rec.entrega_info = payload.entregaInfo || null; rec.taxa = payload.taxa || 0;
+    rec.atualizado_em = new Date().toISOString();
+    rec.pending = (rec.pending === 'create') ? 'create' : 'update'; // create + update = ainda create
+    await DupuroOffline.slotSalvarLocal(rec);
+    if (_slotsOnline()) await DupuroOffline.sincronizarSlots(client);
+    return { error: null };
   }
   async function excluirPedidoAberto(id) {
-    var r = await client.from('caixa_pedidos_abertos').delete().eq('id', id);
-    return { error: r.error };
+    if (!window.DupuroOffline) {
+      var r = await client.from('caixa_pedidos_abertos').delete().eq('id', id);
+      return { error: r.error };
+    }
+    var rec = await DupuroOffline.slotPorId(id);
+    if (!rec) return { error: null };
+    if (rec.server_id == null) { await DupuroOffline.slotRemoverLocal(rec.lid); return { error: null }; } // nunca subiu: some local
+    rec.pending = 'delete'; await DupuroOffline.slotSalvarLocal(rec); // tombstone: apaga no servidor ao sincronizar
+    if (_slotsOnline()) await DupuroOffline.sincronizarSlots(client);
+    return { error: null };
+  }
+  function slotsPendentes() {
+    return window.DupuroOffline ? DupuroOffline.slotsPendentes() : Promise.resolve(0);
   }
 
   return {
@@ -584,7 +629,8 @@ var DupuroCaixa = (function () {
     listPedidosAbertos: listPedidosAbertos,
     salvarPedidoAberto: salvarPedidoAberto,
     atualizarPedidoAberto: atualizarPedidoAberto,
-    excluirPedidoAberto: excluirPedidoAberto
+    excluirPedidoAberto: excluirPedidoAberto,
+    slotsPendentes: slotsPendentes
   };
 
 })();

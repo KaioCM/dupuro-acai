@@ -1788,7 +1788,6 @@
     }).join('');
   }
   async function excluirSlotAgora(id) {
-    if (window.DupuroOffline && !DupuroOffline.estaOnline()) return;
     await DupuroCaixa.excluirPedidoAberto(id);
     if (activeSlot && String(activeSlot.id) === String(id)) { activeSlot = null; setSlotBanner(null); }
     await loadAbertos();
@@ -1825,11 +1824,6 @@
       cartError.classList.add('show');
       return;
     }
-    if (window.DupuroOffline && !DupuroOffline.estaOnline()) {
-      cartError.textContent = 'Pedidos em aberto precisam de internet.';
-      cartError.classList.add('show');
-      return;
-    }
     document.getElementById('slotModalTitle').textContent = activeSlot ? 'Atualizar pedido aberto' : 'Deixar pedido em aberto';
     document.getElementById('slotModalConfirm').textContent = activeSlot ? 'Salvar alterações' : 'Deixar em aberto';
     var info = entregaInfoAtual();
@@ -1843,7 +1837,6 @@
     var label = (document.getElementById('slotLabel').value || '').trim();
     var errEl = document.getElementById('slotModalError');
     if (!label) { errEl.textContent = 'Dê um nome pro pedido.'; errEl.classList.add('show'); return; }
-    if (window.DupuroOffline && !DupuroOffline.estaOnline()) { errEl.textContent = 'Pedidos em aberto precisam de internet.'; errEl.classList.add('show'); return; }
     var btn = this; btn.disabled = true; var txt = btn.textContent; btn.textContent = 'Salvando...';
     var payload = Object.assign({ label: label }, slotPayloadBase());
     var r = activeSlot
@@ -2435,7 +2428,7 @@
   renderPromoList();
   loadVendas();
   carregarCaixa();
-  if (!(window.DupuroOffline && !DupuroOffline.estaOnline())) loadAbertos(); // popula o badge
+  loadAbertos(); // popula o badge (offline lê do store local)
 
   // Já rodando dentro do app da loja? Então não faz sentido oferecer o download.
   if (window.DupuroPrinter && DupuroPrinter.rodandoNoApp()) {
@@ -2472,6 +2465,7 @@
       productsCache = decorate(await DupuroCaixa.getProducts());
       renderShop(); renderEstoque(); loadVendas(); refreshHistoricoSeAberto();
     }
+    loadAbertos(); // reflete pedidos em aberto criados/finalizados offline
   }
 
   window.addEventListener('online', tentarSincronizar);
