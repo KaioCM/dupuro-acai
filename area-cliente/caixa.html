@@ -1538,6 +1538,8 @@
     };
 
     // Se a venda saiu de um pedido em aberto, o slot cumpriu seu papel: apaga.
+    // A comanda da cozinha já saiu quando o pedido foi aberto — não reimprime.
+    var veioDeSlot = !!activeSlot;
     if (activeSlot) {
       var slotFinalizado = activeSlot.id;
       activeSlot = null; setSlotBanner(null);
@@ -1568,8 +1570,8 @@
         nb.textContent = '🧾 Emitir NFC-e (cupom fiscal)';
       }
     })();
-    if (document.getElementById('autoPrint').checked) imprimirComanda(ultimaVenda);
-    else document.getElementById('printResult').textContent = '';
+    if (!veioDeSlot && document.getElementById('autoPrint').checked) imprimirComanda(ultimaVenda);
+    else document.getElementById('printResult').textContent = veioDeSlot ? 'Comanda já foi impressa ao abrir o pedido.' : '';
     // Atualiza estoque e vendas do dia em segundo plano.
     productsCache = decorate(await DupuroCaixa.getProducts());
     renderShop();
@@ -1743,6 +1745,54 @@
   // "Soltar": desgruda o slot do carrinho sem apagá-lo do banco (ele continua aberto).
   document.getElementById('cancelSlotBtn').addEventListener('click', limparCarrinhoDepois);
 
+  // Comanda da COZINHA de um pedido em aberto (sem pagamento — só os itens, pra
+  // a cozinha começar a fazer). Mesmo formato da venda, sem forma de pagamento.
+  function itensParaComanda(cartArr, taxaVal) {
+    var itens = (cartArr || []).map(function (it) {
+      return {
+        nome: it.nome, quantidade: it.quantidade, sabor: it.sabor, modo: it.modo,
+        valor: lineTotal(it), acompanhamentos: it.acomps || [],
+        pesoKg: it.pesoKg || null, precoKg: (it.detalhes && it.detalhes.preco_kg) || null
+      };
+    });
+    if (taxaVal > 0) itens.push({ nome: 'Taxa de entrega', quantidade: 1, sabor: null, modo: 'servico', valor: taxaVal, acompanhamentos: [], pesoKg: null, precoKg: null });
+    return itens;
+  }
+  function comandaDoPedidoAberto(label) {
+    var taxaVal = taxaAtual();
+    var soma = cart.reduce(function (s, it) { return s + lineTotal(it); }, 0) - descontoCombosTotal() + taxaVal;
+    return {
+      numero: 'PEDIDO ABERTO' + (label ? ' - ' + label : ''),
+      cliente: saleTarget === 'revendedor'
+        ? ((resellerSelect.options[resellerSelect.selectedIndex] || {}).text || 'Revendedor') : 'Balcão',
+      hora: Date.now(), total: Math.round(soma * 100) / 100,
+      formaPagamento: null, pagamentos: null, troco: 0, pagamento: null,
+      entrega: entregaAtiva, entregaInfo: entregaInfoAtual(),
+      descontos: combosCarrinho().map(function (c) { return { label: 'Promo ' + c.nome + ' (' + c.N + ' por ' + brl(c.Y) + ')', valor: c.desconto }; }),
+      items: itensParaComanda(cart, taxaVal)
+    };
+  }
+  // Comanda a partir de um slot salvo (reimpressão pelo card, sem carregar no carrinho).
+  function comandaDeSlot(slot) {
+    var itens = (slot.carrinho || []).map(function (it) {
+      return {
+        nome: it.nome, quantidade: it.quantidade, sabor: it.sabor, modo: it.modo,
+        valor: (it.total != null ? it.total : (it.preco || 0) * (it.quantidade || 1)),
+        acompanhamentos: it.acomps || [], pesoKg: it.pesoKg || null,
+        precoKg: (it.detalhes && it.detalhes.preco_kg) || null
+      };
+    });
+    if ((slot.taxa || 0) > 0) itens.push({ nome: 'Taxa de entrega', quantidade: 1, sabor: null, modo: 'servico', valor: slot.taxa, acompanhamentos: [], pesoKg: null, precoKg: null });
+    var soma = itens.reduce(function (s, it) { return s + (Number(it.valor) || 0); }, 0);
+    return {
+      numero: 'PEDIDO ABERTO' + (slot.label ? ' - ' + slot.label : ''),
+      cliente: slot.sale_target === 'revendedor' ? 'Revendedor' : 'Balcão',
+      hora: Date.now(), total: Math.round(soma * 100) / 100,
+      formaPagamento: null, pagamentos: null, troco: 0, pagamento: null,
+      entrega: !!slot.entrega, entregaInfo: slot.entrega_info || null, descontos: [], items: itens
+    };
+  }
+
   var slotItensResumo = function (carrinho) {
     if (!Array.isArray(carrinho) || !carrinho.length) return '—';
     return carrinho.map(function (it) {
@@ -1782,6 +1832,7 @@
         '<div class="slot-card-meta">' + qtd + (qtd === 1 ? ' item' : ' itens') + ' · ' + brl(slotTotal(s)) + ' · ' + hora + '</div>' +
         '<div class="slot-card-actions">' +
           '<button type="button" class="btn btn-green btn-sm" data-slot-finalizar="' + s.id + '">Finalizar / cobrar</button>' +
+          '<button type="button" class="btn btn-dark-outline btn-sm" data-slot-comanda="' + s.id + '">🖨️ Comanda</button>' +
           '<button type="button" class="btn btn-dark-outline btn-sm" data-slot-excluir="' + s.id + '">Excluir</button>' +
         '</div>' +
       '</div>';
@@ -1805,11 +1856,16 @@
   }
   document.getElementById('abertosList').addEventListener('click', function (e) {
     var fin = e.target.closest('[data-slot-finalizar]');
+    var com = e.target.closest('[data-slot-comanda]');
     var exc = e.target.closest('[data-slot-excluir]');
     if (fin) {
       var idf = fin.getAttribute('data-slot-finalizar');
       var s = abertosCache.filter(function (x) { return String(x.id) === idf; })[0];
       if (s) abrirSlot(s);
+    } else if (com) {
+      var idc = com.getAttribute('data-slot-comanda');
+      var sc = abertosCache.filter(function (x) { return String(x.id) === idc; })[0];
+      if (sc) DupuroPrinter.imprimir(comandaDeSlot(sc));
     } else if (exc) {
       excluirSlotConfirm(exc.getAttribute('data-slot-excluir'));
     }
@@ -1845,6 +1901,9 @@
     btn.disabled = false; btn.textContent = txt;
     if (r.error) { errEl.textContent = r.error.message || 'Não foi possível salvar.'; errEl.classList.add('show'); return; }
     slotModal.classList.add('hidden');
+    // Comanda da cozinha sai agora (como uma mesa): a cozinha já começa a fazer,
+    // mesmo sem pagamento. Respeita o "Imprimir a comanda ao registrar".
+    if (document.getElementById('autoPrint').checked) imprimirComanda(comandaDoPedidoAberto(label));
     limparCarrinhoDepois();
     await loadAbertos();
     goTo('abertos');
