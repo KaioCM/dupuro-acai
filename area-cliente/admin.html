@@ -203,6 +203,16 @@
             </select>
             <div class="field-note-inline">Copo e self-service são vendidos só no balcão (caixa) — não aparecem para o revendedor.</div>
           </div>
+          <div class="field" style="margin-bottom:0; grid-column:1/-1;" id="productFiscalField">
+            <label for="productFiscalPerfil">Classificação fiscal (NFC-e)</label>
+            <select id="productFiscalPerfil"></select>
+            <div class="tipo-price-row" id="productFiscalCodigos" style="margin-top:8px;">
+              <div class="field" style="margin-bottom:0;"><label for="productNcm">NCM</label><input type="text" id="productNcm" inputmode="numeric" autocomplete="off" disabled></div>
+              <div class="field" style="margin-bottom:0;"><label for="productCsosn">CSOSN</label><input type="text" id="productCsosn" inputmode="numeric" autocomplete="off" disabled></div>
+              <div class="field" style="margin-bottom:0;"><label for="productCfop">CFOP</label><input type="text" id="productCfop" inputmode="numeric" autocomplete="off" disabled></div>
+            </div>
+            <div class="field-note-inline">Define os códigos que saem no cupom fiscal (NFC-e). Escolha um perfil pronto — os códigos aparecem abaixo. Use <strong>Personalizado</strong> só se precisar de códigos diferentes.</div>
+          </div>
           <div class="field hidden" id="productStoreBlock" style="margin-bottom:0; grid-column:1/-1;">
             <div class="tipo-price-row">
               <div class="field" style="margin-bottom:0;">
@@ -1552,6 +1562,7 @@
             minHtml + stockHtml +
             '<h4>' + p.nome + '</h4>' +
             priceHtml +
+            '<div style="font-size:11px;color:var(--text-light);margin-top:4px;">🧾 NCM ' + (p.ncm || '—') + ' · CSOSN ' + (p.csosn || '—') + ' · CFOP ' + (p.cfop || '—') + '</div>' +
             '<div class="admin-table-actions">' +
               '<button class="btn btn-dark-outline btn-sm" data-edit-product="' + p.id + '">Editar</button>' +
               '<button class="btn btn-dark-outline btn-sm" data-delete-product="' + p.id + '">Excluir</button>' +
@@ -1691,6 +1702,7 @@
     setTipoChecks(true, false, false);
     fillTipoPrices(null, null);
     document.getElementById('productMultissabor').checked = false;
+    setFiscalFromProduct(p);
     syncModoUI();
   }
 
@@ -1713,6 +1725,7 @@
     document.getElementById('productEstoque').value = owner.estoque;
     document.getElementById('productLitros').value = owner.litros || 0;
     document.getElementById('productImagem').value = '';
+    setFiscalFromProduct(owner);
     syncModoUI();
   }
 
@@ -1735,6 +1748,7 @@
     document.getElementById('productEstoque').value = p.estoque;
     document.getElementById('productLitros').value = p.litros || 0;
     document.getElementById('productImagem').value = '';
+    setFiscalFromProduct(p);
     syncModoUI();
   }
 
@@ -1761,6 +1775,7 @@
     document.getElementById('productMultissabor').checked = false;
     document.getElementById('productIncluirAcai').checked = true;
     document.getElementById('productImagem').value = '';
+    setFiscalFromProduct(null);
     syncModoUI();
   }
 
@@ -1842,6 +1857,64 @@
     }).join('');
   }
 
+  // ---- Classificação fiscal (NFC-e) do produto ----
+  // Perfis prontos → NCM/CSOSN/CFOP/origem certos; "custom" deixa digitar. A
+  // emissão (Edge Function emitir-nfce) lê esses códigos da linha do produto.
+  var FISCAL_PERFIS = [
+    { id: 'acai',      label: 'Açaí / self-service / copo / caixa (ST)', ncm: '21050010', csosn: '500', cfop: '5405', origem: '0' },
+    { id: 'agua',      label: 'Água (ST)',                                ncm: '22011000', csosn: '500', cfop: '5405', origem: '0' },
+    { id: 'refri',     label: 'Refrigerante (ST)',                        ncm: '22021000', csosn: '500', cfop: '5405', origem: '0' },
+    { id: 'granola',   label: 'Granola / cereal',                         ncm: '19041000', csosn: '102', cfop: '5102', origem: '0' },
+    { id: 'adicional', label: 'Adicional / complemento / outros',         ncm: '08119000', csosn: '102', cfop: '5102', origem: '0' }
+  ];
+  function fiscalPerfilPorCodigos(ncm, csosn, cfop) {
+    var m = FISCAL_PERFIS.filter(function (p) { return p.ncm === ncm && p.csosn === csosn && p.cfop === cfop; })[0];
+    return m ? m.id : 'custom';
+  }
+  function initFiscalSelect() {
+    var sel = document.getElementById('productFiscalPerfil');
+    sel.innerHTML = FISCAL_PERFIS.map(function (p) {
+      return '<option value="' + p.id + '">' + p.label + ' — NCM ' + p.ncm + '</option>';
+    }).join('') + '<option value="custom">Personalizado (digitar os códigos)</option>';
+    sel.addEventListener('change', syncFiscalUI);
+  }
+  // Reflete o perfil nos 3 campos (preenche e trava; "custom" libera pra editar).
+  function syncFiscalUI() {
+    var id = document.getElementById('productFiscalPerfil').value;
+    var custom = id === 'custom';
+    var ncm = document.getElementById('productNcm'), csosn = document.getElementById('productCsosn'), cfop = document.getElementById('productCfop');
+    if (!custom) {
+      var p = FISCAL_PERFIS.filter(function (x) { return x.id === id; })[0];
+      if (p) { ncm.value = p.ncm; csosn.value = p.csosn; cfop.value = p.cfop; }
+    }
+    ncm.disabled = csosn.disabled = cfop.disabled = !custom;
+  }
+  // Ajusta o seletor a partir dos códigos de um produto (edição). Sem produto
+  // (novo) cai no padrão de açaí/self-service.
+  function setFiscalFromProduct(p) {
+    var ncm = (p && p.ncm) || '21050010', csosn = (p && p.csosn) || '500', cfop = (p && p.cfop) || '5405';
+    document.getElementById('productFiscalPerfil').value = fiscalPerfilPorCodigos(ncm, csosn, cfop);
+    document.getElementById('productNcm').value = ncm;
+    document.getElementById('productCsosn').value = csosn;
+    document.getElementById('productCfop').value = cfop;
+    syncFiscalUI();
+  }
+  // Lê a classificação escolhida agora (pra gravar depois de salvar o produto).
+  function lerFiscalSelecionado() {
+    var id = document.getElementById('productFiscalPerfil').value;
+    if (id !== 'custom') {
+      var p = FISCAL_PERFIS.filter(function (x) { return x.id === id; })[0];
+      return { ncm: p.ncm, csosn: p.csosn, cfop: p.cfop, origem: p.origem };
+    }
+    return {
+      ncm: (document.getElementById('productNcm').value || '').trim(),
+      csosn: (document.getElementById('productCsosn').value || '').trim(),
+      cfop: (document.getElementById('productCfop').value || '').trim(),
+      origem: '0'
+    };
+  }
+  initFiscalSelect();
+
   document.getElementById('productModo').addEventListener('change', syncModoUI);
   document.getElementById('productTipoVarejo').addEventListener('change', syncTipoBlocks);
   document.getElementById('productTipoAtacado').addEventListener('change', syncTipoBlocks);
@@ -1912,6 +1985,7 @@
         errorNote.classList.add('show');
         return;
       }
+      await DupuroAdmin.aplicarFiscal([storeRes.ownerId], lerFiscalSelecionado());
       resetProductForm();
       await renderProducts();
       return;
@@ -1996,6 +2070,10 @@
       errorNote.classList.add('show');
       return;
     }
+    // Grava a classificação fiscal nas linhas do produto (dona + parceira, quando
+    // for par varejo/atacado). editingComplex edita só a linha atual.
+    var fiscalIds = editingComplex ? [result.id] : [result.ownerId, result.partnerId];
+    await DupuroAdmin.aplicarFiscal(fiscalIds, lerFiscalSelecionado());
     resetProductForm();
     await renderProducts();
   });

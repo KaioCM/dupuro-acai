@@ -302,7 +302,7 @@ var DupuroAdmin = (function () {
   async function getProducts() {
     var result = await client
       .from('products')
-      .select('id, nome, preco, imagem_url, tipo, multissabor, multissabor_incluir_acai, estoque, pedido_minimo, litros, estoque_ref, estoque_ref_sabor, modo, acomp_gratis, acomp_extra_preco, product_flavor_stock(sabor, estoque)')
+      .select('id, nome, preco, imagem_url, tipo, multissabor, multissabor_incluir_acai, estoque, pedido_minimo, litros, estoque_ref, estoque_ref_sabor, modo, acomp_gratis, acomp_extra_preco, ncm, csosn, cfop, icms_origem, product_flavor_stock(sabor, estoque)')
       .order('nome', { ascending: true });
     if (result.error) return [];
     var raw = result.data || [];
@@ -344,9 +344,21 @@ var DupuroAdmin = (function () {
         modo: p.modo || 'embalado',
         acompGratis: Number(p.acomp_gratis) || 0,
         acompExtraPreco: Number(p.acomp_extra_preco) || 0,
-        litros: Number(p.litros) || 0
+        litros: Number(p.litros) || 0,
+        ncm: p.ncm || null, csosn: p.csosn || null, cfop: p.cfop || null, icmsOrigem: p.icms_origem || '0'
       };
     });
+  }
+
+  // Grava a classificação fiscal (NFC-e) numa ou mais linhas de products. Usado
+  // pelo formulário de produto (perfil fiscal escolhido no admin). fiscal =
+  // { ncm, csosn, cfop, origem }.
+  async function aplicarFiscal(ids, fiscal) {
+    var lista = (ids || []).filter(function (x) { return x != null; });
+    if (!lista.length || !fiscal) return { error: null };
+    var patch = { ncm: fiscal.ncm, csosn: fiscal.csosn, cfop: fiscal.cfop, icms_origem: fiscal.origem || '0' };
+    var r = await client.from('products').update(patch).in('id', lista);
+    return { error: r.error };
   }
 
   // Salva o estoque por sabor de um produto multissabor: grava os sabores
@@ -479,6 +491,7 @@ var DupuroAdmin = (function () {
       litros: spec.litros || 0
     };
     var ownerId = byTipo[ownerTipo] || null;
+    var partnerIdOut = null;
     var res;
     if (ownerId) res = await client.from('products').update(ownerPayload).eq('id', ownerId).select('id').single();
     else res = await client.from('products').insert(ownerPayload).select('id').single();
@@ -503,6 +516,7 @@ var DupuroAdmin = (function () {
       if (partnerId) pres = await client.from('products').update(partnerPayload).eq('id', partnerId).select('id').single();
       else pres = await client.from('products').insert(partnerPayload).select('id').single();
       if (pres.error) return { error: pres.error };
+      partnerIdOut = pres.data.id;
       // Parceira nunca guarda estoque próprio (lê o da dona).
       if (spec.multissabor) { var pfs = await saveFlavorStock(pres.data.id, []); if (pfs.error) return { error: pfs.error }; }
     } else if (partnerId) {
@@ -510,7 +524,7 @@ var DupuroAdmin = (function () {
       await client.from('products').delete().eq('id', partnerId);
     }
 
-    return { error: null, ownerId: ownerId };
+    return { error: null, ownerId: ownerId, partnerId: partnerIdOut };
   }
 
   // ---------- Produto da loja: copo e self-service (migration_019) ----------
@@ -864,6 +878,7 @@ var DupuroAdmin = (function () {
     updateProduct: updateProduct,
     saveDualProduct: saveDualProduct,
     saveStoreProduct: saveStoreProduct,
+    aplicarFiscal: aplicarFiscal,
     deleteProduct: deleteProduct,
     deleteProductById: deleteProductById,
     saveFlavorStock: saveFlavorStock,
