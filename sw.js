@@ -7,7 +7,7 @@
 //
 // Suba o CACHE_VER quando mudar a lista de arquivos abaixo, pra forçar refresh.
 // ==========================================================================
-var CACHE_VER = 'dupuro-caixa-v18';
+var CACHE_VER = 'dupuro-caixa-v19';
 
 var SHELL = [
   '/area-cliente/caixa.html',

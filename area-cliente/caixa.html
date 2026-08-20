@@ -215,6 +215,7 @@
               </div>
               <button type="button" class="btn btn-dark-outline btn-block" id="nfceBtn" style="margin-bottom:8px;">🧾 Emitir NFC-e (cupom fiscal)</button>
               <p style="font-size:12px; color:var(--text-light); margin-bottom:12px; min-height:1em;" id="nfceResult"></p>
+              <button type="button" class="btn btn-dark-outline btn-block hidden" id="nfceReprintBtn" style="margin-bottom:10px;">🖨️ Reimprimir cupom fiscal</button>
               <button type="button" class="btn btn-dark-outline btn-block" id="reprintBtn" style="margin-bottom:10px;">🖨️ Imprimir comanda de novo</button>
               <button type="button" class="btn btn-green btn-block" id="newSaleBtn">Nova venda</button>
             </div>
@@ -1558,6 +1559,8 @@
     (function () {
       var nb = document.getElementById('nfceBtn'), nr = document.getElementById('nfceResult');
       nr.textContent = ''; nr.style.color = 'var(--text-light)';
+      ultimaEmissao = null;
+      document.getElementById('nfceReprintBtn').classList.add('hidden');
       document.getElementById('nfceDoc').value = ''; document.getElementById('nfceDocErro').textContent = '';
       document.getElementById('nfceDocField').classList.toggle('hidden', !!result.offline);
       if (result.offline) {
@@ -1972,6 +1975,7 @@
   // sai pela impressão do navegador (o mesmo caminho que já funciona). Com o
   // Chrome/Edge abertos em modo --kiosk-printing, sai sem a janela de impressão.
   var ultimaVenda = null;
+  var ultimaEmissao = null; // emissão de NFC-e autorizada da última venda (pra reimprimir o cupom)
   var printerDot = document.getElementById('printerDot');
   var printerState = document.getElementById('printerState');
   var printerHint = document.getElementById('printerHint');
@@ -2048,6 +2052,9 @@
   }
 
   document.getElementById('reprintBtn').addEventListener('click', function () { imprimirComanda(ultimaVenda); });
+  document.getElementById('nfceReprintBtn').addEventListener('click', function () {
+    if (ultimaEmissao) imprimirCupomFiscalDaEmissao(ultimaEmissao);
+  });
 
   // Monta os dados do cupom fiscal a partir da emissão (o payload guarda os
   // itens exatos que foram pra NFC-e) e imprime na Sweda. Best-effort.
@@ -2089,11 +2096,16 @@
       if (!em || !window.DupuroPrinter) return;
       var pay = em.payload || {};
       var consulta = em.qrcode ? String(em.qrcode).split('?')[0] : 'http://www.sefaz.mt.gov.br/nfce/consultanfce';
+      // Forma de pagamento vem do PRÓPRIO cupom (payload), pra reimpressão de
+      // venda antiga sair certa (não depende da ultimaVenda em memória).
+      var TPAG_REV = { '01': 'dinheiro', '03': 'credito', '04': 'debito', '17': 'pix' };
+      var formasPg = pay.formas_pagamento || [];
+      var formaPag = formasPg.length === 1 ? (TPAG_REV[formasPg[0].forma_pagamento] || null) : null;
       DupuroPrinter.imprimirCupomFiscal({
         numero: em.numero_nfce, serie: em.serie, chave: em.chave, protocolo: em.protocolo,
         ambiente: em.ambiente, dataEmissao: em.criado_em || pay.data_emissao || Date.now(),
         total: em.valor, valorPago: em.valor, troco: 0,
-        formaPagamento: (ultimaVenda && ultimaVenda.formaPagamento) || null,
+        formaPagamento: formaPag,
         docConsumidor: pay.cpf_destinatario ? { tipo: 'cpf', numero: pay.cpf_destinatario } : (pay.cnpj_destinatario ? { tipo: 'cnpj', numero: pay.cnpj_destinatario } : null),
         qrcodeUrl: em.qrcode, consultaUrl: consulta,
         items: (pay.items || []).map(function (it) {
@@ -2129,7 +2141,9 @@
       nr.style.color = 'var(--verde-700, #5a7d1e)';
       nr.innerHTML = 'Cupom fiscal autorizado' + (em.numero_nfce ? ' (nº ' + em.numero_nfce + ')' : '') +
         (em.url_danfe ? ' · <a href="' + em.url_danfe + '" target="_blank" rel="noopener">ver cupom</a>' : '');
-      // Imprime o cupom fiscal com QR na Sweda (best-effort).
+      // Imprime o cupom fiscal com QR na Sweda (best-effort) e guarda pra reimprimir.
+      ultimaEmissao = em;
+      document.getElementById('nfceReprintBtn').classList.remove('hidden');
       imprimirCupomFiscalDaEmissao(em);
     } else {
       // erro/processando: mostra a mensagem do SEFAZ pra diagnóstico.
@@ -2163,6 +2177,7 @@
 
   // ---- Vendas do dia ----
   var vendasCache = [];
+  var nfceByNumero = {}; // venda_numero -> emissão NFC-e autorizada (pra reimprimir cupom)
   function pagTag(v) {
     var entrega = v.entrega ? ' <span class="pay-tag entrega-tag">🛵 Entrega</span>' : '';
     if (v.pagamentos && v.pagamentos.length > 1) {
@@ -2183,15 +2198,20 @@
       body.innerHTML = '<tr><td colspan="6"><div class="empty-state"><div class="icon">🧾</div>Nenhuma venda registrada hoje ainda.</div></td></tr>';
       return;
     }
+    // Quais vendas têm NFC-e autorizada (pra oferecer reimpressão do cupom fiscal).
+    nfceByNumero = await DupuroCaixa.getEmissoesAutorizadas(data.sales.map(function (v) { return v.numero; }));
     body.innerHTML = data.sales.map(function (v) {
       var hora = new Date(v.hora).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
       var itensTxt = v.items.map(function (it) { return it.itens; }).join(', ');
+      var temNfce = !!(nfceByNumero && nfceByNumero[v.numero]);
+      var nfceReimp = temNfce ? '<button type="button" class="btn btn-dark-outline btn-sm" data-nfce-reimprimir="' + v.numero + '" title="Reimprimir cupom fiscal (NFC-e)">🧾</button>' : '';
       var acoes = v.cancelada
         ? '<button type="button" class="btn btn-dark-outline btn-sm" data-reimprimir="' + v.numero + '">🖨️</button>'
         : '<div class="venda-actions">' +
             '<button type="button" class="btn btn-dark-outline btn-sm" data-editar="' + v.numero + '">Editar</button>' +
             '<button type="button" class="btn btn-danger-outline btn-sm" data-cancelar="' + v.numero + '">Cancelar</button>' +
             '<button type="button" class="btn btn-dark-outline btn-sm" data-reimprimir="' + v.numero + '">🖨️</button>' +
+            nfceReimp +
           '</div>';
       return '<tr' + (v.cancelada ? ' class="venda-cancelada"' : '') + '>' +
         '<td><strong>' + v.numero + '</strong>' + (v.cancelada ? ' <span class="status-badge cancelado">Cancelada</span>' : '') + '</td>' +
@@ -2212,6 +2232,12 @@
         btn.disabled = true;
         await DupuroPrinter.imprimir(venda);
         btn.disabled = false;
+      });
+    });
+    body.querySelectorAll('[data-nfce-reimprimir]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var em = nfceByNumero[btn.getAttribute('data-nfce-reimprimir')];
+        if (em) imprimirCupomFiscalDaEmissao(em);
       });
     });
     body.querySelectorAll('[data-editar]').forEach(function (btn) {

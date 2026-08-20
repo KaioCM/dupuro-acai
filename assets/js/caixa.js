@@ -488,6 +488,21 @@ var DupuroCaixa = (function () {
     return result.data[0];
   }
 
+  // Emissões AUTORIZADAS (linha completa) de uma lista de vendas — pra reimprimir
+  // o cupom fiscal. Retorna um mapa venda_numero -> emissão (a mais recente).
+  async function getEmissoesAutorizadas(numeros) {
+    if (!numeros || !numeros.length) return {};
+    var r = await client
+      .from('nfce_emissoes')
+      .select('venda_numero, numero_nfce, serie, chave, protocolo, ambiente, valor, qrcode, url_danfe, payload, criado_em')
+      .in('venda_numero', numeros).eq('status', 'autorizado')
+      .order('id', { ascending: false });
+    if (r.error || !r.data) return {};
+    var map = {};
+    r.data.forEach(function (e) { if (!map[e.venda_numero]) map[e.venda_numero] = e; }); // 1ª = mais recente
+    return map;
+  }
+
   // Cancela a NFC-e da venda no SEFAZ (via Edge Function). justificativa 15–255.
   // Retorna { error, cancelado, mensagem, emissao }.
   async function cancelarNfce(numero, justificativa) {
@@ -625,6 +640,7 @@ var DupuroCaixa = (function () {
     updateSale: updateSale,
     emitirNfce: emitirNfce,
     getEmissaoAutorizada: getEmissaoAutorizada,
+    getEmissoesAutorizadas: getEmissoesAutorizadas,
     cancelarNfce: cancelarNfce,
     listPedidosAbertos: listPedidosAbertos,
     salvarPedidoAberto: salvarPedidoAberto,
