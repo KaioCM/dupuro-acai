@@ -1538,8 +1538,6 @@
     };
 
     // Se a venda saiu de um pedido em aberto, o slot cumpriu seu papel: apaga.
-    // A comanda da cozinha já saiu quando o pedido foi aberto — não reimprime.
-    var veioDeSlot = !!activeSlot;
     if (activeSlot) {
       var slotFinalizado = activeSlot.id;
       activeSlot = null; setSlotBanner(null);
@@ -1570,8 +1568,8 @@
         nb.textContent = '🧾 Emitir NFC-e (cupom fiscal)';
       }
     })();
-    if (!veioDeSlot && document.getElementById('autoPrint').checked) imprimirComanda(ultimaVenda);
-    else document.getElementById('printResult').textContent = veioDeSlot ? 'Comanda já foi impressa ao abrir o pedido.' : '';
+    if (document.getElementById('autoPrint').checked) imprimirComanda(ultimaVenda);
+    else document.getElementById('printResult').textContent = '';
     // Atualiza estoque e vendas do dia em segundo plano.
     productsCache = decorate(await DupuroCaixa.getProducts());
     renderShop();
