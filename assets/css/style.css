@@ -1593,9 +1593,11 @@ tr.venda-cancelada td:nth-child(5) { text-decoration: line-through; color: var(-
 .order-item-line { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 7px 0; border-bottom: 1px solid rgba(96,16,80,0.06); font-size: 13px; }
 .order-item-line:last-child { border-bottom: none; }
 /* Coluna "Itens" do relatório: um produto por linha, com o valor à direita. */
+.itens-cell { min-width: 260px; }
 .item-linha { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; padding: 1px 0; }
-.item-linha + .item-linha { border-top: 1px dashed rgba(96,16,80,0.10); margin-top: 3px; padding-top: 4px; }
-.item-val { flex: none; color: var(--text-light); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.item-linha + .item-linha { border-top: 1px dashed rgba(96,16,80,0.12); margin-top: 4px; padding-top: 5px; }
+.item-nome { min-width: 0; }
+.item-val { flex: none; color: var(--roxo-700); font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
 
 /* Faixa de dia no histórico de pedidos (agrupa os pedidos por data).
    Cada dia é um "cartão": fechado fica claro, ABERTO fica roxo. Encher a lista
