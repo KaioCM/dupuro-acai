@@ -159,6 +159,13 @@ var DupuroAdmin = (function () {
     var byId = {};
     resellers.forEach(function (r) { byId[r.id] = r; });
 
+    // Tipo de cada produto (varejo/atacado) — pra classificar o pedido em
+    // BALCÃO x ATACADO POR PRODUTO (não por canal): copo/peso e embalado varejo
+    // = balcão; embalado atacado = atacado, mesmo vendido no caixa.
+    var tipoProduto = {};
+    var prodsRes = await client.from('products').select('id, tipo');
+    (prodsRes.data || []).forEach(function (p) { tipoProduto[p.id] = p.tipo; });
+
     // Agrupa por numero: 1 objeto por pedido, reunindo seus itens.
     var byNum = {};
     var order = [];
@@ -176,12 +183,14 @@ var DupuroAdmin = (function () {
           id: o.numero, numero: o.numero,
           revendedorId: o.revendedor_id,
           revendedorNome: nome,
-          origem: o.origem || null, // 'loja' = balcão (caixa); outro = atacado (painel)
+          origem: o.origem || null, // 'loja' = caixa/PDV; outro = painel do revendedor
+          categoria: 'balcao',      // vira 'atacado' se algum item for produto de atacado
           data: o.data, status: o.status, valor: 0, items: [],
           usaEstoque: o.usa_estoque !== false
         };
         order.push(g);
       }
+      if (tipoProduto[o.produto_id] === 'atacado') g.categoria = 'atacado';
       g.valor += Number(o.valor);
       g.items.push({ id: o.id, produtoId: o.produto_id, quantidade: o.quantidade, sabor: o.sabor, itens: o.itens, valor: Number(o.valor), status: o.status });
     });

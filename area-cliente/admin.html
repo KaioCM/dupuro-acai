@@ -914,12 +914,13 @@
   // aba está visível — um gráfico Chart.js criado num painel display:none nasce
   // com tamanho 0 e fica em branco. Ao ativar a aba (goTo → drawChartsFor), isto
   // é rechamado com o container já visível e dimensionado.
-  // Filtro balcão/atacado: balcão = venda de loja (caixa, origem 'loja');
-  // atacado = pedido do painel do revendedor (o resto).
+  // Filtro balcão/atacado POR PRODUTO: balcão = pedido só com itens de varejo
+  // (copo/peso/embalado varejo); atacado = pedido com algum item de atacado
+  // (mesmo vendido no caixa). Ver getAllOrders (campo `categoria`).
   var overviewFilter = 'tudo';
   function filtraOrigem(lista) {
-    if (overviewFilter === 'balcao') return lista.filter(function (o) { return o.origem === 'loja'; });
-    if (overviewFilter === 'atacado') return lista.filter(function (o) { return o.origem !== 'loja'; });
+    if (overviewFilter === 'balcao') return lista.filter(function (o) { return o.categoria === 'balcao'; });
+    if (overviewFilter === 'atacado') return lista.filter(function (o) { return o.categoria === 'atacado'; });
     return lista;
   }
   function drawOverview() {
@@ -2460,8 +2461,8 @@
   });
   async function renderOrders() {
     var orders = await DupuroAdmin.getAllOrders();
-    if (ordersFilter === 'balcao') orders = orders.filter(function (o) { return o.origem === 'loja'; });
-    else if (ordersFilter === 'atacado') orders = orders.filter(function (o) { return o.origem !== 'loja'; });
+    if (ordersFilter === 'balcao') orders = orders.filter(function (o) { return o.categoria === 'balcao'; });
+    else if (ordersFilter === 'atacado') orders = orders.filter(function (o) { return o.categoria === 'atacado'; });
     var body = document.getElementById('ordersBody');
     if (!orders.length) {
       body.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="icon">📦</div>Nenhum pedido neste recorte.</div></td></tr>';
