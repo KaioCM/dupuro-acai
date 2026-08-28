@@ -380,6 +380,60 @@ var DupuroPrinter = (function () {
     return imprimirHtmlNavegador(html);
   }
 
+  // Folhinha de FECHAMENTO DE CAIXA (resumo do dia), 80mm. d = { atendente,
+  // abertoEm, fechadoEm, qtd, total, porForma:{forma:valor}, fundoTroco,
+  // esperado, contado, diferenca }.
+  function htmlDoResumoCaixa(d) {
+    var esc = function (t) { return String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;'); };
+    var fmtDt = function (x) { return x ? new Date(x).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'; };
+    var FP = { dinheiro: 'Dinheiro', debito: 'Cartão de Débito', credito: 'Cartão de Crédito', pix: 'Pix', sem: 'Sem forma' };
+    var pf = d.porForma || {};
+    var ordem = ['dinheiro', 'debito', 'credito', 'pix', 'sem'];
+    var chaves = ordem.filter(function (k) { return pf[k] != null; })
+      .concat(Object.keys(pf).filter(function (k) { return ordem.indexOf(k) < 0; }));
+    var linhasPf = chaves.length
+      ? chaves.map(function (k) { return par(FP[k] || k, brl(Number(pf[k]) || 0)); }).join('')
+      : '<div class="c small">(sem vendas no dia)</div>';
+    var dif = Number(d.diferenca) || 0;
+    var difTxt = Math.abs(dif) < 0.005 ? 'Confere' : (dif > 0 ? 'Sobra ' + brl(dif) : 'Falta ' + brl(-dif));
+    return '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Fechamento de caixa</title><style>' +
+      '@page { size: 80mm auto; margin: 0; }' +
+      'body { margin:0; padding:4mm 3mm; font-family:"Courier New",monospace; font-size:12px; line-height:1.35; color:#000; width:74mm; }' +
+      '.c{text-align:center;} .b{font-weight:700;}' +
+      '.hr{border-top:1px dashed #000;margin:5px 0;}' +
+      '.small{font-size:10px;} .tot{font-size:14px;} .big{font-size:16px;letter-spacing:1px;}' +
+      '</style></head><body>' +
+      '<div class="c b big">DUPURO AÇAÍ</div>' +
+      '<div class="c small">Puro como tem que ser</div>' +
+      '<div class="hr"></div>' +
+      '<div class="c b" style="font-size:14px;">FECHAMENTO DE CAIXA</div>' +
+      '<div class="c small">Resumo do dia</div>' +
+      '<div class="hr"></div>' +
+      par('Atendente', esc(d.atendente || '—')) +
+      par('Aberto em', fmtDt(d.abertoEm)) +
+      par('Fechado em', fmtDt(d.fechadoEm)) +
+      '<div class="hr"></div>' +
+      par('Vendas', String(d.qtd || 0)) +
+      par('Total do dia', brl(d.total), 'b tot') +
+      '<div class="hr"></div>' +
+      '<div class="c small b">Por forma de pagamento</div>' +
+      linhasPf +
+      '<div class="hr"></div>' +
+      par('Fundo de troco', brl(d.fundoTroco)) +
+      par('Esperado em dinheiro', brl(d.esperado), 'b') +
+      par('Contado em dinheiro', brl(d.contado), 'b') +
+      par('Diferença', difTxt, 'b') +
+      '<div class="hr"></div>' +
+      '<div class="c small">Conferência interna - não é documento fiscal</div>' +
+      '<div class="c small">&nbsp;</div>' +
+      '</body></html>';
+  }
+  async function imprimirResumoCaixa(d) {
+    var html = htmlDoResumoCaixa(d);
+    if (rodandoNoApp()) return imprimirHtmlNativo(html);
+    return imprimirHtmlNavegador(html);
+  }
+
   // ---------- Caminho 0: app nativo (Electron) — SEM janela ----------
   // Quando o caixa roda dentro do app da loja, window.DupuroDesktop existe e
   // imprime o HTML direto na impressora, sem diálogo nenhum. É o preferido.
@@ -444,9 +498,11 @@ var DupuroPrinter = (function () {
     imprimir: imprimir,
     imprimirNavegador: imprimirNavegador,
     imprimirCupomFiscal: imprimirCupomFiscal,
+    imprimirResumoCaixa: imprimirResumoCaixa,
     montarLinhas: montarLinhas,
     htmlDaComanda: htmlDaComanda,
-    htmlDoCupomFiscal: htmlDoCupomFiscal
+    htmlDoCupomFiscal: htmlDoCupomFiscal,
+    htmlDoResumoCaixa: htmlDoResumoCaixa
   };
 
 })();

@@ -1345,6 +1345,18 @@
     var r = await DupuroCaixa.fecharCaixa(caixaSessao.id, contado);
     this.disabled = false; this.textContent = 'Fechar caixa';
     if (r.error) { err.textContent = r.error.message || 'Não foi possível fechar.'; err.classList.add('show'); return; }
+    // Imprime a folhinha do fechamento (resumo do dia), como no sistema antigo.
+    // Best-effort: se a impressão falhar, o caixa fecha assim mesmo.
+    try {
+      var res = r.resumo || {};
+      DupuroPrinter.imprimirResumoCaixa({
+        atendente: (document.getElementById('chipName') || {}).textContent || 'Atendente',
+        abertoEm: caixaSessao && caixaSessao.aberta_em, fechadoEm: Date.now(),
+        qtd: res.qtd, total: res.total, porForma: res.por_forma,
+        fundoTroco: res.fundo_troco, esperado: res.dinheiro_esperado,
+        contado: res.dinheiro_contado, diferenca: res.diferenca
+      });
+    } catch (e) { /* impressão do resumo é best-effort */ }
     fecharModal.classList.add('hidden');
     caixaSessao = null; renderCaixaBar();
     await loadVendas();
