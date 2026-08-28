@@ -190,9 +190,10 @@ var DupuroAdmin = (function () {
         };
         order.push(g);
       }
-      if (tipoProduto[o.produto_id] === 'atacado') g.categoria = 'atacado';
+      var catItem = tipoProduto[o.produto_id] === 'atacado' ? 'atacado' : 'balcao';
+      if (catItem === 'atacado') g.categoria = 'atacado';
       g.valor += Number(o.valor);
-      g.items.push({ id: o.id, produtoId: o.produto_id, quantidade: o.quantidade, sabor: o.sabor, itens: o.itens, valor: Number(o.valor), status: o.status });
+      g.items.push({ id: o.id, produtoId: o.produto_id, quantidade: o.quantidade, sabor: o.sabor, itens: o.itens, valor: Number(o.valor), status: o.status, categoria: catItem });
     });
     order.forEach(function (g) { g.itens = g.items.map(function (i) { return i.itens; }).join(' · '); });
     return order;

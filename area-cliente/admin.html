@@ -914,20 +914,33 @@
   // aba está visível — um gráfico Chart.js criado num painel display:none nasce
   // com tamanho 0 e fica em branco. Ao ativar a aba (goTo → drawChartsFor), isto
   // é rechamado com o container já visível e dimensionado.
-  // Filtro balcão/atacado POR PRODUTO: balcão = pedido só com itens de varejo
-  // (copo/peso/embalado varejo); atacado = pedido com algum item de atacado
-  // (mesmo vendido no caixa). Ver getAllOrders (campo `categoria`).
+  // Recorte balcão/atacado POR ITEM: 'tudo' = pedidos inteiros; 'balcao'/'atacado'
+  // = cada pedido reduzido só aos itens daquele tipo, com o valor recalculado
+  // (pedido misto aparece nos dois lados, mas sem duplicar valor — cada item vai
+  // pra um lado só). Ver getAllOrders (item.categoria). Compartilhado pela Visão
+  // geral e pelo relatório "Todos os pedidos".
   var overviewFilter = 'tudo';
-  function filtraOrigem(lista) {
-    if (overviewFilter === 'balcao') return lista.filter(function (o) { return o.categoria === 'balcao'; });
-    if (overviewFilter === 'atacado') return lista.filter(function (o) { return o.categoria === 'atacado'; });
-    return lista;
+  function recortarPorCategoria(lista, filtro) {
+    if (filtro !== 'balcao' && filtro !== 'atacado') return lista;
+    var out = [];
+    lista.forEach(function (o) {
+      var itens = o.items.filter(function (it) { return it.categoria === filtro; });
+      if (!itens.length) return;
+      var valor = itens.reduce(function (s, it) { return s + (it.valor || 0); }, 0);
+      out.push(Object.assign({}, o, {
+        items: itens,
+        valor: Math.round(valor * 100) / 100,
+        itens: itens.map(function (i) { return i.itens; }).join(' · '),
+        parcial: itens.length !== o.items.length // recorte de um pedido misto
+      }));
+    });
+    return out;
   }
   function drawOverview() {
     if (!overviewCache) return;
     var resellers = overviewCache.resellers;
     var pending = overviewCache.pending;
-    var orders = filtraOrigem(overviewCache.orders);
+    var orders = recortarPorCategoria(overviewCache.orders, overviewFilter);
     // Os dois gráficos "por revendedor" não fazem sentido no recorte só de balcão.
     var soBalcao = overviewFilter === 'balcao';
     document.getElementById('panelOrdersLine').classList.toggle('hidden', soBalcao);
@@ -2460,9 +2473,7 @@
     renderOrders();
   });
   async function renderOrders() {
-    var orders = await DupuroAdmin.getAllOrders();
-    if (ordersFilter === 'balcao') orders = orders.filter(function (o) { return o.categoria === 'balcao'; });
-    else if (ordersFilter === 'atacado') orders = orders.filter(function (o) { return o.categoria === 'atacado'; });
+    var orders = recortarPorCategoria(await DupuroAdmin.getAllOrders(), ordersFilter);
     var body = document.getElementById('ordersBody');
     if (!orders.length) {
       body.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="icon">📦</div>Nenhum pedido neste recorte.</div></td></tr>';
@@ -2496,6 +2507,7 @@
       return '<tr data-dia-row="' + (o.data || 'sem-data') + '">' +
         '<td><strong>' + o.numero + '</strong>' +
           (o.items.length > 1 ? ' <span class="status-badge enviado">' + o.items.length + ' itens</span>' : '') +
+          (o.parcial ? ' <span class="status-badge processando" title="Pedido misto: aqui aparecem só os itens deste recorte; o valor é a parte correspondente.">parcial</span>' : '') +
           (o.usaEstoque ? '' : ' <span class="status-badge cancelado" title="Este pedido não usa o estoque">sem estoque</span>') +
         '</td>' +
         '<td>' + o.revendedorNome + '</td>' +
