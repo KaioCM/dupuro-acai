@@ -176,6 +176,7 @@ var DupuroAdmin = (function () {
           id: o.numero, numero: o.numero,
           revendedorId: o.revendedor_id,
           revendedorNome: nome,
+          origem: o.origem || null, // 'loja' = balcão (caixa); outro = atacado (painel)
           data: o.data, status: o.status, valor: 0, items: [],
           usaEstoque: o.usa_estoque !== false
         };

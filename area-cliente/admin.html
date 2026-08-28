@@ -46,6 +46,12 @@
         <div><h1>Visão geral</h1><div class="subtitle">Panorama de vendas e revendedores da Dupuro Açaí</div></div>
       </div>
 
+      <div class="seg ov-filter" id="ovFilter" style="margin-bottom:18px;">
+        <button type="button" class="seg-btn active" data-ov="tudo">Tudo</button>
+        <button type="button" class="seg-btn" data-ov="balcao">🛍️ Balcão (loja)</button>
+        <button type="button" class="seg-btn" data-ov="atacado">🤝 Atacado (revendedor)</button>
+      </div>
+
       <div class="stat-grid">
         <div class="stat-card">
           <div class="label">Revendedores aprovados</div>
@@ -78,13 +84,13 @@
         </div>
       </div>
 
-      <div class="panel chart-card">
+      <div class="panel chart-card" id="panelOrdersLine">
         <h3>Pedidos por revendedor ao longo do tempo</h3>
         <div class="subtitle">Quantidade de pedidos por mês — top 5 revendedores</div>
         <div class="chart-wrap"><canvas id="chartOrdersLine"></canvas></div>
       </div>
 
-      <div class="panel chart-card">
+      <div class="panel chart-card" id="panelTopResellers">
         <h3>Revendedores por faturamento</h3>
         <div class="subtitle">Faturamento por mês — top 5 revendedores</div>
         <div class="chart-wrap"><canvas id="chartTopResellers"></canvas></div>
@@ -470,7 +476,14 @@
       </div>
 
       <div class="panel">
-        <div class="panel-header"><h3>Todos os pedidos</h3></div>
+        <div class="panel-header" style="flex-wrap:wrap; gap:10px;">
+          <h3>Todos os pedidos</h3>
+          <div class="seg ord-filter" id="ordFilter">
+            <button type="button" class="seg-btn active" data-ord="tudo">Tudo</button>
+            <button type="button" class="seg-btn" data-ord="balcao">🛍️ Balcão</button>
+            <button type="button" class="seg-btn" data-ord="atacado">🤝 Atacado</button>
+          </div>
+        </div>
         <table class="data-table">
           <thead><tr><th>Pedido</th><th>Revendedor</th><th>Data</th><th>Itens</th><th>Valor</th><th>Status</th><th>Ações</th></tr></thead>
           <tbody id="ordersBody"></tbody>
@@ -880,6 +893,14 @@
   }
 
   var overviewCache = null;
+  // Filtro Tudo / Balcão / Atacado da Visão geral.
+  document.getElementById('ovFilter').addEventListener('click', function (e) {
+    var btn = e.target.closest('[data-ov]');
+    if (!btn) return;
+    overviewFilter = btn.getAttribute('data-ov');
+    this.querySelectorAll('.seg-btn').forEach(function (b) { b.classList.toggle('active', b === btn); });
+    drawOverview();
+  });
   async function renderOverview() {
     overviewCache = {
       resellers: await DupuroAdmin.getResellers(),
@@ -893,11 +914,23 @@
   // aba está visível — um gráfico Chart.js criado num painel display:none nasce
   // com tamanho 0 e fica em branco. Ao ativar a aba (goTo → drawChartsFor), isto
   // é rechamado com o container já visível e dimensionado.
+  // Filtro balcão/atacado: balcão = venda de loja (caixa, origem 'loja');
+  // atacado = pedido do painel do revendedor (o resto).
+  var overviewFilter = 'tudo';
+  function filtraOrigem(lista) {
+    if (overviewFilter === 'balcao') return lista.filter(function (o) { return o.origem === 'loja'; });
+    if (overviewFilter === 'atacado') return lista.filter(function (o) { return o.origem !== 'loja'; });
+    return lista;
+  }
   function drawOverview() {
     if (!overviewCache) return;
     var resellers = overviewCache.resellers;
     var pending = overviewCache.pending;
-    var orders = overviewCache.orders;
+    var orders = filtraOrigem(overviewCache.orders);
+    // Os dois gráficos "por revendedor" não fazem sentido no recorte só de balcão.
+    var soBalcao = overviewFilter === 'balcao';
+    document.getElementById('panelOrdersLine').classList.toggle('hidden', soBalcao);
+    document.getElementById('panelTopResellers').classList.toggle('hidden', soBalcao);
 
     DupuroUI.countUp(document.getElementById('ovResellers'), resellers.length);
     DupuroUI.countUp(document.getElementById('ovPending'), pending.length);
@@ -2415,11 +2448,23 @@
     renderOrderCart();
   }
 
+  // Filtro Tudo / Balcão / Atacado do relatório "Todos os pedidos".
+  var ordersFilter = 'tudo';
+  document.getElementById('ordFilter').addEventListener('click', function (e) {
+    var btn = e.target.closest('[data-ord]');
+    if (!btn) return;
+    ordersFilter = btn.getAttribute('data-ord');
+    this.querySelectorAll('.seg-btn').forEach(function (b) { b.classList.toggle('active', b === btn); });
+    diasAbertos = null; // reabre o dia mais recente do novo recorte
+    renderOrders();
+  });
   async function renderOrders() {
     var orders = await DupuroAdmin.getAllOrders();
+    if (ordersFilter === 'balcao') orders = orders.filter(function (o) { return o.origem === 'loja'; });
+    else if (ordersFilter === 'atacado') orders = orders.filter(function (o) { return o.origem !== 'loja'; });
     var body = document.getElementById('ordersBody');
     if (!orders.length) {
-      body.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="icon">📦</div>Nenhum pedido lançado ainda.</div></td></tr>';
+      body.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="icon">📦</div>Nenhum pedido neste recorte.</div></td></tr>';
       return;
     }
     // Agrupa por DIA: cada dia vira uma faixa clicável com o faturamento do dia,
