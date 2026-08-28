@@ -2512,7 +2512,7 @@
         '</td>' +
         '<td>' + o.revendedorNome + '</td>' +
         '<td>' + formatDate(o.data) + '</td>' +
-        '<td>' + o.items.map(function (it) { return '<div class="item-linha">' + it.itens + '</div>'; }).join('') + '</td>' +
+        '<td>' + o.items.map(function (it) { return '<div class="item-linha"><span>' + it.itens + '</span><span class="item-val">' + moeda(it.valor) + '</span></div>'; }).join('') + '</td>' +
         '<td class="num">' + moeda(o.valor) + '</td>' +
         '<td>' +
           '<select class="status-select" data-num="' + o.numero + '">' +
