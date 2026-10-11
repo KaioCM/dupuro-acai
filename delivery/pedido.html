@@ -2,99 +2,112 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Fazer pedido — Dupuro Delivery</title>
 <meta name="description" content="Monte seu pedido de açaí Dupuro com entrega em casa em Cuiabá.">
-<meta name="theme-color" content="#601050">
+<meta name="theme-color" content="#380C2F">
 <link rel="icon" href="../assets/img/brand/favicon-32.png" sizes="32x32" type="image/png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="preload" href="../assets/fonts/Klinko-PlayfulBold.otf" as="font" type="font/otf" crossorigin>
 <link rel="stylesheet" href="../assets/css/style.css?v=11">
-<link rel="stylesheet" href="delivery.css?v=1">
+<link rel="stylesheet" href="delivery.css?v=2">
 </head>
 <body class="dl-body">
 
-<header class="dl-top">
+<header class="dl-app-top">
   <div class="dl-wrap">
-    <a href="index.html" aria-label="Voltar"><img src="../assets/img/brand/logo-branco.png" alt="Dupuro Açaí"></a>
-    <a class="dl-top-link" href="https://wa.me/5565992888228" target="_blank" rel="noopener">Dúvidas? WhatsApp</a>
+    <a class="vol" href="index.html">← Voltar</a>
+    <img src="../assets/img/brand/logo-branco.png" alt="Dupuro Açaí">
+    <a class="vol" href="https://wa.me/5565992888228" target="_blank" rel="noopener">Ajuda</a>
+  </div>
+  <div class="dl-steps" aria-label="Progresso do pedido">
+    <div id="st1"><i></i><span>1 · Escolher</span></div>
+    <div id="st2"><i></i><span>2 · Entrega</span></div>
+    <div id="st3"><i></i><span>3 · Pagamento</span></div>
   </div>
 </header>
 
-<main class="dl-wrap" style="padding-top:20px; padding-bottom:20px; max-width:640px;">
-  <h1 class="dl-display" style="color:var(--roxo-700); font-size:28px; margin:4px 0 16px;">Seu pedido</h1>
+<main class="dl-app">
+  <h1>Monte seu pedido</h1>
+  <p class="dl-app-sub">Direto da fábrica pra sua casa · entrega em Cuiabá</p>
 
-  <section class="dl-etapa">
-    <h2><span class="n">1</span> Escolha o açaí</h2>
-    <div class="dl-prods" id="prods"><p class="dl-vazio">Carregando os produtos…</p></div>
+  <section class="dl-bloco" id="secProdutos">
+    <h2><b>1</b> Escolha o açaí</h2>
+    <div class="dl-produtos" id="prods"><div class="dl-card"><p class="dl-vazio">Carregando os produtos…</p></div></div>
   </section>
 
-  <section class="dl-etapa">
-    <h2><span class="n">🛒</span> Carrinho</h2>
-    <ul class="dl-carrinho" id="carrinho"></ul>
-    <p class="dl-vazio" id="carrinhoVazio">Nenhum item ainda — adicione acima.</p>
+  <section class="dl-bloco" id="secSacola">
+    <h2><b>🛍️</b> Sua sacola</h2>
+    <div class="dl-card"><ul class="dl-sacola" id="sacola"></ul><p class="dl-vazio" id="sacolaVazia">Sua sacola está vazia — escolha acima 👆</p></div>
   </section>
 
-  <section class="dl-etapa">
-    <h2><span class="n">2</span> Seus dados</h2>
-    <div class="dl-campo"><label for="nome">Nome completo</label><input id="nome" autocomplete="name" placeholder="Como devemos te chamar"></div>
-    <div class="dl-campo"><label for="tel">WhatsApp</label><input id="tel" type="tel" inputmode="tel" autocomplete="tel" placeholder="(65) 99999-9999"></div>
-    <p class="dl-vazio" style="font-size:12.5px;margin:0;">É por ele que avisamos quando sair pra entrega.</p>
+  <section class="dl-bloco" id="secDados">
+    <h2><b>2</b> Pra quem é a entrega</h2>
+    <div class="dl-card">
+      <div class="dl-campo"><label for="nome">Seu nome</label><div class="dl-input"><span>🙂</span><input id="nome" autocomplete="name" placeholder="Nome completo"></div></div>
+      <div class="dl-campo" style="margin-bottom:0;"><label for="tel">WhatsApp</label><div class="dl-input"><span>📱</span><input id="tel" type="tel" inputmode="tel" autocomplete="tel" placeholder="(65) 99999-9999"></div>
+        <p class="dl-dica">É por ele que avisamos quando sair pra entrega, com o mapa ao vivo.</p></div>
+    </div>
   </section>
 
-  <section class="dl-etapa">
-    <h2><span class="n">3</span> Endereço de entrega</h2>
-    <div class="dl-campo"><label for="end">Rua, número e bairro</label><input id="end" autocomplete="street-address" placeholder="Ex: Rua das Flores, 120, Jardim Imperial"></div>
-    <div class="dl-campo"><label for="comp">Complemento / referência (opcional)</label><input id="comp" placeholder="Apto, bloco, ponto de referência"></div>
-    <button type="button" class="dl-btn dl-btn-ghost dl-btn-block" id="btnCotar">📍 Calcular entrega</button>
-    <div id="cotMsg"></div>
+  <section class="dl-bloco" id="secEndereco">
+    <h2><b>📍</b> Endereço</h2>
+    <div class="dl-card">
+      <div class="dl-campo"><label for="end">Rua, número e bairro</label><div class="dl-input"><span>🏠</span><input id="end" autocomplete="street-address" placeholder="Ex: Rua das Flores, 120, Jardim Imperial"></div></div>
+      <div class="dl-campo"><label for="comp">Complemento <span style="font-weight:600;color:var(--text-light);">(opcional)</span></label><div class="dl-input"><span>🔑</span><input id="comp" placeholder="Apto, bloco, ponto de referência"></div></div>
+      <button type="button" class="dl-btn dl-btn-roxo dl-btn-block" id="btnCotar">Calcular entrega</button>
+      <div id="cotMsg"></div>
+    </div>
   </section>
 
-  <section class="dl-etapa">
-    <h2><span class="n">4</span> Quando receber</h2>
+  <section class="dl-bloco" id="secQuando">
+    <h2><b>🕒</b> Quando você quer receber?</h2>
     <div class="dl-janelas" id="janelas"></div>
   </section>
 
-  <section class="dl-etapa dl-resumo">
-    <h2><span class="n">5</span> Resumo</h2>
-    <div class="ln"><span>Produtos</span><span id="rSub">R$ 0,00</span></div>
-    <div class="ln"><span>Entrega</span><span id="rTaxa">calcule acima</span></div>
-    <div class="ln tot"><span>Total</span><span id="rTot">R$ 0,00</span></div>
-    <div id="pagMsg"></div>
-    <button type="button" class="dl-btn dl-btn-gold dl-btn-block" id="btnPagar" style="margin-top:12px;" disabled>Ir para o pagamento</button>
-    <p class="dl-seguro">🔒 Pagamento por <strong>Pix ou cartão</strong> no ambiente seguro do Mercado Pago.</p>
+  <section class="dl-bloco" id="secPagar">
+    <h2><b>3</b> Resumo e pagamento</h2>
+    <div class="dl-resumo">
+      <div class="ln"><span>Produtos</span><span id="rSub">R$ 0,00</span></div>
+      <div class="ln"><span>Entrega</span><span id="rTaxa">—</span></div>
+      <div class="ln" id="rQuandoLn" hidden><span>Receber</span><span id="rQuando"></span></div>
+      <div class="ln tot"><span>Total</span><span id="rTot">R$ 0,00</span></div>
+      <div id="pagMsg"></div>
+      <button type="button" class="dl-btn dl-btn-gold dl-btn-block" id="btnPagar" style="margin-top:16px;" disabled>Pagar com Pix ou cartão</button>
+      <div class="dl-pag"><span>⚡ Pix</span><span>💳 Crédito</span><span>💳 Débito</span><span>🔒 Mercado Pago</span></div>
+    </div>
   </section>
 </main>
 
-<div class="dl-barra"><div class="dl-wrap" style="max-width:640px;"><span>Total <span class="v" id="barTot">R$ 0,00</span></span><a href="#btnPagar" class="dl-btn dl-btn-roxo" style="padding:11px 16px;font-size:14px;">Finalizar</a></div></div>
+<div class="dl-barra">
+  <div class="dl-barra-in">
+    <span class="ct">🛍️<b id="barQtd">0</b></span>
+    <span class="tt">Total<strong id="barTot">R$ 0,00</strong></span>
+    <button type="button" class="dl-btn dl-btn-gold" id="barBtn">Continuar</button>
+  </div>
+</div>
 
 <script src="../assets/js/supabase-config.js"></script>
 <script src="maps-config.js?v=1"></script>
-<script src="delivery.js?v=1"></script>
+<script src="delivery.js?v=2"></script>
 <script>
 (async function () {
   var D = DupuroDelivery, brl = D.brl, esc = D.esc;
   var cfg = null, cat = [], cart = [], cot = null, janela = null;
+  var sel = {}; // produto_id -> { sabor, qtd }
   var LS = 'dupuro-delivery-carrinho';
   try { cart = JSON.parse(localStorage.getItem(LS) || '[]') || []; } catch (e) { cart = []; }
   function salvar() { try { localStorage.setItem(LS, JSON.stringify(cart)); } catch (e) {} }
+  function $(id) { return document.getElementById(id); }
 
-  // ---- Carrega config + catálogo ----
-  try {
-    var res = await Promise.all([D.getConfig(), D.getCatalogo()]);
-    cfg = res[0]; cat = res[1] || [];
-  } catch (e) {
-    document.getElementById('prods').innerHTML = '<p class="dl-msg erro">Não conseguimos carregar os produtos. Recarregue a página.</p>';
-    return;
-  }
-  if (cfg && cfg.ativo === false) {
-    document.getElementById('prods').innerHTML = '<p class="dl-msg info">O delivery está pausado no momento. Fale com a gente no WhatsApp.</p>';
-    return;
-  }
-  // Remove do carrinho salvo o que não existe mais no catálogo.
+  try { var res = await Promise.all([D.getConfig(), D.getCatalogo()]); cfg = res[0]; cat = res[1] || []; }
+  catch (e) { $('prods').innerHTML = '<div class="dl-msg erro">Não conseguimos carregar os produtos. Recarregue a página.</div>'; return; }
+  if (cfg && cfg.ativo === false) { $('prods').innerHTML = '<div class="dl-msg info">O delivery está pausado no momento. Fale com a gente no WhatsApp.</div>'; return; }
   cart = cart.filter(function (c) { return cat.some(function (p) { return p.id === c.produto_id; }); });
 
+  function prodDe(id) { return cat.filter(function (p) { return p.id === id; })[0]; }
   function estoqueDe(p, sabor) {
     if (!p.multissabor) return Number(p.estoque) || 0;
     var s = (p.sabores || []).filter(function (x) { return x.sabor === sabor; })[0];
@@ -106,178 +119,213 @@
   }
 
   // ---- Produtos ----
-  var prodsEl = document.getElementById('prods');
-  prodsEl.innerHTML = cat.map(function (p) {
-    var ph = p.imagem_url ? '<img src="' + esc(p.imagem_url) + '" alt="">' : (p.multissabor ? '🫐' : '🥣');
-    var temAlgum = p.multissabor ? (p.sabores || []).some(function (s) { return s.estoque > 0; }) : estoqueDe(p) > 0;
-    var ctrl;
-    if (!temAlgum) ctrl = '<span class="dl-esgotado">Esgotado no momento</span>';
+  function cardProduto(p) {
+    var foto = D.fotoProduto(p);
+    var ph = foto ? '<img src="' + esc(foto) + '" alt="">' : '🥣';
+    var disponiveis = p.multissabor ? (p.sabores || []).filter(function (s) { return s.estoque > 0; }) : [];
+    var temAlgum = p.multissabor ? disponiveis.length > 0 : estoqueDe(p) > 0;
+    if (!sel[p.id]) sel[p.id] = { sabor: p.multissabor && disponiveis[0] ? disponiveis[0].sabor : null, qtd: 1 };
+    var corpo;
+    if (!temAlgum) corpo = '<span class="dl-esgotado">Esgotado no momento — volta em breve</span>';
     else {
-      var sel = p.multissabor
-        ? '<select data-sabor="' + p.id + '">' + (p.sabores || []).map(function (s) {
-            return '<option value="' + esc(s.sabor) + '"' + (s.estoque > 0 ? '' : ' disabled') + '>' + esc(s.sabor) + (s.estoque > 0 ? '' : ' (esgotado)') + '</option>';
-          }).join('') + '</select>'
+      var chips = p.multissabor
+        ? '<div class="lbl">Sabor</div><div class="dl-sab">' + (p.sabores || []).map(function (s) {
+            var on = sel[p.id].sabor === s.sabor;
+            var pouco = s.estoque > 0 && s.estoque <= 3 ? ' <span class="pouco">últimas ' + s.estoque + '</span>' : '';
+            return '<button type="button" data-p="' + p.id + '" data-s="' + esc(s.sabor) + '"' + (on ? ' class="on"' : '') + (s.estoque > 0 ? '' : ' disabled') + '>' +
+              '<i style="background:' + D.corSabor(s.sabor) + '"></i>' + esc(s.sabor === 'Açaí' ? 'Açaí puro' : D.nomeSabor(s.sabor)) + pouco + '</button>';
+          }).join('') + '</div>'
         : '';
-      ctrl = sel + '<span class="dl-qtd"><button type="button" data-menos="' + p.id + '">−</button><span data-q="' + p.id + '">1</span><button type="button" data-mais="' + p.id + '">+</button></span>' +
-        '<button type="button" class="dl-add" data-add="' + p.id + '">Adicionar</button>';
+      corpo = chips + '<div class="dl-pr-acao"><span class="dl-qtd"><button type="button" data-menos="' + p.id + '" aria-label="Menos">−</button><span data-q="' + p.id + '">' + sel[p.id].qtd + '</span>' +
+        '<button type="button" data-mais="' + p.id + '" aria-label="Mais">+</button></span>' +
+        '<button type="button" class="dl-btn dl-btn-verde" data-add="' + p.id + '">Adicionar · ' + brl(p.preco * sel[p.id].qtd) + '</button></div>';
     }
-    return '<div class="dl-prod"><div class="ph">' + ph + '</div><div><h3>' + esc(p.nome) + '</h3><div class="pr">' + brl(p.preco) + '</div></div>' +
-      '<div class="dl-prod-ctrl">' + ctrl + '</div></div>';
-  }).join('') || '<p class="dl-vazio">Nenhum produto disponível agora.</p>';
-  // Seleciona o primeiro sabor com estoque em cada select.
-  prodsEl.querySelectorAll('select[data-sabor]').forEach(function (s) {
-    var ok = Array.prototype.find.call(s.options, function (o) { return !o.disabled; });
-    if (ok) s.value = ok.value;
-  });
+    return '<article class="dl-pr" id="prod-' + p.id + '"><div class="dl-pr-top"><div class="ph">' + ph + '</div><div>' +
+      (D.litrosTxt(p) ? '<span class="lit">' + D.litrosTxt(p) + '</span>' : '') +
+      '<h3>' + esc(p.nome) + '</h3><p class="pra">' + esc(D.idealPra(p)) + '</p><div class="pr">' + brl(p.preco) + '</div></div></div>' +
+      '<div class="dl-pr-bd">' + corpo + '<div class="dl-aviso-prod" data-aviso="' + p.id + '"></div></div></article>';
+  }
+  function renderProdutos() { $('prods').innerHTML = cat.map(cardProduto).join('') || '<div class="dl-card"><p class="dl-vazio">Nenhum produto disponível agora.</p></div>'; }
+  renderProdutos();
 
-  prodsEl.addEventListener('click', function (e) {
-    var b = e.target.closest('button'); if (!b) return;
-    var id = +(b.getAttribute('data-mais') || b.getAttribute('data-menos') || b.getAttribute('data-add'));
-    if (!id) return;
-    var qEl = prodsEl.querySelector('[data-q="' + id + '"]');
-    var q = +qEl.textContent;
-    if (b.hasAttribute('data-mais')) qEl.textContent = Math.min(q + 1, 50);
-    else if (b.hasAttribute('data-menos')) qEl.textContent = Math.max(q - 1, 1);
-    else {
-      var p = cat.filter(function (x) { return x.id === id; })[0];
-      var selEl = prodsEl.querySelector('select[data-sabor="' + id + '"]');
-      var sabor = p.multissabor ? (selEl && selEl.value) : null;
-      var livre = estoqueDe(p, sabor) - noCarrinho(id, sabor);
-      if (q > livre) { alertaProd(b, livre > 0 ? ('Só temos ' + livre + ' em estoque' + (sabor ? ' de ' + sabor : '') + '.') : 'Esgotou' + (sabor ? ' o ' + sabor : '') + '.'); return; }
-      var ex = cart.filter(function (c) { return c.produto_id === id && (c.sabor || null) === (sabor || null); })[0];
-      if (ex) ex.quantidade += q; else cart.push({ produto_id: id, nome: p.nome, sabor: sabor, quantidade: q, preco: Number(p.preco) });
-      qEl.textContent = '1';
-      b.textContent = '✓ Adicionado'; setTimeout(function () { b.textContent = 'Adicionar'; }, 1200);
-      salvar(); render();
-    }
-  });
-  function alertaProd(btn, txt) {
-    var m = document.createElement('div'); m.className = 'dl-msg erro'; m.textContent = txt;
-    btn.closest('.dl-prod').appendChild(m); setTimeout(function () { m.remove(); }, 2500);
+  // Veio de "Escolher" no anúncio (?p=ID): destaca e rola até o produto.
+  var pIni = +new URLSearchParams(location.search).get('p');
+  if (pIni && $('prod-' + pIni)) {
+    var alvo = $('prod-' + pIni); alvo.classList.add('destaque');
+    setTimeout(function () { alvo.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 250);
+    setTimeout(function () { alvo.classList.remove('destaque'); }, 3500);
   }
 
-  // ---- Carrinho + resumo ----
-  var carEl = document.getElementById('carrinho');
-  carEl.addEventListener('click', function (e) {
+  $('prods').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b || b.disabled) return;
+    if (b.hasAttribute('data-s')) {
+      var pid = +b.getAttribute('data-p'); sel[pid].sabor = b.getAttribute('data-s');
+      b.parentNode.querySelectorAll('button').forEach(function (x) { x.classList.toggle('on', x === b); });
+      return;
+    }
+    var id = +(b.getAttribute('data-mais') || b.getAttribute('data-menos') || b.getAttribute('data-add'));
+    if (!id) return;
+    var p = prodDe(id), st = sel[id];
+    if (b.hasAttribute('data-mais')) st.qtd = Math.min(st.qtd + 1, 50);
+    else if (b.hasAttribute('data-menos')) st.qtd = Math.max(st.qtd - 1, 1);
+    if (!b.hasAttribute('data-add')) {
+      $('prods').querySelector('[data-q="' + id + '"]').textContent = st.qtd;
+      $('prods').querySelector('[data-add="' + id + '"]').textContent = 'Adicionar · ' + brl(p.preco * st.qtd);
+      return;
+    }
+    var sabor = p.multissabor ? st.sabor : null;
+    var livre = estoqueDe(p, sabor) - noCarrinho(id, sabor);
+    var aviso = $('prods').querySelector('[data-aviso="' + id + '"]');
+    if (st.qtd > livre) {
+      aviso.innerHTML = '<div class="dl-msg erro">' + (livre > 0 ? 'Só temos mais ' + livre + (sabor ? ' de ' + esc(D.nomeSabor(sabor)) : '') + ' no momento.' : 'Esse ' + (sabor ? 'sabor' : 'item') + ' esgotou.') + '</div>';
+      setTimeout(function () { aviso.innerHTML = ''; }, 3000); return;
+    }
+    var ex = cart.filter(function (c) { return c.produto_id === id && (c.sabor || null) === (sabor || null); })[0];
+    if (ex) ex.quantidade += st.qtd; else cart.push({ produto_id: id, nome: p.nome, sabor: sabor, quantidade: st.qtd, preco: Number(p.preco) });
+    st.qtd = 1;
+    $('prods').querySelector('[data-q="' + id + '"]').textContent = '1';
+    b.textContent = '✓ Na sacola!';
+    setTimeout(function () { b.textContent = 'Adicionar · ' + brl(p.preco); }, 1300);
+    salvar(); render();
+  });
+
+  // ---- Sacola + resumo ----
+  $('sacola').addEventListener('click', function (e) {
     var i = e.target.getAttribute('data-rm'); if (i == null) return;
     cart.splice(+i, 1); salvar(); render();
   });
   function subtotal() { return cart.reduce(function (s, c) { return s + c.preco * c.quantidade; }, 0); }
+  function qtdItens() { return cart.reduce(function (s, c) { return s + c.quantidade; }, 0); }
   function render() {
-    carEl.innerHTML = cart.map(function (c, i) {
-      return '<li><span>' + c.quantidade + '× ' + esc(c.nome) + (c.sabor ? ' — ' + esc(c.sabor) : '') + '</span><span>' + brl(c.preco * c.quantidade) +
-        ' <button type="button" class="rm" data-rm="' + i + '" aria-label="Remover">×</button></span></li>';
+    $('sacola').innerHTML = cart.map(function (c, i) {
+      return '<li><span class="q">' + c.quantidade + '×</span><span class="t">' + esc(c.nome) + (c.sabor ? '<small>' + esc(c.sabor === 'Açaí' ? 'Açaí puro' : c.sabor) + '</small>' : '') + '</span>' +
+        '<span class="v">' + brl(c.preco * c.quantidade) + '</span><button type="button" class="rm" data-rm="' + i + '" aria-label="Remover">×</button></li>';
     }).join('');
-    document.getElementById('carrinhoVazio').style.display = cart.length ? 'none' : '';
-    var sub = subtotal(), taxa = cot && cot.atende ? cot.taxa : null;
-    document.getElementById('rSub').textContent = brl(sub);
-    document.getElementById('rTaxa').textContent = taxa == null ? 'calcule acima' : brl(taxa);
-    var tot = sub + (taxa || 0);
-    document.getElementById('rTot').textContent = brl(tot);
-    document.getElementById('barTot').textContent = brl(tot);
+    $('sacolaVazia').hidden = !!cart.length;
+    var sub = subtotal(), taxa = cot && cot.atende ? cot.taxa : null, tot = sub + (taxa || 0);
+    $('rSub').textContent = brl(sub);
+    $('rTaxa').textContent = taxa == null ? 'calcule no endereço' : brl(taxa);
+    $('rTot').textContent = brl(tot);
+    $('barTot').textContent = brl(tot);
+    $('barQtd').textContent = qtdItens();
+    $('rQuandoLn').hidden = !janela;
+    if (janela) $('rQuando').textContent = janela.titulo + ' · ' + janela.faixa;
     validar();
   }
 
   // ---- Dados ----
-  var telEl = document.getElementById('tel');
+  var telEl = $('tel');
   telEl.addEventListener('input', function () {
     var d = telEl.value.replace(/\D/g, '').slice(0, 11);
     telEl.value = d.length > 6 ? '(' + d.slice(0, 2) + ') ' + d.slice(2, d.length - 4) + '-' + d.slice(-4) : (d.length > 2 ? '(' + d.slice(0, 2) + ') ' + d.slice(2) : d);
     validar();
   });
-  document.getElementById('nome').addEventListener('input', validar);
+  $('nome').addEventListener('input', validar);
 
   // ---- Endereço / cotação ----
-  var endEl = document.getElementById('end'), cotMsg = document.getElementById('cotMsg');
-  var placeSel = null; // { place_id, lat, lng, formatado } quando escolheu do autocomplete
+  var endEl = $('end'), cotMsg = $('cotMsg'), placeSel = null;
   endEl.addEventListener('input', function () { placeSel = null; if (cot) { cot = null; cotMsg.innerHTML = ''; render(); } });
-  // Autocomplete do Google (só se a chave do front estiver configurada).
-  if (window.DUPURO_GOOGLE_MAPS_KEY) {
-    window.__dlMapsPronto = function () {
+  endEl.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); cotar(); } });
+  if (window.DUPURO_GOOGLE_MAPS_KEY) carregarAutocomplete();
+  function carregarAutocomplete() {
+    // Places API (New): PlaceAutocompleteElement. Se falhar, segue com texto livre.
+    window.__dlMapsPronto = async function () {
       try {
-        var ac = new google.maps.places.Autocomplete(endEl, {
-          componentRestrictions: { country: 'br' }, fields: ['place_id', 'formatted_address', 'geometry'],
-          bounds: { north: -15.40, south: -15.80, east: -55.85, west: -56.25 }, strictBounds: false
-        });
-        ac.addListener('place_changed', function () {
-          var pl = ac.getPlace(); if (!pl || !pl.geometry) return;
-          placeSel = { place_id: pl.place_id, lat: pl.geometry.location.lat(), lng: pl.geometry.location.lng(), formatado: pl.formatted_address };
+        await google.maps.importLibrary('places');
+        var pac = new google.maps.places.PlaceAutocompleteElement({ includedRegionCodes: ['br'],
+          locationBias: { north: -15.40, south: -15.80, east: -55.85, west: -56.25 } });
+        pac.style.width = '100%';
+        var box = endEl.closest('.dl-input'); box.style.display = 'none'; box.parentNode.insertBefore(pac, box);
+        pac.addEventListener('gmp-select', async function (ev) {
+          var place = ev.placePrediction.toPlace();
+          await place.fetchFields({ fields: ['formattedAddress', 'location', 'id'] });
+          endEl.value = place.formattedAddress;
+          placeSel = { place_id: place.id, lat: place.location.lat(), lng: place.location.lng(), formatado: place.formattedAddress };
           cotar();
         });
-      } catch (e) { /* segue com texto livre */ }
+      } catch (e) { /* fica o campo de texto */ }
     };
     var s = document.createElement('script');
-    s.src = 'https://maps.googleapis.com/maps/api/js?key=' + encodeURIComponent(window.DUPURO_GOOGLE_MAPS_KEY) + '&libraries=places&language=pt-BR&region=BR&callback=__dlMapsPronto';
+    s.src = 'https://maps.googleapis.com/maps/api/js?key=' + encodeURIComponent(window.DUPURO_GOOGLE_MAPS_KEY) + '&v=weekly&language=pt-BR&region=BR&loading=async&callback=__dlMapsPronto';
     s.async = true; document.head.appendChild(s);
   }
-  document.getElementById('btnCotar').addEventListener('click', cotar);
+  $('btnCotar').addEventListener('click', cotar);
   async function cotar() {
     var txt = endEl.value.trim();
     if (txt.length < 6 && !placeSel) { cotMsg.innerHTML = '<div class="dl-msg erro">Digite rua, número e bairro.</div>'; return; }
-    cotMsg.innerHTML = '<div class="dl-msg info">Calculando a distância…</div>';
+    $('btnCotar').disabled = true; $('btnCotar').textContent = 'Calculando…';
+    cotMsg.innerHTML = '';
     try {
       cot = await D.fn('delivery-cotacao', placeSel ? { place_id: placeSel.place_id, lat: placeSel.lat, lng: placeSel.lng, endereco: placeSel.formatado || txt } : { endereco: txt });
-      if (!cot.atende) {
-        cotMsg.innerHTML = '<div class="dl-msg erro">😕 ' + esc(cot.mensagem || 'Ainda não entregamos nesse endereço.') + '</div>';
-      } else {
-        cotMsg.innerHTML = '<div class="dl-msg ok">✔ ' + esc(cot.endereco_formatado || txt) + '<br><strong>' + String(cot.km).replace('.', ',') + ' km · entrega ' + brl(cot.taxa) + '</strong></div>';
-      }
+      if (!cot.atende) cotMsg.innerHTML = '<div class="dl-msg erro">😕 ' + esc(cot.mensagem || 'Ainda não entregamos nesse endereço.') + '</div>';
+      else cotMsg.innerHTML = '<div class="dl-msg ok dl-cot"><span class="pin">📍</span><div><strong>Entregamos aí! ' + brl(cot.taxa) + '</strong>' +
+        '<span class="km">' + esc(cot.endereco_formatado || txt) + ' · ' + String(cot.km).replace('.', ',') + ' km da loja</span>' +
+        (cot.impreciso ? '<br><span class="km">⚠️ Confira se o número da casa está certo.</span>' : '') + '</div></div>';
     } catch (e) {
-      cot = null;
-      cotMsg.innerHTML = '<div class="dl-msg erro">' + esc(e.message || 'Não foi possível calcular agora.') + '</div>';
+      cot = null; cotMsg.innerHTML = '<div class="dl-msg erro">' + esc(e.message || 'Não foi possível calcular agora.') + '</div>';
     }
+    $('btnCotar').disabled = false; $('btnCotar').textContent = cot && cot.atende ? 'Recalcular entrega' : 'Calcular entrega';
     render();
   }
 
   // ---- Janelas ----
-  var janEl = document.getElementById('janelas');
   var jans = D.janelasDisponiveis(cfg, 6);
-  janEl.innerHTML = jans.map(function (j, i) {
-    return '<button type="button" class="dl-jan" data-j="' + i + '"><strong>' + esc(j.titulo) + '</strong><span>' + esc(j.faixa) + '</span></button>';
-  }).join('') || '<p class="dl-vazio">Sem horários disponíveis nos próximos dias.</p>';
-  janEl.addEventListener('click', function (e) {
+  $('janelas').innerHTML = jans.map(function (j, i) {
+    return '<button type="button" class="dl-jan" data-j="' + i + '"><span class="ic">' + (j.periodo === 'manha' ? '☀️' : '🌤️') + '</span>' +
+      '<span><strong>' + esc(j.titulo) + '</strong><span>' + esc(j.faixa) + '</span></span></button>';
+  }).join('') || '<div class="dl-card"><p class="dl-vazio">Sem horários disponíveis nos próximos dias.</p></div>';
+  $('janelas').addEventListener('click', function (e) {
     var b = e.target.closest('[data-j]'); if (!b) return;
     janela = jans[+b.getAttribute('data-j')];
-    janEl.querySelectorAll('.dl-jan').forEach(function (x) { x.classList.toggle('ativo', x === b); });
-    validar();
+    $('janelas').querySelectorAll('.dl-jan').forEach(function (x) { x.classList.toggle('ativo', x === b); });
+    render();
   });
 
-  // ---- Validação + pagamento ----
-  var pagMsg = document.getElementById('pagMsg'), btnPagar = document.getElementById('btnPagar');
-  function faltando() {
-    if (!cart.length) return 'Adicione pelo menos um item.';
-    if (document.getElementById('nome').value.trim().length < 3) return 'Informe seu nome.';
-    if (telEl.value.replace(/\D/g, '').length < 10) return 'Informe um WhatsApp válido.';
-    if (!cot || !cot.atende) return 'Calcule a entrega do seu endereço.';
-    if (!janela) return 'Escolha quando quer receber.';
+  // ---- Progresso, validação e pagamento ----
+  var btnPagar = $('btnPagar'), pagMsg = $('pagMsg');
+  function okDados() { return $('nome').value.trim().length >= 3 && telEl.value.replace(/\D/g, '').length >= 10; }
+  function pendencia() {
+    if (!cart.length) return { txt: 'Adicione pelo menos um item.', sec: 'secProdutos' };
+    if (!okDados()) return { txt: 'Informe seu nome e WhatsApp.', sec: 'secDados' };
+    if (!cot || !cot.atende) return { txt: 'Calcule a entrega do seu endereço.', sec: 'secEndereco' };
+    if (!janela) return { txt: 'Escolha quando quer receber.', sec: 'secQuando' };
     return null;
   }
   function validar() {
-    var f = faltando();
-    btnPagar.disabled = !!f;
-    pagMsg.innerHTML = f ? '<div class="dl-msg info">' + esc(f) + '</div>' : '';
+    var p = pendencia();
+    btnPagar.disabled = !!p;
+    pagMsg.innerHTML = p ? '<div class="dl-msg info" style="margin-top:14px;">' + esc(p.txt) + '</div>' : '';
+    $('st1').classList.toggle('ok', cart.length > 0);
+    $('st2').classList.toggle('ok', cart.length > 0 && okDados() && !!(cot && cot.atende) && !!janela);
+    $('st3').classList.toggle('ok', false);
+    $('barBtn').textContent = p ? (cart.length ? 'Continuar' : 'Escolher') : 'Pagar agora';
   }
-  btnPagar.addEventListener('click', async function () {
-    if (faltando()) return;
-    btnPagar.disabled = true; btnPagar.textContent = 'Gerando pagamento…';
+  $('barBtn').addEventListener('click', function () {
+    var p = pendencia();
+    if (!p) { pagar(); return; }
+    $(p.sec).scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+  btnPagar.addEventListener('click', pagar);
+  async function pagar() {
+    if (pendencia()) return;
+    btnPagar.disabled = true; btnPagar.textContent = 'Gerando pagamento…'; $('barBtn').disabled = true;
     try {
       var r = await D.fn('delivery-checkout', {
         itens: cart.map(function (c) { return { produto_id: c.produto_id, sabor: c.sabor, quantidade: c.quantidade }; }),
-        nome: document.getElementById('nome').value.trim(),
-        telefone: telEl.value.replace(/\D/g, ''),
-        endereco: cot.endereco_formatado || endEl.value.trim(),
-        complemento: document.getElementById('comp').value.trim() || null,
+        nome: $('nome').value.trim(), telefone: telEl.value.replace(/\D/g, ''),
+        endereco: cot.endereco_formatado || endEl.value.trim(), complemento: $('comp').value.trim() || null,
         lat: cot.lat, lng: cot.lng, place_id: cot.place_id || null,
         km: cot.km, taxa: cot.taxa, cotacao: cot.cotacao, // assinada pelo servidor
         periodo: janela.periodo, data: janela.data
       });
+      $('st3').classList.add('ok');
       try { localStorage.removeItem(LS); } catch (e) {}
       window.location.href = r.init_point; // tela do Mercado Pago (Pix ou cartão)
     } catch (e) {
-      btnPagar.disabled = false; btnPagar.textContent = 'Ir para o pagamento';
-      pagMsg.innerHTML = '<div class="dl-msg erro">' + esc(e.message || 'Não foi possível iniciar o pagamento.') + '</div>';
+      btnPagar.disabled = false; btnPagar.textContent = 'Pagar com Pix ou cartão'; $('barBtn').disabled = false;
+      pagMsg.innerHTML = '<div class="dl-msg erro" style="margin-top:14px;">' + esc(e.message || 'Não foi possível iniciar o pagamento.') + '</div>';
     }
-  });
+  }
 
   render();
 })();

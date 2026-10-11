@@ -11,23 +11,24 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../assets/css/style.css?v=11">
-<link rel="stylesheet" href="delivery.css?v=1">
+<link rel="stylesheet" href="delivery.css?v=2">
 </head>
 <body class="dl-body">
 
-<header class="dl-top">
+<header class="dl-app-top">
   <div class="dl-wrap">
-    <a href="index.html" aria-label="Dupuro Delivery"><img src="../assets/img/brand/logo-branco.png" alt="Dupuro Açaí"></a>
-    <a class="dl-top-link" href="https://wa.me/5565992888228" target="_blank" rel="noopener">Falar com a gente</a>
+    <a class="vol" href="index.html">← Início</a>
+    <img src="../assets/img/brand/logo-branco.png" alt="Dupuro Açaí">
+    <a class="vol" href="https://wa.me/5565992888228" target="_blank" rel="noopener">Ajuda</a>
   </div>
 </header>
 
-<main class="dl-wrap" style="padding-top:22px; padding-bottom:30px; max-width:640px;">
+<main class="dl-app" style="padding-bottom:40px;">
   <div id="conteudo"><p class="dl-vazio">Carregando seu pedido…</p></div>
 </main>
 
 <script src="../assets/js/supabase-config.js"></script>
-<script src="delivery.js?v=1"></script>
+<script src="delivery.js?v=2"></script>
 <script>
 (async function () {
   var D = DupuroDelivery, esc = D.esc, brl = D.brl, el = document.getElementById('conteudo');
@@ -35,11 +36,12 @@
   if (!token) { el.innerHTML = '<p class="dl-msg erro">Link de acompanhamento inválido.</p>'; return; }
 
   var ETAPAS = [
-    { st: 'aguardando_pagamento', titulo: 'Aguardando pagamento', txt: 'Assim que o Mercado Pago confirmar, seu pedido entra na rota.' },
-    { st: 'pago', titulo: 'Pagamento confirmado', txt: 'Seu pedido está separado e vai na rota do período escolhido.' },
-    { st: 'em_rota', titulo: 'Saiu para entrega', txt: 'Estamos fazendo entregas na sua região e já chegamos aí.' },
-    { st: 'entregue', titulo: 'Entregue', txt: 'Bom apetite! 💜' }
+    { st: 'aguardando_pagamento', ic: '💳', titulo: 'Aguardando pagamento', txt: 'Assim que o Mercado Pago confirmar, seu pedido entra na rota.' },
+    { st: 'pago', ic: '✅', titulo: 'Pagamento confirmado', txt: 'Seu pedido está separado e vai na rota do período escolhido.' },
+    { st: 'em_rota', ic: '🛵', titulo: 'Saiu para entrega', txt: 'Estamos fazendo entregas na sua região e já chegamos aí.' },
+    { st: 'entregue', ic: '💜', titulo: 'Entregue', txt: 'Bom apetite!' }
   ];
+  var ROTULO = { aguardando_pagamento: 'Aguardando pagamento', pago: 'Pago · na fila da rota', em_rota: 'A caminho', entregue: 'Entregue' };
   function hora(t) { return t ? new Date(t).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : ''; }
   function dataBR(iso) { var p = String(iso).split('-'); return p[2] + '/' + p[1]; }
 
@@ -57,19 +59,20 @@
     var quando = { pago: p.pago_em, em_rota: p.saiu_em, entregue: p.entregue_em, aguardando_pagamento: p.criado_em };
     var periodoTxt = (p.periodo === 'manha' ? 'Manhã' : 'Tarde') + ' de ' + dataBR(p.data_entrega);
     el.innerHTML =
-      '<h1 class="dl-display" style="color:var(--roxo-700);font-size:26px;margin:0 0 4px;">Olá, ' + esc(p.cliente) + '!</h1>' +
-      '<p class="dl-vazio" style="margin:0 0 16px;">Pedido <strong>' + esc(p.codigo) + '</strong> · entrega: <strong>' + esc(periodoTxt) + '</strong></p>' +
-      '<section class="dl-etapa"><ul class="dl-timeline">' + ETAPAS.map(function (e, i) {
+      '<div class="dl-acomp-hero"><h1>Olá, ' + esc(p.cliente) + '!</h1>' +
+        '<p>Pedido <strong>' + esc(p.codigo) + '</strong> · entrega na <strong>' + esc(periodoTxt) + '</strong></p>' +
+        '<span class="st">' + esc(ROTULO[p.status] || p.status) + '</span></div>' +
+      '<div class="dl-bloco"><div class="dl-card"><ul class="dl-timeline">' + ETAPAS.map(function (e, i) {
         var cls = i < idx ? 'feito' : (i === idx ? (p.status === 'entregue' ? 'feito' : 'atual') : '');
-        return '<li class="' + cls + '"><span class="dot"></span><strong>' + e.titulo + '</strong><span>' +
+        return '<li class="' + cls + '"><span class="dot">' + e.ic + '</span><strong>' + e.titulo + '</strong><span>' +
           (i <= idx ? (hora(quando[e.st]) + (i === idx ? ' — ' + e.txt : '')) : '') + '</span></li>';
-      }).join('') + '</ul></section>' +
-      '<section class="dl-etapa dl-resumo"><h2>Itens</h2>' +
+      }).join('') + '</ul></div></div>' +
+      '<div class="dl-bloco"><h2 style="font:800 17px Inter,sans-serif;color:var(--roxo-900);margin:0 0 10px;">🛍️ Seu pedido</h2><div class="dl-card dl-itens">' +
         (p.itens || []).map(function (it) {
           return '<div class="ln"><span>' + it.quantidade + '× ' + esc(it.nome) + (it.sabor ? ' — ' + esc(it.sabor) : '') + '</span><span>' + brl(it.preco * it.quantidade) + '</span></div>';
         }).join('') +
         '<div class="ln"><span>Entrega</span><span>' + brl(p.taxa) + '</span></div>' +
-        '<div class="ln tot"><span>Total</span><span>' + brl(p.total) + '</span></div></section>';
+        '<div class="ln tot"><span>Total</span><span>' + brl(p.total) + '</span></div></div></div>';
     return p.status !== 'entregue';
   }
   // Atualiza sozinho enquanto o pedido não foi entregue (pagamento cai via webhook).

@@ -71,10 +71,36 @@ var DupuroDelivery = (function () {
     return out;
   }
 
+  // Cor de cada sabor (bolinha dos chips).
+  var CORES = { 'açaí': '#5B1450', 'morango': '#E8607A', 'ninho': '#F3E9CF', 'cupuaçu': '#E6C36A', 'maracujá': '#F2C230',
+    'doce de leite': '#C98A4B', 'banana': '#F1D86A', 'paçoca': '#B88457', 'pistache': '#9DBF6B', 'chocolate': '#5A3221', 'coco': '#F6F1E6' };
+  function corSabor(nome) {
+    var n = String(nome || '').toLowerCase().replace(/^creme de\s+/, '');
+    return CORES[n] || '#A94E8C';
+  }
+  function nomeSabor(nome) { return String(nome || '').replace(/^Creme de\s+/i, ''); }
+  // Pra quem é cada tamanho (texto de venda), pelo volume.
+  function idealPra(p) {
+    var l = Number(p.litros) || 0;
+    if (!p.multissabor) return 'Crocante pra completar o açaí';
+    if (l <= 1) return 'Pra matar a vontade ou provar um creme novo';
+    if (l <= 2) return 'Sobremesa do casal a semana toda';
+    if (l <= 5) return 'A família toda no fim de semana';
+    return 'Festa, aniversário ou pra não faltar nunca';
+  }
+  // Foto do produto: a cadastrada no admin ou, sem ela, uma foto real de reserva.
+  function fotoProduto(p) {
+    if (p.imagem_url) return p.imagem_url;
+    if (p.multissabor) return '../assets/img/delivery/caixa-na-mao.jpg';
+    return null;
+  }
+  function litrosTxt(p) { var l = Number(p.litros) || 0; return l ? (String(l).replace('.', ',') + ' L') : ''; }
+
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
 
   return {
     brl: brl, esc: esc, getConfig: getConfig, getCatalogo: getCatalogo, getRastreio: getRastreio,
-    fn: fn, janelasDisponiveis: janelasDisponiveis
+    fn: fn, janelasDisponiveis: janelasDisponiveis,
+    corSabor: corSabor, nomeSabor: nomeSabor, idealPra: idealPra, litrosTxt: litrosTxt, fotoProduto: fotoProduto
   };
 })();
