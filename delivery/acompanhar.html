@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Acompanhar pedido — Dupuro Delivery</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#601050">
+<link rel="icon" href="../assets/img/brand/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/style.css?v=11">
+<link rel="stylesheet" href="delivery.css?v=1">
+</head>
+<body class="dl-body">
+
+<header class="dl-top">
+  <div class="dl-wrap">
+    <a href="index.html" aria-label="Dupuro Delivery"><img src="../assets/img/brand/logo-branco.png" alt="Dupuro Açaí"></a>
+    <a class="dl-top-link" href="https://wa.me/5565992888228" target="_blank" rel="noopener">Falar com a gente</a>
+  </div>
+</header>
+
+<main class="dl-wrap" style="padding-top:22px; padding-bottom:30px; max-width:640px;">
+  <div id="conteudo"><p class="dl-vazio">Carregando seu pedido…</p></div>
+</main>
+
+<script src="../assets/js/supabase-config.js"></script>
+<script src="delivery.js?v=1"></script>
+<script>
+(async function () {
+  var D = DupuroDelivery, esc = D.esc, brl = D.brl, el = document.getElementById('conteudo');
+  var token = new URLSearchParams(location.search).get('t');
+  if (!token) { el.innerHTML = '<p class="dl-msg erro">Link de acompanhamento inválido.</p>'; return; }
+
+  var ETAPAS = [
+    { st: 'aguardando_pagamento', titulo: 'Aguardando pagamento', txt: 'Assim que o Mercado Pago confirmar, seu pedido entra na rota.' },
+    { st: 'pago', titulo: 'Pagamento confirmado', txt: 'Seu pedido está separado e vai na rota do período escolhido.' },
+    { st: 'em_rota', titulo: 'Saiu para entrega', txt: 'Estamos fazendo entregas na sua região e já chegamos aí.' },
+    { st: 'entregue', titulo: 'Entregue', txt: 'Bom apetite! 💜' }
+  ];
+  function hora(t) { return t ? new Date(t).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : ''; }
+  function dataBR(iso) { var p = String(iso).split('-'); return p[2] + '/' + p[1]; }
+
+  async function carregar() {
+    var p;
+    try { p = await D.getRastreio(token); } catch (e) { el.innerHTML = '<p class="dl-msg erro">Não conseguimos carregar agora. Tente de novo em instantes.</p>'; return; }
+    if (!p) { el.innerHTML = '<p class="dl-msg erro">Pedido não encontrado.</p>'; return; }
+    if (p.status === 'cancelado' || p.status === 'expirado') {
+      el.innerHTML = '<h1 class="dl-display" style="color:var(--roxo-700);font-size:26px;">Pedido ' + esc(p.codigo) + '</h1>' +
+        '<p class="dl-msg erro">Este pedido foi ' + (p.status === 'expirado' ? 'expirado (pagamento não concluído)' : 'cancelado') + '. Se precisar, faça um novo pedido ou fale com a gente.</p>' +
+        '<a class="dl-btn dl-btn-gold dl-btn-block" href="pedido.html">Fazer novo pedido</a>';
+      return false;
+    }
+    var idx = ETAPAS.findIndex(function (e) { return e.st === p.status; });
+    var quando = { pago: p.pago_em, em_rota: p.saiu_em, entregue: p.entregue_em, aguardando_pagamento: p.criado_em };
+    var periodoTxt = (p.periodo === 'manha' ? 'Manhã' : 'Tarde') + ' de ' + dataBR(p.data_entrega);
+    el.innerHTML =
+      '<h1 class="dl-display" style="color:var(--roxo-700);font-size:26px;margin:0 0 4px;">Olá, ' + esc(p.cliente) + '!</h1>' +
+      '<p class="dl-vazio" style="margin:0 0 16px;">Pedido <strong>' + esc(p.codigo) + '</strong> · entrega: <strong>' + esc(periodoTxt) + '</strong></p>' +
+      '<section class="dl-etapa"><ul class="dl-timeline">' + ETAPAS.map(function (e, i) {
+        var cls = i < idx ? 'feito' : (i === idx ? (p.status === 'entregue' ? 'feito' : 'atual') : '');
+        return '<li class="' + cls + '"><span class="dot"></span><strong>' + e.titulo + '</strong><span>' +
+          (i <= idx ? (hora(quando[e.st]) + (i === idx ? ' — ' + e.txt : '')) : '') + '</span></li>';
+      }).join('') + '</ul></section>' +
+      '<section class="dl-etapa dl-resumo"><h2>Itens</h2>' +
+        (p.itens || []).map(function (it) {
+          return '<div class="ln"><span>' + it.quantidade + '× ' + esc(it.nome) + (it.sabor ? ' — ' + esc(it.sabor) : '') + '</span><span>' + brl(it.preco * it.quantidade) + '</span></div>';
+        }).join('') +
+        '<div class="ln"><span>Entrega</span><span>' + brl(p.taxa) + '</span></div>' +
+        '<div class="ln tot"><span>Total</span><span>' + brl(p.total) + '</span></div></section>';
+    return p.status !== 'entregue';
+  }
+  // Atualiza sozinho enquanto o pedido não foi entregue (pagamento cai via webhook).
+  var continuar = await carregar();
+  var t = setInterval(async function () { if (!(await carregar())) clearInterval(t); }, 20000);
+  if (!continuar) clearInterval(t);
+})();
+</script>
+</body>
+</html>

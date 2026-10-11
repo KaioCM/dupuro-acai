@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fazer pedido — Dupuro Delivery</title>
+<meta name="description" content="Monte seu pedido de açaí Dupuro com entrega em casa em Cuiabá.">
+<meta name="theme-color" content="#601050">
+<link rel="icon" href="../assets/img/brand/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/style.css?v=11">
+<link rel="stylesheet" href="delivery.css?v=1">
+</head>
+<body class="dl-body">
+
+<header class="dl-top">
+  <div class="dl-wrap">
+    <a href="index.html" aria-label="Voltar"><img src="../assets/img/brand/logo-branco.png" alt="Dupuro Açaí"></a>
+    <a class="dl-top-link" href="https://wa.me/5565992888228" target="_blank" rel="noopener">Dúvidas? WhatsApp</a>
+  </div>
+</header>
+
+<main class="dl-wrap" style="padding-top:20px; padding-bottom:20px; max-width:640px;">
+  <h1 class="dl-display" style="color:var(--roxo-700); font-size:28px; margin:4px 0 16px;">Seu pedido</h1>
+
+  <section class="dl-etapa">
+    <h2><span class="n">1</span> Escolha o açaí</h2>
+    <div class="dl-prods" id="prods"><p class="dl-vazio">Carregando os produtos…</p></div>
+  </section>
+
+  <section class="dl-etapa">
+    <h2><span class="n">🛒</span> Carrinho</h2>
+    <ul class="dl-carrinho" id="carrinho"></ul>
+    <p class="dl-vazio" id="carrinhoVazio">Nenhum item ainda — adicione acima.</p>
+  </section>
+
+  <section class="dl-etapa">
+    <h2><span class="n">2</span> Seus dados</h2>
+    <div class="dl-campo"><label for="nome">Nome completo</label><input id="nome" autocomplete="name" placeholder="Como devemos te chamar"></div>
+    <div class="dl-campo"><label for="tel">WhatsApp</label><input id="tel" type="tel" inputmode="tel" autocomplete="tel" placeholder="(65) 99999-9999"></div>
+    <p class="dl-vazio" style="font-size:12.5px;margin:0;">É por ele que avisamos quando sair pra entrega.</p>
+  </section>
+
+  <section class="dl-etapa">
+    <h2><span class="n">3</span> Endereço de entrega</h2>
+    <div class="dl-campo"><label for="end">Rua, número e bairro</label><input id="end" autocomplete="street-address" placeholder="Ex: Rua das Flores, 120, Jardim Imperial"></div>
+    <div class="dl-campo"><label for="comp">Complemento / referência (opcional)</label><input id="comp" placeholder="Apto, bloco, ponto de referência"></div>
+    <button type="button" class="dl-btn dl-btn-ghost dl-btn-block" id="btnCotar">📍 Calcular entrega</button>
+    <div id="cotMsg"></div>
+  </section>
+
+  <section class="dl-etapa">
+    <h2><span class="n">4</span> Quando receber</h2>
+    <div class="dl-janelas" id="janelas"></div>
+  </section>
+
+  <section class="dl-etapa dl-resumo">
+    <h2><span class="n">5</span> Resumo</h2>
+    <div class="ln"><span>Produtos</span><span id="rSub">R$ 0,00</span></div>
+    <div class="ln"><span>Entrega</span><span id="rTaxa">calcule acima</span></div>
+    <div class="ln tot"><span>Total</span><span id="rTot">R$ 0,00</span></div>
+    <div id="pagMsg"></div>
+    <button type="button" class="dl-btn dl-btn-gold dl-btn-block" id="btnPagar" style="margin-top:12px;" disabled>Ir para o pagamento</button>
+    <p class="dl-seguro">🔒 Pagamento por <strong>Pix ou cartão</strong> no ambiente seguro do Mercado Pago.</p>
+  </section>
+</main>
+
+<div class="dl-barra"><div class="dl-wrap" style="max-width:640px;"><span>Total <span class="v" id="barTot">R$ 0,00</span></span><a href="#btnPagar" class="dl-btn dl-btn-roxo" style="padding:11px 16px;font-size:14px;">Finalizar</a></div></div>
+
+<script src="../assets/js/supabase-config.js"></script>
+<script src="maps-config.js?v=1"></script>
+<script src="delivery.js?v=1"></script>
+<script>
+(async function () {
+  var D = DupuroDelivery, brl = D.brl, esc = D.esc;
+  var cfg = null, cat = [], cart = [], cot = null, janela = null;
+  var LS = 'dupuro-delivery-carrinho';
+  try { cart = JSON.parse(localStorage.getItem(LS) || '[]') || []; } catch (e) { cart = []; }
+  function salvar() { try { localStorage.setItem(LS, JSON.stringify(cart)); } catch (e) {} }
+
+  // ---- Carrega config + catálogo ----
+  try {
+    var res = await Promise.all([D.getConfig(), D.getCatalogo()]);
+    cfg = res[0]; cat = res[1] || [];
+  } catch (e) {
+    document.getElementById('prods').innerHTML = '<p class="dl-msg erro">Não conseguimos carregar os produtos. Recarregue a página.</p>';
+    return;
+  }
+  if (cfg && cfg.ativo === false) {
+    document.getElementById('prods').innerHTML = '<p class="dl-msg info">O delivery está pausado no momento. Fale com a gente no WhatsApp.</p>';
+    return;
+  }
+  // Remove do carrinho salvo o que não existe mais no catálogo.
+  cart = cart.filter(function (c) { return cat.some(function (p) { return p.id === c.produto_id; }); });
+
+  function estoqueDe(p, sabor) {
+    if (!p.multissabor) return Number(p.estoque) || 0;
+    var s = (p.sabores || []).filter(function (x) { return x.sabor === sabor; })[0];
+    return s ? Number(s.estoque) || 0 : 0;
+  }
+  function noCarrinho(pid, sabor) {
+    return cart.filter(function (c) { return c.produto_id === pid && (c.sabor || null) === (sabor || null); })
+      .reduce(function (s, c) { return s + c.quantidade; }, 0);
+  }
+
+  // ---- Produtos ----
+  var prodsEl = document.getElementById('prods');
+  prodsEl.innerHTML = cat.map(function (p) {
+    var ph = p.imagem_url ? '<img src="' + esc(p.imagem_url) + '" alt="">' : (p.multissabor ? '🫐' : '🥣');
+    var temAlgum = p.multissabor ? (p.sabores || []).some(function (s) { return s.estoque > 0; }) : estoqueDe(p) > 0;
+    var ctrl;
+    if (!temAlgum) ctrl = '<span class="dl-esgotado">Esgotado no momento</span>';
+    else {
+      var sel = p.multissabor
+        ? '<select data-sabor="' + p.id + '">' + (p.sabores || []).map(function (s) {
+            return '<option value="' + esc(s.sabor) + '"' + (s.estoque > 0 ? '' : ' disabled') + '>' + esc(s.sabor) + (s.estoque > 0 ? '' : ' (esgotado)') + '</option>';
+          }).join('') + '</select>'
+        : '';
+      ctrl = sel + '<span class="dl-qtd"><button type="button" data-menos="' + p.id + '">−</button><span data-q="' + p.id + '">1</span><button type="button" data-mais="' + p.id + '">+</button></span>' +
+        '<button type="button" class="dl-add" data-add="' + p.id + '">Adicionar</button>';
+    }
+    return '<div class="dl-prod"><div class="ph">' + ph + '</div><div><h3>' + esc(p.nome) + '</h3><div class="pr">' + brl(p.preco) + '</div></div>' +
+      '<div class="dl-prod-ctrl">' + ctrl + '</div></div>';
+  }).join('') || '<p class="dl-vazio">Nenhum produto disponível agora.</p>';
+  // Seleciona o primeiro sabor com estoque em cada select.
+  prodsEl.querySelectorAll('select[data-sabor]').forEach(function (s) {
+    var ok = Array.prototype.find.call(s.options, function (o) { return !o.disabled; });
+    if (ok) s.value = ok.value;
+  });
+
+  prodsEl.addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    var id = +(b.getAttribute('data-mais') || b.getAttribute('data-menos') || b.getAttribute('data-add'));
+    if (!id) return;
+    var qEl = prodsEl.querySelector('[data-q="' + id + '"]');
+    var q = +qEl.textContent;
+    if (b.hasAttribute('data-mais')) qEl.textContent = Math.min(q + 1, 50);
+    else if (b.hasAttribute('data-menos')) qEl.textContent = Math.max(q - 1, 1);
+    else {
+      var p = cat.filter(function (x) { return x.id === id; })[0];
+      var selEl = prodsEl.querySelector('select[data-sabor="' + id + '"]');
+      var sabor = p.multissabor ? (selEl && selEl.value) : null;
+      var livre = estoqueDe(p, sabor) - noCarrinho(id, sabor);
+      if (q > livre) { alertaProd(b, livre > 0 ? ('Só temos ' + livre + ' em estoque' + (sabor ? ' de ' + sabor : '') + '.') : 'Esgotou' + (sabor ? ' o ' + sabor : '') + '.'); return; }
+      var ex = cart.filter(function (c) { return c.produto_id === id && (c.sabor || null) === (sabor || null); })[0];
+      if (ex) ex.quantidade += q; else cart.push({ produto_id: id, nome: p.nome, sabor: sabor, quantidade: q, preco: Number(p.preco) });
+      qEl.textContent = '1';
+      b.textContent = '✓ Adicionado'; setTimeout(function () { b.textContent = 'Adicionar'; }, 1200);
+      salvar(); render();
+    }
+  });
+  function alertaProd(btn, txt) {
+    var m = document.createElement('div'); m.className = 'dl-msg erro'; m.textContent = txt;
+    btn.closest('.dl-prod').appendChild(m); setTimeout(function () { m.remove(); }, 2500);
+  }
+
+  // ---- Carrinho + resumo ----
+  var carEl = document.getElementById('carrinho');
+  carEl.addEventListener('click', function (e) {
+    var i = e.target.getAttribute('data-rm'); if (i == null) return;
+    cart.splice(+i, 1); salvar(); render();
+  });
+  function subtotal() { return cart.reduce(function (s, c) { return s + c.preco * c.quantidade; }, 0); }
+  function render() {
+    carEl.innerHTML = cart.map(function (c, i) {
+      return '<li><span>' + c.quantidade + '× ' + esc(c.nome) + (c.sabor ? ' — ' + esc(c.sabor) : '') + '</span><span>' + brl(c.preco * c.quantidade) +
+        ' <button type="button" class="rm" data-rm="' + i + '" aria-label="Remover">×</button></span></li>';
+    }).join('');
+    document.getElementById('carrinhoVazio').style.display = cart.length ? 'none' : '';
+    var sub = subtotal(), taxa = cot && cot.atende ? cot.taxa : null;
+    document.getElementById('rSub').textContent = brl(sub);
+    document.getElementById('rTaxa').textContent = taxa == null ? 'calcule acima' : brl(taxa);
+    var tot = sub + (taxa || 0);
+    document.getElementById('rTot').textContent = brl(tot);
+    document.getElementById('barTot').textContent = brl(tot);
+    validar();
+  }
+
+  // ---- Dados ----
+  var telEl = document.getElementById('tel');
+  telEl.addEventListener('input', function () {
+    var d = telEl.value.replace(/\D/g, '').slice(0, 11);
+    telEl.value = d.length > 6 ? '(' + d.slice(0, 2) + ') ' + d.slice(2, d.length - 4) + '-' + d.slice(-4) : (d.length > 2 ? '(' + d.slice(0, 2) + ') ' + d.slice(2) : d);
+    validar();
+  });
+  document.getElementById('nome').addEventListener('input', validar);
+
+  // ---- Endereço / cotação ----
+  var endEl = document.getElementById('end'), cotMsg = document.getElementById('cotMsg');
+  var placeSel = null; // { place_id, lat, lng, formatado } quando escolheu do autocomplete
+  endEl.addEventListener('input', function () { placeSel = null; if (cot) { cot = null; cotMsg.innerHTML = ''; render(); } });
+  // Autocomplete do Google (só se a chave do front estiver configurada).
+  if (window.DUPURO_GOOGLE_MAPS_KEY) {
+    window.__dlMapsPronto = function () {
+      try {
+        var ac = new google.maps.places.Autocomplete(endEl, {
+          componentRestrictions: { country: 'br' }, fields: ['place_id', 'formatted_address', 'geometry'],
+          bounds: { north: -15.40, south: -15.80, east: -55.85, west: -56.25 }, strictBounds: false
+        });
+        ac.addListener('place_changed', function () {
+          var pl = ac.getPlace(); if (!pl || !pl.geometry) return;
+          placeSel = { place_id: pl.place_id, lat: pl.geometry.location.lat(), lng: pl.geometry.location.lng(), formatado: pl.formatted_address };
+          cotar();
+        });
+      } catch (e) { /* segue com texto livre */ }
+    };
+    var s = document.createElement('script');
+    s.src = 'https://maps.googleapis.com/maps/api/js?key=' + encodeURIComponent(window.DUPURO_GOOGLE_MAPS_KEY) + '&libraries=places&language=pt-BR&region=BR&callback=__dlMapsPronto';
+    s.async = true; document.head.appendChild(s);
+  }
+  document.getElementById('btnCotar').addEventListener('click', cotar);
+  async function cotar() {
+    var txt = endEl.value.trim();
+    if (txt.length < 6 && !placeSel) { cotMsg.innerHTML = '<div class="dl-msg erro">Digite rua, número e bairro.</div>'; return; }
+    cotMsg.innerHTML = '<div class="dl-msg info">Calculando a distância…</div>';
+    try {
+      cot = await D.fn('delivery-cotacao', placeSel ? { place_id: placeSel.place_id, lat: placeSel.lat, lng: placeSel.lng, endereco: placeSel.formatado || txt } : { endereco: txt });
+      if (!cot.atende) {
+        cotMsg.innerHTML = '<div class="dl-msg erro">😕 ' + esc(cot.mensagem || 'Ainda não entregamos nesse endereço.') + '</div>';
+      } else {
+        cotMsg.innerHTML = '<div class="dl-msg ok">✔ ' + esc(cot.endereco_formatado || txt) + '<br><strong>' + String(cot.km).replace('.', ',') + ' km · entrega ' + brl(cot.taxa) + '</strong></div>';
+      }
+    } catch (e) {
+      cot = null;
+      cotMsg.innerHTML = '<div class="dl-msg erro">' + esc(e.message || 'Não foi possível calcular agora.') + '</div>';
+    }
+    render();
+  }
+
+  // ---- Janelas ----
+  var janEl = document.getElementById('janelas');
+  var jans = D.janelasDisponiveis(cfg, 6);
+  janEl.innerHTML = jans.map(function (j, i) {
+    return '<button type="button" class="dl-jan" data-j="' + i + '"><strong>' + esc(j.titulo) + '</strong><span>' + esc(j.faixa) + '</span></button>';
+  }).join('') || '<p class="dl-vazio">Sem horários disponíveis nos próximos dias.</p>';
+  janEl.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-j]'); if (!b) return;
+    janela = jans[+b.getAttribute('data-j')];
+    janEl.querySelectorAll('.dl-jan').forEach(function (x) { x.classList.toggle('ativo', x === b); });
+    validar();
+  });
+
+  // ---- Validação + pagamento ----
+  var pagMsg = document.getElementById('pagMsg'), btnPagar = document.getElementById('btnPagar');
+  function faltando() {
+    if (!cart.length) return 'Adicione pelo menos um item.';
+    if (document.getElementById('nome').value.trim().length < 3) return 'Informe seu nome.';
+    if (telEl.value.replace(/\D/g, '').length < 10) return 'Informe um WhatsApp válido.';
+    if (!cot || !cot.atende) return 'Calcule a entrega do seu endereço.';
+    if (!janela) return 'Escolha quando quer receber.';
+    return null;
+  }
+  function validar() {
+    var f = faltando();
+    btnPagar.disabled = !!f;
+    pagMsg.innerHTML = f ? '<div class="dl-msg info">' + esc(f) + '</div>' : '';
+  }
+  btnPagar.addEventListener('click', async function () {
+    if (faltando()) return;
+    btnPagar.disabled = true; btnPagar.textContent = 'Gerando pagamento…';
+    try {
+      var r = await D.fn('delivery-checkout', {
+        itens: cart.map(function (c) { return { produto_id: c.produto_id, sabor: c.sabor, quantidade: c.quantidade }; }),
+        nome: document.getElementById('nome').value.trim(),
+        telefone: telEl.value.replace(/\D/g, ''),
+        endereco: cot.endereco_formatado || endEl.value.trim(),
+        complemento: document.getElementById('comp').value.trim() || null,
+        lat: cot.lat, lng: cot.lng, place_id: cot.place_id || null,
+        km: cot.km, taxa: cot.taxa, cotacao: cot.cotacao, // assinada pelo servidor
+        periodo: janela.periodo, data: janela.data
+      });
+      try { localStorage.removeItem(LS); } catch (e) {}
+      window.location.href = r.init_point; // tela do Mercado Pago (Pix ou cartão)
+    } catch (e) {
+      btnPagar.disabled = false; btnPagar.textContent = 'Ir para o pagamento';
+      pagMsg.innerHTML = '<div class="dl-msg erro">' + esc(e.message || 'Não foi possível iniciar o pagamento.') + '</div>';
+    }
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>

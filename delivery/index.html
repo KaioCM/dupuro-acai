@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dupuro Delivery — Açaí de qualidade no conforto de casa | Cuiabá</title>
+<meta name="description" content="Caixas de açaí e cremes Dupuro de 1 a 10 litros, direto da fábrica, entregues na sua casa em Cuiabá. Escolha manhã ou tarde, pague por Pix ou cartão e acompanhe a entrega em tempo real.">
+<meta name="theme-color" content="#601050">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="pt_BR">
+<meta property="og:site_name" content="Dupuro Açaí">
+<meta property="og:title" content="Açaí de qualidade no conforto de casa — Dupuro Delivery">
+<meta property="og:description" content="Caixas de 1 a 10 litros direto da fábrica, entregues em Cuiabá. Pix ou cartão, acompanhe ao vivo.">
+<meta property="og:image" content="https://www.dupuroacai.com/assets/img/fotos/menina-caixa-5l.jpg">
+<link rel="icon" href="../assets/img/brand/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="../assets/img/brand/favicon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="preload" href="../assets/fonts/Klinko-PlayfulBold.otf" as="font" type="font/otf" crossorigin>
+<link rel="stylesheet" href="../assets/css/style.css?v=11">
+<link rel="stylesheet" href="delivery.css?v=1">
+</head>
+<body class="dl-body">
+
+<header class="dl-top">
+  <div class="dl-wrap">
+    <a href="../index.html" aria-label="Dupuro Açaí"><img src="../assets/img/brand/logo-branco.png" alt="Dupuro Açaí"></a>
+    <a class="dl-top-link" href="pedido.html">Fazer pedido →</a>
+  </div>
+</header>
+
+<section class="dl-hero">
+  <div class="dl-wrap">
+    <div>
+      <span class="dl-tag">🛵 Entrega em Cuiabá · direto da fábrica</span>
+      <h1>Açaí de qualidade <em>no conforto de casa</em></h1>
+      <p class="dl-sub">Caixas de açaí e cremes de <strong>1 a 10 litros</strong> pra toda a família. Você escolhe se recebe de <strong>manhã ou à tarde</strong>, paga no <strong>Pix ou cartão</strong> e acompanha a entrega em tempo real.</p>
+      <a class="dl-btn dl-btn-gold" href="pedido.html">Quero receber em casa</a>
+    </div>
+    <div class="dl-hero-foto">
+      <img src="../assets/img/fotos/menina-caixa-5l.jpg" alt="Criança segurando uma caixa de 5 litros de açaí Dupuro" width="1066" height="1600" fetchpriority="high">
+      <div class="dl-selo">Caixas a partir de<strong id="seloPreco">R$ 25</strong>de 1 a 10 litros</div>
+    </div>
+  </div>
+</section>
+
+<section class="dl-sec">
+  <div class="dl-wrap">
+    <h2>Escolha o tamanho</h2>
+    <p class="dl-lead">Açaí puro e cremes (morango, ninho, cupuaçu e mais). Preços de fábrica.</p>
+    <div class="dl-vitrine" id="vitrine">
+      <div class="dl-vit"><div class="ph">🫐</div><h3>Carregando…</h3></div>
+    </div>
+    <p style="text-align:center;margin-top:22px;"><a class="dl-btn dl-btn-roxo" href="pedido.html">Montar meu pedido</a></p>
+  </div>
+</section>
+
+<section class="dl-sec" style="padding-top:0;">
+  <div class="dl-wrap">
+    <h2>Como funciona</h2>
+    <p class="dl-lead">Simples como pedir no Mercado Livre — só que chega gelado e no mesmo dia.</p>
+    <div class="dl-passos">
+      <div class="dl-passo"><div class="n">1</div><div><h4>Escolha</h4><p>Tamanho, sabor e quantidade.</p></div></div>
+      <div class="dl-passo"><div class="n">2</div><div><h4>Endereço e horário</h4><p>A taxa de entrega aparece na hora. Você escolhe manhã ou tarde.</p></div></div>
+      <div class="dl-passo"><div class="n">3</div><div><h4>Pague seguro</h4><p>Pix ou cartão pelo Mercado Pago.</p></div></div>
+      <div class="dl-passo"><div class="n">4</div><div><h4>Acompanhe</h4><p>Avisamos no WhatsApp quando sair pra entrega, com o mapa ao vivo.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="dl-sec" style="padding-top:0;">
+  <div class="dl-wrap">
+    <div class="dl-cta-final">
+      <h2>Bateu vontade?</h2>
+      <p style="margin:0 0 18px;opacity:.85;">Peça agora e receba ainda hoje (pedidos até 11h saem à tarde).</p>
+      <a class="dl-btn dl-btn-gold" href="pedido.html">Fazer meu pedido</a>
+    </div>
+  </div>
+</section>
+
+<footer class="dl-rodape">Dupuro Açaí · Puro como tem que ser · Cuiabá-MT · <a href="https://wa.me/5565992888228" style="color:inherit;">(65) 99288-8228</a></footer>
+
+<script src="../assets/js/supabase-config.js"></script>
+<script src="delivery.js?v=1"></script>
+<script>
+(async function () {
+  var vit = document.getElementById('vitrine');
+  try {
+    var cat = await DupuroDelivery.getCatalogo();
+    vit.innerHTML = cat.map(function (p) {
+      var ph = p.imagem_url ? '<img src="' + DupuroDelivery.esc(p.imagem_url) + '" alt="" loading="lazy">' : (p.multissabor ? '🫐' : '🥣');
+      return '<div class="dl-vit"><div class="ph">' + ph + '</div><h3>' + DupuroDelivery.esc(p.nome) + '</h3><div class="pr">' + DupuroDelivery.brl(p.preco) + '</div></div>';
+    }).join('');
+    var menor = cat.filter(function (p) { return p.multissabor; })[0]; // já vem ordenado por preço
+    if (menor) document.getElementById('seloPreco').textContent = DupuroDelivery.brl(menor.preco).replace(',00', '');
+  } catch (e) {
+    vit.innerHTML = '<p class="dl-vazio">Não conseguimos carregar os preços agora. <a href="pedido.html">Ver no pedido</a>.</p>';
+  }
+})();
+</script>
+</body>
+</html>
