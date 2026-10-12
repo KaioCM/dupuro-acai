@@ -377,7 +377,7 @@
     $('btnCotar').disabled = true; $('btnCotar').textContent = 'Calculando…';
     cotMsg.innerHTML = '';
     try {
-      cot = await D.fn('delivery-cotacao', { endereco: txt + ', Brasil' });
+      cot = await D.fn('delivery-cotacao', { endereco: txt, cep: cepEl.value, rua: $('rua').value.trim(), numero: $('numero').value.trim(), bairro: $('bairro').value.trim(), cidade: $('cidade').value });
       if (!cot.atende) cotMsg.innerHTML = '<div class="dl-msg erro">😕 ' + esc(cot.mensagem || 'Ainda não entregamos nesse endereço.') + '</div>';
       else cotMsg.innerHTML = '<div class="dl-msg ok dl-cot"><span class="pin">📍</span><div><strong>Entregamos aí! ' + brl(cot.taxa) + '</strong>' +
         '<span class="km">' + esc(cot.endereco_formatado || txt) + ' · ' + String(cot.km).replace('.', ',') + ' km da loja</span>' +
