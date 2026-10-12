@@ -332,3 +332,35 @@
 @media (prefers-reduced-motion: reduce) {
   .dl-hero::after, .dl-selo-gira, .dl-marquee-track, .dl-hero-txt > *, .dl-timeline li.atual .dot { animation: none !important; }
 }
+
+/* ---------- Sacola editável (lista + gaveta da barra) ---------- */
+.dl-sacola li { flex-wrap: nowrap; }
+.dl-sacola .t .v { display: block; margin-top: 2px; font-size: 13.5px; }
+.dl-qtd.mini { border-radius: 11px; }
+.dl-qtd.mini button { width: 34px; height: 36px; font-size: 17px; }
+.dl-qtd.mini span { min-width: 22px; font-size: 14.5px; }
+.dl-qtd button.nao { animation: dlNao .3s; color: var(--danger); }
+@keyframes dlNao { 25% { transform: translateX(-3px); } 75% { transform: translateX(3px); } }
+.dl-barra-in .ver { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; background: transparent; border: 0; padding: 0; color: inherit; text-align: left; cursor: pointer; font: inherit; }
+.dl-barra-in .ver .tt em { display: block; font-style: normal; font-size: 11.5px; font-weight: 700; color: var(--gold); margin-top: 1px; }
+.dl-gaveta { position: fixed; inset: 0; z-index: 60; display: flex; align-items: flex-end; justify-content: center; }
+.dl-gaveta[hidden] { display: none; }
+.dl-gaveta-fundo { position: absolute; inset: 0; background: rgba(36,8,32,.55); animation: dlFade .2s ease; }
+.dl-gaveta-in { position: relative; width: 100%; max-width: 560px; max-height: 82vh; overflow: auto; background: #fff; border-radius: 26px 26px 0 0; padding: 18px 18px calc(18px + env(safe-area-inset-bottom)); box-shadow: 0 -18px 40px rgba(36,8,32,.3); animation: dlSobe .25s ease; }
+.dl-gaveta-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.dl-gaveta-top h2 { font: 800 18px 'Inter', sans-serif; color: var(--roxo-900); margin: 0; }
+.dl-gaveta-top .x { border: 0; background: var(--cream-2); width: 36px; height: 36px; border-radius: 12px; font-size: 20px; font-weight: 800; color: var(--roxo-700); cursor: pointer; }
+.dl-gaveta-tot { display: flex; justify-content: space-between; align-items: center; padding: 14px 0 4px; border-top: 2px solid var(--cream-2); margin-top: 6px; font-weight: 700; color: var(--roxo-900); }
+.dl-gaveta-tot strong { font-size: 19px; color: var(--roxo-700); }
+.dl-gaveta-acoes { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+.dl-gaveta-acoes .dl-btn { padding: 14px 10px; font-size: 14.5px; }
+body.dl-travado { overflow: hidden; }
+@keyframes dlSobe { from { transform: translateY(40px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes dlFade { from { opacity: 0; } to { opacity: 1; } }
+
+/* Campos que vêm do CEP ficam travados */
+.dl-input.travado input, .dl-input.travado select { background-color: var(--cream-2); color: var(--roxo-900); cursor: not-allowed; border-style: dashed; }
+.dl-input.travado select { opacity: 1; background-image: none; }
+.dl-input.travado::after { content: "🔒"; position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 13px; opacity: .55; pointer-events: none; }
+.dl-input.travado input { padding-right: 34px; text-overflow: ellipsis; }
+.dl-gaveta-acoes .dl-btn-line { background: #fff; color: var(--roxo-700); border-color: rgba(96,16,80,.25); }

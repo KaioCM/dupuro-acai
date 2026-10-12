@@ -12,7 +12,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="preload" href="../assets/fonts/Klinko-PlayfulBold.otf" as="font" type="font/otf" crossorigin>
 <link rel="stylesheet" href="../assets/css/style.css?v=11">
-<link rel="stylesheet" href="delivery.css?v=3">
+<link rel="stylesheet" href="delivery.css?v=4">
 </head>
 <body class="dl-body">
 
@@ -58,13 +58,13 @@
       <div class="dl-linha">
         <div class="dl-campo"><label for="cep">CEP</label><div class="dl-input"><span>📮</span><input id="cep" inputmode="numeric" autocomplete="postal-code" placeholder="78000-000" maxlength="9"></div>
           <a class="dl-cep-ajuda" href="https://buscacepinter.correios.com.br/app/endereco/index.php" target="_blank" rel="noopener">Não sei meu CEP</a></div>
-        <div class="dl-campo"><label for="cidade">Cidade</label><div class="dl-input"><span>🏙️</span><select id="cidade" autocomplete="address-level2">
-          <option value="Cuiabá">Cuiabá</option><option value="Várzea Grande">Várzea Grande</option></select></div></div>
+        <div class="dl-campo"><label for="cidade">Cidade</label><div class="dl-input"><span>🏙️</span><select id="cidade" autocomplete="address-level2" disabled>
+          <option value="">Pelo CEP</option><option value="Cuiabá">Cuiabá</option><option value="Várzea Grande">Várzea Grande</option></select></div></div>
       </div>
-      <div class="dl-campo"><label for="rua">Rua / avenida</label><div class="dl-input"><span>🏠</span><input id="rua" autocomplete="address-line1" placeholder="Ex: Rua das Flores"></div></div>
+      <div class="dl-campo"><label for="rua">Rua / avenida</label><div class="dl-input"><span>🏠</span><input id="rua" autocomplete="address-line1" placeholder="Preenchido pelo CEP" readonly></div></div>
       <div class="dl-linha num">
         <div class="dl-campo"><label for="numero">Número</label><div class="dl-input sem-ic"><input id="numero" inputmode="numeric" placeholder="120"></div></div>
-        <div class="dl-campo"><label for="bairro">Bairro</label><div class="dl-input"><span>🏘️</span><input id="bairro" autocomplete="address-level3" placeholder="Ex: Jardim Imperial"></div></div>
+        <div class="dl-campo"><label for="bairro">Bairro</label><div class="dl-input"><span>🏘️</span><input id="bairro" autocomplete="address-level3" placeholder="Preenchido pelo CEP" readonly></div></div>
       </div>
       <div class="dl-campo"><label for="comp">Complemento <span style="font-weight:600;color:var(--text-light);">(opcional)</span></label><div class="dl-input"><span>🔑</span><input id="comp" placeholder="Apto, bloco, ponto de referência"></div></div>
       <div id="cepMsg"></div>
@@ -94,9 +94,25 @@
 
 <div class="dl-barra">
   <div class="dl-barra-in">
-    <span class="ct">🛍️<b id="barQtd">0</b></span>
-    <span class="tt">Total<strong id="barTot">R$ 0,00</strong></span>
+    <button type="button" class="ver" id="barSacola" aria-label="Ver e editar a sacola">
+      <span class="ct">🛍️<b id="barQtd">0</b></span>
+      <span class="tt">Total<strong id="barTot">R$ 0,00</strong><em>Ver sacola ▴</em></span>
+    </button>
     <button type="button" class="dl-btn dl-btn-gold" id="barBtn">Continuar</button>
+  </div>
+</div>
+
+<div class="dl-gaveta" id="gaveta" hidden>
+  <div class="dl-gaveta-fundo" data-fechar></div>
+  <div class="dl-gaveta-in" role="dialog" aria-modal="true" aria-labelledby="gavetaTit">
+    <div class="dl-gaveta-top"><h2 id="gavetaTit">🛍️ Sua sacola</h2><button type="button" class="x" data-fechar aria-label="Fechar">×</button></div>
+    <ul class="dl-sacola" id="sacolaGaveta"></ul>
+    <p class="dl-vazio" id="gavetaVazia">Sua sacola está vazia.</p>
+    <div class="dl-gaveta-tot"><span>Produtos</span><strong id="gavetaSub">R$ 0,00</strong></div>
+    <div class="dl-gaveta-acoes">
+      <button type="button" class="dl-btn dl-btn-line" data-fechar data-ir="secProdutos">+ Adicionar mais</button>
+      <button type="button" class="dl-btn dl-btn-gold" data-fechar data-ir="continuar">Continuar</button>
+    </div>
   </div>
 </div>
 
@@ -200,18 +216,45 @@
   });
 
   // ---- Sacola + resumo ----
-  $('sacola').addEventListener('click', function (e) {
-    var i = e.target.getAttribute('data-rm'); if (i == null) return;
-    cart.splice(+i, 1); salvar(); render();
+  // A mesma lista aparece na seção "Sua sacola" e na gaveta da barra de baixo.
+  function editarSacola(e) {
+    var b = e.target.closest('[data-rm],[data-mais],[data-menos]'); if (!b) return;
+    var i = +(b.getAttribute('data-rm') || b.getAttribute('data-mais') || b.getAttribute('data-menos')), c = cart[i];
+    if (!c) return;
+    if (b.hasAttribute('data-rm')) cart.splice(i, 1);
+    else if (b.hasAttribute('data-menos')) { if (c.quantidade > 1) c.quantidade--; else cart.splice(i, 1); }
+    else {
+      var p = cat.filter(function (x) { return x.id === c.produto_id; })[0];
+      if (p && noCarrinho(c.produto_id, c.sabor || null) >= estoqueDe(p, c.sabor || null)) { b.classList.add('nao'); setTimeout(function () { b.classList.remove('nao'); }, 600); return; }
+      c.quantidade++;
+    }
+    salvar(); render();
+  }
+  $('sacola').addEventListener('click', editarSacola);
+  $('sacolaGaveta').addEventListener('click', editarSacola);
+  var gaveta = $('gaveta');
+  $('barSacola').addEventListener('click', function () { gaveta.hidden = false; document.body.classList.add('dl-travado'); });
+  gaveta.addEventListener('click', function (e) {
+    var f = e.target.closest('[data-fechar]'); if (!f) return;
+    gaveta.hidden = true; document.body.classList.remove('dl-travado');
+    var ir = f.getAttribute('data-ir');
+    if (ir === 'continuar') $('barBtn').click();
+    else if (ir) $(ir).scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !gaveta.hidden) { gaveta.hidden = true; document.body.classList.remove('dl-travado'); } });
   function subtotal() { return cart.reduce(function (s, c) { return s + c.preco * c.quantidade; }, 0); }
   function qtdItens() { return cart.reduce(function (s, c) { return s + c.quantidade; }, 0); }
   function render() {
-    $('sacola').innerHTML = cart.map(function (c, i) {
-      return '<li><span class="q">' + c.quantidade + '×</span><span class="t">' + esc(c.nome) + (c.sabor ? '<small>' + esc(c.sabor === 'Açaí' ? 'Açaí puro' : c.sabor) + '</small>' : '') + '</span>' +
-        '<span class="v">' + brl(c.preco * c.quantidade) + '</span><button type="button" class="rm" data-rm="' + i + '" aria-label="Remover">×</button></li>';
+    var linhas = cart.map(function (c, i) {
+      return '<li><span class="t">' + esc(c.nome) + (c.sabor ? '<small>' + esc(c.sabor === 'Açaí' ? 'Açaí puro' : c.sabor) + '</small>' : '') +
+          '<b class="v">' + brl(c.preco * c.quantidade) + '</b></span>' +
+        '<span class="dl-qtd mini"><button type="button" data-menos="' + i + '" aria-label="Diminuir">' + (c.quantidade > 1 ? '−' : '🗑') + '</button><span>' + c.quantidade + '</span>' +
+          '<button type="button" data-mais="' + i + '" aria-label="Aumentar">+</button></span>' +
+        '<button type="button" class="rm" data-rm="' + i + '" aria-label="Remover ' + esc(c.nome) + '">×</button></li>';
     }).join('');
-    $('sacolaVazia').hidden = !!cart.length;
+    $('sacola').innerHTML = linhas; $('sacolaGaveta').innerHTML = linhas;
+    $('sacolaVazia').hidden = !!cart.length; $('gavetaVazia').hidden = !!cart.length;
+    $('gavetaSub').textContent = brl(subtotal());
     var sub = subtotal(), taxa = cot && cot.atende ? cot.taxa : null, tot = sub + (taxa || 0);
     $('rSub').textContent = brl(sub);
     $('rTaxa').textContent = taxa == null ? 'calcule no endereço' : brl(taxa);
@@ -242,29 +285,42 @@
   ['rua', 'numero', 'bairro', 'comp'].forEach(function (id) {
     $(id).addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); cotar(); } });
   });
-  var cepBuscado = '';
+  // Cidade, rua e bairro vêm do CEP e ficam travados (CEP de Cuiabá não vira VG).
+  // Só abre pra digitar o que o CEP não trouxe (CEP geral da cidade) ou se a consulta cair.
+  var cepBuscado = '', cepOk = false, manual = false;
+  function travar(id, trava) { var el = $(id); el.readOnly = trava; el.closest('.dl-input').classList.toggle('travado', trava); }
+  function travarCidade(trava) { $('cidade').disabled = trava; $('cidade').closest('.dl-input').classList.toggle('travado', trava); }
+  function limparEndereco() {
+    cepOk = false; manual = false;
+    $('rua').value = ''; $('bairro').value = ''; $('cidade').value = '';
+    travar('rua', true); travar('bairro', true); travarCidade(true);
+  }
+  limparEndereco();
   cepEl.addEventListener('input', function () {
     var d = cepEl.value.replace(/\D/g, '').slice(0, 8);
     cepEl.value = d.length > 5 ? d.slice(0, 5) + '-' + d.slice(5) : d;
     if (d.length === 8 && d !== cepBuscado) buscarCep(d);
-    if (d.length < 8) { cepBuscado = ''; cepMsg.innerHTML = ''; }
+    if (d.length < 8 && cepBuscado) { cepBuscado = ''; cepMsg.innerHTML = ''; limparEndereco(); }
   });
   async function buscarCep(d) {
-    cepBuscado = d;
+    cepBuscado = d; limparEndereco();
     cepMsg.innerHTML = '<div class="dl-msg info">Buscando o CEP…</div>';
     try {
       var r = await fetch('https://viacep.com.br/ws/' + d + '/json/').then(function (x) { return x.json(); });
       if (cepBuscado !== d) return; // digitou outro CEP enquanto buscava
-      if (r.erro) { cepMsg.innerHTML = '<div class="dl-msg erro">CEP não encontrado. Confira ou preencha o endereço abaixo.</div>'; return; }
+      if (r.erro) { cepMsg.innerHTML = '<div class="dl-msg erro">CEP não encontrado. Confira os números ou use o "Não sei meu CEP".</div>'; return; }
       var cid = CIDADES[String(r.localidade || '').toLowerCase()];
       if (!cid) { cepMsg.innerHTML = '<div class="dl-msg erro">Esse CEP é de ' + esc(r.localidade) + ' - ' + esc(r.uf) + '. Por enquanto entregamos só em Cuiabá e Várzea Grande.</div>'; return; }
       $('cidade').value = cid;
-      if (r.logradouro) $('rua').value = r.logradouro;
-      if (r.bairro) $('bairro').value = r.bairro;
-      cepMsg.innerHTML = '';
+      $('rua').value = r.logradouro || ''; travar('rua', !!r.logradouro);
+      $('bairro').value = r.bairro || ''; travar('bairro', !!r.bairro);
+      cepOk = true; cepMsg.innerHTML = '';
       (r.logradouro ? $('numero') : $('rua')).focus();
     } catch (e) {
-      if (cepBuscado === d) cepMsg.innerHTML = '<div class="dl-msg info">Não conseguimos consultar o CEP agora. Preencha o endereço abaixo.</div>';
+      if (cepBuscado !== d) return;
+      // Sem consulta: libera tudo pra não travar a venda.
+      manual = true; travar('rua', false); travar('bairro', false); travarCidade(false); $('cidade').value = 'Cuiabá';
+      cepMsg.innerHTML = '<div class="dl-msg info">Não conseguimos consultar o CEP agora. Preencha o endereço abaixo.</div>';
     }
   }
   function enderecoTexto() {
@@ -274,6 +330,7 @@
   }
   $('btnCotar').addEventListener('click', cotar);
   async function cotar() {
+    if (!cepOk && !manual) { cotMsg.innerHTML = '<div class="dl-msg erro">Digite um CEP válido de Cuiabá ou Várzea Grande.</div>'; cepEl.focus(); return; }
     var falta = [];
     if ($('rua').value.trim().length < 3) falta.push('rua');
     if (!$('numero').value.trim()) falta.push('número (ou "s/n")');
