@@ -324,11 +324,11 @@
   });
   // Cidade, rua e bairro vêm do CEP e ficam travados (CEP de Cuiabá não vira VG).
   // Só abre pra digitar o que o CEP não trouxe (CEP geral da cidade) ou se a consulta cair.
-  var cepBuscado = '', cepOk = false, manual = false;
+  var cepBuscado = '', cepOk = false, manual = false, cepPonto = null;
   function travar(id, trava) { var el = $(id); el.readOnly = trava; el.closest('.dl-input').classList.toggle('travado', trava); }
   function travarCidade(trava) { $('cidade').disabled = trava; $('cidade').closest('.dl-input').classList.toggle('travado', trava); }
   function limparEndereco() {
-    cepOk = false; manual = false;
+    cepOk = false; manual = false; cepPonto = null;
     $('rua').value = ''; $('bairro').value = ''; $('cidade').value = '';
     travar('rua', true); travar('bairro', true); travarCidade(true);
   }
@@ -352,6 +352,10 @@
       $('rua').value = r.logradouro || ''; travar('rua', !!r.logradouro);
       $('bairro').value = r.bairro || ''; travar('bairro', !!r.bairro);
       cepOk = true; cepMsg.innerHTML = '';
+      // Coordenada do CEP (ajuda o servidor quando o mapa não acha o número).
+      fetch('https://cep.awesomeapi.com.br/json/' + d).then(function (x) { return x.ok ? x.json() : null; }).then(function (g) {
+        if (g && cepBuscado === d && g.lat && g.lng) cepPonto = { lat: Number(g.lat), lng: Number(g.lng) };
+      }).catch(function () {});
       (r.logradouro ? $('numero') : $('rua')).focus();
     } catch (e) {
       if (cepBuscado !== d) return;
@@ -377,7 +381,7 @@
     $('btnCotar').disabled = true; $('btnCotar').textContent = 'Calculando…';
     cotMsg.innerHTML = '';
     try {
-      cot = await D.fn('delivery-cotacao', { endereco: txt, cep: cepEl.value, rua: $('rua').value.trim(), numero: $('numero').value.trim(), bairro: $('bairro').value.trim(), cidade: $('cidade').value });
+      cot = await D.fn('delivery-cotacao', { endereco: txt, cep: cepEl.value, rua: $('rua').value.trim(), numero: $('numero').value.trim(), bairro: $('bairro').value.trim(), cidade: $('cidade').value, cep_lat: cepPonto ? cepPonto.lat : null, cep_lng: cepPonto ? cepPonto.lng : null });
       if (!cot.atende) cotMsg.innerHTML = '<div class="dl-msg erro">😕 ' + esc(cot.mensagem || 'Ainda não entregamos nesse endereço.') + '</div>';
       else cotMsg.innerHTML = '<div class="dl-msg ok dl-cot"><span class="pin">📍</span><div><strong>Entregamos aí! ' + brl(cot.taxa) + '</strong>' +
         '<span class="km">' + esc(cot.endereco_formatado || txt) + ' · ' + String(cot.km).replace('.', ',') + ' km da loja</span>' +

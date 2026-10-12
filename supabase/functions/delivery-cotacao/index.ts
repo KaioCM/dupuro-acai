@@ -54,18 +54,24 @@ async function pelias(texto: string, key: string) {
   return (j.features || []).map((f: any) => ({
     lng: f.geometry.coordinates[0], lat: f.geometry.coordinates[1],
     layer: f.properties.layer as string, label: f.properties.label as string,
-  })).filter((f: any) => naArea(f.lat, f.lng))
+  })).filter((f: any) => naArea(f.lat, f.lng) && ['address', 'street', 'venue', 'neighbourhood'].includes(f.layer)) // centro da cidade (locality) não serve pra taxa
 }
 
 async function pontoDoCep(cep: string) {
   if (!/^\d{8}$/.test(cep)) return null
   try {
-    const r = await fetch(`https://cep.awesomeapi.com.br/json/${cep}`)
+    const r = await fetch(`https://cep.awesomeapi.com.br/json/${cep}`, { headers: { 'User-Agent': 'Mozilla/5.0 (compatible; DupuroDelivery/1.0)', Accept: 'application/json' } })
     if (!r.ok) return null
     const j = await r.json()
     const lat = Number(j.lat), lng = Number(j.lng)
     return Number.isFinite(lat) && Number.isFinite(lng) && naArea(lat, lng) ? { lat, lng } : null
   } catch { return null }
+}
+// Distância em linha reta (km) — só pra conferir se dois pontos batem.
+function distKm(a: { lat: number, lng: number }, b: { lat: number, lng: number }) {
+  const r = Math.PI / 180, dLat = (b.lat - a.lat) * r, dLng = (b.lng - a.lng) * r
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(a.lat * r) * Math.cos(b.lat * r) * Math.sin(dLng / 2) ** 2
+  return 12742 * Math.asin(Math.sqrt(h))
 }
 
 Deno.serve(async (req: Request) => {
@@ -79,7 +85,9 @@ Deno.serve(async (req: Request) => {
     const cep = s(body.cep, 9).replace(/\D/g, '')
     const endereco = s(body.endereco, 300) || [rua && numero ? `${rua}, ${numero}` : rua, bairro, cidade, 'MT'].filter(Boolean).join(', ')
     if (!rua || !cidade) return json({ error: 'Informe o endereço completo.' }, 400)
-    if (!['Cuiabá', 'Várzea Grande'].includes(cidade)) return json({ atende: false, mensagem: 'Por enquanto entregamos só em Cuiabá e Várzea Grande.' })
+    // Compara sem acento/caixa (o texto pode chegar em NFC ou NFD).
+    const semAcento = (t: string) => t.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase()
+    if (!['cuiaba', 'varzea grande'].includes(semAcento(cidade))) return json({ atende: false, mensagem: 'Por enquanto entregamos só em Cuiabá e Várzea Grande.' })
 
     const sb = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
     const { data: row } = await sb.from('delivery_config').select('config').eq('id', 1).single()
@@ -93,7 +101,15 @@ Deno.serve(async (req: Request) => {
     let dest: any = achados.find((f: any) => f.layer === 'address')
     let impreciso = false
     if (!dest) {
-      const c = await pontoDoCep(cep)
+      let c = await pontoDoCep(cep)
+      // A AwesomeAPI costuma limitar (429) os IPs do servidor; aí vale o ponto do
+      // CEP que o navegador do cliente buscou na mesma API — desde que esteja na
+      // área e perto da rua/bairro que o mapa achou (evita coordenada inventada).
+      const cl = { lat: Number(body.cep_lat), lng: Number(body.cep_lng) }
+      if (!c && Number.isFinite(cl.lat) && Number.isFinite(cl.lng) && naArea(cl.lat, cl.lng)) {
+        const ref = achados[0] || (await pelias(`${bairro}, ${cidade}, MT`, key))[0]
+        if (!ref || distKm(ref, cl) <= 4) c = cl
+      }
       if (c) dest = { ...c, label: null }
     }
     if (!dest && achados.length) { dest = achados[0]; impreciso = true }
@@ -119,7 +135,7 @@ Deno.serve(async (req: Request) => {
     const base = [dest.lat.toFixed(6), dest.lng.toFixed(6), km, taxa, exp].join('|')
     return json({
       atende: true, km, taxa, lat: dest.lat, lng: dest.lng, place_id: null,
-      endereco_formatado: endereco, impreciso,
+      endereco_formatado: endereco, impreciso, fonte: dest.layer || 'cep',
       cotacao: { exp, assinatura: await hmac(base) },
     })
   } catch (e) {
