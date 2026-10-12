@@ -422,3 +422,9 @@ body.dl-travado { overflow: hidden; }
 #mapaMsg .dl-msg { margin: 10px 0 0; }
 .dl-mapa .dl-gaveta-in { max-height: 92vh; } .dl-mapa .dl-gaveta-in .dl-gaveta-top { margin-bottom: 2px; }
 .dl-mapa .dl-gps { padding: 12px 14px; font-size: 14px; } @media (min-height: 860px) { .dl-mapa-box { height: min(50vh, 460px); } }
+/* Mapa primeiro, "ou preencha" depois */
+.dl-mapa-btn { margin: 0 0 4px; border-style: solid; border-color: rgba(245,179,1,.7); background: linear-gradient(135deg, #FFF8E6, #fff); }
+.dl-mapa-btn.ok { border-color: var(--verde, #8BB831); background: linear-gradient(135deg, #F2F9E6, #fff); }
+.dl-mapa-btn.ok .ic { background: rgba(139,184,49,.18); }
+.dl-ou { display: flex; align-items: center; gap: 10px; margin: 14px 0 12px; color: var(--text-light); font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; }
+.dl-ou::before, .dl-ou::after { content: ""; flex: 1; height: 1px; background: rgba(96,16,80,.14); }
