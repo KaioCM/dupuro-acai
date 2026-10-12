@@ -12,29 +12,31 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="preload" href="../assets/fonts/Klinko-PlayfulBold.otf" as="font" type="font/otf" crossorigin>
 <link rel="stylesheet" href="../assets/css/style.css?v=11">
-<link rel="stylesheet" href="delivery.css?v=6">
+<link rel="stylesheet" href="delivery.css?v=7">
 </head>
 <body class="dl-body">
 
 <header class="dl-app-top">
   <div class="dl-wrap">
-    <a class="vol" href="index.html">← Voltar</a>
+    <a class="vol" href="index.html" id="btnVoltar">← Voltar</a>
     <img src="../assets/img/brand/logo-branco.png" alt="Dupuro Açaí">
     <a class="vol" href="https://wa.me/5565992888228" target="_blank" rel="noopener">Ajuda</a>
   </div>
   <div class="dl-steps" aria-label="Progresso do pedido">
-    <div id="st1"><i></i><span>1 · Escolher</span></div>
-    <div id="st2"><i></i><span>2 · Entrega</span></div>
-    <div id="st3"><i></i><span>3 · Pagamento</span></div>
+    <button type="button" id="st1" data-etapa="1"><i></i><span>1 · Escolher</span></button>
+    <button type="button" id="st2" data-etapa="2"><i></i><span>2 · Entrega</span></button>
+    <button type="button" id="st3" data-etapa="3"><i></i><span>3 · Pagamento</span></button>
   </div>
 </header>
 
 <main class="dl-app">
-  <h1>Monte seu pedido</h1>
-  <p class="dl-app-sub">Direto da fábrica pra sua casa · entrega em Cuiabá e Várzea Grande</p>
+  <h1 id="etTit">Monte seu pedido</h1>
+  <p class="dl-app-sub" id="etSub">Direto da fábrica pra sua casa · entrega em Cuiabá e Várzea Grande</p>
 
+  <!-- ===== Etapa 1: escolher ===== -->
+  <div class="dl-etapa" id="etapa1">
   <section class="dl-bloco" id="secProdutos">
-    <h2><b>1</b> Escolha o açaí</h2>
+    <h2><b>🫐</b> Escolha o açaí</h2>
     <div class="dl-produtos" id="prods"><div class="dl-card"><p class="dl-vazio">Carregando os produtos…</p></div></div>
   </section>
 
@@ -42,9 +44,12 @@
     <h2><b>🛍️</b> Sua sacola</h2>
     <div class="dl-card"><ul class="dl-sacola" id="sacola"></ul><p class="dl-vazio" id="sacolaVazia">Sua sacola está vazia — escolha acima 👆</p></div>
   </section>
+  </div>
 
+  <!-- ===== Etapa 2: entrega ===== -->
+  <div class="dl-etapa" id="etapa2" hidden>
   <section class="dl-bloco" id="secDados">
-    <h2><b>2</b> Pra quem é a entrega</h2>
+    <h2><b>🙂</b> Pra quem é a entrega</h2>
     <div class="dl-card">
       <div class="dl-campo"><label for="nome">Seu nome</label><div class="dl-input"><span>🙂</span><input id="nome" autocomplete="name" placeholder="Nome completo"></div></div>
       <div class="dl-campo" style="margin-bottom:0;"><label for="tel">WhatsApp</label><div class="dl-input"><span>📱</span><input id="tel" type="tel" inputmode="tel" autocomplete="tel" placeholder="(65) 99999-9999"></div>
@@ -77,9 +82,21 @@
     <h2><b>🕒</b> Quando você quer receber?</h2>
     <div class="dl-janelas" id="janelas"></div>
   </section>
+  <div id="etapa2Msg"></div>
+  </div>
 
+  <!-- ===== Etapa 3: revisar e pagar ===== -->
+  <div class="dl-etapa" id="etapa3" hidden>
+  <section class="dl-bloco">
+    <h2><b>🛍️</b> Seu pedido <button type="button" class="dl-alterar" data-etapa="1">Alterar</button></h2>
+    <div class="dl-card"><div class="dl-rev" id="revItens"></div></div>
+  </section>
+  <section class="dl-bloco">
+    <h2><b>🛵</b> Entrega <button type="button" class="dl-alterar" data-etapa="2">Alterar</button></h2>
+    <div class="dl-card"><div class="dl-rev" id="revEntrega"></div></div>
+  </section>
   <section class="dl-bloco" id="secPagar">
-    <h2><b>3</b> Resumo e pagamento</h2>
+    <h2><b>💳</b> Pagamento</h2>
     <div class="dl-resumo">
       <div class="ln"><span>Produtos</span><span id="rSub">R$ 0,00</span></div>
       <div class="ln"><span>Entrega</span><span id="rTaxa">—</span></div>
@@ -90,6 +107,7 @@
       <div class="dl-pag"><span>⚡ Pix</span><span>💳 Crédito</span><span>💳 Débito</span><span>🔒 Mercado Pago</span></div>
     </div>
   </section>
+  </div>
 </main>
 
 <div class="dl-barra">
@@ -249,8 +267,8 @@
     var f = e.target.closest('[data-fechar]'); if (!f) return;
     gaveta.hidden = true; document.body.classList.remove('dl-travado');
     var ir = f.getAttribute('data-ir');
-    if (ir === 'continuar') $('barBtn').click();
-    else if (ir) $(ir).scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (ir === 'continuar') avancar();
+    else if (ir) { if (etapa !== 1) irPara(1); $(ir).scrollIntoView({ behavior: 'smooth', block: 'start' }); }
   });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !gaveta.hidden) { gaveta.hidden = true; document.body.classList.remove('dl-travado'); } });
   function subtotal() { return cart.reduce(function (s, c) { return s + c.preco * c.quantidade; }, 0); }
@@ -274,6 +292,14 @@
     $('barQtd').textContent = qtdItens();
     $('rQuandoLn').hidden = !janela;
     if (janela) $('rQuando').textContent = janela.titulo + ' · ' + janela.faixa;
+    // Revisão da etapa 3
+    $('revItens').innerHTML = cart.map(function (c) {
+      return '<div class="ln"><span><b>' + c.quantidade + '×</b> ' + esc(c.nome) + (c.sabor ? ' · ' + esc(c.sabor === 'Açaí' ? 'Açaí puro' : D.nomeSabor(c.sabor)) : '') + '</span><span>' + brl(c.preco * c.quantidade) + '</span></div>';
+    }).join('');
+    $('revEntrega').innerHTML =
+      '<div class="lb">🙂 ' + esc($('nome').value.trim()) + ' · ' + esc($('tel').value) + '</div>' +
+      '<div class="lb">📍 ' + esc(cepOk || manual ? enderecoTexto() : '') + ($('comp').value.trim() ? ' (' + esc($('comp').value.trim()) + ')' : '') + '</div>' +
+      (janela ? '<div class="lb">🕒 ' + esc(janela.titulo) + ' · entregaremos entre ' + esc(janela.faixa.replace(' às ', ' e ')) + '</div>' : '');
     validar();
   }
 
@@ -389,17 +415,60 @@
   function validar() {
     var p = pendencia();
     btnPagar.disabled = !!p;
-    pagMsg.innerHTML = p ? '<div class="dl-msg info" style="margin-top:14px;">' + esc(p.txt) + '</div>' : '';
-    $('st1').classList.toggle('ok', cart.length > 0);
-    $('st2').classList.toggle('ok', cart.length > 0 && okDados() && !!(cot && cot.atende) && !!janela);
-    $('st3').classList.toggle('ok', false);
-    $('barBtn').textContent = p ? (cart.length ? 'Continuar' : 'Escolher') : 'Pagar agora';
+    pagMsg.innerHTML = p && etapa === 3 ? '<div class="dl-msg info" style="margin-top:14px;">' + esc(p.txt) + '</div>' : '';
+    $('barBtn').textContent = etapa === 3 ? 'Pagar agora' : 'Continuar';
+    if (etapa === 2 && !pendenciaEntrega()) $('etapa2Msg').innerHTML = '';
   }
-  $('barBtn').addEventListener('click', function () {
+
+  // ---- Etapas (1 escolher → 2 entrega → 3 pagamento), uma tela por vez ----
+  var etapa = 1;
+  var TITULOS = {
+    1: ['Monte seu pedido', 'Direto da fábrica pra sua casa · entrega em Cuiabá e Várzea Grande'],
+    2: ['Dados da entrega', 'Pra quem, onde e quando entregamos'],
+    3: ['Revise e pague', 'Confira tudo antes de ir pro pagamento']
+  };
+  function pendenciaEntrega() {
     var p = pendencia();
-    if (!p) { pagar(); return; }
-    $(p.sec).scrollIntoView({ behavior: 'smooth', block: 'start' });
+    return p && p.sec !== 'secProdutos' ? p : null;
+  }
+  function podeIr(n) {
+    if (n >= 2 && !cart.length) return false;
+    if (n >= 3 && pendenciaEntrega()) return false;
+    return true;
+  }
+  function irPara(n, semHistorico) {
+    etapa = n;
+    [1, 2, 3].forEach(function (i) {
+      $('etapa' + i).hidden = i !== n;
+      $('st' + i).classList.toggle('ok', i < n);
+      $('st' + i).classList.toggle('atual', i === n);
+      $('st' + i).disabled = i > n && !podeIr(i);
+    });
+    $('etTit').textContent = TITULOS[n][0]; $('etSub').textContent = TITULOS[n][1];
+    toast.hidden = true;
+    if (!semHistorico) history.pushState({ etapa: n }, '');
+    document.documentElement.style.scrollBehavior = 'auto'; window.scrollTo(0, 0); document.documentElement.style.scrollBehavior = '';
+    render();
+  }
+  history.replaceState({ etapa: 1 }, '');
+  window.addEventListener('popstate', function (e) { irPara((e.state && e.state.etapa) || 1, true); });
+  $('btnVoltar').addEventListener('click', function (e) { if (etapa > 1) { e.preventDefault(); history.back(); } });
+  document.querySelectorAll('[data-etapa]').forEach(function (b) {
+    b.addEventListener('click', function () { var n = +b.getAttribute('data-etapa'); if (n !== etapa && (n < etapa || podeIr(n))) irPara(n); });
   });
+  function avancar() {
+    if (etapa === 1) {
+      if (!cart.length) { $('prods').scrollIntoView({ behavior: 'smooth', block: 'start' }); $('toastTxt').textContent = 'Escolha pelo menos uma caixa pra continuar'; toast.hidden = false; clearTimeout(toastT); toastT = setTimeout(function () { toast.hidden = true; }, 3000); return; }
+      irPara(2); return;
+    }
+    if (etapa === 2) {
+      var p = pendenciaEntrega();
+      if (p) { $('etapa2Msg').innerHTML = '<div class="dl-msg erro">' + esc(p.txt) + '</div>'; $(p.sec).scrollIntoView({ behavior: 'smooth', block: 'start' }); return; }
+      irPara(3); return;
+    }
+    pagar();
+  }
+  $('barBtn').addEventListener('click', avancar);
   btnPagar.addEventListener('click', pagar);
   async function pagar() {
     if (pendencia()) return;
@@ -422,7 +491,7 @@
     }
   }
 
-  render();
+  irPara(1, true);
 })();
 </script>
 </body>

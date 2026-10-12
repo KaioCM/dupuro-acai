@@ -382,3 +382,22 @@ body.dl-travado { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) { .dl-barra-in .ver.pulou, .dl-barra-in .ver.pulou .ct, .dl-toast { animation: none; } }
 .dl-toast { left: 16px; right: 16px; transform: none; margin: 0 auto; max-width: 520px; width: auto; }
 .dl-toast b { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; }
+
+/* ---------- Etapas do pedido (uma tela por vez) ---------- */
+.dl-steps button { flex: 1; background: none; border: 0; padding: 0; text-align: left; font: inherit; cursor: pointer; color: inherit; }
+.dl-steps button:disabled { cursor: default; }
+.dl-steps .atual i::after { width: 100%; }
+.dl-steps .atual span { color: var(--gold); }
+.dl-steps .ok i::after { background: var(--gold-soft); }
+.dl-steps .ok span { color: rgba(255,255,255,.9); }
+.dl-steps .ok span::after { content: " ✓"; color: var(--gold); }
+.dl-etapa { animation: dlEntra .28s ease; }
+.dl-etapa[hidden] { display: none; }
+@keyframes dlEntra { from { opacity: 0; transform: translateX(14px); } to { opacity: 1; transform: none; } }
+.dl-bloco h2 .dl-alterar { margin-left: auto; border: 0; background: var(--cream-2); color: var(--roxo-700); font: 800 12.5px 'Inter', sans-serif; padding: 7px 12px; border-radius: 10px; cursor: pointer; }
+.dl-rev .ln { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; border-bottom: 1px dashed rgba(96,16,80,.14); font-size: 14.5px; color: var(--roxo-900); }
+.dl-rev .ln:last-child { border-bottom: 0; }
+.dl-rev .ln span:last-child { font-weight: 800; white-space: nowrap; }
+.dl-rev .lb { padding: 7px 0; font-size: 14.5px; line-height: 1.45; color: var(--roxo-900); font-weight: 600; }
+#etapa2Msg .dl-msg { margin-top: 4px; }
+@media (prefers-reduced-motion: reduce) { .dl-etapa { animation: none; } }
