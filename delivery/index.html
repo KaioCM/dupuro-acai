@@ -4,13 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dupuro Delivery — Açaí de qualidade no conforto de casa | Cuiabá</title>
-<meta name="description" content="Caixas de açaí e cremes Dupuro de 1 a 10 litros, direto da fábrica, entregues na sua casa em Cuiabá. Escolha manhã ou tarde, pague por Pix ou cartão e acompanhe a entrega em tempo real.">
+<meta name="description" content="Caixas de açaí e cremes Dupuro de 1 a 10 litros, direto da fábrica, entregues na sua casa em Cuiabá e Várzea Grande. Escolha manhã ou tarde, pague por Pix ou cartão e acompanhe a entrega em tempo real.">
 <meta name="theme-color" content="#4A1140">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="pt_BR">
 <meta property="og:site_name" content="Dupuro Açaí">
 <meta property="og:title" content="Açaí de qualidade no conforto de casa — Dupuro Delivery">
-<meta property="og:description" content="Caixas de 1 a 10 litros direto da fábrica, entregues em Cuiabá. Pix ou cartão, acompanhe ao vivo.">
+<meta property="og:description" content="Caixas de 1 a 10 litros direto da fábrica, entregues em Cuiabá e Várzea Grande. Pix ou cartão, acompanhe ao vivo.">
 <meta property="og:image" content="https://www.dupuroacai.com/assets/img/delivery/familia-pai-filho-caixa.jpg">
 <link rel="icon" href="../assets/img/brand/favicon-32.png" sizes="32x32" type="image/png">
 <link rel="apple-touch-icon" href="../assets/img/brand/favicon-180.png">
@@ -59,8 +59,8 @@
 
 <div class="dl-marquee" aria-hidden="true">
   <div class="dl-marquee-track">
-    <span>Entrega em Cuiabá</span><i>●</i><span>Direto da fábrica</span><i>●</i><span>Açaí puro + 8 cremes</span><i>●</i><span>Pix ou cartão</span><i>●</i><span>Acompanhe ao vivo</span><i>●</i>
-    <span>Entrega em Cuiabá</span><i>●</i><span>Direto da fábrica</span><i>●</i><span>Açaí puro + 8 cremes</span><i>●</i><span>Pix ou cartão</span><i>●</i><span>Acompanhe ao vivo</span><i>●</i>
+    <span>Entrega em Cuiabá e VG</span><i>●</i><span>Direto da fábrica</span><i>●</i><span>Açaí puro + 8 cremes</span><i>●</i><span>Pix ou cartão</span><i>●</i><span>Acompanhe ao vivo</span><i>●</i>
+    <span>Entrega em Cuiabá e VG</span><i>●</i><span>Direto da fábrica</span><i>●</i><span>Açaí puro + 8 cremes</span><i>●</i><span>Pix ou cartão</span><i>●</i><span>Acompanhe ao vivo</span><i>●</i>
   </div>
 </div>
 
@@ -136,7 +136,7 @@
   <div class="dl-wrap">
     <div class="dl-centro"><span class="dl-eyebrow">Dúvidas</span><h2>Perguntas <em>frequentes</em></h2></div>
     <div class="dl-faq" id="faq">
-      <details><summary>Até onde vocês entregam?</summary><p id="faqArea">Entregamos em Cuiabá até 15 km da nossa loja no Jardim Imperial. No pedido, é só digitar seu endereço que o site já diz se atende e quanto fica a entrega.</p></details>
+      <details><summary>Até onde vocês entregam?</summary><p id="faqArea">Entregamos em Cuiabá e Várzea Grande, até 15 km da nossa loja no Jardim Imperial. No pedido, é só digitar seu endereço que o site já diz se atende e quanto fica a entrega.</p></details>
       <details><summary>Quanto custa a entrega?</summary><p id="faqTaxa">A partir de R$ 5,00 (até 3 km), e R$ 1,50 por km a mais. O valor exato aparece antes de você pagar.</p></details>
       <details><summary>Que horas chega?</summary><p id="faqHora">Você escolhe: manhã (8h às 12h) ou tarde (13h às 17h), de segunda a sábado. Pedidos até 11h podem sair ainda hoje à tarde.</p></details>
       <details><summary>Como eu pago?</summary><p>Pix ou cartão de crédito/débito, pelo ambiente seguro do Mercado Pago. Seu pedido só entra na rota depois que o pagamento é confirmado.</p></details>
@@ -207,7 +207,7 @@
   // FAQ com os parâmetros reais da config.
   if (cfg && cfg.taxa) {
     var t = cfg.taxa, j = cfg.janelas || {};
-    document.getElementById('faqArea').textContent = 'Entregamos em Cuiabá até ' + t.max_km + ' km da nossa loja no Jardim Imperial. No pedido, é só digitar seu endereço que o site já diz se atende e quanto fica a entrega.';
+    document.getElementById('faqArea').textContent = 'Entregamos em Cuiabá e Várzea Grande, até ' + t.max_km + ' km da nossa loja no Jardim Imperial. No pedido, é só digitar seu endereço que o site já diz se atende e quanto fica a entrega.';
     document.getElementById('faqTaxa').textContent = 'A partir de ' + brl(t.base) + ' (até ' + t.km_base + ' km), e ' + brl(t.por_km) + ' por km a mais. O valor exato aparece antes de você pagar.';
     if (j.manha && j.tarde) {
       var h = function (s) { var p = String(s).split(':'); return (+p[0]) + 'h' + (p[1] && p[1] !== '00' ? p[1] : ''); };
