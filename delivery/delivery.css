@@ -428,3 +428,4 @@ body.dl-travado { overflow: hidden; }
 .dl-mapa-btn.ok .ic { background: rgba(139,184,49,.18); }
 .dl-ou { display: flex; align-items: center; gap: 10px; margin: 14px 0 12px; color: var(--text-light); font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; }
 .dl-ou::before, .dl-ou::after { content: ""; flex: 1; height: 1px; background: rgba(96,16,80,.14); }
+.dl-mapa-btn small[hidden] { display: none; }

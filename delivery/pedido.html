@@ -12,7 +12,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="preload" href="../assets/fonts/Klinko-PlayfulBold.otf" as="font" type="font/otf" crossorigin>
 <link rel="stylesheet" href="../assets/css/style.css?v=11">
-<link rel="stylesheet" href="delivery.css?v=11">
+<link rel="stylesheet" href="delivery.css?v=12">
 </head>
 <body class="dl-body">
 
@@ -61,7 +61,7 @@
     <h2><b>📍</b> Endereço</h2>
     <div class="dl-card">
       <button type="button" class="dl-mapa-btn" id="btnMapa">
-        <span class="ic">🗺️</span><span class="tx"><strong id="btnMapaTit">Não sabe o endereço certinho? Marque no mapa</strong><small id="btnMapaSub">A gente preenche o endereço pra você, como no Uber</small></span><b>›</b>
+        <span class="ic">🗺️</span><span class="tx"><strong id="btnMapaTit">Não sabe o endereço certinho? Marque no mapa</strong><small id="btnMapaSub" hidden></small></span><b>›</b>
       </button>
       <div class="dl-ou"><span>ou preencha</span></div>
       <div class="dl-linha">
@@ -353,7 +353,7 @@
     pino = p;
     $('btnMapa').classList.toggle('ok', !!p);
     $('btnMapaTit').textContent = p ? '✓ Local marcado no mapa' : 'Não sabe o endereço certinho? Marque no mapa';
-    $('btnMapaSub').textContent = p ? 'Toque pra ajustar o ponto' : 'A gente preenche o endereço pra você, como no Uber';
+    $('btnMapaSub').textContent = p ? 'Toque pra ajustar o ponto' : ''; $('btnMapaSub').hidden = !p;
   }
 
   // CEP (opcional)
