@@ -239,7 +239,7 @@ select:focus-visible,
 .btn-green:hover { transform: translateY(-2px); box-shadow: 0 6px 0 #4E7010, 0 14px 26px rgba(139,184,49,0.42); }
 .btn-green:active { transform: translateY(2px); box-shadow: 0 1px 0 #4E7010; }
 
-.btn-block { width: 100%; }
+.btn-block { width: 100%; white-space: normal; }
 .btn-sm { padding: 11px 22px; font-size: 13px; }
 
 /* ---------- Header ---------- */
@@ -519,6 +519,69 @@ select:focus-visible,
   gap: 28px;
 }
 @media (max-width: 900px) { .cards-grid { grid-template-columns: 1fr; } }
+
+/* ---------- Home: as 2 portas (Pra sua casa / Pra revender) ---------- */
+.portas { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin: 6px 0 40px; max-width: 620px; }
+.porta {
+  position: relative;
+  display: flex; flex-direction: column; gap: 8px;
+  padding: 22px 22px 20px;
+  border-radius: var(--radius-lg);
+  background: var(--white);
+  color: var(--roxo-950);
+  box-shadow: 0 6px 0 rgba(0,0,0,0.28), 0 18px 40px rgba(0,0,0,0.25);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  overflow: hidden;
+}
+.porta:hover { transform: translateY(-4px) rotate(-0.5deg); box-shadow: 0 10px 0 rgba(0,0,0,0.28), 0 24px 48px rgba(0,0,0,0.3); }
+.porta:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(0,0,0,0.28), 0 8px 20px rgba(0,0,0,0.2); }
+.porta-casa { background: linear-gradient(160deg, var(--gold-soft) 0%, var(--gold) 60%, var(--gold-strong) 100%); }
+.porta-foto {
+  position: absolute; top: 14px; right: 14px;
+  width: 64px; height: 64px; object-fit: cover;
+  border-radius: 18px; border: 3px solid var(--white);
+  box-shadow: 0 4px 0 rgba(0,0,0,0.18);
+  transform: rotate(4deg);
+}
+.porta-tag {
+  align-self: flex-start;
+  font-size: 11px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 5px 12px; border-radius: var(--radius-full);
+  background: rgba(56,12,47,0.1);
+}
+.porta-titulo { font-family: var(--font-display); font-size: 27px; line-height: 1; text-transform: uppercase; color: var(--roxo-700); margin-top: 6px; padding-right: 64px; }
+.porta-casa .porta-titulo { color: var(--roxo-950); }
+.porta-txt { font-size: 14px; line-height: 1.45; color: rgba(36,8,32,0.78); flex: 1; }
+.porta-preco { font-size: 13px; font-weight: 800; color: var(--roxo-700); }
+.porta-casa .porta-preco { color: var(--roxo-950); }
+.porta-cta {
+  margin-top: 6px;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 13px 16px; border-radius: var(--radius-full);
+  font-weight: 800; font-size: 14px;
+  background: var(--roxo-700); color: var(--white);
+  box-shadow: 0 4px 0 var(--roxo-950);
+}
+.porta-revenda .porta-cta { background: linear-gradient(180deg, var(--gold-soft), var(--gold) 60%, var(--gold-strong)); color: var(--roxo-950); box-shadow: 0 4px 0 #A96A00; }
+@media (max-width: 560px) {
+  .portas { grid-template-columns: 1fr; gap: 14px; }
+  .porta-titulo { font-size: 24px; }
+}
+
+/* Tamanhos/preços puxados do delivery (seção "Pra sua casa") */
+.tam-chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin: -24px auto 44px; }
+.tam-chips[hidden] { display: none; }
+.tam-chip {
+  display: flex; flex-direction: column; align-items: center;
+  min-width: 112px; padding: 14px 18px;
+  background: var(--white); border-radius: var(--radius-md);
+  border: 2px solid rgba(245,179,1,0.55); box-shadow: 0 4px 0 rgba(96,16,80,0.1);
+  transition: transform 0.2s ease;
+}
+.tam-chip:hover { transform: translateY(-3px); }
+.tam-chip b { font-family: var(--font-display); font-size: 22px; color: var(--roxo-700); }
+.tam-chip span { font-size: 14px; font-weight: 800; color: var(--roxo-950); }
+.secao-cta { display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; margin-top: 44px; }
 
 .feature-card {
   position: relative;
@@ -804,6 +867,7 @@ select:focus-visible,
 }
 @media (max-width: 900px) { .form-grid { grid-template-columns: 1fr; } }
 
+.form-grid > * { min-width: 0; }
 .form-grid .section-tag { background: var(--gold); color: var(--roxo-950); }
 .form-grid .section-title { color: var(--white); }
 .form-grid p.lead { color: rgba(255,255,255,0.82); font-size: 16px; margin-bottom: 28px; }

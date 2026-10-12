@@ -20,7 +20,7 @@ while ($listener.IsListening) {
   $res = $context.Response
   try {
     $path = [System.Uri]::UnescapeDataString($req.Url.AbsolutePath)
-    if ($path -eq "/") { $path = "/index.html" }
+    if ($path.EndsWith("/")) { $path = $path + "index.html" }  # pastas servem o index.html (igual ao GitHub Pages)
     $filePath = Join-Path $Root ($path.TrimStart("/"))
     if (Test-Path $filePath -PathType Leaf) {
       $ext = [System.IO.Path]::GetExtension($filePath)

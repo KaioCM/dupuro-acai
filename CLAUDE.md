@@ -3,9 +3,9 @@
 ## Eficiência (leia primeiro)
 
 - **Site 100% estático** (HTML/CSS/JS puro): sem build, sem framework, sem npm. Editou → recarrega o preview.
-- **Preview**: servidor `dupuro-acai` na porta 8853, raiz serve `dupuro-acai/` (ex.: `/area-cliente/login.html`). Dashboard/admin exigem sessão Supabase — não dá pra clicar através deles sem login.
+- **Preview**: servidor `dupuro-acai` na porta 8855, raiz serve `dupuro-acai/` (ex.: `/area-cliente/login.html`). Dashboard/admin exigem sessão Supabase — não dá pra clicar através deles sem login.
 - **Orientação de imagem**: as fotos em `assets/img/fotos/` **não têm tag EXIF** de orientação. Cheque orientação pelas dimensões via PowerShell (`System.Drawing`) — não abra o arquivo em tamanho cheio (caro em tokens). Deitada = conteúdo retrato salvo em landscape; corrija com `RotateFlip(Rotate270FlipNone)` (90° anti-horário) e atualize `width`/`height` no HTML.
-- Toda ação de compra leva ao WhatsApp `5565992888228` (sem carrinho/checkout).
+- Site em 3 partes: **Home** (`index.html`, 2 portas) · **Peça agora** (`delivery/`, compra online) · **Revenda** (`revenda/`). Demais contatos levam ao WhatsApp `5565992888228`.
 
 ## Negócio
 
@@ -14,7 +14,8 @@ Fábrica/distribuidora de açaí e cremes em Cuiabá-MT (atendimento presencial,
 ## Estrutura
 
 ```
-index.html                landing
+index.html                home (vitrine: 2 portas → delivery/ e revenda/)
+revenda/index.html        página de revenda (diferenciais, como funciona, cadastro #revenda)
 area-cliente/
   login.html              login (revendedor ou admin, redireciona conforme role)
   dashboard.html          painel revendedor (fazer pedido, pedidos, cupons, perfil)
@@ -44,9 +45,9 @@ supabase/functions/admin-delete-reseller/index.ts
 
 ## Backend Supabase (real e validado)
 
-Projeto real em `supabase-config.js` (URL `zqadfktfplrbrjmepllh.supabase.co`). Duas camadas sobre o mesmo cliente compartilhado: `cliente.js` (usado por index+dashboard) e `admin.js` (admin). Conta admin: **kayocamargo@outlook.com** (`profiles.role = 'admin'`).
+Projeto real em `supabase-config.js` (URL `zqadfktfplrbrjmepllh.supabase.co`). Duas camadas sobre o mesmo cliente compartilhado: `cliente.js` (usado por revenda+dashboard; a home não carrega supabase-js — só `delivery.js` pros preços) e `admin.js` (admin). Conta admin: **kayocamargo@outlook.com** (`profiles.role = 'admin'`).
 
-- **Cadastro/aprovação**: cliente se cadastra em `index.html#revenda` → `status = 'pendente'`. Login só libera se `aprovado`. Admin aprova/rejeita na aba Aprovações. Login admin pula aprovação e vai direto ao painel admin. **"Confirm email" do Supabase está desativado** — aprovação do admin é o único obstáculo.
+- **Cadastro/aprovação**: cliente se cadastra em `revenda/#revenda` (links antigos `/#revenda` redirecionam) → `status = 'pendente'`. Login só libera se `aprovado`. Admin aprova/rejeita na aba Aprovações. Login admin pula aprovação e vai direto ao painel admin. **"Confirm email" do Supabase está desativado** — aprovação do admin é o único obstáculo.
 - **Separação Balcão x Atacado nos relatórios** (pedido do Kayo — misturar distorcia a leitura): filtro segmentado **Tudo / 🛍️ Balcão / 🤝 Atacado** na **Visão geral** (`#ovFilter` → `overviewFilter`, `filtraOrigem` recorta `overviewCache.orders` e `drawOverview` redesenha; no recorte Balcão os 2 gráficos "por revendedor" — `#panelOrdersLine`/`#panelTopResellers` — são escondidos) e no relatório **"Todos os pedidos"** (`#ordFilter` → `ordersFilter`, `renderOrders` filtra antes de agrupar por dia). Critério (decisão do Kayo, refinada): a separação é **POR PRODUTO, não por canal** — **Atacado = pedido com QUALQUER item de produto `tipo='atacado'`** (mesmo vendido no caixa/balcão); **Balcão = pedido só com itens de varejo** (copo/peso/embalado varejo/taxa). `getAllOrders` monta o mapa `id->tipo` de products e marca **cada ITEM** com `categoria` ('atacado' se o produto for atacado, senão 'balcao'). O helper compartilhado **`recortarPorCategoria(orders, filtro)`** (admin.html) faz o **rateio por linha**: em 'balcao'/'atacado' reduz cada pedido só aos itens daquele tipo e recalcula o `valor`; pedido **misto** aparece **nos dois lados** (marcado `parcial` → selo "parcial" na lista), mas **sem duplicar valor** (cada item vai pra um lado só). 'tudo' usa o pedido inteiro. Usado tanto pela Visão geral quanto por "Todos os pedidos". Verificado: balcão 290/R$12.130,57 + atacado 84/R$75.644,40 = total R$87.774,97 (6 pedidos mistos aparecem parciais nos dois; soma não duplica).
 - **Painel admin**: Visão geral (cards + 4 gráficos Chart.js via CDN); Aprovações; Revendedores (listar + editar + remover); Produtos (CRUD, imagem no bucket público `produtos`; um produto pode ser **varejo e/ou atacado** — marcando os dois vira duas linhas ligadas por `estoque_ref` que dividem estoque, com preço e pedido mínimo próprios de cada tipo; `saveDualProduct` reconcilia criar/editar/converter); Pedidos (select de produto + qtd 1–99, valor auto, campo de data livre, criar/editar/excluir, número `PED-XXXX` auto; o histórico "Todos os pedidos" é **agrupado por dia** numa faixa clicável com contagem e faturamento do dia — cancelados não somam no total, só o dia mais recente nasce aberto e os dias abertos sobrevivem ao re-render); Cupons (gerar/excluir — revendedor só vê).
 - **Modos de produto** (migration_019, `products.modo`): `embalado` (padrão — caixas/potes/bebidas, é o único que o revendedor vê e o único com estoque/atacado-varejo), `copo` (açaí no copo da loja: preço fixo + `acomp_gratis` acompanhamentos grátis e `acomp_extra_preco` por excedente) e `peso` (self-service; `preco` = R$/kg). Copo/peso são linha única (`saveStoreProduct`), sem estoque por unidade, e ficam fora do gráfico de estoque, do select de pedidos e do dashboard do revendedor. Tabela `acompanhamentos` (lista única da loja: `gratuito` entra na cota, `pago` cobra preço próprio) tem CRUD na aba Produtos.
@@ -87,7 +88,7 @@ Tudo em `:root` no topo de `style.css` — **ajuste as variáveis, não hardcode
 
 ## SEO
 
-`index.html` tem Open Graph, Twitter Card, JSON-LD (`LocalBusiness`), `robots.txt` e `sitemap.xml`. **Todas as URLs usam o domínio placeholder `https://www.dupuroacai.com.br/`** — trocar pelo real ao definir hospedagem. Imagens com `width`/`height` e `loading="lazy"` (hero é eager/`fetchpriority="high"`). Tem skip-link, `prefers-reduced-motion`, `aria-expanded` no menu mobile.
+`index.html` tem Open Graph, Twitter Card, JSON-LD (`LocalBusiness`); `revenda/` tem OG próprio; `robots.txt`/`sitemap.xml` com home, delivery, revenda. Domínio real `https://www.dupuroacai.com/`. Imagens com `width`/`height` e `loading="lazy"` (hero é eager/`fetchpriority="high"`). Tem skip-link, `prefers-reduced-motion`, `aria-expanded` no menu mobile.
 
 ## Lacunas conhecidas
 
