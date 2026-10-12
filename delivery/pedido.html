@@ -272,7 +272,7 @@
   var jans = D.janelasDisponiveis(cfg, 6);
   $('janelas').innerHTML = jans.map(function (j, i) {
     return '<button type="button" class="dl-jan" data-j="' + i + '"><span class="ic">' + (j.periodo === 'manha' ? '☀️' : '🌤️') + '</span>' +
-      '<span><strong>' + esc(j.titulo) + '</strong><span>' + esc(j.faixa) + '</span></span></button>';
+      '<span><strong>' + esc(j.titulo) + '</strong><span>Entregaremos entre as ' + esc(j.faixa) + '</span></span></button>';
   }).join('') || '<div class="dl-card"><p class="dl-vazio">Sem horários disponíveis nos próximos dias.</p></div>';
   $('janelas').addEventListener('click', function (e) {
     var b = e.target.closest('[data-j]'); if (!b) return;
