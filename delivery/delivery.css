@@ -364,3 +364,21 @@ body.dl-travado { overflow: hidden; }
 .dl-input.travado::after { content: "🔒"; position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 13px; opacity: .55; pointer-events: none; }
 .dl-input.travado input { padding-right: 34px; text-overflow: ellipsis; }
 .dl-gaveta-acoes .dl-btn-line { background: #fff; color: var(--roxo-700); border-color: rgba(96,16,80,.25); }
+
+/* Sacola em destaque na barra (antes ficava camuflada no fundo escuro) */
+.dl-barra-in .ver { background: rgba(255,255,255,.09); border: 1.5px solid rgba(245,179,1,.6); border-radius: 15px; padding: 6px 12px 6px 6px; transition: background .15s, transform .15s; }
+.dl-barra-in .ver:hover { background: rgba(255,255,255,.15); }
+.dl-barra-in .ver:active { transform: scale(.98); }
+.dl-barra-in .ver .ct { flex: none; width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; background: linear-gradient(180deg, var(--gold-soft), var(--gold) 60%, var(--gold-strong)); box-shadow: 0 3px 0 #A96A00; }
+.dl-barra-in .ver .ct b { top: -7px; right: -7px; background: var(--danger, #C0392B); color: #fff; border: 2px solid var(--roxo-950); min-width: 22px; height: 22px; border-radius: 11px; font-size: 11.5px; }
+.dl-barra-in .ver .tt em { display: inline-flex; align-items: center; gap: 4px; margin-top: 3px; padding: 2px 8px; border-radius: 99px; background: var(--gold); color: var(--roxo-950); font-size: 11px; font-weight: 800; }
+.dl-barra-in .ver.pulou { animation: dlPulo .55s ease; }
+.dl-barra-in .ver.pulou .ct { animation: dlBalanca .55s ease; }
+@keyframes dlPulo { 30% { transform: scale(1.06); background: rgba(245,179,1,.28); } }
+@keyframes dlBalanca { 20% { transform: rotate(-12deg); } 50% { transform: rotate(10deg); } 80% { transform: rotate(-5deg); } }
+.dl-toast { position: fixed; left: 50%; bottom: calc(96px + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 40; display: flex; align-items: center; gap: 10px; max-width: calc(100% - 32px); padding: 11px 12px 11px 16px; border-radius: 16px; background: var(--verde, #8BB831); color: var(--roxo-950); font-weight: 800; font-size: 14px; box-shadow: 0 12px 30px rgba(36,8,32,.35); animation: dlSobe .25s ease; cursor: pointer; border: 0; font-family: inherit; }
+.dl-toast[hidden] { display: none; }
+.dl-toast span { white-space: nowrap; background: var(--roxo-950); color: #fff; padding: 6px 10px; border-radius: 10px; font-size: 12.5px; }
+@media (prefers-reduced-motion: reduce) { .dl-barra-in .ver.pulou, .dl-barra-in .ver.pulou .ct, .dl-toast { animation: none; } }
+.dl-toast { left: 16px; right: 16px; transform: none; margin: 0 auto; max-width: 520px; width: auto; }
+.dl-toast b { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; }

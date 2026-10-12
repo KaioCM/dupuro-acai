@@ -12,7 +12,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="preload" href="../assets/fonts/Klinko-PlayfulBold.otf" as="font" type="font/otf" crossorigin>
 <link rel="stylesheet" href="../assets/css/style.css?v=11">
-<link rel="stylesheet" href="delivery.css?v=4">
+<link rel="stylesheet" href="delivery.css?v=6">
 </head>
 <body class="dl-body">
 
@@ -101,6 +101,8 @@
     <button type="button" class="dl-btn dl-btn-gold" id="barBtn">Continuar</button>
   </div>
 </div>
+
+<button type="button" class="dl-toast" id="toast" hidden>✓ <b id="toastTxt">Adicionado à sacola</b><span>Ver sacola</span></button>
 
 <div class="dl-gaveta" id="gaveta" hidden>
   <div class="dl-gaveta-fundo" data-fechar></div>
@@ -211,6 +213,7 @@
     st.qtd = 1;
     $('prods').querySelector('[data-q="' + id + '"]').textContent = '1';
     b.textContent = '✓ Na sacola!';
+    avisarSacola(p.nome + (sabor ? ' · ' + (sabor === 'Açaí' ? 'Açaí puro' : D.nomeSabor(sabor)) : ''));
     setTimeout(function () { b.textContent = 'Adicionar · ' + brl(p.preco); }, 1300);
     salvar(); render();
   });
@@ -232,8 +235,16 @@
   }
   $('sacola').addEventListener('click', editarSacola);
   $('sacolaGaveta').addEventListener('click', editarSacola);
-  var gaveta = $('gaveta');
-  $('barSacola').addEventListener('click', function () { gaveta.hidden = false; document.body.classList.add('dl-travado'); });
+  var gaveta = $('gaveta'), toast = $('toast'), toastT = null;
+  function abrirGaveta() { toast.hidden = true; gaveta.hidden = false; document.body.classList.add('dl-travado'); }
+  $('barSacola').addEventListener('click', abrirGaveta);
+  toast.addEventListener('click', abrirGaveta);
+  // Ao adicionar: a sacola da barra pula e aparece um aviso clicável.
+  function avisarSacola(txt) {
+    var v = $('barSacola'); v.classList.remove('pulou'); void v.offsetWidth; v.classList.add('pulou');
+    $('toastTxt').textContent = 'Adicionado: ' + txt;
+    toast.hidden = false; clearTimeout(toastT); toastT = setTimeout(function () { toast.hidden = true; }, 3200);
+  }
   gaveta.addEventListener('click', function (e) {
     var f = e.target.closest('[data-fechar]'); if (!f) return;
     gaveta.hidden = true; document.body.classList.remove('dl-travado');
