@@ -5,10 +5,11 @@
 // distância DE CARRO da loja até lá pelo OpenRouteService (mapas OpenStreetMap,
 // chave grátis sem cartão). Aplica a tabela de taxa da delivery_config e devolve
 // a cotação ASSINADA (HMAC) — o checkout só aceita cotação assinada, então o
-// cliente não consegue alterar km/taxa no navegador. O ponto é sempre achado
-// aqui (nunca aceito do cliente), pra ninguém mandar coordenada perto da loja.
+// cliente não consegue alterar km/taxa no navegador. O ponto é achado aqui pelo
+// endereço, ou é o local que o cliente marcou no mapa (onde a entrega acontece).
 //
 // Localização (melhor primeiro):
+//   0. ponto que o cliente marcou no mapa (opcional) — vale direto;
 //   1. Pelias (geocodificador do ORS) acertando o NÚMERO da casa;
 //   2. coordenada do CEP (AwesomeAPI, grátis, sem chave) — no Brasil o CEP
 //      costuma ser da rua/trecho, bem preciso pra taxa;
@@ -96,26 +97,37 @@ Deno.serve(async (req: Request) => {
     const oLat = Number(cfg.origem?.lat), oLng = Number(cfg.origem?.lng)
     if (!Number.isFinite(oLat) || !Number.isFinite(oLng)) return json({ error: 'Localização da loja não configurada.' }, 500)
 
-    // 1) número exato; 2) CEP; 3) rua/bairro.
-    const achados = await pelias(`${rua} ${numero}, ${bairro}, ${cidade}, MT`, key)
-    let dest: any = achados.find((f: any) => f.layer === 'address')
+    const ponto = (a: unknown, b: unknown) => {
+      if (a == null || b == null || a === '' || b === '') return null
+      const p = { lat: Number(a), lng: Number(b) }
+      return Number.isFinite(p.lat) && Number.isFinite(p.lng) && naArea(p.lat, p.lng) ? p : null
+    }
+    // Ponto marcado pelo cliente no mapa (opcional): é exatamente onde a entrega
+    // acontece (decisão do Kayo), então vale direto e a taxa sai dele.
+    const pin = ponto(body.pin_lat, body.pin_lng)
+    let dest: any = pin ? { ...pin, layer: 'mapa' } : null
     let impreciso = false
     if (!dest) {
-      let c = await pontoDoCep(cep)
-      // A AwesomeAPI costuma limitar (429) os IPs do servidor; aí vale o ponto do
-      // CEP que o navegador do cliente buscou na mesma API — desde que esteja na
-      // área e perto da rua/bairro que o mapa achou (evita coordenada inventada).
-      const cl = { lat: Number(body.cep_lat), lng: Number(body.cep_lng) }
-      if (!c && Number.isFinite(cl.lat) && Number.isFinite(cl.lng) && naArea(cl.lat, cl.lng)) {
-        const ref = achados[0] || (await pelias(`${bairro}, ${cidade}, MT`, key))[0]
-        if (!ref || distKm(ref, cl) <= 4) c = cl
+      // 1) número exato; 2) CEP; 3) rua/bairro.
+      const achados = await pelias(`${rua} ${numero}, ${bairro}, ${cidade}, MT`, key)
+      dest = achados.find((f: any) => f.layer === 'address')
+      if (!dest) {
+        let c = await pontoDoCep(cep)
+        // A AwesomeAPI costuma limitar (429) os IPs do servidor; aí vale o ponto do
+        // CEP que o navegador do cliente buscou na mesma API — desde que esteja na
+        // área e perto da rua/bairro que o mapa achou (evita coordenada errada).
+        const cl = ponto(body.cep_lat, body.cep_lng)
+        if (!c && cl) {
+          const ref = achados[0] || (await pelias(`${bairro}, ${cidade}, MT`, key))[0]
+          if (!ref || distKm(ref, cl) <= 4) c = cl
+        }
+        if (c) dest = { ...c, label: null }
       }
-      if (c) dest = { ...c, label: null }
-    }
-    if (!dest && achados.length) { dest = achados[0]; impreciso = true }
-    if (!dest) {
-      const bb = await pelias(`${bairro}, ${cidade}, MT`, key)
-      if (bb.length) { dest = bb[0]; impreciso = true }
+      if (!dest && achados.length) { dest = achados[0]; impreciso = true }
+      if (!dest) {
+        const bb = await pelias(`${bairro}, ${cidade}, MT`, key)
+        if (bb.length) { dest = bb[0]; impreciso = true }
+      }
     }
     if (!dest) return json({ atende: false, mensagem: 'Não encontramos esse endereço no mapa. Confira o CEP e o número ou fale com a gente no WhatsApp.' })
 
