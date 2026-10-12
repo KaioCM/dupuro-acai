@@ -12,7 +12,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="preload" href="../assets/fonts/Klinko-PlayfulBold.otf" as="font" type="font/otf" crossorigin>
 <link rel="stylesheet" href="../assets/css/style.css?v=11">
-<link rel="stylesheet" href="delivery.css?v=2">
+<link rel="stylesheet" href="delivery.css?v=3">
 </head>
 <body class="dl-body">
 
@@ -55,8 +55,19 @@
   <section class="dl-bloco" id="secEndereco">
     <h2><b>📍</b> Endereço</h2>
     <div class="dl-card">
-      <div class="dl-campo"><label for="end">Rua, número e bairro</label><div class="dl-input"><span>🏠</span><input id="end" autocomplete="street-address" placeholder="Ex: Rua das Flores, 120, Jardim Imperial"></div></div>
+      <div class="dl-linha">
+        <div class="dl-campo"><label for="cep">CEP</label><div class="dl-input"><span>📮</span><input id="cep" inputmode="numeric" autocomplete="postal-code" placeholder="78000-000" maxlength="9"></div>
+          <a class="dl-cep-ajuda" href="https://buscacepinter.correios.com.br/app/endereco/index.php" target="_blank" rel="noopener">Não sei meu CEP</a></div>
+        <div class="dl-campo"><label for="cidade">Cidade</label><div class="dl-input"><span>🏙️</span><select id="cidade" autocomplete="address-level2">
+          <option value="Cuiabá">Cuiabá</option><option value="Várzea Grande">Várzea Grande</option></select></div></div>
+      </div>
+      <div class="dl-campo"><label for="rua">Rua / avenida</label><div class="dl-input"><span>🏠</span><input id="rua" autocomplete="address-line1" placeholder="Ex: Rua das Flores"></div></div>
+      <div class="dl-linha num">
+        <div class="dl-campo"><label for="numero">Número</label><div class="dl-input sem-ic"><input id="numero" inputmode="numeric" placeholder="120"></div></div>
+        <div class="dl-campo"><label for="bairro">Bairro</label><div class="dl-input"><span>🏘️</span><input id="bairro" autocomplete="address-level3" placeholder="Ex: Jardim Imperial"></div></div>
+      </div>
       <div class="dl-campo"><label for="comp">Complemento <span style="font-weight:600;color:var(--text-light);">(opcional)</span></label><div class="dl-input"><span>🔑</span><input id="comp" placeholder="Apto, bloco, ponto de referência"></div></div>
+      <div id="cepMsg"></div>
       <button type="button" class="dl-btn dl-btn-roxo dl-btn-block" id="btnCotar">Calcular entrega</button>
       <div id="cotMsg"></div>
     </div>
@@ -90,7 +101,6 @@
 </div>
 
 <script src="../assets/js/supabase-config.js"></script>
-<script src="maps-config.js?v=1"></script>
 <script src="delivery.js?v=2"></script>
 <script>
 (async function () {
@@ -223,40 +233,57 @@
   $('nome').addEventListener('input', validar);
 
   // ---- Endereço / cotação ----
-  var endEl = $('end'), cotMsg = $('cotMsg'), placeSel = null;
-  endEl.addEventListener('input', function () { placeSel = null; if (cot) { cot = null; cotMsg.innerHTML = ''; render(); } });
-  endEl.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); cotar(); } });
-  if (window.DUPURO_GOOGLE_MAPS_KEY) carregarAutocomplete();
-  function carregarAutocomplete() {
-    // Places API (New): PlaceAutocompleteElement. Se falhar, segue com texto livre.
-    window.__dlMapsPronto = async function () {
-      try {
-        await google.maps.importLibrary('places');
-        var pac = new google.maps.places.PlaceAutocompleteElement({ includedRegionCodes: ['br'],
-          locationBias: { north: -15.40, south: -15.80, east: -55.85, west: -56.25 } });
-        pac.style.width = '100%';
-        var box = endEl.closest('.dl-input'); box.style.display = 'none'; box.parentNode.insertBefore(pac, box);
-        pac.addEventListener('gmp-select', async function (ev) {
-          var place = ev.placePrediction.toPlace();
-          await place.fetchFields({ fields: ['formattedAddress', 'location', 'id'] });
-          endEl.value = place.formattedAddress;
-          placeSel = { place_id: place.id, lat: place.location.lat(), lng: place.location.lng(), formatado: place.formattedAddress };
-          cotar();
-        });
-      } catch (e) { /* fica o campo de texto */ }
-    };
-    var s = document.createElement('script');
-    s.src = 'https://maps.googleapis.com/maps/api/js?key=' + encodeURIComponent(window.DUPURO_GOOGLE_MAPS_KEY) + '&v=weekly&language=pt-BR&region=BR&loading=async&callback=__dlMapsPronto';
-    s.async = true; document.head.appendChild(s);
+  // Campos separados (CEP preenche rua/bairro/cidade pelo ViaCEP, mas tudo continua editável).
+  var cotMsg = $('cotMsg'), cepEl = $('cep'), cepMsg = $('cepMsg');
+  var CIDADES = { 'cuiabá': 'Cuiabá', 'cuiaba': 'Cuiabá', 'várzea grande': 'Várzea Grande', 'varzea grande': 'Várzea Grande' };
+  ['cep', 'cidade', 'rua', 'numero', 'bairro'].forEach(function (id) {
+    $(id).addEventListener(id === 'cidade' ? 'change' : 'input', function () { if (cot) { cot = null; cotMsg.innerHTML = ''; render(); } });
+  });
+  ['rua', 'numero', 'bairro', 'comp'].forEach(function (id) {
+    $(id).addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); cotar(); } });
+  });
+  var cepBuscado = '';
+  cepEl.addEventListener('input', function () {
+    var d = cepEl.value.replace(/\D/g, '').slice(0, 8);
+    cepEl.value = d.length > 5 ? d.slice(0, 5) + '-' + d.slice(5) : d;
+    if (d.length === 8 && d !== cepBuscado) buscarCep(d);
+    if (d.length < 8) { cepBuscado = ''; cepMsg.innerHTML = ''; }
+  });
+  async function buscarCep(d) {
+    cepBuscado = d;
+    cepMsg.innerHTML = '<div class="dl-msg info">Buscando o CEP…</div>';
+    try {
+      var r = await fetch('https://viacep.com.br/ws/' + d + '/json/').then(function (x) { return x.json(); });
+      if (cepBuscado !== d) return; // digitou outro CEP enquanto buscava
+      if (r.erro) { cepMsg.innerHTML = '<div class="dl-msg erro">CEP não encontrado. Confira ou preencha o endereço abaixo.</div>'; return; }
+      var cid = CIDADES[String(r.localidade || '').toLowerCase()];
+      if (!cid) { cepMsg.innerHTML = '<div class="dl-msg erro">Esse CEP é de ' + esc(r.localidade) + ' - ' + esc(r.uf) + '. Por enquanto entregamos só em Cuiabá e Várzea Grande.</div>'; return; }
+      $('cidade').value = cid;
+      if (r.logradouro) $('rua').value = r.logradouro;
+      if (r.bairro) $('bairro').value = r.bairro;
+      cepMsg.innerHTML = '';
+      (r.logradouro ? $('numero') : $('rua')).focus();
+    } catch (e) {
+      if (cepBuscado === d) cepMsg.innerHTML = '<div class="dl-msg info">Não conseguimos consultar o CEP agora. Preencha o endereço abaixo.</div>';
+    }
+  }
+  function enderecoTexto() {
+    var cep = cepEl.value.replace(/\D/g, '');
+    return $('rua').value.trim() + ', ' + $('numero').value.trim() + ' - ' + $('bairro').value.trim() + ', ' +
+      $('cidade').value + ' - MT' + (cep.length === 8 ? ', ' + cep.slice(0, 5) + '-' + cep.slice(5) : '');
   }
   $('btnCotar').addEventListener('click', cotar);
   async function cotar() {
-    var txt = endEl.value.trim();
-    if (txt.length < 6 && !placeSel) { cotMsg.innerHTML = '<div class="dl-msg erro">Digite rua, número e bairro.</div>'; return; }
+    var falta = [];
+    if ($('rua').value.trim().length < 3) falta.push('rua');
+    if (!$('numero').value.trim()) falta.push('número (ou "s/n")');
+    if ($('bairro').value.trim().length < 2) falta.push('bairro');
+    if (falta.length) { cotMsg.innerHTML = '<div class="dl-msg erro">Preencha ' + esc(falta.join(', ')) + '.</div>'; return; }
+    var txt = enderecoTexto();
     $('btnCotar').disabled = true; $('btnCotar').textContent = 'Calculando…';
     cotMsg.innerHTML = '';
     try {
-      cot = await D.fn('delivery-cotacao', placeSel ? { place_id: placeSel.place_id, lat: placeSel.lat, lng: placeSel.lng, endereco: placeSel.formatado || txt } : { endereco: txt });
+      cot = await D.fn('delivery-cotacao', { endereco: txt + ', Brasil' });
       if (!cot.atende) cotMsg.innerHTML = '<div class="dl-msg erro">😕 ' + esc(cot.mensagem || 'Ainda não entregamos nesse endereço.') + '</div>';
       else cotMsg.innerHTML = '<div class="dl-msg ok dl-cot"><span class="pin">📍</span><div><strong>Entregamos aí! ' + brl(cot.taxa) + '</strong>' +
         '<span class="km">' + esc(cot.endereco_formatado || txt) + ' · ' + String(cot.km).replace('.', ',') + ' km da loja</span>' +
@@ -272,7 +299,7 @@
   var jans = D.janelasDisponiveis(cfg, 6);
   $('janelas').innerHTML = jans.map(function (j, i) {
     return '<button type="button" class="dl-jan" data-j="' + i + '"><span class="ic">' + (j.periodo === 'manha' ? '☀️' : '🌤️') + '</span>' +
-      '<span><strong>' + esc(j.titulo) + '</strong><span>Entregaremos entre as ' + esc(j.faixa) + '</span></span></button>';
+      '<span><strong>' + esc(j.titulo) + '</strong><span>Entregaremos entre ' + esc(j.faixa.replace(' às ', ' e ')) + '</span></span></button>';
   }).join('') || '<div class="dl-card"><p class="dl-vazio">Sem horários disponíveis nos próximos dias.</p></div>';
   $('janelas').addEventListener('click', function (e) {
     var b = e.target.closest('[data-j]'); if (!b) return;
@@ -313,7 +340,7 @@
       var r = await D.fn('delivery-checkout', {
         itens: cart.map(function (c) { return { produto_id: c.produto_id, sabor: c.sabor, quantidade: c.quantidade }; }),
         nome: $('nome').value.trim(), telefone: telEl.value.replace(/\D/g, ''),
-        endereco: cot.endereco_formatado || endEl.value.trim(), complemento: $('comp').value.trim() || null,
+        endereco: enderecoTexto(), complemento: $('comp').value.trim() || null,
         lat: cot.lat, lng: cot.lng, place_id: cot.place_id || null,
         km: cot.km, taxa: cot.taxa, cotacao: cot.cotacao, // assinada pelo servidor
         periodo: janela.periodo, data: janela.data
