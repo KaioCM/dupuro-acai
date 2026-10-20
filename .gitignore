@@ -10,3 +10,6 @@ desktop.ini
 # Arquivos temporários
 *.log
 *.tmp
+
+# Credenciais de contas de TESTE (nunca vão pro GitHub)
+*.local.txt
