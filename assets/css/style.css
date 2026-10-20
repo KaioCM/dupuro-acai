@@ -2342,3 +2342,7 @@ a.stat-card.alerta .stat-sub { color: var(--warning); font-weight: 800; }
 .stat-grid .stat-card .stat-sub.desce { color: #B03A2E; }
 .stat-grid a.stat-card.alerta { box-shadow: 0 0 0 2px var(--gold), var(--shadow-sm); }
 .stat-grid a.stat-card.alerta .stat-sub { color: var(--warning); font-weight: 800; }
+.stock-grafico { margin-top: 18px; border-top: 1px dashed rgba(96,16,80,0.15); padding-top: 12px; }
+.stock-grafico > summary { cursor: pointer; font-weight: 800; font-size: 14px; color: var(--roxo-700); list-style-position: inside; }
+.stock-grafico[open] > summary { margin-bottom: 12px; }
+.stock-chip-group > summary { flex-wrap: nowrap; align-items: flex-start; } .stock-chip-group > summary .chevron { margin-top: 3px; flex: none; }

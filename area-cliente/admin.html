@@ -9,7 +9,7 @@
 <link rel="apple-touch-icon" href="../assets/img/brand/favicon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/css/style.css?v=22">
+<link rel="stylesheet" href="../assets/css/style.css?v=24">
 </head>
 <body>
 
@@ -177,15 +177,13 @@
       </div>
 
       <div class="panel chart-card">
-        <h3>Estoque por produto</h3>
-        <div class="subtitle">Do mais urgente pro mais saudável — cremes esgotados aparecem destacados em vermelho (passe o mouse pra ver quais)</div>
-        <div class="chart-wrap" id="chartStockWrap"><canvas id="chartStock"></canvas></div>
-        <div class="stock-legend">
-          <span class="stock-legend-item"><span class="dot dot-danger"></span> Esgotado</span>
-          <span class="stock-legend-item"><span class="dot dot-warning"></span> Estoque baixo (&lt; 5)</span>
-          <span class="stock-legend-item"><span class="dot dot-green"></span> Estoque saudável</span>
-        </div>
+        <h3>Estoque: o que repor</h3>
+        <div class="subtitle">Do mais urgente pro mais saudável. Estoque baixo = menos de 5 unidades.</div>
         <div class="stock-summary" id="stockSummary"></div>
+        <details class="stock-grafico" id="stockGrafico">
+          <summary>Ver gráfico de estoque por sabor</summary>
+          <div class="chart-wrap" id="chartStockWrap"><canvas id="chartStock"></canvas></div>
+        </details>
       </div>
 
       <div class="panel">
@@ -1120,6 +1118,8 @@
     'Creme de Banana': '#FFF176',
     'Creme de Doce de Leite': '#D98C5F'
   };
+  // O gráfico fica recolhido; desenha quando abre (Chart.js precisa do canvas visível).
+  document.getElementById('stockGrafico').addEventListener('toggle', function () { if (this.open) renderStockChart(); });
   function renderStockChart() {
     var wrap = document.getElementById('chartStockWrap');
     if (!wrap) return;
