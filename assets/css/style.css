@@ -2153,3 +2153,128 @@ tr.venda-cancelada td:nth-child(5) { text-decoration: line-through; color: var(-
 }
 .mobile-topbar .brand img { height: 40px; width: auto; }
 .mobile-topbar button { background: transparent; color: var(--white); font-size: 24px; }
+
+/* =====================================================================
+   Refinamento visual v3 (2026-10-20) — home, revenda
+   - ícones próprios (sprite SVG) no lugar de emoji
+   - títulos de card em letra normal (Klinko só nos títulos grandes)
+   - um único momento de movimento: a caixa chegando no topo
+   - celular mais curto: listas compactas e carrosséis de arrastar
+   ===================================================================== */
+.sprite { position: absolute; width: 0; height: 0; overflow: hidden; }
+.ic { width: 1.15em; height: 1.15em; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; flex: none; vertical-align: -0.2em; }
+
+/* ---------- Topo da home: a caixa é o protagonista ---------- */
+.hero:has(.hero-v3) { padding: 150px 0 96px; }
+.hero-v3 {
+  position: relative; z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  grid-template-areas: "titulo caixa" "lead caixa" "portas caixa" "nota caixa";
+  column-gap: 56px;
+  align-items: center;
+}
+.hv-titulo { grid-area: titulo; align-self: end; margin-bottom: 18px; }
+.hv-lead { grid-area: lead; font-size: 18px; color: rgba(255,255,255,0.85); max-width: 30em; margin-bottom: 28px; }
+.hv-portas { grid-area: portas; margin: 0 0 22px; }
+.hv-nota { grid-area: nota; align-self: start; display: flex; align-items: center; gap: 8px; font-size: 14px; color: rgba(255,255,255,0.72); }
+.hv-nota strong { color: var(--white); }
+.hv-nota .ic { color: var(--gold); fill: var(--gold); width: 18px; height: 18px; }
+.hv-caixa { grid-area: caixa; position: relative; margin: 0; justify-self: center; width: min(100%, 540px); }
+.hv-caixa::before {
+  content: ""; position: absolute; inset: 6% 0 0; z-index: -1;
+  background: radial-gradient(closest-side, rgba(245,179,1,0.32), transparent);
+}
+.hv-caixa > img:first-child {
+  width: 100%; height: auto;
+  transform: rotate(-7deg);
+  filter: drop-shadow(0 34px 28px rgba(0,0,0,0.45));
+  animation: caixaChega 0.9s cubic-bezier(.2,.9,.3,1.12) both;
+}
+.hv-selo { position: absolute; width: 118px; height: auto; top: -6%; right: 0; animation: seloSpin 18s linear infinite; filter: drop-shadow(0 8px 16px rgba(0,0,0,0.35)); }
+@keyframes caixaChega { from { opacity: 0; transform: translateY(46px) rotate(-15deg) scale(0.9); } to { opacity: 1; transform: rotate(-7deg); } }
+
+@media (max-width: 900px) {
+  .hero:has(.hero-v3) { padding: 104px 0 44px; }
+  .hero-v3 { grid-template-columns: 1fr; grid-template-areas: "titulo" "lead" "caixa" "portas" "nota"; }
+  .hero-v3 .hv-titulo { font-size: clamp(38px, 11vw, 56px); margin-bottom: 12px; }
+  .hv-lead { font-size: 16px; margin-bottom: 4px; }
+  .hv-caixa { width: min(80%, 380px); margin: 4px auto 14px; }
+  .hv-selo { width: 78px; top: -10%; right: -4%; }
+  .hv-nota { justify-content: center; margin-top: 2px; }
+}
+/* As duas portas lado a lado também no celular (cabem na primeira tela) */
+@media (max-width: 560px) {
+  .hv-portas { grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+  .hv-portas .porta { padding: 14px 12px 12px; gap: 6px; border-radius: 20px; }
+  .hv-portas .porta-tag { font-size: 10px; padding: 4px 9px; letter-spacing: 0.06em; }
+  .hv-portas .porta-titulo { font-size: 19px; padding-right: 0; margin-top: 2px; }
+  .hv-portas .porta-txt { display: none; }
+  .hv-portas .porta-preco { font-size: 12.5px; flex: 1; }
+  .hv-portas .porta-cta { padding: 11px 8px; font-size: 13px; }
+}
+.porta-tag { display: inline-flex; align-items: center; gap: 6px; }
+
+/* ---------- Títulos de card em letra normal ---------- */
+.feature-card h3, .step-card h4, .checklist h4, .location-row h4 {
+  font-family: var(--font-body, 'Inter', sans-serif);
+  text-transform: none; font-weight: 800; letter-spacing: 0; line-height: 1.25;
+}
+.feature-card h3 { font-size: 18px; }
+.step-card h4 { font-size: 17px; }
+.gallery-caption { font-family: var(--font-body, 'Inter', sans-serif); text-transform: none; font-weight: 800; letter-spacing: 0; font-size: 15px; }
+
+/* Ícones nos quadradinhos */
+.feature-icon { color: var(--roxo-700); }
+.feature-icon .ic { width: 28px; height: 28px; }
+.step-number .ic { width: 24px; height: 24px; color: var(--roxo-950); }
+.location-row .icon { color: var(--roxo-700); }
+.location-row .icon .ic { width: 22px; height: 22px; }
+
+/* Sem "pulinho" em todo card: hover só onde é link */
+.feature-card:hover, .step-card:hover, .testimonial-card:hover { transform: none; }
+.feature-card:hover { box-shadow: var(--shadow-sm); border-color: rgba(96,16,80,0.06); }
+.feature-card::before { display: none; }
+.feature-card:hover .feature-icon { transform: none; }
+
+/* ---------- Celular: mais curto ---------- */
+@media (max-width: 640px) {
+  .section { padding: 64px 0; }
+  .section-header { margin-bottom: 30px; }
+
+  /* cards viram linhas: ícone + texto */
+  .lista-compacta { gap: 12px; }
+  .lista-compacta .feature-card, .lista-compacta .step-card {
+    display: grid; grid-template-columns: 48px 1fr; column-gap: 14px; align-items: start;
+    padding: 16px; border-radius: 18px;
+  }
+  .lista-compacta .feature-icon, .lista-compacta .step-number { grid-row: span 2; width: 48px; height: 48px; margin: 0; border-radius: 14px; }
+  .lista-compacta h3, .lista-compacta h4 { font-size: 16px; margin: 2px 0 4px; }
+  .lista-compacta p { font-size: 14px; }
+
+  /* galeria e avaliações: arrastar pro lado */
+  .carrossel {
+    display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 14px;
+    margin: 0 -24px; padding: 4px 24px 14px; scrollbar-width: none; -webkit-overflow-scrolling: touch;
+  }
+  .carrossel::-webkit-scrollbar { display: none; }
+  .carrossel > * { flex: 0 0 78%; scroll-snap-align: center; }
+  .testimonials-grid.carrossel > * { flex-basis: 84%; }
+
+  .about-visual { min-height: 300px; padding: 26px; }
+  .about-visual p { font-size: 16px; }
+  .about-visual .quote-mark { font-size: 46px; }
+  .map-embed, .map-embed iframe { min-height: 250px; }
+  .location-card { padding: 22px; }
+  .hero-stats { gap: 22px; flex-wrap: nowrap; }
+  .hero-stats .stat { flex: 1; }
+  .hero-stats .stat strong { font-size: 26px; }
+  .cta-banner { padding: 64px 0; }
+}
+.benefit-pill .icon { color: var(--gold); display: inline-flex; } .benefit-pill .icon .ic { width: 20px; height: 20px; stroke-width: 2.4; }
+.hv-portas .porta-titulo { padding-right: 0; font-size: clamp(19px, 2.1vw, 27px); overflow-wrap: anywhere; }
+@media (max-width: 560px) {
+  .hv-portas .porta-titulo { font-size: 17px; overflow-wrap: normal; }
+  .hv-selo { top: 2%; right: -6%; }
+}
+@media (max-width: 360px) { .hv-portas .porta-titulo { font-size: 15px; } }

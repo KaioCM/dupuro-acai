@@ -150,56 +150,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  // ---- Reveal on scroll (leve) ----
-  var prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var revealTargets = document.querySelectorAll('.feature-card, .product-card, .testimonial-card, .step-card');
-  if ('IntersectionObserver' in window && !prefersReducedMotion) {
-    var observer = new IntersectionObserver(function (entries) {
-      entries.forEach(function (entry) {
-        if (entry.isIntersecting) {
-          entry.target.style.opacity = '1';
-          entry.target.style.transform = 'translateY(0)';
-          observer.unobserve(entry.target);
-        }
-      });
-    }, { threshold: 0.15 });
-
-    revealTargets.forEach(function (el) {
-      el.style.opacity = '0';
-      el.style.transform = 'translateY(16px)';
-      el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
-      observer.observe(el);
-    });
-  }
-
-  // ---- Parallax leve no hero (foto e cards flutuantes em velocidades diferentes) ----
-  var heroSection = document.querySelector('.hero');
-  var heroPhoto = document.querySelector('.hero-photo-frame');
-  var floatCards = document.querySelectorAll('.hero-visual .float-card');
-
-  if (heroSection && heroPhoto && !prefersReducedMotion) {
-    var parallaxTicking = false;
-
-    function updateParallax() {
-      var rect = heroSection.getBoundingClientRect();
-      // Só anima enquanto o hero estiver (ao menos parcialmente) na tela.
-      if (rect.bottom > 0 && rect.top < window.innerHeight) {
-        var scrolled = Math.max(0, -rect.top);
-        heroPhoto.style.transform = 'rotate(-2deg) translate3d(0, ' + (scrolled * 0.12).toFixed(1) + 'px, 0)';
-        floatCards.forEach(function (card, i) {
-          var speed = 0.05 + i * 0.05;
-          card.style.transform = 'translate3d(0, ' + (scrolled * speed).toFixed(1) + 'px, 0)';
-        });
-      }
-      parallaxTicking = false;
-    }
-
-    window.addEventListener('scroll', function () {
-      if (!parallaxTicking) {
-        requestAnimationFrame(updateParallax);
-        parallaxTicking = true;
-      }
-    }, { passive: true });
-  }
+  // Sem reveal-on-scroll nem parallax (v3): o conteúdo nunca depende de animação
+  // pra aparecer, e o único movimento de entrada é a caixa no topo da home.
 
 });

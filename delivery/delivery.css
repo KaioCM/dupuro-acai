@@ -429,3 +429,10 @@ body.dl-travado { overflow: hidden; }
 .dl-ou { display: flex; align-items: center; gap: 10px; margin: 14px 0 12px; color: var(--text-light); font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; }
 .dl-ou::before, .dl-ou::after { content: ""; flex: 1; height: 1px; background: rgba(96,16,80,.14); }
 .dl-mapa-btn small[hidden] { display: none; }
+
+/* v3: ícones próprios (sprite SVG) no lugar de emoji */
+.dl-body .sprite { position: absolute; width: 0; height: 0; overflow: hidden; }
+.dl-body .ic svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+.dl-float .ic { color: var(--roxo-700); }
+.dl-passo .n { font-family: var(--font-display); font-size: 22px; color: var(--gold); }
+.dl-extra .ic { color: var(--roxo-700); } .dl-extra .ic svg { width: 28px; height: 28px; }

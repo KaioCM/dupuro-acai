@@ -40,7 +40,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="preload" href="assets/fonts/Klinko-PlayfulBold.otf" as="font" type="font/otf" crossorigin>
-<link rel="stylesheet" href="assets/css/style.css?v=13">
+<link rel="stylesheet" href="assets/css/style.css?v=15">
 
 <script type="application/ld+json">
 {
@@ -81,6 +81,25 @@
 
 <a href="#main" class="skip-link">Pular para o conteúdo</a>
 
+<!-- Ícones da marca (traço, herdam a cor do texto) -->
+<svg class="sprite" aria-hidden="true" focusable="false">
+  <symbol id="i-caixa" viewBox="0 0 24 24"><path d="M3 8l9-4 9 4v9l-9 4-9-4z"/><path d="M3 8l9 4 9-4M12 12v9"/></symbol>
+  <symbol id="i-moto" viewBox="0 0 24 24"><circle cx="5.5" cy="17" r="2.5"/><circle cx="18.5" cy="17" r="2.5"/><path d="M8 17h7.5l-2.5-7h-3M13 10l1.5-4H18M3.5 13.5H9l2 3.5"/></symbol>
+  <symbol id="i-cartao" viewBox="0 0 24 24"><rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M2.5 10h19M6 15h4"/></symbol>
+  <symbol id="i-fabrica" viewBox="0 0 24 24"><path d="M3 21V10l5 3v-3l5 3V7l8 4v10z"/><path d="M7 17h2M12 17h2M17 17h1"/></symbol>
+  <symbol id="i-etiqueta" viewBox="0 0 24 24"><path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.4"/></symbol>
+  <symbol id="i-caminhao" viewBox="0 0 24 24"><path d="M2 6h11v10H2zM13 10h4l3 3v3h-7"/><circle cx="6" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></symbol>
+  <symbol id="i-painel" viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 10h6M9 14h6M9 18h3"/></symbol>
+  <symbol id="i-estrela" viewBox="0 0 24 24"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s7-6.1 7-11.5a7 7 0 0 0-14 0C5 14.9 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></symbol>
+  <symbol id="i-relogio" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+  <symbol id="i-fone" viewBox="0 0 24 24"><path d="M5 3h3l2 5-2.5 1.5a11 11 0 0 0 5 5L14 12l5 2v3a2 2 0 0 1-2 2A15 15 0 0 1 3 5a2 2 0 0 1 2-2z"/></symbol>
+  <symbol id="i-loja" viewBox="0 0 24 24"><path d="M3 9l1.5-5h15L21 9M3 9v11h18V9M3 9h18M9 20v-6h6v6"/></symbol>
+  <symbol id="i-casa" viewBox="0 0 24 24"><path d="M3 11l9-7 9 7M5 9.5V20h14V9.5M10 20v-6h4v6"/></symbol>
+  <symbol id="i-megafone" viewBox="0 0 24 24"><path d="M3 10v4h3l7 4V6L6 10zM16.5 9a4 4 0 0 1 0 6M19 6.5a7.5 7.5 0 0 1 0 11"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+</svg>
+
 <!-- ===================== HEADER ===================== -->
 <header class="site-header">
   <div class="container">
@@ -106,40 +125,30 @@
 <!-- ===================== HERO + 2 PORTAS ===================== -->
 <section class="hero" id="top">
   <div class="hero-grain" aria-hidden="true"></div>
-  <div class="container hero-grid">
-    <div>
-      <div class="hero-badge"><span class="dot"></span> Fábrica de Açaí · Cuiabá-MT</div>
-      <h1>Puro como <em>tem que ser</em>.</h1>
-      <p class="lead">Açaí puro e cremes feitos na nossa fábrica, do jeito que você precisar: na sua casa ou no seu negócio.</p>
-      <div class="portas">
-        <a class="porta porta-casa" href="delivery/">
-          <img class="porta-foto" src="assets/img/delivery/caixa-na-mao.jpg" alt="" aria-hidden="true">
-          <span class="porta-tag">🏠 Pra sua casa</span>
-          <strong class="porta-titulo">Peça agora</strong>
-          <span class="porta-txt">Caixas de 1 a 10 L com entrega em Cuiabá e Várzea Grande, de manhã ou à tarde.</span>
-          <span class="porta-preco" id="portaPreco">Pix ou cartão</span>
-          <span class="porta-cta">Escolher minha caixa →</span>
-        </a>
-        <a class="porta porta-revenda" href="revenda/">
-          <img class="porta-foto" src="assets/img/fotos/belvedere-5.jpg" alt="" aria-hidden="true">
-          <span class="porta-tag">🏪 Pra revender</span>
-          <strong class="porta-titulo">Seja revendedor</strong>
-          <span class="porta-txt">Direto da fábrica pro seu negócio, com suporte e entrega rápida.</span>
-          <span class="porta-preco">Sem pedido mínimo</span>
-          <span class="porta-cta">Quero revender →</span>
-        </a>
-      </div>
-      <div class="hero-stats">
-        <div class="stat"><strong data-count-to="4.8" data-decimals="1" data-suffix="★">0</strong><span>avaliação Google (33 avaliações)</span></div>
-        <div class="stat"><strong data-count-to="100" data-suffix="%">0</strong><span>direto da fábrica</span></div>
-      </div>
+  <div class="container hero-v3">
+    <h1 class="hv-titulo">Puro como <em>tem que ser</em>.</h1>
+    <p class="hv-lead">Açaí puro e cremes da nossa fábrica em Cuiabá, pra sua casa ou pro seu negócio.</p>
+    <figure class="hv-caixa">
+      <img src="assets/img/delivery/caixa-10l-recorte.webp" alt="Caixa de 10 litros de açaí Dupuro" width="900" height="732" fetchpriority="high" decoding="async">
+      <img src="assets/img/brand/selo-redondo.png" alt="" class="hv-selo" aria-hidden="true" width="110" height="110">
+    </figure>
+    <div class="portas hv-portas">
+      <a class="porta porta-casa" href="delivery/">
+        <span class="porta-tag"><svg class="ic"><use href="#i-casa"/></svg> Pra sua casa</span>
+        <strong class="porta-titulo">Peça agora</strong>
+        <span class="porta-txt">Caixas de 1 a 10 L com entrega em Cuiabá e Várzea Grande.</span>
+        <span class="porta-preco" id="portaPreco">Pix ou cartão</span>
+        <span class="porta-cta">Escolher caixa</span>
+      </a>
+      <a class="porta porta-revenda" href="revenda/">
+        <span class="porta-tag"><svg class="ic"><use href="#i-loja"/></svg> Pra revender</span>
+        <strong class="porta-titulo">Seja revendedor</strong>
+        <span class="porta-txt">Direto da fábrica pro seu negócio, com entrega rápida.</span>
+        <span class="porta-preco">Sem pedido mínimo</span>
+        <span class="porta-cta">Quero revender</span>
+      </a>
     </div>
-    <div class="hero-visual">
-      <div class="hero-photo-frame">
-        <img src="assets/img/fotos/menina-caixa-5l.jpg" alt="Menina segurando uma caixa de 5 litros de açaí Dupuro" width="1066" height="1600" fetchpriority="high" decoding="async">
-        <img src="assets/img/brand/selo-redondo.png" alt="" class="hero-selo" aria-hidden="true">
-      </div>
-    </div>
+    <p class="hv-nota"><svg class="ic"><use href="#i-estrela"/></svg> <strong>4,8 no Google</strong> em 33 avaliações</p>
   </div>
 </section>
 
@@ -164,24 +173,23 @@
 <section class="section" id="casa">
   <div class="container">
     <div class="section-header">
-      <span class="section-tag">Delivery Dupuro</span>
       <h2 class="section-title">Açaí de fábrica na sua porta</h2>
       <p class="section-subtitle">Escolha o tamanho e o sabor, pague online e receba no período que for melhor pra você.</p>
     </div>
     <div class="tam-chips" id="tamChips" hidden></div>
-    <div class="cards-grid">
+    <div class="cards-grid lista-compacta">
       <div class="feature-card">
-        <div class="feature-icon">📦</div>
+        <div class="feature-icon"><svg class="ic"><use href="#i-caixa"/></svg></div>
         <h3>De 1 a 10 litros</h3>
         <p>Açaí puro ou o creme que você mais gosta, em caixas pra matar a vontade ou pra festa toda.</p>
       </div>
       <div class="feature-card">
-        <div class="feature-icon">🛵</div>
+        <div class="feature-icon"><svg class="ic"><use href="#i-moto"/></svg></div>
         <h3>Manhã ou tarde</h3>
         <p>Você escolhe o período da entrega, de segunda a sábado. A taxa é calculada pela distância.</p>
       </div>
       <div class="feature-card">
-        <div class="feature-icon">💳</div>
+        <div class="feature-icon"><svg class="ic"><use href="#i-cartao"/></svg></div>
         <h3>Pix ou cartão</h3>
         <p>Pagamento seguro pelo Mercado Pago, e você acompanha cada etapa do pedido pelo celular.</p>
       </div>
@@ -205,7 +213,6 @@
       </div>
     </div>
     <div>
-      <span class="section-tag">Nossa história</span>
       <h2 class="section-title">Uma fábrica de Cuiabá que virou referência no boca a boca</h2>
       <p class="section-subtitle">A Dupuro nasceu para provar que dá pra ter açaí de fábrica com sabor de feito à mão. Hoje atendemos famílias, o iFood e uma rede crescente de revendedores parceiros.</p>
       <ul class="checklist">
@@ -230,28 +237,27 @@
 <section class="section steps-section" id="negocio">
   <div class="container">
     <div class="section-header">
-      <span class="section-tag">Pra seu negócio</span>
       <h2 class="section-title">Revenda Dupuro, sem pedido mínimo</h2>
       <p class="section-subtitle">Açaiterias, mercados e delivery que querem vender um açaí de verdade, direto da fábrica.</p>
     </div>
-    <div class="steps-grid">
+    <div class="steps-grid lista-compacta escura">
       <div class="step-card">
-        <div class="step-number">🫐</div>
+        <div class="step-number"><svg class="ic"><use href="#i-fabrica"/></svg></div>
         <h4>Direto da fábrica</h4>
         <p>Sem atravessadores: produto puro e cremoso, com preço de fábrica.</p>
       </div>
       <div class="step-card">
-        <div class="step-number">📦</div>
+        <div class="step-number"><svg class="ic"><use href="#i-etiqueta"/></svg></div>
         <h4>Sem pedido mínimo</h4>
         <p>Comece do seu jeito, no seu ritmo, sem comprar grandes volumes.</p>
       </div>
       <div class="step-card">
-        <div class="step-number">🚚</div>
+        <div class="step-number"><svg class="ic"><use href="#i-caminhao"/></svg></div>
         <h4>Entrega rápida</h4>
         <p>Logística pensada pro seu estoque nunca faltar.</p>
       </div>
       <div class="step-card">
-        <div class="step-number">🧾</div>
+        <div class="step-number"><svg class="ic"><use href="#i-painel"/></svg></div>
         <h4>Painel do revendedor</h4>
         <p>Faça pedidos e acompanhe histórico e cupons num painel simples.</p>
       </div>
@@ -267,11 +273,10 @@
 <section class="section gallery-section" id="comunidade">
   <div class="container">
     <div class="section-header">
-      <span class="section-tag">Direto do Instagram</span>
       <h2 class="section-title">Dupuro no dia a dia de quem confia na marca</h2>
       <p class="section-subtitle">Patrocinamos corridas, times e famílias de Cuiabá — o açaí que acompanha quem vive com intensidade.</p>
     </div>
-    <div class="gallery-grid">
+    <div class="gallery-grid carrossel">
       <a class="gallery-item" href="https://www.instagram.com/dupuroacai/" target="_blank" rel="noopener">
         <img src="assets/img/fotos/marcos-0.jpg" alt="Atleta patrocinado pela Dupuro exibindo medalha" width="1067" height="1600" loading="lazy" decoding="async">
         <span class="gallery-caption">Energia de quem compete</span>
@@ -295,11 +300,10 @@
 <section class="section" id="depoimentos">
   <div class="container">
     <div class="section-header">
-      <span class="section-tag">Quem já experimentou</span>
       <h2 class="section-title">Avaliações reais no Google</h2>
       <p class="section-subtitle">4,8 de 5 estrelas em 33 avaliações — reputação construída no boca a boca.</p>
     </div>
-    <div class="testimonials-grid">
+    <div class="testimonials-grid carrossel">
       <div class="testimonial-card">
         <div class="stars">★★★★★</div>
         <p class="quote">"Pessoal bem atencioso, ambiente limpo, açaí bem montado com muito sabor. Ótimas opções."</p>
@@ -332,26 +336,25 @@
 <section class="section" id="localizacao">
   <div class="container">
     <div class="section-header">
-      <span class="section-tag">Onde estamos</span>
       <h2 class="section-title">Venha nos visitar</h2>
       <p class="section-subtitle">Fábrica com atendimento presencial em Cuiabá-MT.</p>
     </div>
     <div class="location-grid">
       <div class="location-card">
         <div class="location-row">
-          <span class="icon">📍</span>
+          <span class="icon"><svg class="ic"><use href="#i-pin"/></svg></span>
           <div><h4>Endereço</h4><p>Av. das Torres, nº 16 — Jardim Imperial II, Cuiabá - MT, 78076-001</p></div>
         </div>
         <div class="location-row">
-          <span class="icon">🕒</span>
+          <span class="icon"><svg class="ic"><use href="#i-relogio"/></svg></span>
           <div><h4>Horário</h4><p>Abre segunda-feira às 13:30 · consulte demais horários por WhatsApp</p></div>
         </div>
         <div class="location-row">
-          <span class="icon">📞</span>
+          <span class="icon"><svg class="ic"><use href="#i-fone"/></svg></span>
           <div><h4>Telefone / WhatsApp</h4><p>(65) 99288-8228</p></div>
         </div>
         <div class="location-row">
-          <span class="icon">🏪</span>
+          <span class="icon"><svg class="ic"><use href="#i-loja"/></svg></span>
           <div><h4>Atendimento presencial</h4><p>Compre e retire direto na fábrica.</p></div>
         </div>
       </div>
@@ -369,13 +372,12 @@
 <section class="cta-banner">
   <div class="container cta-banner-inner">
     <div>
-      <span class="section-tag cta-tag">Bora de Dupuro?</span>
       <h2>Puro como tem que ser, do jeito que você precisar.</h2>
       <p>Uma caixa pra família no fim de semana ou o açaí que vai fazer sua revenda vender mais.</p>
     </div>
     <div class="cta-actions">
-      <a href="delivery/" class="btn btn-primary">🏠 Peça agora</a>
-      <a href="revenda/" class="btn btn-outline">🏪 Seja revendedor</a>
+      <a href="delivery/" class="btn btn-primary">Peça agora</a>
+      <a href="revenda/" class="btn btn-outline">Seja revendedor</a>
     </div>
   </div>
 </section>
@@ -427,7 +429,7 @@
 
 <script src="assets/js/supabase-config.js"></script>
 <script src="delivery/delivery.js?v=2"></script>
-<script src="assets/js/main.js"></script>
+<script src="assets/js/main.js?v=2"></script>
 <script>
 // Preços reais das caixas do delivery (mesma fonte da loja). Se falhar, a home segue sem preço.
 DupuroDelivery.getCatalogo().then(function (cat) {
