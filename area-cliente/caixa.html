@@ -9,7 +9,7 @@
 <link rel="apple-touch-icon" href="../assets/img/brand/favicon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/css/style.css?v=28">
+<link rel="stylesheet" href="../assets/css/style.css?v=30">
 <link rel="manifest" href="../manifest.webmanifest">
 <meta name="theme-color" content="#601050">
 </head>
@@ -85,7 +85,7 @@
         </div>
 
         <aside class="order-summary" aria-label="Resumo da venda">
-          <div class="order-summary-head">🧾 Venda atual</div>
+          <h2 class="order-summary-head">🧾 Venda atual</h2>
           <div class="order-summary-body">
 
             <div class="placeholder" id="summaryPlaceholder">
@@ -97,7 +97,7 @@
               <div class="picked">
                 <div class="thumb" id="summaryThumb">🫐</div>
                 <div>
-                  <h4 id="summaryName">—</h4>
+                  <h3 id="summaryName">—</h3>
                   <div class="unit" id="summaryUnit">—</div>
                 </div>
               </div>
@@ -207,7 +207,7 @@
 
             <div id="saleSuccess" class="hidden" style="text-align:center; padding:14px 4px;">
               <div style="width:64px; height:64px; margin:0 auto 14px; background:rgba(139,184,49,0.18); border-radius:20px; display:flex; align-items:center; justify-content:center; font-size:30px;">✅</div>
-              <h4 style="font-family:var(--font-display); color:var(--roxo-700); font-size:19px; text-transform:uppercase; margin-bottom:6px;">Venda registrada!</h4>
+              <h3 style="font-family:var(--font-display); color:var(--roxo-700); font-size:19px; text-transform:uppercase; margin-bottom:6px;">Venda registrada!</h3>
               <p style="font-size:13.5px; color:var(--text-light); margin-bottom:6px;" id="saleSuccessDetail">—</p>
               <p style="font-size:12.5px; color:var(--text-light); margin-bottom:14px;" id="printResult"></p>
               <div class="nfce-doc" id="nfceDocField">
@@ -311,7 +311,7 @@
       </div>
 
       <div class="panel" style="margin-bottom:18px;">
-        <div class="panel-header"><div><h3>Nova promoção</h3>
+        <div class="panel-header"><div><h2>Nova promoção</h2>
           <div class="subtitle" id="promoLimits">Unitárias: 0/3 · Combos: 0/3</div></div></div>
         <div class="promo-form">
           <div class="field"><label for="promoProduto">Produto</label>
@@ -422,7 +422,7 @@
 
       <!-- Ajuda: impressão automática (silenciosa) sem a janela do navegador -->
       <div class="panel printer-help hidden" id="printerHelp" style="margin-bottom:18px;">
-        <div class="panel-header"><div><h3>Fazer a comanda sair sozinha (sem a janela)</h3>
+        <div class="panel-header"><div><h2>Fazer a comanda sair sozinha (sem a janela)</h2>
           <div class="subtitle">Configuração de uma vez só, no computador da loja. Some com a janela de impressão a cada venda.</div></div>
           <button type="button" class="link-btn" id="printerHelpClose">fechar</button></div>
         <ol class="help-steps">
@@ -445,7 +445,7 @@
 <!-- Modal: motivo do cancelamento -->
 <div class="modal-overlay hidden" id="cancelModal">
   <div class="modal-card">
-    <h3>Cancelar venda <span id="cancelModalNum">—</span></h3>
+    <h2>Cancelar venda <span id="cancelModalNum">—</span></h2>
     <p class="subtitle">A venda fica registrada como <strong>cancelada</strong> e o estoque volta. Diga o motivo — a dona consegue ver depois.</p>
     <div class="hidden" id="cancelNfceAviso" style="background:rgba(245,179,1,0.14); border:1px solid rgba(245,179,1,0.5); border-radius:12px; padding:10px 12px; margin-bottom:12px; font-size:13px; color:var(--roxo-700);">
       🧾 <strong>Esta venda tem NFC-e emitida.</strong> O cupom fiscal também será cancelado no SEFAZ (prazo de 30 min após a emissão). A justificativa precisa ter <strong>pelo menos 15 letras</strong>.
@@ -465,7 +465,7 @@
 <!-- Deixar pedido em aberto (nome do slot) -->
 <div class="modal-overlay hidden" id="slotModal">
   <div class="modal-card">
-    <h3 id="slotModalTitle">Deixar pedido em aberto</h3>
+    <h2 id="slotModalTitle">Deixar pedido em aberto</h2>
     <p class="subtitle">O pedido fica guardado sem cobrar. O estoque só baixa quando você finalizar o pagamento. Dê um nome pra achar depois.</p>
     <div class="field" style="margin-bottom:0;">
       <label for="slotLabel">Nome / referência do cliente</label>
@@ -482,7 +482,7 @@
 <!-- Abrir caixa -->
 <div class="modal-overlay hidden" id="abrirModal">
   <div class="modal-card">
-    <h3>Abrir o caixa</h3>
+    <h2>Abrir o caixa</h2>
     <p class="subtitle">Informe quanto tem de dinheiro na gaveta pra troco (fundo de troco). No fechamento a gente confere.</p>
     <div class="field" style="margin-bottom:0;">
       <label for="fundoTroco">Fundo de troco (R$)</label>
@@ -499,7 +499,7 @@
 <!-- Fechar caixa -->
 <div class="modal-overlay hidden" id="fecharModal">
   <div class="modal-card">
-    <h3>Fechar o caixa</h3>
+    <h2>Fechar o caixa</h2>
     <div id="fecharResumo" class="fechar-resumo">Calculando o resumo...</div>
     <div class="field" style="margin-bottom:0;">
       <label for="dinheiroContado">Dinheiro contado na gaveta (R$)</label>
@@ -687,7 +687,7 @@
       promoBadge +
       '<div class="ph">' + (p.imagemUrl ? '<img src="' + p.imagemUrl + '" alt="" loading="lazy">' : icone) + '</div>' +
       '<div class="body">' +
-        '<h4>' + esc(p.nome) + '</h4>' +
+        '<h3>' + esc(p.nome) + '</h3>' +
         priceHtml +
         comboTag +
         hint +

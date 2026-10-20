@@ -2380,3 +2380,17 @@ a.stat-card.alerta .stat-sub { color: var(--warning); font-weight: 800; }
   .pg-revenda .shop-card .body .price { font-size: 14.5px; }
   .pg-revenda .shop-card:hover { transform: none; }
 }
+
+/* Hierarquia de títulos nas telas internas (2026-10-20): h1 da tela → h2 dos
+   cartões → h3 dos itens. Mesma aparência de antes (eram h3/h4). */
+.app-main h2 { font-size: 1.17em; }
+.app-main h3 { font-size: 1em; }
+.chart-card h2 { font-size: 17px; color: var(--roxo-700); margin-bottom: 4px; text-transform: uppercase; }
+.modal-card h2 { font-family: var(--font-display); color: var(--roxo-700); text-transform: uppercase; margin-bottom: 6px; }
+.panel-header h2 { font-size: 19px; color: var(--roxo-700); text-transform: uppercase; }
+.primeiro-pedido h2 { margin-bottom: 12px; }
+.shop-card .body h3 { font-size: 14.5px; color: var(--roxo-700); margin-bottom: 3px; line-height: 1.25; }
+.order-summary .picked h3 { font-size: 14px; color: var(--roxo-700); }
+.pg-caixa .shop-card .body h3 { font-size: 14px; margin-bottom: 2px; }
+@media (max-width: 640px) { .pg-revenda .shop-card .body h3 { font-size: 13px; } }
+.app-main h2.order-summary-head { font-size: 17px; margin: 0; line-height: 1.2; }

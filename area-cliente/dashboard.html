@@ -9,7 +9,7 @@
 <link rel="apple-touch-icon" href="../assets/img/brand/favicon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/css/style.css?v=28">
+<link rel="stylesheet" href="../assets/css/style.css?v=30">
 </head>
 <body class="pg-revenda">
 <svg class="sprite" aria-hidden="true" focusable="false"><symbol id="m-grafico" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></symbol><symbol id="m-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol><symbol id="m-usuarios" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"/></symbol><symbol id="m-caixa" viewBox="0 0 24 24"><path d="M3 8l9-4 9 4v9l-9 4-9-4z"/><path d="M3 8l9 4 9-4M12 12v9"/></symbol><symbol id="m-painel" viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 10h6M9 14h6M9 18h3"/></symbol><symbol id="m-fabrica" viewBox="0 0 24 24"><path d="M3 21V10l5 3v-3l5 3V7l8 4v10z"/><path d="M7 17h2M12 17h2M17 17h1"/></symbol><symbol id="m-etiqueta" viewBox="0 0 24 24"><path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.4"/></symbol><symbol id="m-engrenagem" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></symbol><symbol id="m-casa" viewBox="0 0 24 24"><path d="M3 11l9-7 9 7M5 9.5V20h14V9.5M10 20v-6h4v6"/></symbol><symbol id="m-sair" viewBox="0 0 24 24"><path d="M14 4h5a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-5M10 16l-4-4 4-4M6 12h10"/></symbol><symbol id="m-carrinho" viewBox="0 0 24 24"><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2.5 3.5h3l2.4 11.2a1.5 1.5 0 0 0 1.5 1.3h8.4a1.5 1.5 0 0 0 1.5-1.2L21 7H6.3"/></symbol><symbol id="m-recibo" viewBox="0 0 24 24"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6M9 16h3"/></symbol><symbol id="m-calendario" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></symbol><symbol id="m-chat" viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></symbol><symbol id="m-usuario" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol><symbol id="m-globo" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></symbol></svg>
@@ -80,7 +80,7 @@
 
       <div class="panel" style="display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap; background:linear-gradient(120deg, rgba(245,179,1,0.12), rgba(139,184,49,0.1)); border-color:rgba(245,179,1,0.35);">
         <div>
-          <h3 style="font-family:var(--font-display); color:var(--roxo-700); font-size:20px; text-transform:uppercase; margin-bottom:4px;">Precisa repor o estoque?</h3>
+          <h2 style="font-family:var(--font-display); color:var(--roxo-700); font-size:20px; text-transform:uppercase; margin-bottom:4px;">Precisa repor o estoque?</h2>
           <p style="font-size:14px; color:var(--text-light);">Monte seu pedido em menos de um minuto, sem sair do painel.</p>
         </div>
         <div style="display:flex; gap:12px; flex-wrap:wrap;">
@@ -90,7 +90,7 @@
       </div>
 
       <div class="panel primeiro-pedido hidden" id="primeiroPedido">
-        <h3>Seu primeiro pedido em 3 passos</h3>
+        <h2>Seu primeiro pedido em 3 passos</h2>
         <ol>
           <li><strong>Escolha os produtos</strong> na aba Fazer pedido (os preços já são de revenda).</li>
           <li><strong>Ajuste as quantidades</strong> e confira o total.</li>
@@ -118,12 +118,12 @@
 
       <div class="charts-grid">
         <div class="panel chart-card">
-          <h3>Minhas compras por data</h3>
+          <h2>Minhas compras por data</h2>
           <div class="subtitle">Valor total pedido, por dia de pedido</div>
           <div class="chart-wrap"><canvas id="chartMyRevenue"></canvas></div>
         </div>
         <div class="panel chart-card">
-          <h3>Meus produtos por data</h3>
+          <h2>Meus produtos por data</h2>
           <div class="subtitle">Quantidade pedida de cada produto, por dia de pedido</div>
           <div class="chart-wrap"><canvas id="chartMyProducts"></canvas></div>
         </div>
@@ -133,7 +133,7 @@
       <div class="panel">
         <div class="panel-header">
           <div>
-            <h3>Pedidos recentes</h3>
+            <h2>Pedidos recentes</h2>
             <div class="subtitle">Seus últimos 3 pedidos</div>
           </div>
           <a href="#" class="btn btn-dark-outline btn-sm" data-goto="pedidos">Ver todos</a>
@@ -159,7 +159,7 @@
         </div>
 
         <aside class="order-summary" aria-label="Resumo do pedido">
-          <div class="order-summary-head">🧾 Seu pedido</div>
+          <h2 class="order-summary-head">🧾 Seu pedido</h2>
           <div class="order-summary-body">
 
             <div class="placeholder" id="summaryPlaceholder">
@@ -171,7 +171,7 @@
               <div class="picked">
                 <div class="thumb" id="summaryThumb">🫐</div>
                 <div>
-                  <h4 id="summaryName">—</h4>
+                  <h3 id="summaryName">—</h3>
                   <div class="unit" id="summaryUnit">—</div>
                 </div>
               </div>
@@ -212,7 +212,7 @@
 
             <div id="summarySuccess" class="hidden" style="text-align:center; padding:14px 4px;">
               <div style="width:64px; height:64px; margin:0 auto 14px; background:rgba(139,184,49,0.18); border-radius:20px; display:flex; align-items:center; justify-content:center; font-size:30px;">🎉</div>
-              <h4 style="font-family:var(--font-display); color:var(--roxo-700); font-size:19px; text-transform:uppercase; margin-bottom:6px;">Pedido enviado!</h4>
+              <h3 style="font-family:var(--font-display); color:var(--roxo-700); font-size:19px; text-transform:uppercase; margin-bottom:6px;">Pedido enviado!</h3>
               <p style="font-size:13.5px; color:var(--text-light); margin-bottom:18px;" id="summarySuccessDetail">O time Dupuro já recebeu seu pedido.</p>
               <button type="button" class="btn btn-green btn-block" id="newOrderBtn">Fazer outro pedido</button>
               <a href="#" class="btn btn-dark-outline btn-block" data-goto="pedidos" style="margin-top:10px;">Acompanhar pedido</a>
@@ -231,7 +231,7 @@
       </div>
 
       <div class="panel">
-        <div class="panel-header"><h3>Histórico de pedidos</h3></div>
+        <div class="panel-header"><h2>Histórico de pedidos</h2></div>
         <div class="table-scroll">
           <table class="data-table">
             <thead><tr><th>Pedido</th><th>Data</th><th>Itens</th><th>Valor</th><th>Status</th></tr></thead>
@@ -248,7 +248,7 @@
       </div>
 
       <div class="panel">
-        <div class="panel-header"><h3>Meus cupons</h3></div>
+        <div class="panel-header"><h2>Meus cupons</h2></div>
         <div class="coupon-grid" id="couponGrid"></div>
       </div>
     </section>
@@ -287,7 +287,7 @@
 
       <div class="panel" style="max-width:560px; margin-top:18px;">
         <div class="panel-header">
-          <div><h3>Alterar senha</h3><div class="subtitle">Defina uma nova senha de acesso (mínimo 6 caracteres)</div></div>
+          <div><h2>Alterar senha</h2><div class="subtitle">Defina uma nova senha de acesso (mínimo 6 caracteres)</div></div>
         </div>
         <form id="passwordForm">
           <div class="field">
@@ -623,7 +623,7 @@
     return '<button type="button" class="shop-card' + (oos ? ' out-of-stock' : '') + '" data-product-id="' + p.id + '" aria-pressed="false"' + (oos ? ' disabled aria-disabled="true"' : '') + '>' +
       '<div class="ph">' + (p.imagemUrl ? '<img src="' + p.imagemUrl + '" alt="" loading="lazy">' : '🫐') + '</div>' +
       '<div class="body">' +
-        '<h4>' + esc(p.nome) + '</h4>' +
+        '<h3>' + esc(p.nome) + '</h3>' +
         '<div class="price">' + brl(p.preco) + '</div>' +
         (oos ? '<span class="flavor-hint oos-hint">esgotado</span>' : (p.multissabor ? '<span class="flavor-hint">escolha o sabor</span>' : '')) +
       '</div>' +
