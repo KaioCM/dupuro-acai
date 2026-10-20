@@ -29,7 +29,7 @@
 
   /* Verde-limão do anel e das folhas */
   --verde: #8BB831;
-  --verde-dark: #628A16;
+  --verde-dark: #4D7012;   /* era #628A16: escurecido pra contraste AA (4,5:1) em texto */
 
   /* Neutros */
   --cream: #FFF7EC;
@@ -38,8 +38,8 @@
   --text: #33122B;
   --text-light: #7A5A72;
 
-  --success: #628A16;
-  --warning: #C77C00;
+  --success: #4D7012;
+  --warning: #8F5600;      /* era #C77C00: 3:1 no creme, agora AA */
   --danger: #C0392B;
 
   /* Aliases legados (mantêm compatibilidade com trechos antigos) */

@@ -229,7 +229,7 @@
 .dl-sab button i { width: 12px; height: 12px; border-radius: 50%; flex: none; }
 .dl-sab button.on { background: var(--roxo-700); border-color: var(--roxo-700); color: #fff; box-shadow: 0 4px 0 var(--roxo-950); }
 .dl-sab button:disabled { opacity: .45; text-decoration: line-through; cursor: not-allowed; }
-.dl-sab button .pouco { font-size: 11px; font-weight: 800; color: #C77C00; }
+.dl-sab button .pouco { font-size: 11px; font-weight: 800; color: #8F5600; }
 .dl-sab button.on .pouco { color: var(--gold-soft); }
 .dl-pr-acao { display: flex; gap: 10px; align-items: stretch; }
 .dl-qtd { display: inline-flex; align-items: center; background: var(--cream-2); border-radius: 14px; flex: none; }

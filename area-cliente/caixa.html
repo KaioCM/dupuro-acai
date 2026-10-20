@@ -3,12 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
 <title>Caixa da Loja — Dupuro Açaí</title>
 <link rel="icon" href="../assets/img/brand/favicon-32.png" sizes="32x32" type="image/png">
 <link rel="apple-touch-icon" href="../assets/img/brand/favicon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/css/style.css?v=11">
+<link rel="stylesheet" href="../assets/css/style.css?v=15">
 <link rel="manifest" href="../manifest.webmanifest">
 <meta name="theme-color" content="#601050">
 </head>
@@ -506,7 +507,7 @@
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.min.js"></script>
 <script src="../assets/js/supabase-config.js"></script>
 <script src="../assets/js/supabase-client.js"></script>
 <script src="../assets/js/app-ui.js"></script>
@@ -515,6 +516,8 @@
 <script src="../assets/js/vendor/qrcode.js"></script>
 <script src="../assets/js/printer.js"></script>
 <script>
+  // Escapa texto antes de ir pro innerHTML (dado de revendedor/cliente nunca vira HTML).
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
 (async function () {
   var auth = await DupuroCaixa.requireCaixa('login.html');
   if (!auth) return;
@@ -677,7 +680,7 @@
       promoBadge +
       '<div class="ph">' + (p.imagemUrl ? '<img src="' + p.imagemUrl + '" alt="" loading="lazy">' : icone) + '</div>' +
       '<div class="body">' +
-        '<h4>' + p.nome + '</h4>' +
+        '<h4>' + esc(p.nome) + '</h4>' +
         priceHtml +
         comboTag +
         hint +
@@ -752,7 +755,7 @@
     function chip(a) {
       return '<label class="acomp-chip' + (a.tipo === 'pago' ? ' pago' : '') + '">' +
         '<input type="checkbox" data-acomp="' + a.id + '">' +
-        '<span class="acomp-nome">' + a.nome + '</span>' +
+        '<span class="acomp-nome">' + esc(a.nome) + '</span>' +
         (a.tipo === 'pago' ? '<span class="acomp-tag">+' + brl(a.preco) + '</span>' : '') +
         '</label>';
     }
@@ -866,7 +869,7 @@
       if (i === editandoPrecoIdx) {
         var atual = it.modo === 'peso' ? lineTotal(it) : it.preco;
         var rotulo = it.modo === 'peso' ? 'Valor da linha (R$)' : 'Preço por unidade (R$)';
-        return '<li class="cart-item cart-edit-preco"><div class="ci-info"><span class="ci-name">' + it.nome + (it.sabor ? ' · ' + it.sabor : '') + '</span>' +
+        return '<li class="cart-item cart-edit-preco"><div class="ci-info"><span class="ci-name">' + esc(it.nome) + (it.sabor ? ' · ' + it.sabor : '') + '</span>' +
           '<span class="ci-sub">' + rotulo + '</span>' +
           '<div class="ci-edit-row">' +
           '<input type="text" inputmode="decimal" class="ci-edit-input" data-edit-input="' + i + '" value="' + String(atual.toFixed(2)).replace('.', ',') + '" autocomplete="off">' +
@@ -874,7 +877,7 @@
           '<button type="button" class="ci-edit-cancel" data-edit-cancel="' + i + '">✕</button>' +
           '</div></div></li>';
       }
-      return '<li class="cart-item"><div class="ci-info"><span class="ci-name">' + it.nome + (it.sabor ? ' · ' + it.sabor : '') + '</span>' +
+      return '<li class="cart-item"><div class="ci-info"><span class="ci-name">' + esc(it.nome) + (it.sabor ? ' · ' + it.sabor : '') + '</span>' +
         '<span class="ci-sub">' + linha + '</span>' +
         (it.sub ? '<span class="ci-sub ci-detail">' + it.sub + '</span>' : '') +
         (it.precoManual ? '<span class="ci-sub ci-preco-editado">✏️ preço editado (era ' + brl(it.precoOriginal) + ') · <button type="button" class="ci-linkbtn" data-cart-reset="' + i + '">desfazer</button></span>' : '') +
@@ -887,7 +890,7 @@
     var combos = combosCarrinho();
     var descHtml = combos.map(function (c) {
       return '<li class="cart-item cart-desconto"><div class="ci-info">' +
-        '<span class="ci-name">🏷️ Promoção · ' + c.nome + '</span>' +
+        '<span class="ci-name">🏷️ Promoção · ' + esc(c.nome) + '</span>' +
         '<span class="ci-sub">leve ' + c.N + ' por ' + brl(c.Y) + (c.grupos > 1 ? ' ×' + c.grupos : '') + '</span></div>' +
         '<span class="ci-desc-val">− ' + brl(c.desconto) + '</span></li>';
     }).join('');
@@ -1379,7 +1382,7 @@
       return;
     }
     resellerSelect.innerHTML = resellers.map(function (r) {
-      return '<option value="' + r.id + '">' + r.nome + '</option>';
+      return '<option value="' + r.id + '">' + esc(r.nome) + '</option>';
     }).join('');
   });
 
@@ -2229,7 +2232,7 @@
         '<td><strong>' + v.numero + '</strong>' + (v.cancelada ? ' <span class="status-badge cancelado">Cancelada</span>' : '') + '</td>' +
         '<td>' + hora + '</td>' +
         '<td>' + v.cliente + pagTag(v) + '</td>' +
-        '<td>' + itensTxt + (v.cancelada && v.motivo ? '<span class="venda-motivo">Motivo: ' + v.motivo + '</span>' : '') + '</td>' +
+        '<td>' + itensTxt + (v.cancelada && v.motivo ? '<span class="venda-motivo">Motivo: ' + esc(v.motivo) + '</span>' : '') + '</td>' +
         '<td class="num">' + brl(v.valor) + '</td>' +
         '<td>' + acoes + '</td>' +
         '</tr>';
@@ -2344,7 +2347,7 @@
       '<td><strong>' + v.numero + '</strong>' + (v.cancelada ? ' <span class="status-badge cancelado">Cancelada</span>' : '') + '</td>' +
       '<td>' + hora + '</td>' +
       '<td>' + v.cliente + pagTag(v) + '</td>' +
-      '<td>' + itensTxt + (v.cancelada && v.motivo ? '<span class="venda-motivo">Motivo: ' + v.motivo + '</span>' : '') + '</td>' +
+      '<td>' + itensTxt + (v.cancelada && v.motivo ? '<span class="venda-motivo">Motivo: ' + esc(v.motivo) + '</span>' : '') + '</td>' +
       '<td class="num">' + brl(v.valor) + '</td>' +
       '<td>' + acoes + '</td>' +
       '</tr>';
@@ -2406,12 +2409,12 @@
           if (p.multissabor) {
             var sab = (p.sabores || []).slice().sort(function (a, b) { return a.estoque - b.estoque; });
             return '<details class="stock-chip stock-chip-group">' +
-              '<summary><span class="chevron">▸</span>' + p.nome + '<span class="qty">' + p.estoqueTotal + ' un</span></summary>' +
+              '<summary><span class="chevron">▸</span>' + esc(p.nome) + '<span class="qty">' + p.estoqueTotal + ' un</span></summary>' +
               '<div class="sabor-list">' + sab.map(function (s) {
-                return '<div class="sabor-row"><span class="dot ' + saborDot(s.estoque) + '"></span><span class="sabor-nome">' + s.sabor + '</span><span class="sabor-qty">' + s.estoque + ' un</span></div>';
+                return '<div class="sabor-row"><span class="dot ' + saborDot(s.estoque) + '"></span><span class="sabor-nome">' + esc(s.sabor) + '</span><span class="sabor-qty">' + s.estoque + ' un</span></div>';
               }).join('') + '</div></details>';
           }
-          return '<div class="stock-chip"><span class="dot ' + saborDot(p.estoqueTotal) + '"></span>' + p.nome + '<span class="qty">' + p.estoqueTotal + ' un</span></div>';
+          return '<div class="stock-chip"><span class="dot ' + saborDot(p.estoqueTotal) + '"></span>' + esc(p.nome) + '<span class="qty">' + p.estoqueTotal + ' un</span></div>';
         }).join('') + '</div>';
     }).join('');
   }
@@ -2438,7 +2441,7 @@
     var opts = productsCache.slice().sort(function (a, b) { return a.nome < b.nome ? -1 : 1; });
     sel.innerHTML = opts.map(function (p) {
       var suf = p.modo === 'peso' ? ' /kg' : '';
-      return '<option value="' + p.id + '">' + p.nome + ' — ' + brl(p.preco) + suf + '</option>';
+      return '<option value="' + p.id + '">' + esc(p.nome) + ' — ' + brl(p.preco) + suf + '</option>';
     }).join('');
     if (atual) sel.value = atual;
   }

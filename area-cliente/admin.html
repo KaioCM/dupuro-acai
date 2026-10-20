@@ -3,12 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
 <title>Painel Admin — Dupuro Açaí</title>
 <link rel="icon" href="../assets/img/brand/favicon-32.png" sizes="32x32" type="image/png">
 <link rel="apple-touch-icon" href="../assets/img/brand/favicon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/css/style.css?v=11">
+<link rel="stylesheet" href="../assets/css/style.css?v=15">
 </head>
 <body>
 
@@ -646,13 +647,15 @@
   </main>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js"></script>
 <script src="../assets/js/supabase-config.js"></script>
 <script src="../assets/js/supabase-client.js"></script>
 <script src="../assets/js/app-ui.js"></script>
 <script src="../assets/js/admin.js"></script>
 <script>
+  // Escapa texto antes de ir pro innerHTML (dado de revendedor/cliente nunca vira HTML).
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
 (async function () {
   var session = await DupuroAdmin.requireAdmin('login.html');
   if (!session) return;
@@ -1250,7 +1253,7 @@
     function saborList(sabores) {
       return '<div class="sabor-list">' + sabores.map(function (s) {
         return '<div class="sabor-row"><span class="dot ' + saborDot(s.estoque) + '"></span>' +
-          '<span class="sabor-nome">' + s.sabor + '</span>' +
+          '<span class="sabor-nome">' + esc(s.sabor) + '</span>' +
           '<span class="sabor-qty">' + s.estoque + ' un</span></div>';
       }).join('') + '</div>';
     }
@@ -1263,11 +1266,11 @@
           var n = u.sabores.length;
           var resumo = '<span class="qty">' + n + ' sabor' + (n > 1 ? 'es' : '') + '</span>';
           return '<details class="stock-chip stock-chip-group">' +
-            '<summary><span class="chevron">▸</span>' + u.nome + resumo + '</summary>' +
+            '<summary><span class="chevron">▸</span>' + esc(u.nome) + resumo + '</summary>' +
             saborList(u.sabores) + '</details>';
         }
         var meta = withQty ? '<span class="qty">' + u.estoque + ' un</span>' : '';
-        return '<span class="stock-chip">' + u.nome + meta + '</span>';
+        return '<span class="stock-chip">' + esc(u.nome) + meta + '</span>';
       }).join('') + '</div>';
     }
 
@@ -1300,11 +1303,11 @@
     }
     body.innerHTML = pending.map(function (p) {
       return '<tr>' +
-        '<td><strong>' + (p.nome || '—') + '</strong></td>' +
-        '<td>' + (p.empresa || '—') + '</td>' +
-        '<td>' + (p.telefone || '—') + '</td>' +
-        '<td>' + (p.email || '—') + '</td>' +
-        '<td>' + (p.cidade || '—') + '</td>' +
+        '<td><strong>' + esc(p.nome || '—') + '</strong></td>' +
+        '<td>' + esc(p.empresa || '—') + '</td>' +
+        '<td>' + esc(p.telefone || '—') + '</td>' +
+        '<td>' + esc(p.email || '—') + '</td>' +
+        '<td>' + esc(p.cidade || '—') + '</td>' +
         '<td>' + formatDate(p.created_at) + '</td>' +
         '<td class="admin-table-actions">' +
           '<button class="btn btn-green btn-sm" data-approve="' + p.id + '">Aprovar</button>' +
@@ -1351,8 +1354,8 @@
         ? '<span class="subtitle" style="margin:0;">você (conta atual)</span>'
         : '<button class="btn btn-dark-outline btn-sm" data-remove-admin="' + a.id + '">Remover admin</button>';
       return '<tr>' +
-        '<td><strong>' + (a.nome || '—') + '</strong></td>' +
-        '<td>' + (a.email || '—') + '</td>' +
+        '<td><strong>' + esc(a.nome || '—') + '</strong></td>' +
+        '<td>' + esc(a.email || '—') + '</td>' +
         '<td class="admin-table-actions">' + action + '</td>' +
         '</tr>';
     }).join('');
@@ -1388,8 +1391,8 @@
     }
     body.innerHTML = atendentesCache.map(function (a) {
       return '<tr>' +
-        '<td><strong>' + (a.nome || '—') + '</strong></td>' +
-        '<td>' + (a.email || '—') + '</td>' +
+        '<td><strong>' + esc(a.nome || '—') + '</strong></td>' +
+        '<td>' + esc(a.email || '—') + '</td>' +
         '<td class="admin-table-actions">' +
           '<button class="btn btn-dark-outline btn-sm" data-remove-atendente="' + a.id + '">Remover acesso</button>' +
         '</td>' +
@@ -1428,11 +1431,11 @@
     }
     body.innerHTML = resellersCache.map(function (r) {
       return '<tr>' +
-        '<td><strong>' + (r.nome || '—') + '</strong></td>' +
-        '<td>' + (r.empresa || '—') + '</td>' +
-        '<td>' + (r.telefone || '—') + '</td>' +
-        '<td>' + (r.email || '—') + '</td>' +
-        '<td>' + (r.cidade || '—') + '</td>' +
+        '<td><strong>' + esc(r.nome || '—') + '</strong></td>' +
+        '<td>' + esc(r.empresa || '—') + '</td>' +
+        '<td>' + esc(r.telefone || '—') + '</td>' +
+        '<td>' + esc(r.email || '—') + '</td>' +
+        '<td>' + esc(r.cidade || '—') + '</td>' +
         '<td>' + formatDate(r.created_at) + '</td>' +
         '<td class="admin-table-actions">' +
           '<button class="btn btn-dark-outline btn-sm" data-edit-reseller="' + r.id + '">Editar</button>' +
@@ -1563,11 +1566,11 @@
                 : ' <span class="status-badge processando">Sem acompanhamento grátis</span>')
             : '<span class="status-badge enviado">⚖️ Self-service</span>';
           return '<div class="admin-product-card">' +
-            '<div class="ph">' + (p.imagemUrl ? '<img src="' + p.imagemUrl + '" alt="' + p.nome + '" loading="lazy">' : '🥤') + '</div>' +
+            '<div class="ph">' + (p.imagemUrl ? '<img src="' + p.imagemUrl + '" alt="' + esc(p.nome) + '" loading="lazy">' : '🥤') + '</div>' +
             '<div class="body">' +
               lojaBadge +
               '<span class="status-badge" style="background:rgba(96,16,80,0.1);color:var(--roxo-700);">Só na loja</span>' +
-              '<h4>' + p.nome + '</h4>' +
+              '<h4>' + esc(p.nome) + '</h4>' +
               '<div class="price">' + precoBRL(p.preco) + (p.modo === 'peso' ? ' / kg' : '') + '</div>' +
               '<div class="admin-table-actions">' +
                 '<button class="btn btn-dark-outline btn-sm" data-edit-product="' + p.id + '">Editar</button>' +
@@ -1602,12 +1605,12 @@
           return ' <span class="status-badge ' + (total > 0 ? 'aprovado' : 'cancelado') + '">' + (total > 0 ? total + ' em estoque' : 'Esgotado') + '</span>';
         })();
         return '<div class="admin-product-card">' +
-          '<div class="ph">' + (p.imagemUrl ? '<img src="' + p.imagemUrl + '" alt="' + p.nome + '" loading="lazy">' : '🫐') + '</div>' +
+          '<div class="ph">' + (p.imagemUrl ? '<img src="' + p.imagemUrl + '" alt="' + esc(p.nome) + '" loading="lazy">' : '🫐') + '</div>' +
           '<div class="body">' +
             badges +
             (p.multissabor ? ' <span class="status-badge enviado">Sabor no pedido</span>' : '') +
             minHtml + stockHtml +
-            '<h4>' + p.nome + '</h4>' +
+            '<h4>' + esc(p.nome) + '</h4>' +
             priceHtml +
             '<div style="font-size:11px;color:var(--text-light);margin-top:4px;">🧾 NCM ' + (p.ncm || '—') + ' · CSOSN ' + (p.csosn || '—') + ' · CFOP ' + (p.cfop || '—') + '</div>' +
             '<div class="admin-table-actions">' +
@@ -1921,7 +1924,7 @@
   function initFiscalSelect() {
     var sel = document.getElementById('productFiscalPerfil');
     sel.innerHTML = FISCAL_PERFIS.map(function (p) {
-      return '<option value="' + p.id + '">' + p.label + ' — NCM ' + p.ncm + '</option>';
+      return '<option value="' + p.id + '">' + esc(p.label) + ' — NCM ' + p.ncm + '</option>';
     }).join('') + '<option value="custom">Personalizado (digitar os códigos)</option>';
     sel.addEventListener('change', syncFiscalUI);
   }
@@ -1985,7 +1988,7 @@
         if (!group.length) return '';
         return '<optgroup label="' + (tipo === 'atacado' ? 'Atacado' : 'Varejo') + '">' +
           group.map(function (p) {
-            return '<option value="' + p.id + '">' + p.nome + ' — ' + p.preco.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) + (p.multissabor ? ' (sabor no pedido)' : '') + (p.estoqueTotal <= 0 ? ' (esgotado)' : '') + '</option>';
+            return '<option value="' + p.id + '">' + esc(p.nome) + ' — ' + p.preco.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) + (p.multissabor ? ' (sabor no pedido)' : '') + (p.estoqueTotal <= 0 ? ' (esgotado)' : '') + '</option>';
           }).join('') +
           '</optgroup>';
       }).join('');
@@ -2138,7 +2141,7 @@
     var precoBRL = function (v) { return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); };
     body.innerHTML = acompCache.map(function (a) {
       return '<tr>' +
-        '<td><strong>' + a.nome + '</strong></td>' +
+        '<td><strong>' + esc(a.nome) + '</strong></td>' +
         '<td>' + (a.tipo === 'pago'
           ? '<span class="status-badge processando">Pago · ' + precoBRL(a.preco) + '</span>'
           : '<span class="status-badge aprovado">Gratuito (na cota)</span>') + '</td>' +
@@ -2286,7 +2289,7 @@
       }
       select.innerHTML = opcoes.length
         ? opcoes.map(function (o) {
-            return '<option value="' + o.sabor + '">' + o.sabor + (o.esgotado ? ' (esgotado)' : '') + '</option>';
+            return '<option value="' + esc(o.sabor) + '">' + esc(o.sabor) + (o.esgotado ? ' (esgotado)' : '') + '</option>';
           }).join('')
         : '<option value="">Nenhum sabor com estoque</option>';
       field.classList.remove('hidden');
@@ -2385,7 +2388,7 @@
     field.classList.remove('hidden');
     submit.textContent = 'Criar pedido (' + orderCart.length + ')';
     list.innerHTML = orderCart.map(function (it, i) {
-      return '<li class="cart-item"><div class="ci-info"><span class="ci-name">' + it.nome + (it.sabor ? ' · ' + it.sabor : '') + '</span>' +
+      return '<li class="cart-item"><div class="ci-info"><span class="ci-name">' + esc(it.nome) + (it.sabor ? ' · ' + it.sabor : '') + '</span>' +
         '<span class="ci-sub">' + it.quantidade + ' × ' + moeda(it.preco) + ' = ' + moeda(it.preco * it.quantidade) + '</span></div>' +
         '<button type="button" class="ci-remove" data-oc-i="' + i + '" aria-label="Remover item">×</button></li>';
     }).join('');
@@ -2498,7 +2501,7 @@
 
     function linhaPedido(o) {
       var itemsHtml = o.items.map(function (it) {
-        return '<div class="order-item-line"><span>' + it.itens + ' · ' + moeda(it.valor) + '</span>' +
+        return '<div class="order-item-line"><span>' + esc(it.itens) + ' · ' + moeda(it.valor) + '</span>' +
           '<span class="admin-table-actions">' +
             '<button class="btn btn-dark-outline btn-sm" data-edit-item="' + it.id + '" data-num="' + o.numero + '">Editar item</button>' +
             '<button class="btn btn-dark-outline btn-sm" data-remove-item="' + it.id + '">Remover</button>' +
@@ -2510,9 +2513,9 @@
           (o.parcial ? ' <span class="status-badge processando" title="Pedido misto: aqui aparecem só os itens deste recorte; o valor é a parte correspondente.">parcial</span>' : '') +
           (o.usaEstoque ? '' : ' <span class="status-badge cancelado" title="Este pedido não usa o estoque">sem estoque</span>') +
         '</td>' +
-        '<td>' + o.revendedorNome + '</td>' +
+        '<td>' + esc(o.revendedorNome) + '</td>' +
         '<td>' + formatDate(o.data) + '</td>' +
-        '<td class="itens-cell">' + o.items.map(function (it) { return '<div class="item-linha"><span class="item-nome">' + it.itens + '</span><span class="item-val">' + moeda(it.valor) + '</span></div>'; }).join('') + '</td>' +
+        '<td class="itens-cell">' + o.items.map(function (it) { return '<div class="item-linha"><span class="item-nome">' + esc(it.itens) + '</span><span class="item-val">' + moeda(it.valor) + '</span></div>'; }).join('') + '</td>' +
         '<td class="num">' + moeda(o.valor) + '</td>' +
         '<td>' +
           '<select class="status-select" data-num="' + o.numero + '">' +
@@ -2703,7 +2706,7 @@
         '<td><strong>' + a.numero + '</strong></td>' +
         '<td>' + badge + '</td>' +
         '<td>' + a.quem + '</td>' +
-        '<td>' + a.motivo + '</td>' +
+        '<td>' + esc(a.motivo) + '</td>' +
         '<td class="audit-antes">' + antes + '</td>' +
         '</tr>';
     }).join('');
@@ -2830,7 +2833,7 @@
     body.innerHTML = coupons.map(function (c) {
       return '<tr>' +
         '<td><strong>' + c.code + '</strong></td>' +
-        '<td>' + c.revendedorNome + '</td>' +
+        '<td>' + esc(c.revendedorNome) + '</td>' +
         '<td>' + c.desc + '</td>' +
         '<td>' + formatDate(c.validade) + '</td>' +
         '<td>' + (c.usado ? 'Sim' : 'Não') + '</td>' +
@@ -3020,7 +3023,7 @@
     }
     box.innerHTML = prodItensData.map(function (it, i) {
       var opts = '<option value="">Escolha o produto…</option>' + disp.map(function (p) {
-        return '<option value="' + p.id + '"' + (String(p.id) === String(it.produtoId) ? ' selected' : '') + '>' + p.nome + ' (' + fmtLitrosProd(p.litros) + '/un)</option>';
+        return '<option value="' + p.id + '"' + (String(p.id) === String(it.produtoId) ? ' selected' : '') + '>' + esc(p.nome) + ' (' + fmtLitrosProd(p.litros) + '/un)</option>';
       }).join('');
       var litrosTot = (numBR(it.quantidade) * (it.litrosUnit || 0));
       return '<div class="item-row" data-i="' + i + '">' +
@@ -3066,7 +3069,7 @@
       var lt = numBR(it.quantidade) * (it.litrosUnit || 0);
       var custoProduto = custoLitro != null ? custoLitro * lt : null;
       var custoUnidade = custoLitro != null ? custoLitro * (it.litrosUnit || 0) : null;
-      return '<div class="calc-item"><span>' + it.nome + ' · ' + fmtLitrosProd(lt) + '</span>' +
+      return '<div class="calc-item"><span>' + esc(it.nome) + ' · ' + fmtLitrosProd(lt) + '</span>' +
         '<span>' + (custoProduto != null ? moeda(custoProduto) + ' (' + moeda(custoUnidade) + '/un)' : '—') + '</span></div>';
     }).join('');
 
@@ -3157,11 +3160,11 @@
     body.innerHTML = producoesCache.map(function (l) {
       var produzido = l.itens.map(function (it) { return it.nome + ' ×' + (Math.round(it.quantidade * 100) / 100).toLocaleString('pt-BR'); }).join(', ') || '—';
       var det = '<div class="prod-det-block"><strong>Gastos</strong>' + (l.gastos.length ? l.gastos.map(function (g) {
-        return '<div class="order-item-line"><span>' + (g.descricao || '(sem descrição)') + ' · ' + PROD_CAT_LABEL[g.categoria] + '</span><span>' + moeda(g.valor) + '</span></div>';
+        return '<div class="order-item-line"><span>' + esc(g.descricao || '(sem descrição)') + ' · ' + PROD_CAT_LABEL[g.categoria] + '</span><span>' + moeda(g.valor) + '</span></div>';
       }).join('') : '<div class="field-note-inline">—</div>') + '</div>' +
       '<div class="prod-det-block"><strong>Produtos</strong>' + (l.itens.length ? l.itens.map(function (it) {
         var custoUn = l.custoPorLitro != null ? l.custoPorLitro * it.litrosUnit : null;
-        return '<div class="order-item-line"><span>' + it.nome + ' ×' + (Math.round(it.quantidade * 100) / 100).toLocaleString('pt-BR') + ' · ' + fmtLitrosProd(it.litrosTotal) + '</span><span>' + (custoUn != null ? moeda(custoUn) + '/un' : '—') + '</span></div>';
+        return '<div class="order-item-line"><span>' + esc(it.nome) + ' ×' + (Math.round(it.quantidade * 100) / 100).toLocaleString('pt-BR') + ' · ' + fmtLitrosProd(it.litrosTotal) + '</span><span>' + (custoUn != null ? moeda(custoUn) + '/un' : '—') + '</span></div>';
       }).join('') : '<div class="field-note-inline">—</div>') + '</div>';
       return '<tr>' +
           '<td>' + formatDate(l.data) + '</td>' +
@@ -3210,7 +3213,7 @@
     var sel = document.getElementById('admPromoProduto'); if (!sel) return;
     var atual = sel.value;
     var opts = productsCache.slice().sort(function (a, b) { return a.nome < b.nome ? -1 : 1; });
-    sel.innerHTML = opts.map(function (p) { var suf = p.modo === 'peso' ? ' /kg' : ''; return '<option value="' + p.id + '">' + p.nome + ' — ' + moeda(p.preco) + suf + '</option>'; }).join('');
+    sel.innerHTML = opts.map(function (p) { var suf = p.modo === 'peso' ? ' /kg' : ''; return '<option value="' + p.id + '">' + esc(p.nome) + ' — ' + moeda(p.preco) + suf + '</option>'; }).join('');
     if (atual) sel.value = atual;
   }
   function admUpdatePromoTipo() {

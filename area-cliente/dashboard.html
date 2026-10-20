@@ -3,12 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
 <title>Painel do Revendedor — Dupuro Açaí</title>
 <link rel="icon" href="../assets/img/brand/favicon-32.png" sizes="32x32" type="image/png">
 <link rel="apple-touch-icon" href="../assets/img/brand/favicon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/css/style.css?v=11">
+<link rel="stylesheet" href="../assets/css/style.css?v=15">
 </head>
 <body>
 
@@ -293,13 +294,15 @@
   </main>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js"></script>
 <script src="../assets/js/supabase-config.js"></script>
 <script src="../assets/js/supabase-client.js"></script>
 <script src="../assets/js/app-ui.js"></script>
 <script src="../assets/js/cliente.js"></script>
 <script>
+  // Escapa texto antes de ir pro innerHTML (dado de revendedor/cliente nunca vira HTML).
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
 (async function () {
   var session = await DupuroCliente.requireAuth('login.html');
   if (!session) return;
@@ -377,7 +380,7 @@
       return '<tr>' +
         '<td><strong>' + o.id + '</strong></td>' +
         '<td>' + formatDate(o.data) + '</td>' +
-        '<td>' + o.itens + '</td>' +
+        '<td>' + esc(o.itens) + '</td>' +
         '<td class="num">' + brl(o.valor) + '</td>' +
         '<td>' + statusBadge(o.status) + '</td>' +
         '</tr>';
@@ -592,7 +595,7 @@
     return '<button type="button" class="shop-card' + (oos ? ' out-of-stock' : '') + '" data-product-id="' + p.id + '" aria-pressed="false"' + (oos ? ' disabled aria-disabled="true"' : '') + '>' +
       '<div class="ph">' + (p.imagemUrl ? '<img src="' + p.imagemUrl + '" alt="" loading="lazy">' : '🫐') + '</div>' +
       '<div class="body">' +
-        '<h4>' + p.nome + '</h4>' +
+        '<h4>' + esc(p.nome) + '</h4>' +
         '<div class="price">' + brl(p.preco) + '</div>' +
         (oos ? '<span class="flavor-hint oos-hint">esgotado</span>' : (p.multissabor ? '<span class="flavor-hint">escolha o sabor</span>' : '')) +
       '</div>' +
@@ -759,7 +762,7 @@
     if (!cart.length) { section.classList.add('hidden'); return; }
     section.classList.remove('hidden');
     list.innerHTML = cart.map(function (it, i) {
-      return '<li class="cart-item"><div class="ci-info"><span class="ci-name">' + it.nome + (it.sabor ? ' · ' + it.sabor : '') + '</span>' +
+      return '<li class="cart-item"><div class="ci-info"><span class="ci-name">' + esc(it.nome) + (it.sabor ? ' · ' + it.sabor : '') + '</span>' +
         '<span class="ci-sub">' + it.quantidade + ' × ' + brl(it.preco) + ' = ' + brl(it.preco * it.quantidade) + '</span></div>' +
         '<button type="button" class="ci-remove" data-cart-i="' + i + '" aria-label="Remover item">×</button></li>';
     }).join('');
