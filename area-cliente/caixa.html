@@ -9,11 +9,11 @@
 <link rel="apple-touch-icon" href="../assets/img/brand/favicon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/css/style.css?v=17">
+<link rel="stylesheet" href="../assets/css/style.css?v=19">
 <link rel="manifest" href="../manifest.webmanifest">
 <meta name="theme-color" content="#601050">
 </head>
-<body>
+<body class="pg-caixa">
 
 <div class="mobile-topbar">
   <div class="brand"><a href="../index.html" aria-label="Site Dupuro"><img src="../assets/img/brand/logo-branco.png" alt="Dupuro Açaí"></a></div>
@@ -24,8 +24,6 @@
 
   <aside class="sidebar" id="sidebar">
     <div class="brand"><a href="../index.html" aria-label="Site Dupuro"><img src="../assets/img/brand/logo-branco.png" alt="Dupuro Açaí"></a></div>
-
-    <a href="#" class="sidebar-cta" data-tab="venda">🛒 Nova venda</a>
 
     <a href="#" class="sidebar-link active" data-tab="venda"><span class="ic">🛒</span> Nova venda</a>
     <a href="#" class="sidebar-link" data-tab="abertos"><span class="ic">📋</span> Pedidos abertos <span class="nav-badge hidden" id="abertosBadge">0</span></a>
@@ -227,6 +225,13 @@
     </section>
 
     <!-- ============ VENDAS DO DIA ============ -->
+    <!-- Barra fixa da venda (só em telas onde o resumo fica embaixo da lista) -->
+    <div class="caixa-barra" id="caixaBarra" hidden>
+      <span class="cb-qtd" id="barraQtd">0 itens</span>
+      <strong id="barraTotal">R$ 0,00</strong>
+      <button type="button" class="btn btn-primary btn-sm" id="barraVer">Ver venda</button>
+    </div>
+
     <section class="tab-panel hidden" id="tab-vendas">
       <div class="app-topbar">
         <div><h1>Vendas do dia</h1><div class="subtitle" id="vendasDataSub">Fechamento de caixa — vendas registradas hoje</div></div>
@@ -855,10 +860,23 @@
   summaryQtyInput.addEventListener('input', updateTotal);
   document.getElementById('summaryPeso').addEventListener('input', updateTotal);
 
+  // Barra fixa: total sempre à vista e atalho pro resumo (CSS só mostra em telas <= 1100px).
+  function atualizarBarra() {
+    var b = document.getElementById('caixaBarra');
+    var naVenda = !document.getElementById('tab-venda').classList.contains('hidden');
+    b.hidden = !cart.length || !naVenda;
+    document.getElementById('barraQtd').textContent = cart.length + (cart.length === 1 ? ' item' : ' itens');
+    document.getElementById('barraTotal').textContent = brl(totalDaVenda());
+  }
+  document.getElementById('barraVer').addEventListener('click', function () {
+    document.querySelector('.order-summary').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+
   function renderCart() {
     var section = document.getElementById('cartSection');
     var list = document.getElementById('cartList');
     sendBtn.textContent = (editingSale ? 'Salvar alteração' : 'Registrar venda') + (cart.length ? ' (' + cart.length + ')' : '') + (editingSale ? '' : ' ✔');
+    atualizarBarra();
     if (!cart.length && !editingSale) { section.classList.add('hidden'); return; }
     section.classList.remove('hidden');
     var itensHtml = cart.map(function (it, i) {
@@ -2584,6 +2602,7 @@
     });
     document.getElementById('sidebar').classList.remove('open');
     window.scrollTo(0, 0);
+    atualizarBarra(); // a barra do total só aparece na aba Nova venda
     // O histórico é carregado sob demanda (consulta o mês inteiro).
     if (tab === 'historico' && !histCarregado) loadHistorico();
     // Promoções: recarrega ao abrir (o admin pode ter mudado em outro lugar).

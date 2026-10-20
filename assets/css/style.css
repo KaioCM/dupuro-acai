@@ -2285,3 +2285,44 @@ tr.venda-cancelada td:nth-child(5) { text-decoration: line-through; color: var(-
 .panel > .data-table { min-width: 640px; }
 .status-badge.neutro { background: rgba(96,16,80,0.08); color: var(--roxo-700); }
 .app-main, .tab-panel, .panel:has(> .data-table) { min-width: 0; max-width: 100%; }
+
+/* =====================================================================
+   Caixa (PDV) — auditoria 2026-10-20: mais produtos por tela e total à vista
+   (escopo .pg-caixa: o painel do revendedor usa os mesmos cartões com foto)
+   ===================================================================== */
+.pg-caixa .shop-grid { grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 10px; margin-bottom: 18px; }
+.pg-caixa .shop-card {
+  display: grid; grid-template-columns: 56px 1fr; align-items: center; column-gap: 12px;
+  padding: 10px 12px; min-height: 78px; border-radius: 16px;
+}
+.pg-caixa .shop-card:hover { transform: none; box-shadow: var(--shadow-sm); }
+.pg-caixa .shop-card:active { transform: scale(0.98); }
+.pg-caixa .shop-card .ph { width: 56px; height: 56px; border-radius: 14px; font-size: 24px; }
+.pg-caixa .shop-card:hover .ph img { transform: none; }
+.pg-caixa .shop-card .body { padding: 0; min-width: 0; }
+.pg-caixa .shop-card .body h4 { font-size: 14px; margin-bottom: 2px; }
+.pg-caixa .shop-card .body .price { font-size: 16.5px; }
+.pg-caixa .shop-card .flavor-hint { margin-top: 3px; }
+.pg-caixa .shop-card.selected::after { top: 6px; right: 6px; width: 22px; height: 22px; font-size: 12px; }
+
+.caixa-barra { display: none; }
+@media (max-width: 1100px) {
+  .caixa-barra:not([hidden]) {
+    display: flex; align-items: center; gap: 14px;
+    position: fixed; left: 50%; bottom: 14px; transform: translateX(-50%); z-index: 900;
+    width: min(560px, calc(100% - 28px)); padding: 10px 10px 10px 18px;
+    background: var(--roxo-950); color: var(--white); border-radius: 18px;
+    box-shadow: 0 16px 36px rgba(36,8,32,0.4);
+  }
+  .caixa-barra .cb-qtd { font-size: 13px; color: rgba(255,255,255,0.75); }
+  .caixa-barra .cb-qtd { color: var(--gold-soft); font-weight: 700; }
+  .caixa-barra strong { flex: 1; font-size: 20px; }
+  .pg-caixa .app-main { padding-bottom: 96px; }
+}
+/* barra do caixa: fica sobre a área de venda, sem cobrir o menu lateral */
+@media (max-width: 1100px) {
+  .caixa-barra:not([hidden]) { left: auto; right: 16px; transform: none; width: min(520px, calc(100% - 292px)); }
+}
+@media (max-width: 900px) {
+  .caixa-barra:not([hidden]) { right: 14px; width: calc(100% - 28px); }
+}
