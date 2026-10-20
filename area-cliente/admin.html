@@ -9,9 +9,11 @@
 <link rel="apple-touch-icon" href="../assets/img/brand/favicon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/css/style.css?v=24">
+<link rel="stylesheet" href="../assets/css/style.css?v=27">
 </head>
 <body>
+<svg class="sprite" aria-hidden="true" focusable="false"><symbol id="m-grafico" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></symbol><symbol id="m-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol><symbol id="m-usuarios" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"/></symbol><symbol id="m-caixa" viewBox="0 0 24 24"><path d="M3 8l9-4 9 4v9l-9 4-9-4z"/><path d="M3 8l9 4 9-4M12 12v9"/></symbol><symbol id="m-painel" viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 10h6M9 14h6M9 18h3"/></symbol><symbol id="m-fabrica" viewBox="0 0 24 24"><path d="M3 21V10l5 3v-3l5 3V7l8 4v10z"/><path d="M7 17h2M12 17h2M17 17h1"/></symbol><symbol id="m-etiqueta" viewBox="0 0 24 24"><path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.4"/></symbol><symbol id="m-engrenagem" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></symbol><symbol id="m-casa" viewBox="0 0 24 24"><path d="M3 11l9-7 9 7M5 9.5V20h14V9.5M10 20v-6h4v6"/></symbol><symbol id="m-sair" viewBox="0 0 24 24"><path d="M14 4h5a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-5M10 16l-4-4 4-4M6 12h10"/></symbol><symbol id="m-carrinho" viewBox="0 0 24 24"><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2.5 3.5h3l2.4 11.2a1.5 1.5 0 0 0 1.5 1.3h8.4a1.5 1.5 0 0 0 1.5-1.2L21 7H6.3"/></symbol><symbol id="m-recibo" viewBox="0 0 24 24"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6M9 16h3"/></symbol><symbol id="m-calendario" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></symbol><symbol id="m-chat" viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></symbol><symbol id="m-usuario" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol><symbol id="m-globo" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></symbol></svg>
+
 
 <div class="mobile-topbar">
   <div class="brand"><a href="#" data-goto="visao-geral" aria-label="Voltar ao início"><img src="../assets/img/brand/logo-branco.png" alt="Dupuro Açaí — Admin"></a></div>
@@ -24,18 +26,18 @@
     <div class="brand"><a href="#" data-goto="visao-geral" aria-label="Voltar ao início"><img src="../assets/img/brand/logo-branco.png" alt="Dupuro Açaí — Admin"></a></div>
     <div class="sidebar-section-label">Painel Admin</div>
 
-    <a href="#" class="sidebar-link active" data-tab="visao-geral"><span class="ic">📊</span> Visão geral</a>
-    <a href="#" class="sidebar-link" data-tab="aprovacoes"><span class="ic">✅</span> Aprovações <span class="badge-pill hidden" id="pendingBadge"></span></a>
-    <a href="#" class="sidebar-link" data-tab="revendedores"><span class="ic">👥</span> Revendedores</a>
-    <a href="#" class="sidebar-link" data-tab="produtos"><span class="ic">🧺</span> Produtos</a>
-    <a href="#" class="sidebar-link" data-tab="pedidos"><span class="ic">📦</span> Pedidos</a>
-    <a href="#" class="sidebar-link" data-tab="producao"><span class="ic">🏭</span> Produção</a>
-    <a href="#" class="sidebar-link" data-tab="cupons"><span class="ic">🏷️</span> Cupons</a>
-    <a href="#" class="sidebar-link" data-tab="conta"><span class="ic">⚙️</span> Minha conta</a>
+    <a href="#" class="sidebar-link active" data-tab="visao-geral"><span class="ic"><svg><use href="#m-grafico"/></svg></span> Visão geral</a>
+    <a href="#" class="sidebar-link" data-tab="aprovacoes"><span class="ic"><svg><use href="#m-check"/></svg></span> Aprovações <span class="badge-pill hidden" id="pendingBadge"></span></a>
+    <a href="#" class="sidebar-link" data-tab="revendedores"><span class="ic"><svg><use href="#m-usuarios"/></svg></span> Revendedores</a>
+    <a href="#" class="sidebar-link" data-tab="produtos"><span class="ic"><svg><use href="#m-caixa"/></svg></span> Produtos</a>
+    <a href="#" class="sidebar-link" data-tab="pedidos"><span class="ic"><svg><use href="#m-painel"/></svg></span> Pedidos</a>
+    <a href="#" class="sidebar-link" data-tab="producao"><span class="ic"><svg><use href="#m-fabrica"/></svg></span> Produção</a>
+    <a href="#" class="sidebar-link" data-tab="cupons"><span class="ic"><svg><use href="#m-etiqueta"/></svg></span> Cupons</a>
+    <a href="#" class="sidebar-link" data-tab="conta"><span class="ic"><svg><use href="#m-engrenagem"/></svg></span> Minha conta</a>
 
     <div class="sidebar-footer">
-      <a href="../index.html" class="sidebar-link"><span class="ic">🏠</span> Ver site</a>
-      <a href="#" class="sidebar-link" id="logoutBtn"><span class="ic">🚪</span> Sair</a>
+      <a href="../index.html" class="sidebar-link"><span class="ic"><svg><use href="#m-casa"/></svg></span> Ver site</a>
+      <a href="#" class="sidebar-link" id="logoutBtn"><span class="ic"><svg><use href="#m-sair"/></svg></span> Sair</a>
     </div>
   </aside>
 
@@ -660,6 +662,34 @@
     var msg = 'Olá' + (nome ? ', ' + nome : '') + '! Aqui é da Dupuro Açaí. Recebemos seu cadastro pra revenda' + (p.empresa ? ' (' + p.empresa + ')' : '') + ' e queremos conversar com você.';
     return 'https://wa.me/' + d + '?text=' + encodeURIComponent(msg);
   }
+  // Diálogos na própria tela (no lugar de window.confirm/alert, que destoam e
+  // nem sempre aparecem no app do caixa). confirmar() devolve uma Promise<boolean>.
+  function dialogo(msg, opcoes) {
+    opcoes = opcoes || {};
+    return new Promise(function (resolve) {
+      var fundo = document.createElement('div');
+      fundo.className = 'dlg-fundo';
+      var perigo = opcoes.perigo || /^(excluir|remover|apagar)/i.test(msg);
+      fundo.innerHTML = '<div class="dlg" role="alertdialog" aria-modal="true" aria-describedby="dlgMsg">' +
+        '<p id="dlgMsg"></p><div class="dlg-acoes">' +
+        (opcoes.soOk ? '' : '<button type="button" class="btn btn-dark-outline btn-sm" data-r="0">Cancelar</button>') +
+        '<button type="button" class="btn btn-sm ' + (perigo ? 'btn-perigo' : 'btn-primary') + '" data-r="1">' + (opcoes.ok || (opcoes.soOk ? 'Entendi' : 'Confirmar')) + '</button>' +
+        '</div></div>';
+      fundo.querySelector('#dlgMsg').textContent = msg;
+      function fechar(r) { document.removeEventListener('keydown', tecla); fundo.remove(); resolve(r); }
+      function tecla(e) { if (e.key === 'Escape') fechar(false); }
+      fundo.addEventListener('click', function (e) {
+        var b = e.target.closest('[data-r]');
+        if (b) fechar(b.getAttribute('data-r') === '1');
+        else if (e.target === fundo) fechar(false);
+      });
+      document.addEventListener('keydown', tecla);
+      document.body.appendChild(fundo);
+      fundo.querySelector('[data-r="1"]').focus();
+    });
+  }
+  function confirmar(msg, opcoes) { return dialogo(msg, opcoes); }
+  function aviso(msg) { return dialogo(msg, { soOk: true }); }
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
 (async function () {
   var session = await DupuroAdmin.requireAdmin('login.html');
@@ -1385,12 +1415,12 @@
       btn.addEventListener('click', async function () {
         var a = adminsCache.find(function (x) { return String(x.id) === btn.getAttribute('data-remove-admin'); });
         if (!a) return;
-        var ok = window.confirm('Remover o acesso de administrador de "' + (a.nome || a.email) + '"? Ele volta a ser um revendedor comum (mantém a conta e o login).');
+        var ok = await confirmar('Remover o acesso de administrador de "' + (a.nome || a.email) + '"? Ele volta a ser um revendedor comum (mantém a conta e o login).');
         if (!ok) return;
         btn.disabled = true;
         var result = await DupuroAdmin.setProfileRole(a.id, 'revendedor');
         if (result.error) {
-          window.alert('Não foi possível remover o admin: ' + result.error.message);
+          aviso('Não foi possível remover o admin: ' + result.error.message);
           btn.disabled = false;
           return;
         }
@@ -1424,12 +1454,12 @@
       btn.addEventListener('click', async function () {
         var a = atendentesCache.find(function (x) { return String(x.id) === btn.getAttribute('data-remove-atendente'); });
         if (!a) return;
-        var ok = window.confirm('Remover o acesso de caixa de "' + (a.nome || a.email) + '"? Ele volta a ser um revendedor comum (mantém a conta e o login).');
+        var ok = await confirmar('Remover o acesso de caixa de "' + (a.nome || a.email) + '"? Ele volta a ser um revendedor comum (mantém a conta e o login).');
         if (!ok) return;
         btn.disabled = true;
         var result = await DupuroAdmin.setProfileRole(a.id, 'revendedor');
         if (result.error) {
-          window.alert('Não foi possível remover: ' + result.error.message);
+          aviso('Não foi possível remover: ' + result.error.message);
           btn.disabled = false;
           return;
         }
@@ -1486,12 +1516,12 @@
       btn.addEventListener('click', async function () {
         var r = resellersCache.find(function (x) { return String(x.id) === btn.getAttribute('data-make-admin'); });
         if (!r) return;
-        var ok = window.confirm('Tornar "' + (r.empresa || r.nome) + '" um ADMINISTRADOR? Ele passa a ter acesso total ao painel (aprovar contas, produtos, pedidos, cupons).');
+        var ok = await confirmar('Tornar "' + (r.empresa || r.nome) + '" um ADMINISTRADOR? Ele passa a ter acesso total ao painel (aprovar contas, produtos, pedidos, cupons).');
         if (!ok) return;
         btn.disabled = true;
         var result = await DupuroAdmin.setProfileRole(r.id, 'admin');
         if (result.error) {
-          window.alert('Não foi possível promover: ' + result.error.message);
+          aviso('Não foi possível promover: ' + result.error.message);
           btn.disabled = false;
           return;
         }
@@ -1504,12 +1534,12 @@
       btn.addEventListener('click', async function () {
         var r = resellersCache.find(function (x) { return String(x.id) === btn.getAttribute('data-make-atendente'); });
         if (!r) return;
-        var ok = window.confirm('Tornar "' + (r.empresa || r.nome) + '" um ATENDENTE de caixa? Ela poderá registrar vendas presenciais da loja (baixam o estoque na hora), mas não gerencia produtos, revendedores nem pedidos.');
+        var ok = await confirmar('Tornar "' + (r.empresa || r.nome) + '" um ATENDENTE de caixa? Ela poderá registrar vendas presenciais da loja (baixam o estoque na hora), mas não gerencia produtos, revendedores nem pedidos.');
         if (!ok) return;
         btn.disabled = true;
         var result = await DupuroAdmin.setProfileRole(r.id, 'atendente');
         if (result.error) {
-          window.alert('Não foi possível tornar atendente: ' + result.error.message);
+          aviso('Não foi possível tornar atendente: ' + result.error.message);
           btn.disabled = false;
           return;
         }
@@ -1522,12 +1552,12 @@
       btn.addEventListener('click', async function () {
         var r = resellersCache.find(function (x) { return String(x.id) === btn.getAttribute('data-remove-reseller'); });
         if (!r) return;
-        var ok = window.confirm('Remover a conta de "' + (r.empresa || r.nome) + '"? Isso apaga o login do revendedor. Os pedidos e cupons dele continuam no histórico, só sem o nome vinculado.');
+        var ok = await confirmar('Remover a conta de "' + (r.empresa || r.nome) + '"? Isso apaga o login do revendedor. Os pedidos e cupons dele continuam no histórico, só sem o nome vinculado.');
         if (!ok) return;
         btn.disabled = true;
         var result = await DupuroAdmin.deleteReseller(r.id);
         if (result.error) {
-          window.alert('Não foi possível remover: ' + result.error.message);
+          aviso('Não foi possível remover: ' + result.error.message);
           btn.disabled = false;
           return;
         }
@@ -1672,7 +1702,7 @@
           var msg = partner
             ? 'Excluir "' + p.nome + '" (varejo e atacado)? As duas versões serão removidas.'
             : 'Excluir "' + p.nome + '"?';
-          if (!window.confirm(msg)) return;
+          if (!await confirmar(msg)) return;
           btn.disabled = true;
           if (partner) await DupuroAdmin.deleteProductById(partner.id);
           if (p.estoqueRefId == null) await DupuroAdmin.deleteProduct(p);
@@ -2206,7 +2236,7 @@
     body.querySelectorAll('[data-delete-acomp]').forEach(function (btn) {
       btn.addEventListener('click', async function () {
         var a = acompCache.find(function (x) { return String(x.id) === btn.getAttribute('data-delete-acomp'); });
-        if (!a || !window.confirm('Excluir o acompanhamento "' + a.nome + '"?')) return;
+        if (!a || !await confirmar('Excluir o acompanhamento "' + a.nome + '"?')) return;
         btn.disabled = true;
         await DupuroAdmin.deleteAcompanhamento(a.id);
         if (document.getElementById('acompEditingId').value === String(a.id)) resetAcompForm();
@@ -2611,7 +2641,7 @@
         select.disabled = false;
         if (result && result.error) {
           var e = result.error;
-          window.alert(
+          aviso(
             (e.code === '23514' || /estoque/i.test(e.message || ''))
               ? 'Não foi possível confirmar: estoque insuficiente para um ou mais itens deste pedido.'
               : 'Não foi possível alterar o status: ' + e.message
@@ -2637,7 +2667,7 @@
     body.querySelectorAll('[data-remove-order]').forEach(function (btn) {
       btn.addEventListener('click', async function () {
         var num = btn.getAttribute('data-remove-order');
-        if (!window.confirm('Excluir o pedido ' + num + ' inteiro? Essa ação não pode ser desfeita.')) return;
+        if (!await confirmar('Excluir o pedido ' + num + ' inteiro? Essa ação não pode ser desfeita.')) return;
         btn.disabled = true;
         await DupuroAdmin.deleteOrderByNumero(num);
         resetOrderForm();
@@ -2649,7 +2679,7 @@
     // Remover um item do pedido.
     body.querySelectorAll('[data-remove-item]').forEach(function (btn) {
       btn.addEventListener('click', async function () {
-        if (!window.confirm('Remover este item do pedido?')) return;
+        if (!await confirmar('Remover este item do pedido?')) return;
         btn.disabled = true;
         await DupuroAdmin.deleteOrder(btn.getAttribute('data-remove-item'));
         await renderOrders();
@@ -3216,7 +3246,7 @@
     });
     body.querySelectorAll('[data-prod-del]').forEach(function (btn) {
       btn.addEventListener('click', async function () {
-        if (!window.confirm('Excluir esta leva? Essa ação não pode ser desfeita.')) return;
+        if (!await confirmar('Excluir esta leva? Essa ação não pode ser desfeita.')) return;
         btn.disabled = true;
         await DupuroAdmin.deleteProducao(btn.getAttribute('data-prod-del'));
         if (String(editingProducaoId) === btn.getAttribute('data-prod-del')) resetProdForm();

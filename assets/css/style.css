@@ -2346,3 +2346,16 @@ a.stat-card.alerta .stat-sub { color: var(--warning); font-weight: 800; }
 .stock-grafico > summary { cursor: pointer; font-weight: 800; font-size: 14px; color: var(--roxo-700); list-style-position: inside; }
 .stock-grafico[open] > summary { margin-bottom: 12px; }
 .stock-chip-group > summary { flex-wrap: nowrap; align-items: flex-start; } .stock-chip-group > summary .chevron { margin-top: 3px; flex: none; }
+
+/* Diálogo na própria tela (admin) */
+.dlg-fundo { position: fixed; inset: 0; z-index: 3000; background: rgba(36,8,32,0.55); display: flex; align-items: center; justify-content: center; padding: 20px; }
+.dlg { background: var(--white); border-radius: var(--radius-lg); padding: 22px 22px 18px; max-width: 440px; width: 100%; box-shadow: var(--shadow-lg); }
+.dlg p { font-size: 15px; line-height: 1.5; color: var(--text); margin: 0 0 18px; white-space: pre-line; }
+.dlg-acoes { display: flex; justify-content: flex-end; gap: 10px; }
+.btn-perigo { background: #B03A2E; color: #fff; box-shadow: 0 3px 0 #7d2920; }
+.btn-perigo:hover { filter: brightness(1.05); }
+
+/* Menus laterais: ícones SVG da marca no lugar de emoji */
+.app-shell .sprite { position: absolute; width: 0; height: 0; overflow: hidden; }
+.sidebar-link .ic svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; display: block; }
+.sidebar-link .ic { display: inline-flex; align-items: center; justify-content: center; }
