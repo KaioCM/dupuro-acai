@@ -436,3 +436,20 @@ body.dl-travado { overflow: hidden; }
 .dl-float .ic { color: var(--roxo-700); }
 .dl-passo .n { font-family: var(--font-display); font-size: 22px; color: var(--gold); }
 .dl-extra .ic { color: var(--roxo-700); } .dl-extra .ic svg { width: 28px; height: 28px; }
+
+/* Ícones da marca no pedido e no acompanhamento (no lugar de emoji) */
+.dl-body svg.i { width: 1.1em; height: 1.1em; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; vertical-align: -0.18em; flex: none; }
+.dl-bloco > h2 b svg.i { width: 17px; height: 17px; color: var(--gold); vertical-align: middle; }
+.dl-input > span svg.i { width: 19px; height: 19px; color: var(--roxo-500); display: block; }
+.dl-mapa-btn .ic svg.i { width: 24px; height: 24px; color: var(--roxo-700); }
+.dl-jan .ic svg.i { width: 26px; height: 26px; color: var(--gold-strong); }
+.dl-pag svg.i { width: 14px; height: 14px; color: var(--roxo-500); }
+.dl-barra-in .ct svg.i { width: 24px; height: 24px; color: var(--roxo-950); }
+.dl-gaveta-top h2 svg.i, #mapaTit svg.i { color: var(--roxo-500); }
+.dl-cot .pin svg.i { width: 22px; height: 22px; color: var(--verde-dark, #4D7012); }
+.dl-rev .lb svg.i { color: var(--roxo-500); margin-right: 4px; }
+.dl-qtd.mini button svg.i { width: 16px; height: 16px; }
+.dl-pr .ph svg.i { width: 44px; height: 44px; color: rgba(255,255,255,0.85); }
+.dl-timeline .dot svg.i { width: 18px; height: 18px; }
+.dl-mapa-pino svg { display: block; filter: drop-shadow(0 4px 4px rgba(0,0,0,.35)); }
+.dl-mapa-pino { font-size: 0; }
