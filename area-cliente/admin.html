@@ -9,7 +9,7 @@
 <link rel="apple-touch-icon" href="../assets/img/brand/favicon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/css/style.css?v=15">
+<link rel="stylesheet" href="../assets/css/style.css?v=17">
 </head>
 <body>
 
@@ -2511,7 +2511,7 @@
         '<td><strong>' + o.numero + '</strong>' +
           (o.items.length > 1 ? ' <span class="status-badge enviado">' + o.items.length + ' itens</span>' : '') +
           (o.parcial ? ' <span class="status-badge processando" title="Pedido misto: aqui aparecem só os itens deste recorte; o valor é a parte correspondente.">parcial</span>' : '') +
-          (o.usaEstoque ? '' : ' <span class="status-badge cancelado" title="Este pedido não usa o estoque">sem estoque</span>') +
+          (o.usaEstoque ? '' : ' <span class="status-badge neutro" title="Copo e self-service não controlam estoque por unidade">não usa estoque</span>') +
         '</td>' +
         '<td>' + esc(o.revendedorNome) + '</td>' +
         '<td>' + formatDate(o.data) + '</td>' +
