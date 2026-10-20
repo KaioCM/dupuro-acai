@@ -2326,3 +2326,6 @@ tr.venda-cancelada td:nth-child(5) { text-decoration: line-through; color: var(-
 @media (max-width: 900px) {
   .caixa-barra:not([hidden]) { right: 14px; width: calc(100% - 28px); }
 }
+.btn-whats { background: #25D366; color: #0b3d1f; box-shadow: 0 3px 0 #128C7E; }
+.btn-whats:hover { transform: translateY(-1px); }
+.admin-table-actions { white-space: nowrap; }

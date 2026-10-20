@@ -9,7 +9,7 @@
 <link rel="apple-touch-icon" href="../assets/img/brand/favicon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/css/style.css?v=19">
+<link rel="stylesheet" href="../assets/css/style.css?v=20">
 </head>
 <body>
 
@@ -655,6 +655,16 @@
 <script src="../assets/js/admin.js"></script>
 <script>
   // Escapa texto antes de ir pro innerHTML (dado de revendedor/cliente nunca vira HTML).
+  // Link de WhatsApp pro cadastro (telefone vem em formatos variados: +55..., (66) 9..., 659...).
+  function linkWhats(p) {
+    var d = String(p.telefone || '').replace(/\D/g, '');
+    if (d.length === 10 || d.length === 11) d = '55' + d;
+    if (d.length < 12 || d.length > 13) return '';
+    var nome = String(p.nome || '').trim().split(/\s+/)[0] || '';
+    nome = nome.charAt(0).toUpperCase() + nome.slice(1).toLowerCase();
+    var msg = 'Olá' + (nome ? ', ' + nome : '') + '! Aqui é da Dupuro Açaí. Recebemos seu cadastro pra revenda' + (p.empresa ? ' (' + p.empresa + ')' : '') + ' e queremos conversar com você.';
+    return 'https://wa.me/' + d + '?text=' + encodeURIComponent(msg);
+  }
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
 (async function () {
   var session = await DupuroAdmin.requireAdmin('login.html');
@@ -1310,6 +1320,7 @@
         '<td>' + esc(p.cidade || '—') + '</td>' +
         '<td>' + formatDate(p.created_at) + '</td>' +
         '<td class="admin-table-actions">' +
+          (linkWhats(p) ? '<a class="btn btn-whats btn-sm" href="' + linkWhats(p) + '" target="_blank" rel="noopener" title="Conversar no WhatsApp">WhatsApp</a>' : '') +
           '<button class="btn btn-green btn-sm" data-approve="' + p.id + '">Aprovar</button>' +
           '<button class="btn btn-dark-outline btn-sm" data-reject="' + p.id + '">Rejeitar</button>' +
         '</td>' +
