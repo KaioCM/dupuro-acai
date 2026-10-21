@@ -2589,3 +2589,40 @@ a.stat-card.alerta .stat-sub { color: var(--warning); font-weight: 800; }
   .pg-admin .data-table td.admin-table-actions > * + * { margin-left: 8px; }
 }
 @media (min-width: 701px) { .pg-admin #tab-numeros .stat-grid { grid-template-columns: repeat(3, 1fr); } }
+
+/* ---------- Rodada 2: estoque por produto + celular ---------- */
+.pg-admin .stock-summary { display: block; }
+.estoque-resumo { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 0 0 10px; font-size: 14px; font-weight: 700; }
+.estoque-lista { list-style: none; margin: 0; padding: 0; }
+.estoque-linha { display: grid; grid-template-columns: minmax(160px, 1fr) 2.4fr auto; align-items: center; gap: 8px 18px; padding: 12px 0; border-top: 1px solid rgba(96,16,80,0.08); }
+.estoque-nome strong { display: block; font-size: 15px; color: var(--roxo-950); }
+.estoque-nome span { font-size: 12.5px; color: var(--text-light); font-variant-numeric: tabular-nums; }
+.estoque-sabores { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 14px; line-height: 1.45; }
+.nivel { display: inline-flex; align-items: baseline; gap: 6px; }
+.nivel::before { content: ""; flex: none; width: 8px; height: 8px; border-radius: 50%; transform: translateY(-1px); }
+.nivel.esgotado { color: var(--danger); font-weight: 600; }
+.nivel.esgotado::before { background: var(--danger); }
+.nivel.baixo { color: var(--warning); }
+.nivel.baixo::before { background: var(--gold-strong, #E28F00); }
+.nivel.saudavel { color: var(--verde-dark); }
+.nivel.saudavel::before { background: var(--verde); }
+.pag-oculta { display: none; }
+.ver-mais { margin: 6px auto; display: flex; }
+.status-badge { white-space: nowrap; }
+@media (max-width: 700px) {
+  .estoque-linha { grid-template-columns: 1fr; gap: 6px; }
+  .estoque-linha .btn { justify-self: start; }
+  /* Célula do cartão: rótulo flutua à esquerda e o conteúdo flui à direita
+     (com flex, cada pedaço do conteúdo virava uma coluna e quebrava "VND-/0770"). */
+  .pg-admin .data-table td { display: block; text-align: right; }
+  .pg-admin .data-table td[data-label]::before { float: left; margin-right: 12px; }
+  .pg-admin .data-table td.admin-table-actions { display: flex; }
+  .pg-admin .data-table tr.pag-oculta { display: none; }
+  /* Etapas de Pedidos em 3 partes iguais; sub-abas quebram linha em vez de esconder */
+  .pg-admin .ped-etapas { flex-wrap: nowrap; overflow: visible; }
+  .pg-admin .ped-etapas .subnav-btn { flex: 1 1 0; justify-content: center; padding: 9px 6px; font-size: 13.5px; }
+  .pg-admin #cadSubnav { flex-wrap: wrap; overflow: visible; }
+  /* Botão com texto longo quebra a linha em vez de cortar */
+  .pg-admin .btn { white-space: normal; text-align: center; line-height: 1.25; }
+  .pg-admin .order-form-grid { grid-template-columns: 1fr; }
+}

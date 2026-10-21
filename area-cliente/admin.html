@@ -9,7 +9,7 @@
 <link rel="apple-touch-icon" href="../assets/img/brand/favicon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/css/style.css?v=37">
+<link rel="stylesheet" href="../assets/css/style.css?v=38">
 </head>
 <body class="pg-admin">
 <svg class="sprite" aria-hidden="true" focusable="false"><symbol id="m-grafico" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></symbol><symbol id="m-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol><symbol id="m-usuarios" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"/></symbol><symbol id="m-caixa" viewBox="0 0 24 24"><path d="M3 8l9-4 9 4v9l-9 4-9-4z"/><path d="M3 8l9 4 9-4M12 12v9"/></symbol><symbol id="m-painel" viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 10h6M9 14h6M9 18h3"/></symbol><symbol id="m-fabrica" viewBox="0 0 24 24"><path d="M3 21V10l5 3v-3l5 3V7l8 4v10z"/><path d="M7 17h2M12 17h2M17 17h1"/></symbol><symbol id="m-etiqueta" viewBox="0 0 24 24"><path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.4"/></symbol><symbol id="m-engrenagem" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></symbol><symbol id="m-casa" viewBox="0 0 24 24"><path d="M3 11l9-7 9 7M5 9.5V20h14V9.5M10 20v-6h4v6"/></symbol><symbol id="m-sair" viewBox="0 0 24 24"><path d="M14 4h5a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-5M10 16l-4-4 4-4M6 12h10"/></symbol><symbol id="m-carrinho" viewBox="0 0 24 24"><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2.5 3.5h3l2.4 11.2a1.5 1.5 0 0 0 1.5 1.3h8.4a1.5 1.5 0 0 0 1.5-1.2L21 7H6.3"/></symbol><symbol id="m-recibo" viewBox="0 0 24 24"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6M9 16h3"/></symbol><symbol id="m-calendario" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></symbol><symbol id="m-chat" viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></symbol><symbol id="m-usuario" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol><symbol id="m-globo" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></symbol><symbol id="m-hoje" viewBox="0 0 24 24"><path d="M4 13h4l2 3h4l2-3h4"/><path d="M4 13l2.5-8h11L20 13v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/></symbol><symbol id="m-pasta" viewBox="0 0 24 24"><path d="M3 6.5A1.5 1.5 0 0 1 4.5 5H9l2 2.5h8.5A1.5 1.5 0 0 1 21 9v9.5a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 18.5z"/></symbol><symbol id="m-mais" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol></svg>
@@ -90,8 +90,8 @@
           <div class="field" style="margin-bottom:0;">
             <label for="orderStatus">Status</label>
             <select id="orderStatus">
-              <option value="enviado">Novo (esperando confirmação)</option>
-              <option value="processando" selected>Confirmado (baixa o estoque)</option>
+              <option value="enviado" selected>Novo (entra em "A confirmar")</option>
+              <option value="processando">Confirmado (já baixa o estoque)</option>
               <option value="entregue">Entregue</option>
               <option value="cancelado">Cancelado</option>
             </select>
@@ -99,9 +99,9 @@
           <div class="field" style="margin-bottom:0; grid-column:1/-1;">
             <label for="orderUsaEstoque" class="checkbox-line">
               <input type="checkbox" id="orderUsaEstoque" checked>
-              <span>Utilizar estoque?</span>
+              <span>Mexer no estoque</span>
             </label>
-            <div class="field-note-inline">Desmarque para lançar pedidos antigos: o pedido não exige estoque disponível nem altera o estoque atual — e aí <strong>todos os produtos e sabores ficam disponíveis</strong>, mesmo os esgotados.</div>
+            <div class="field-note-inline">Desmarque só pra registrar um pedido antigo: ele não confere nem altera o estoque, e todos os sabores ficam disponíveis.</div>
           </div>
           <div class="field" style="margin-bottom:0; grid-column:1/-1;"><div class="cart-head" style="margin:2px 0 0;">Adicionar item</div></div>
           <div class="field" style="margin-bottom:0;">
@@ -120,7 +120,7 @@
             <label>Valor do item</label>
             <input type="text" id="orderValorPreview" disabled>
           </div>
-          <button type="button" class="btn btn-green" id="orderAddItemBtn" style="grid-column:1/-1;">Adicionar item ao pedido</button>
+          <button type="button" class="btn btn-dark-outline" id="orderAddItemBtn" style="grid-column:1/-1;">+ Adicionar item</button>
           <div class="field hidden" id="orderCartField" style="margin-bottom:0; grid-column:1/-1;">
             <div class="cart-head">Itens do pedido</div>
             <ul class="cart-list" id="orderCartList"></ul>
@@ -204,7 +204,7 @@
 
       <div class="panel chart-card">
         <h2>Estoque: o que repor</h2>
-        <div class="subtitle">Do mais urgente pro mais saudável. Estoque baixo = menos de 5 unidades.</div>
+        <div class="subtitle">Um produto por linha, do mais urgente pro mais tranquilo. Pouco = menos de 5 unidades.</div>
         <div class="stock-summary" id="stockSummary"></div>
         <details class="stock-grafico" id="stockGrafico">
           <summary>Ver gráfico de estoque por sabor</summary>
@@ -1258,78 +1258,72 @@
     renderStockSummary(chartProducts);
   }
 
-  // Resumo visual do estoque abaixo do gráfico. Classifica CADA sabor (não o
-  // produto inteiro): assim um sabor esgotado aparece no card "Esgotado" mesmo
-  // que o produto tenha estoque em outros sabores. Os itens de cada card são
-  // agrupados pelo produto (bloco expansível com setinha) para não repetir
-  // nomes de sabor iguais entre tamanhos diferentes. Produto de estoque único
-  // entra como um item simples.
+  // "O que repor": uma linha por produto, do mais urgente pro mais tranquilo.
+  // Cada linha diz quais sabores acabaram, quais estão baixos e quantos estão
+  // ok, e tem o atalho pra registrar a produção dele (já abre a leva preenchida).
   function renderStockSummary(chartProducts) {
     var box = document.getElementById('stockSummary');
     if (!box) return;
+    var produziveis = {};
+    prodProdutosDisponiveis().forEach(function (p) { produziveis[p.id] = true; });
+    var total = { esgotado: 0, baixo: 0, saudavel: 0 };
 
-    var buckets = { esgotado: [], baixo: [], saudavel: [] };
-    chartProducts.forEach(function (p) {
-      if (p.multissabor) {
-        var porBucket = { esgotado: [], baixo: [], saudavel: [] };
-        p.sabores.forEach(function (s) { porBucket[nivelEstoque(s.estoque)].push(s); });
-        ['esgotado', 'baixo', 'saudavel'].forEach(function (b) {
-          if (!porBucket[b].length) return;
-          var sabores = porBucket[b].slice().sort(function (a, c) { return a.estoque - c.estoque; });
-          var soma = sabores.reduce(function (t, s) { return t + s.estoque; }, 0);
-          buckets[b].push({ nome: p.nome, multi: true, sabores: sabores, estoque: soma });
-        });
-      } else {
-        buckets[nivelEstoque(p.estoqueTotal)].push({ nome: p.nome, multi: false, estoque: p.estoqueTotal });
-      }
-    });
-    ['esgotado', 'baixo', 'saudavel'].forEach(function (b) {
-      buckets[b].sort(function (a, c) { return a.nome.localeCompare(c.nome); });
-    });
+    var linhas = chartProducts.map(function (p) {
+      var itens = p.multissabor
+        ? p.sabores.map(function (s) { return { nome: s.sabor, q: s.estoque, nivel: nivelEstoque(s.estoque) }; })
+        : [{ nome: null, q: p.estoqueTotal, nivel: nivelEstoque(p.estoqueTotal) }];
+      var por = { esgotado: [], baixo: [], saudavel: [] };
+      itens.forEach(function (i) { por[i.nivel].push(i); total[i.nivel]++; });
+      return { p: p, por: por, peso: por.esgotado.length * 100 + por.baixo.length };
+    }).sort(function (a, b) { return b.peso - a.peso || a.p.nome.localeCompare(b.p.nome); });
 
-    // Quantos sabores/itens (não produtos) estão no card.
-    function contar(list) {
-      return list.reduce(function (n, u) { return n + (u.multi ? u.sabores.length : 1); }, 0);
+    function sabores(lista, comQtd) {
+      // 'Creme de Morango' → 'Morango': o prefixo repetido só atrapalha a leitura.
+      return lista.map(function (i) { return esc(i.nome.replace(/^Creme de /, '')) + (comQtd ? ' (' + i.q + ')' : ''); }).join(', ');
     }
-
-    var DOT = { esgotado: 'dot-danger', baixo: 'dot-warning', saudavel: 'dot-green' };
-    function saborList(sabores) {
-      return '<div class="sabor-list">' + sabores.map(function (s) {
-        return '<div class="sabor-row"><span class="dot ' + DOT[nivelEstoque(s.estoque)] + '"></span>' +
-          '<span class="sabor-nome">' + esc(s.sabor) + '</span>' +
-          '<span class="sabor-qty">' + s.estoque + ' un</span></div>';
-      }).join('') + '</div>';
-    }
-
-    function chips(list, withQty) {
-      if (!list.length) return '<div class="stock-summary-empty">Nenhum item</div>';
-      return '<div class="stock-summary-chips">' + list.map(function (u) {
-        // Multissabor: bloco expansível com os sabores DESTE card.
-        if (u.multi) {
-          var n = u.sabores.length;
-          var resumo = '<span class="qty">' + n + ' sabor' + (n > 1 ? 'es' : '') + '</span>';
-          return '<details class="stock-chip stock-chip-group">' +
-            '<summary><span class="chevron">▸</span>' + esc(u.nome) + resumo + '</summary>' +
-            saborList(u.sabores) + '</details>';
-        }
-        var meta = withQty ? '<span class="qty">' + u.estoque + ' un</span>' : '';
-        return '<span class="stock-chip">' + esc(u.nome) + meta + '</span>';
-      }).join('') + '</div>';
-    }
-
-    function card(mod, titulo, list, withQty) {
-      return '<div class="stock-summary-card ' + mod + '">' +
-        '<div class="stock-summary-head">' +
-          '<span class="stock-summary-title">' + titulo + '</span>' +
-          '<span class="stock-summary-count">' + contar(list) + '</span>' +
-        '</div>' + chips(list, withQty) + '</div>';
-    }
-
     box.innerHTML =
-      card('is-danger', 'Esgotado', buckets.esgotado, false) +
-      card('is-warning', 'Estoque baixo', buckets.baixo, true) +
-      card('is-green', 'Estoque saudável', buckets.saudavel, true);
+      '<p class="estoque-resumo">' +
+        '<span class="nivel esgotado">' + total.esgotado + ' esgotados</span>' +
+        '<span class="nivel baixo">' + total.baixo + ' com menos de ' + LOW_STOCK_THRESHOLD + '</span>' +
+        '<span class="nivel saudavel">' + total.saudavel + ' ok</span>' +
+      '</p>' +
+      '<ul class="estoque-lista">' + linhas.map(function (l) {
+        var p = l.p, por = l.por, partes = [];
+        if (p.multissabor) {
+          if (por.esgotado.length) partes.push('<span class="nivel esgotado">Acabou: ' + sabores(por.esgotado) + '</span>');
+          if (por.baixo.length) partes.push('<span class="nivel baixo">Pouco: ' + sabores(por.baixo, true) + '</span>');
+          if (por.saudavel.length) partes.push('<span class="nivel saudavel">' + por.saudavel.length + plural(por.saudavel.length, ' sabor ok', ' sabores ok') + '</span>');
+        } else {
+          var i = (por.esgotado[0] || por.baixo[0] || por.saudavel[0]);
+          partes.push('<span class="nivel ' + i.nivel + '">' + (i.nivel === 'esgotado' ? 'Acabou' : i.q + ' un') + '</span>');
+        }
+        return '<li class="estoque-linha">' +
+          '<div class="estoque-nome"><strong>' + esc(p.nome) + '</strong>' +
+            (p.multissabor ? '<span>' + p.estoqueTotal + ' un no total</span>' : '') + '</div>' +
+          '<div class="estoque-sabores">' + partes.join('') + '</div>' +
+          (produziveis[p.id] && l.peso
+            ? '<button type="button" class="btn btn-dark-outline btn-sm" data-produzir="' + p.id + '">Registrar produção</button>'
+            : '<span></span>') +
+          '</li>';
+      }).join('') + '</ul>';
   }
+
+  // Atalho do "o que repor": abre "Registrar produção" com o produto já na lista.
+  document.getElementById('stockSummary').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-produzir]');
+    if (!b) return;
+    var p = produtoPorId(b.getAttribute('data-produzir'));
+    if (!p) return;
+    var vazio = prodItensData.length === 1 && !prodItensData[0].produtoId;
+    var item = { produtoId: p.id, nome: p.nome, litrosUnit: p.litros, quantidade: 0, sabor: null };
+    if (vazio) prodItensData = [item]; else prodItensData.push(item);
+    renderItemRows(); recomputeProd();
+    var caixa = document.getElementById('novaLevaBox');
+    caixa.open = true;
+    caixa.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    var campo = caixa.querySelectorAll('#prodItens .item-row')[prodItensData.length - 1];
+    if (campo) (campo.querySelector('.i-sabor') || campo.querySelector('.i-qtd')).focus({ preventScroll: true });
+  });
 
   // ---- Aprovações ----
   async function renderPending() {
@@ -2347,7 +2341,7 @@
     }
   }
 
-  // Alternar "Utilizar estoque?" muda quais sabores ficam disponíveis (sem
+  // Alternar "Mexer no estoque" muda quais sabores ficam disponíveis (sem
   // repopular o select de produtos, pra não perder o produto já escolhido).
   document.getElementById('orderUsaEstoque').addEventListener('change', function () {
     updateOrderSaborField();
@@ -2397,7 +2391,7 @@
 
   // Dispensa do pedido mínimo por volume (migration_023): pedido que atinge o
   // limite de litros libera os mínimos de todos os itens. Também dispensamos em
-  // lançamento retroativo ("Utilizar estoque?" desmarcado).
+  // lançamento retroativo ("Mexer no estoque" desmarcado).
   var LIMITE_LITROS = 50;
   function orderCartLitros() {
     return orderCart.reduce(function (s, it) { return s + (it.litros || 0) * it.quantidade; }, 0);
@@ -2504,7 +2498,7 @@
     document.getElementById('orderUsaEstoque').checked = true;  // padrão: usa estoque
     document.getElementById('orderEditingId').value = '';
     document.getElementById('orderFormTitle').textContent = 'Novo pedido';
-    document.getElementById('orderStatus').value = 'processando';
+    document.getElementById('orderStatus').value = 'enviado'; // padrão: entra na fila, estoque só baixa ao confirmar
     document.getElementById('orderFormSubtitle').textContent = 'Monte o pedido adicionando itens e depois clique em criar';
     document.getElementById('orderSubmitBtn').textContent = 'Criar pedido';
     document.getElementById('orderEditCancel').classList.add('hidden');
@@ -2984,6 +2978,31 @@
   });
 
   // ---- Trilha de alterações/cancelamentos da loja (auditoria da caixa) ----
+  // Histórico longo (fechamentos, auditoria): mostra 10 linhas e um
+  // "Mostrar mais". Linhas de detalhe (já escondidas) ficam de fora da conta.
+  function paginarTabela(tbody, porVez) {
+    var cols = tbody.closest('table').querySelectorAll('thead th').length || 1;
+    var linhas = Array.prototype.filter.call(tbody.children, function (tr) { return !tr.classList.contains('hidden'); });
+    if (linhas.length <= porVez) return;
+    var mostradas = 0;
+    function mostrar() {
+      mostradas += porVez;
+      linhas.forEach(function (tr, i) { tr.classList.toggle('pag-oculta', i >= mostradas); });
+      var resto = linhas.length - mostradas;
+      var mais = tbody.querySelector('tr[data-mais]');
+      if (resto <= 0) { if (mais) mais.remove(); return; }
+      if (!mais) {
+        mais = document.createElement('tr');
+        mais.setAttribute('data-mais', '');
+        mais.innerHTML = '<td colspan="' + cols + '"><button type="button" class="btn btn-dark-outline btn-sm ver-mais"></button></td>';
+        mais.querySelector('button').addEventListener('click', mostrar);
+        tbody.appendChild(mais);
+      }
+      mais.querySelector('button').textContent = 'Mostrar mais ' + Math.min(porVez, resto) + ' (faltam ' + resto + ')';
+    }
+    mostrar();
+  }
+
   async function renderAudits() {
     var audits = await DupuroAdmin.getOrderAudits();
     var body = document.getElementById('auditsBody');
@@ -3002,11 +3021,12 @@
         '<td>' + quando + '</td>' +
         '<td><strong>' + a.numero + '</strong></td>' +
         '<td>' + badge + '</td>' +
-        '<td>' + a.quem + '</td>' +
+        '<td>' + esc(a.quem) + '</td>' +
         '<td>' + esc(a.motivo) + '</td>' +
         '<td class="audit-antes">' + antes + '</td>' +
         '</tr>';
     }).join('');
+    paginarTabela(body, 10);
   }
   document.getElementById('refreshAuditsBtn').addEventListener('click', renderAudits);
 
@@ -3054,6 +3074,7 @@
         if (row) row.classList.toggle('hidden');
       });
     });
+    paginarTabela(body, 10);
   }
   document.getElementById('refreshCaixaBtn').addEventListener('click', renderCaixaFechamentos);
 
@@ -3108,15 +3129,16 @@
     var result = await DupuroAdmin.createOrderCart({ revendedorId: revendedorId, data: data, status: status, usaEstoque: usaEstoque }, items);
     if (result.error) {
       errorNote.textContent = result.error.code === '23514'
-        ? 'Algum item ficou sem estoque para essa quantidade. Se for um pedido antigo, desmarque "Utilizar estoque?".'
+        ? 'Algum item ficou sem estoque para essa quantidade. Se for um pedido antigo, desmarque "Mexer no estoque".'
         : 'Não foi possível criar o pedido. Confira os dados.';
       errorNote.classList.add('show');
       return;
     }
     resetOrderForm();
+    document.getElementById('novoPedidoBox').open = false;
     await updateOrderNumberPreview();
-    await renderOrders();
-    await renderOverview();
+    await atualizarDepoisDePedido();
+    toast((result.numero || 'Pedido') + (status === 'enviado' ? ' lançado. Está em "A confirmar".' : ' lançado.'));
   });
 
   // ---- Cupons ----
@@ -3129,9 +3151,9 @@
     }
     body.innerHTML = coupons.map(function (c) {
       return '<tr>' +
-        '<td><strong>' + c.code + '</strong></td>' +
+        '<td><strong>' + esc(c.code) + '</strong></td>' +
         '<td>' + esc(c.revendedorNome) + '</td>' +
-        '<td>' + c.desc + '</td>' +
+        '<td>' + esc(c.desc) + '</td>' +
         '<td>' + formatDate(c.validade) + '</td>' +
         '<td>' + (c.usado ? 'Sim' : 'Não') + '</td>' +
         '<td><button class="btn btn-dark-outline btn-sm" data-delete-coupon="' + c.id + '">Apagar</button></td>' +
