@@ -149,21 +149,25 @@ var DupuroAdmin = (function () {
   // Junta orders + profiles no cliente (não há FK direta entre as duas
   // tabelas para o PostgREST embutir automaticamente).
   async function getAllOrders() {
-    var ordersResult = await client
-      .from('orders')
-      .select('id, revendedor_id, numero, data, itens, valor, status, produto_id, quantidade, sabor, usa_estoque, origem')
-      .order('data', { ascending: false });
+    // As três leituras são independentes: vão juntas, não uma depois da outra.
+    // O tipo de cada produto (varejo/atacado) classifica o pedido em BALCÃO x
+    // ATACADO POR PRODUTO (não por canal): copo/peso e embalado varejo = balcão;
+    // embalado atacado = atacado, mesmo vendido no caixa.
+    var r = await Promise.all([
+      client
+        .from('orders')
+        .select('id, revendedor_id, numero, data, itens, valor, status, produto_id, quantidade, sabor, usa_estoque, origem')
+        .order('data', { ascending: false }),
+      getResellers(),
+      client.from('products').select('id, tipo')
+    ]);
+    var ordersResult = r[0], resellers = r[1], prodsRes = r[2];
     if (ordersResult.error) return [];
 
-    var resellers = await getResellers();
     var byId = {};
     resellers.forEach(function (r) { byId[r.id] = r; });
 
-    // Tipo de cada produto (varejo/atacado) — pra classificar o pedido em
-    // BALCÃO x ATACADO POR PRODUTO (não por canal): copo/peso e embalado varejo
-    // = balcão; embalado atacado = atacado, mesmo vendido no caixa.
     var tipoProduto = {};
-    var prodsRes = await client.from('products').select('id, tipo');
     (prodsRes.data || []).forEach(function (p) { tipoProduto[p.id] = p.tipo; });
 
     // Agrupa por numero: 1 objeto por pedido, reunindo seus itens.
@@ -635,6 +639,17 @@ var DupuroAdmin = (function () {
     return { error: result.error };
   }
 
+  // ---------- Delivery ----------
+  // Pedidos do Dupuro Delivery (clientes de casa). Só admin lê (RLS is_admin()).
+  async function getDeliveryPedidos() {
+    var r = await client
+      .from('delivery_pedidos')
+      .select('id, codigo, cliente_nome, cliente_telefone, endereco, complemento, total, itens, periodo, data_entrega, status, criado_em')
+      .order('criado_em', { ascending: false })
+      .limit(200);
+    return r.error ? [] : (r.data || []);
+  }
+
   // ---------- Cupons ----------
   // Só o admin gera e apaga cupons (ver migration_004_cupons_admin.sql).
   async function getAllCoupons() {
@@ -872,6 +887,7 @@ var DupuroAdmin = (function () {
     setProfileRole: setProfileRole,
     changePassword: changePassword,
     getAllOrders: getAllOrders,
+    getDeliveryPedidos: getDeliveryPedidos,
     getNextOrderNumber: getNextOrderNumber,
     createOrder: createOrder,
     createOrderCart: createOrderCart,

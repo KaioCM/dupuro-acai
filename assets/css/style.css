@@ -2403,3 +2403,65 @@ a.stat-card.alerta .stat-sub { color: var(--warning); font-weight: 800; }
 .tabela-grafico-t thead th { font-weight: 700; color: var(--text-light); font-size: 12px; }
 .tabela-grafico-t th[scope="row"], .tabela-grafico-t thead th:first-child { text-align: left; color: var(--roxo-900); }
 .tabela-grafico-t .tg-cor { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: 1px; }
+
+/* =====================================================================
+   Admin reestruturado (2026-10-20): Início com fila de ações, sub-abas
+   de Cadastros, barra inferior no celular. Só existe no admin.html.
+   ===================================================================== */
+.sidebar-nav { display: flex; flex-direction: column; gap: 5px; margin-top: 10px; }
+
+/* Fila "o que precisa de você": uma lista só, linhas com divisória. */
+.fila { background: #fff; border: 1px solid rgba(96,16,80,0.10); border-radius: 16px; overflow: hidden; }
+.fila-item { display: grid; grid-template-columns: 48px 1fr auto; align-items: center; gap: 16px; padding: 16px 20px; color: inherit; text-decoration: none; transition: background 0.15s ease; }
+.fila-item + .fila-item { border-top: 1px solid rgba(96,16,80,0.08); }
+.fila-item:hover { background: rgba(96,16,80,0.035); }
+.fila-item:focus-visible { outline: 3px solid var(--gold); outline-offset: -3px; }
+.fila-n { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-size: 24px; line-height: 1; font-variant-numeric: tabular-nums; }
+.tom-urgente .fila-n { background: var(--roxo-700); color: #fff; }
+.tom-atencao .fila-n { background: #FFF1D6; color: #8F5600; }
+.tom-info .fila-n { background: rgba(96,16,80,0.07); color: var(--roxo-700); }
+.fila-texto { min-width: 0; }
+.fila-texto strong { display: block; font-size: 15.5px; font-weight: 700; color: var(--roxo-950); line-height: 1.3; }
+.fila-detalhe { display: block; margin-top: 4px; font-size: 13px; line-height: 1.5; color: var(--text-light); overflow-wrap: anywhere; }
+.fila-acao { display: inline-flex; align-items: center; gap: 4px; font-size: 14px; font-weight: 700; color: var(--roxo-700); white-space: nowrap; }
+.fila-acao svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.fila-vazia, .fila-carregando { display: flex; align-items: center; gap: 14px; padding: 22px 20px; font-size: 15px; color: var(--text-light); }
+.fila-vazia strong { color: var(--roxo-950); }
+.fila-vazia svg { width: 30px; height: 30px; flex: none; fill: none; stroke: var(--verde-dark); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.hoje-resumo { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 22px; margin-top: 16px; padding: 0 4px; font-size: 14px; color: var(--text-light); }
+.hoje-resumo strong { color: var(--roxo-950); font-variant-numeric: tabular-nums; }
+.hoje-resumo a { margin-left: auto; font-weight: 700; color: var(--roxo-700); }
+@media (max-width: 600px) {
+  .fila-item { grid-template-columns: 42px 1fr; gap: 6px 14px; padding: 14px 16px; }
+  .fila-n { width: 42px; height: 42px; font-size: 21px; }
+  .fila-acao { grid-column: 2; }
+  .hoje-resumo a { margin-left: 0; }
+}
+
+/* Sub-abas de Cadastros */
+.subnav { display: flex; gap: 6px; overflow-x: auto; margin: -8px 0 22px; padding-bottom: 4px; scrollbar-width: thin; }
+.subnav-btn { display: inline-flex; align-items: center; gap: 6px; flex: none; padding: 9px 16px; border: 1px solid rgba(96,16,80,0.16); border-radius: var(--radius-full); background: #fff; font-family: inherit; font-size: 14px; font-weight: 700; color: var(--roxo-700); cursor: pointer; transition: background 0.15s ease, color 0.15s ease; }
+.subnav-btn:hover { background: rgba(96,16,80,0.05); }
+.subnav-btn.active { background: var(--roxo-700); border-color: var(--roxo-700); color: #fff; }
+.subnav-btn .badge-pill { margin-left: 0; min-width: 20px; height: 20px; font-size: 11.5px; padding: 0 6px; }
+.secao-titulo { margin: 36px 0 14px; }
+
+/* "+ Lançar pedido": o formulário só aparece quando pedido */
+.bloco-novo { margin-bottom: 20px; }
+.bloco-novo > summary { list-style: none; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
+.bloco-novo > summary::-webkit-details-marker { display: none; }
+.bloco-novo > summary span { display: inline-block; font-size: 1.25em; line-height: 1; transition: transform 0.2s ease; }
+.bloco-novo[open] > summary span { transform: rotate(45deg); }
+.bloco-novo[open] > .panel { margin-top: 14px; }
+
+/* Barra inferior no celular */
+.bottom-nav { display: none; }
+.mobile-topbar button .ic-svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; display: block; }
+@media (max-width: 900px) {
+  .bottom-nav { display: grid; grid-template-columns: repeat(5, 1fr); position: fixed; left: 0; right: 0; bottom: 0; z-index: 1150; background: var(--roxo-950); border-top: 1px solid rgba(245,179,1,0.22); padding: 4px 4px calc(4px + env(safe-area-inset-bottom)); }
+  .bottom-nav a, .bottom-nav button { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-height: 54px; padding: 4px 2px; border: 0; background: none; font-family: inherit; font-size: 11.5px; font-weight: 700; color: rgba(255,255,255,0.74); text-decoration: none; cursor: pointer; }
+  .bottom-nav .ic svg { width: 23px; height: 23px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; display: block; }
+  .bottom-nav .active { color: var(--gold); }
+  .bottom-nav .badge-pill { position: absolute; top: 3px; left: 50%; margin-left: 7px; min-width: 18px; height: 18px; padding: 0 5px; font-size: 11px; }
+  body:has(.bottom-nav) .app-main { padding-bottom: 100px; }
+}
