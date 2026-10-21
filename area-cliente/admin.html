@@ -9,7 +9,7 @@
 <link rel="apple-touch-icon" href="../assets/img/brand/favicon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/css/style.css?v=38">
+<link rel="stylesheet" href="../assets/css/style.css?v=39">
 </head>
 <body class="pg-admin">
 <svg class="sprite" aria-hidden="true" focusable="false"><symbol id="m-grafico" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></symbol><symbol id="m-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol><symbol id="m-usuarios" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"/></symbol><symbol id="m-caixa" viewBox="0 0 24 24"><path d="M3 8l9-4 9 4v9l-9 4-9-4z"/><path d="M3 8l9 4 9-4M12 12v9"/></symbol><symbol id="m-painel" viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 10h6M9 14h6M9 18h3"/></symbol><symbol id="m-fabrica" viewBox="0 0 24 24"><path d="M3 21V10l5 3v-3l5 3V7l8 4v10z"/><path d="M7 17h2M12 17h2M17 17h1"/></symbol><symbol id="m-etiqueta" viewBox="0 0 24 24"><path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.4"/></symbol><symbol id="m-engrenagem" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></symbol><symbol id="m-casa" viewBox="0 0 24 24"><path d="M3 11l9-7 9 7M5 9.5V20h14V9.5M10 20v-6h4v6"/></symbol><symbol id="m-sair" viewBox="0 0 24 24"><path d="M14 4h5a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-5M10 16l-4-4 4-4M6 12h10"/></symbol><symbol id="m-carrinho" viewBox="0 0 24 24"><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2.5 3.5h3l2.4 11.2a1.5 1.5 0 0 0 1.5 1.3h8.4a1.5 1.5 0 0 0 1.5-1.2L21 7H6.3"/></symbol><symbol id="m-recibo" viewBox="0 0 24 24"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6M9 16h3"/></symbol><symbol id="m-calendario" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></symbol><symbol id="m-chat" viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></symbol><symbol id="m-usuario" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol><symbol id="m-globo" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></symbol><symbol id="m-hoje" viewBox="0 0 24 24"><path d="M4 13h4l2 3h4l2-3h4"/><path d="M4 13l2.5-8h11L20 13v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/></symbol><symbol id="m-pasta" viewBox="0 0 24 24"><path d="M3 6.5A1.5 1.5 0 0 1 4.5 5H9l2 2.5h8.5A1.5 1.5 0 0 1 21 9v9.5a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 18.5z"/></symbol><symbol id="m-mais" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol></svg>
@@ -140,6 +140,12 @@
       <div class="panel hidden" id="pedConcluidos">
         <div class="panel-header" style="flex-wrap:wrap; gap:10px;">
           <div><h2>Pedidos concluídos</h2><div class="subtitle">Entregues, vendas do balcão e cancelados, agrupados por dia</div></div>
+          <select id="ordPeriodo" class="ped-periodo" aria-label="Período">
+            <option value="30" selected>Últimos 30 dias</option>
+            <option value="90">Últimos 90 dias</option>
+            <option value="365">Últimos 12 meses</option>
+            <option value="0">Tudo</option>
+          </select>
           <div class="seg ord-filter" id="ordFilter">
             <button type="button" class="seg-btn active" data-ord="tudo">Tudo</button>
             <button type="button" class="seg-btn" data-ord="balcao">Balcão</button>
@@ -147,7 +153,7 @@
           </div>
         </div>
         <table class="data-table">
-          <thead><tr><th>Pedido</th><th>Revendedor</th><th>Data</th><th>Itens</th><th>Valor</th><th>Status</th><th>Ações</th></tr></thead>
+          <thead><tr><th>Pedido</th><th>Cliente</th><th>Data</th><th>Itens</th><th>Valor</th><th>Status</th><th>Ações</th></tr></thead>
           <tbody id="ordersBody"></tbody>
         </table>
       </div>
@@ -160,7 +166,7 @@
       </div>
 
       <details class="bloco-novo" id="novaLevaBox">
-        <summary class="btn btn-primary"><span aria-hidden="true">+</span> Registrar produção</summary>
+        <summary class="btn btn-primary"><span aria-hidden="true">+</span> Registrar leva</summary>
       <div class="panel">
         <div class="panel-header">
           <div><h2 id="prodFormTitle">Nova leva</h2><div class="subtitle" id="prodFormSubtitle">O que foi produzido entra no estoque, e o custo por litro sai sozinho</div></div>
@@ -618,9 +624,28 @@
         <div><h1>Equipe e acessos</h1><div class="subtitle">Quem administra o painel e quem atende no caixa da loja</div></div>
       </div>
 
+      <div class="panel" id="darAcessoPanel">
+        <div class="panel-header"><div><h2>Dar acesso</h2><div class="subtitle">Escolha alguém que já tem cadastro de revendedor e o tipo de acesso.</div></div></div>
+        <div class="order-form-grid">
+          <div class="field" style="margin-bottom:0;">
+            <label for="acessoPessoa">Pessoa</label>
+            <select id="acessoPessoa"><option value="">Carregando…</option></select>
+          </div>
+          <div class="field" style="margin-bottom:0;">
+            <label for="acessoPapel">Acesso</label>
+            <select id="acessoPapel">
+              <option value="atendente">Atendente do caixa da loja</option>
+              <option value="admin">Administrador (acesso total)</option>
+            </select>
+          </div>
+          <button type="button" class="btn btn-primary" id="acessoBtn">Dar acesso</button>
+        </div>
+        <div class="field-note-inline">Quem ainda não tem conta precisa se cadastrar antes em dupuroacai.com/revenda.</div>
+      </div>
+
       <div class="panel">
         <div class="panel-header">
-          <div><h2>Administradores</h2><div class="subtitle">Contas com acesso total ao painel. Para promover alguém, use "Tornar admin" em Cadastros › Revendedores.</div></div>
+          <div><h2>Administradores</h2><div class="subtitle">Contas com acesso total ao painel. Para incluir alguém, use "Dar acesso" acima.</div></div>
         </div>
         <table class="data-table">
           <thead><tr><th>Nome</th><th>E-mail</th><th>Ações</th></tr></thead>
@@ -630,7 +655,7 @@
 
       <div class="panel">
         <div class="panel-header">
-          <div><h2>Atendentes da loja (caixa)</h2><div class="subtitle">Contas que só registram vendas presenciais no caixa (PDV). Para dar acesso, use "Caixa" em Cadastros › Revendedores.</div></div>
+          <div><h2>Atendentes da loja (caixa)</h2><div class="subtitle">Contas que só registram vendas presenciais no caixa (PDV). Para incluir alguém, use "Dar acesso" acima.</div></div>
         </div>
         <table class="data-table">
           <thead><tr><th>Nome</th><th>E-mail</th><th>Ações</th></tr></thead>
@@ -709,8 +734,19 @@
         '<button type="button" class="btn btn-sm ' + (perigo ? 'btn-perigo' : 'btn-primary') + '" data-r="1">' + (opcoes.ok || (opcoes.soOk ? 'Entendi' : 'Confirmar')) + '</button>' +
         '</div></div>';
       fundo.querySelector('#dlgMsg').textContent = msg;
-      function fechar(r) { document.removeEventListener('keydown', tecla); fundo.remove(); resolve(r); }
-      function tecla(e) { if (e.key === 'Escape') fechar(false); }
+      function fechar(r) {
+        document.removeEventListener('keydown', tecla); fundo.remove();
+        if (focoAntes && focoAntes.focus) focoAntes.focus({ preventScroll: true });
+        resolve(r);
+      }
+      function tecla(e) {
+        if (e.key === 'Escape') return fechar(false);
+        if (e.key !== 'Tab') return;
+        var bs = fundo.querySelectorAll('button'), primeiro = bs[0], ultimo = bs[bs.length - 1];
+        if (e.shiftKey && document.activeElement === primeiro) { e.preventDefault(); ultimo.focus(); }
+        else if (!e.shiftKey && document.activeElement === ultimo) { e.preventDefault(); primeiro.focus(); }
+      }
+      var focoAntes = document.activeElement;
       fundo.addEventListener('click', function (e) {
         var b = e.target.closest('[data-r]');
         if (b) fechar(b.getAttribute('data-r') === '1');
@@ -718,7 +754,8 @@
       });
       document.addEventListener('keydown', tecla);
       document.body.appendChild(fundo);
-      fundo.querySelector('[data-r="1"]').focus();
+      // Em ação de perigo o Enter não pode confirmar por engano: foco no Cancelar.
+      (perigo && !opcoes.soOk ? fundo.querySelector('[data-r="0"]') : fundo.querySelector('[data-r="1"]')).focus();
     });
   }
   function confirmar(msg, opcoes) { return dialogo(msg, opcoes); }
@@ -1302,7 +1339,7 @@
             (p.multissabor ? '<span>' + p.estoqueTotal + ' un no total</span>' : '') + '</div>' +
           '<div class="estoque-sabores">' + partes.join('') + '</div>' +
           (produziveis[p.id] && l.peso
-            ? '<button type="button" class="btn btn-dark-outline btn-sm" data-produzir="' + p.id + '">Registrar produção</button>'
+            ? '<button type="button" class="btn btn-dark-outline btn-sm" data-produzir="' + p.id + '">Registrar leva</button>'
             : '<span></span>') +
           '</li>';
       }).join('') + '</ul>';
@@ -1394,7 +1431,7 @@
         ? '<span class="subtitle" style="margin:0;">você (conta atual)</span>'
         : '<button class="btn btn-dark-outline btn-sm" data-remove-admin="' + a.id + '">Remover admin</button>';
       return '<tr>' +
-        '<td><strong>' + esc(a.nome || '—') + '</strong></td>' +
+        '<td><strong>' + esc(a.nome || a.email || '—') + '</strong></td>' +
         '<td>' + esc(a.email || '—') + '</td>' +
         '<td class="admin-table-actions">' + action + '</td>' +
         '</tr>';
@@ -1404,7 +1441,7 @@
       btn.addEventListener('click', async function () {
         var a = adminsCache.find(function (x) { return String(x.id) === btn.getAttribute('data-remove-admin'); });
         if (!a) return;
-        var ok = await confirmar('Remover o acesso de administrador de "' + (a.nome || a.email) + '"? Ele volta a ser um revendedor comum (mantém a conta e o login).');
+        var ok = await confirmar('Remover o acesso de administrador de "' + (a.nome || a.email) + '"? Volta a ser revendedor comum, com a mesma conta e login.', { ok: 'Remover acesso', perigo: true });
         if (!ok) return;
         btn.disabled = true;
         var result = await DupuroAdmin.setProfileRole(a.id, 'revendedor');
@@ -1419,6 +1456,37 @@
     });
   }
 
+  // Dar acesso de admin ou de atendente do caixa a alguém já cadastrado.
+  // Usado pelo painel "Dar acesso" (Equipe) e pelo menu ⋯ do revendedor.
+  async function darAcesso(id, papel) {
+    var r = resellersCache.find(function (x) { return String(x.id) === String(id); });
+    if (!r) return;
+    var nome = r.empresa || r.nome || r.email;
+    var ok = await confirmar(papel === 'admin'
+      ? 'Tornar ' + nome + ' administrador? Passa a ter acesso total ao painel: aprovar contas, produtos, pedidos e cupons.'
+      : 'Tornar ' + nome + ' atendente do caixa da loja? Vai registrar vendas do balcão (baixam o estoque na hora), sem mexer em produtos, revendedores ou pedidos.',
+      { ok: papel === 'admin' ? 'Tornar administrador' : 'Dar acesso ao caixa' });
+    if (!ok) return;
+    var result = await DupuroAdmin.setProfileRole(r.id, papel);
+    if (result.error) { aviso('Não foi possível dar o acesso: ' + result.error.message); return; }
+    await Promise.all([renderResellers(), renderAdmins(), renderAtendentes()]);
+    await populateResellerSelect();
+    preencherAcesso();
+    toast(nome + (papel === 'admin' ? ' agora é administrador.' : ' agora tem acesso ao caixa.'));
+  }
+  async function preencherAcesso() {
+    var lista = await DupuroAdmin.getResellers();
+    resellersCache = lista;
+    document.getElementById('acessoPessoa').innerHTML = '<option value="">Escolha quem…</option>' + lista.map(function (r) {
+      return '<option value="' + r.id + '">' + esc((r.empresa ? r.empresa + ' · ' : '') + (r.nome || r.email || '')) + '</option>';
+    }).join('');
+  }
+  document.getElementById('acessoBtn').addEventListener('click', function () {
+    var id = document.getElementById('acessoPessoa').value;
+    if (!id) { aviso('Escolha a pessoa que vai receber o acesso.'); return; }
+    darAcesso(id, document.getElementById('acessoPapel').value);
+  });
+
   // ---- Atendentes (caixa/PDV) ----
   var atendentesCache = [];
   async function renderAtendentes() {
@@ -1426,7 +1494,7 @@
     if (!body) return;
     atendentesCache = await DupuroAdmin.getAtendentes();
     if (!atendentesCache.length) {
-      body.innerHTML = '<tr><td colspan="3"><div class="empty-state">Nenhum atendente ainda. Promova um revendedor com o botão "Caixa".</div></td></tr>';
+      body.innerHTML = '<tr><td colspan="3"><div class="empty-state">Nenhum atendente ainda. Use "Dar acesso" acima.</div></td></tr>';
       return;
     }
     body.innerHTML = atendentesCache.map(function (a) {
@@ -1443,7 +1511,7 @@
       btn.addEventListener('click', async function () {
         var a = atendentesCache.find(function (x) { return String(x.id) === btn.getAttribute('data-remove-atendente'); });
         if (!a) return;
-        var ok = await confirmar('Remover o acesso de caixa de "' + (a.nome || a.email) + '"? Ele volta a ser um revendedor comum (mantém a conta e o login).');
+        var ok = await confirmar('Remover o acesso de caixa de "' + (a.nome || a.email) + '"? Volta a ser revendedor comum, com a mesma conta e login.', { ok: 'Remover acesso', perigo: true });
         if (!ok) return;
         btn.disabled = true;
         var result = await DupuroAdmin.setProfileRole(a.id, 'revendedor');
@@ -1504,46 +1572,17 @@
     });
 
     body.querySelectorAll('[data-make-admin]').forEach(function (btn) {
-      btn.addEventListener('click', async function () {
-        var r = resellersCache.find(function (x) { return String(x.id) === btn.getAttribute('data-make-admin'); });
-        if (!r) return;
-        var ok = await confirmar('Tornar "' + (r.empresa || r.nome) + '" um ADMINISTRADOR? Ele passa a ter acesso total ao painel (aprovar contas, produtos, pedidos, cupons).');
-        if (!ok) return;
-        btn.disabled = true;
-        var result = await DupuroAdmin.setProfileRole(r.id, 'admin');
-        if (result.error) {
-          aviso('Não foi possível promover: ' + result.error.message);
-          btn.disabled = false;
-          return;
-        }
-        await renderResellers();
-        await populateResellerSelect();
-      });
+      btn.addEventListener('click', function () { darAcesso(btn.getAttribute('data-make-admin'), 'admin'); });
     });
-
     body.querySelectorAll('[data-make-atendente]').forEach(function (btn) {
-      btn.addEventListener('click', async function () {
-        var r = resellersCache.find(function (x) { return String(x.id) === btn.getAttribute('data-make-atendente'); });
-        if (!r) return;
-        var ok = await confirmar('Tornar "' + (r.empresa || r.nome) + '" um ATENDENTE de caixa? Ela poderá registrar vendas presenciais da loja (baixam o estoque na hora), mas não gerencia produtos, revendedores nem pedidos.');
-        if (!ok) return;
-        btn.disabled = true;
-        var result = await DupuroAdmin.setProfileRole(r.id, 'atendente');
-        if (result.error) {
-          aviso('Não foi possível tornar atendente: ' + result.error.message);
-          btn.disabled = false;
-          return;
-        }
-        await renderResellers();
-        await populateResellerSelect();
-      });
+      btn.addEventListener('click', function () { darAcesso(btn.getAttribute('data-make-atendente'), 'atendente'); });
     });
 
     body.querySelectorAll('[data-remove-reseller]').forEach(function (btn) {
       btn.addEventListener('click', async function () {
         var r = resellersCache.find(function (x) { return String(x.id) === btn.getAttribute('data-remove-reseller'); });
         if (!r) return;
-        var ok = await confirmar('Remover a conta de "' + (r.empresa || r.nome) + '"? Isso apaga o login do revendedor. Os pedidos e cupons dele continuam no histórico, só sem o nome vinculado.');
+        var ok = await confirmar('Remover a conta de "' + (r.empresa || r.nome) + '"? Isso apaga o login do revendedor. Os pedidos e cupons dele continuam no histórico, só sem o nome vinculado.', { ok: 'Remover conta', perigo: true });
         if (!ok) return;
         btn.disabled = true;
         var result = await DupuroAdmin.deleteReseller(r.id);
@@ -1616,7 +1655,7 @@
               '<div class="price">' + precoBRL(p.preco) + (p.modo === 'peso' ? ' / kg' : '') + '</div>' +
               '<div class="admin-table-actions">' +
                 '<button class="btn btn-dark-outline btn-sm" data-edit-product="' + p.id + '">Editar</button>' +
-                '<button class="btn btn-link-perigo btn-sm" data-delete-product="' + p.id + '">Excluir</button>' +
+                menuAcoes(p.nome, [{ attr: 'data-delete-product="' + p.id + '"', texto: 'Excluir produto', perigo: true }]) +
               '</div>' +
             '</div>' +
             '</div>';
@@ -1654,10 +1693,9 @@
             minHtml + stockHtml +
             '<h3>' + esc(p.nome) + '</h3>' +
             priceHtml +
-            '<div class="prod-fiscal">NCM ' + esc(p.ncm || '—') + ' · CSOSN ' + esc(p.csosn || '—') + ' · CFOP ' + esc(p.cfop || '—') + '</div>' +
             '<div class="admin-table-actions">' +
               '<button class="btn btn-dark-outline btn-sm" data-edit-product="' + p.id + '">Editar</button>' +
-              '<button class="btn btn-link-perigo btn-sm" data-delete-product="' + p.id + '">Excluir</button>' +
+              menuAcoes(p.nome, [{ attr: 'data-delete-product="' + p.id + '"', texto: 'Excluir produto', perigo: true }]) +
             '</div>' +
           '</div>' +
           '</div>';
@@ -1694,7 +1732,7 @@
           var msg = partner
             ? 'Excluir "' + p.nome + '" (varejo e atacado)? As duas versões serão removidas.'
             : 'Excluir "' + p.nome + '"?';
-          if (!await confirmar(msg)) return;
+          if (!await confirmar(msg, { ok: 'Excluir produto', perigo: true })) return;
           btn.disabled = true;
           if (partner) await DupuroAdmin.deleteProductById(partner.id);
           if (p.estoqueRefId == null) await DupuroAdmin.deleteProduct(p);
@@ -2193,8 +2231,10 @@
           : '<span class="status-badge cancelado">Inativo</span>') + '</td>' +
         '<td><div class="admin-table-actions">' +
           '<button class="btn btn-dark-outline btn-sm" data-edit-acomp="' + a.id + '">Editar</button>' +
-          '<button class="btn btn-dark-outline btn-sm" data-toggle-acomp="' + a.id + '">' + (a.ativo ? 'Desativar' : 'Ativar') + '</button>' +
-          '<button class="btn btn-link-perigo btn-sm" data-delete-acomp="' + a.id + '">Excluir</button>' +
+          menuAcoes(a.nome, [
+            { attr: 'data-toggle-acomp="' + a.id + '"', texto: a.ativo ? 'Desativar (some do caixa)' : 'Ativar' },
+            { attr: 'data-delete-acomp="' + a.id + '"', texto: 'Excluir acompanhamento', perigo: true }
+          ]) +
         '</div></td>' +
         '</tr>';
     }).join('');
@@ -2228,7 +2268,7 @@
     body.querySelectorAll('[data-delete-acomp]').forEach(function (btn) {
       btn.addEventListener('click', async function () {
         var a = acompCache.find(function (x) { return String(x.id) === btn.getAttribute('data-delete-acomp'); });
-        if (!a || !await confirmar('Excluir o acompanhamento "' + a.nome + '"?')) return;
+        if (!a || !await confirmar('Excluir o acompanhamento "' + a.nome + '"? Ele some do caixa.', { ok: 'Excluir acompanhamento', perigo: true })) return;
         btn.disabled = true;
         await DupuroAdmin.deleteAcompanhamento(a.id);
         if (document.getElementById('acompEditingId').value === String(a.id)) resetAcompForm();
@@ -2551,7 +2591,11 @@
     el.classList.add('show');
     clearTimeout(toastTimer);
     if (desfazer) el.querySelector('button').addEventListener('click', function () { el.classList.remove('show'); desfazer(); });
-    toastTimer = setTimeout(function () { el.classList.remove('show'); }, desfazer ? 9000 : 4000);
+    var tempo = desfazer ? 9000 : 4000;
+    function contar() { clearTimeout(toastTimer); toastTimer = setTimeout(function () { el.classList.remove('show'); }, tempo); }
+    el.onmouseenter = el.onfocusin = function () { clearTimeout(toastTimer); };
+    el.onmouseleave = el.onfocusout = contar;
+    contar();
   }
 
   // Menus "⋯": a lista abre em position:fixed ao lado do botão, porque as tabelas
@@ -2765,6 +2809,15 @@
     if (!await mudarStatus(o, alvo)) b.disabled = false;
   });
 
+  // Menu "⋯" padrão: ações raras e destrutivas ficam sempre aqui (nunca soltas).
+  // opcoes = [{ attr: 'data-x="1"', texto: 'Excluir', perigo: true }]
+  function menuAcoes(rotulo, opcoes) {
+    return '<details class="menu-acoes"><summary class="btn btn-dark-outline btn-sm" aria-label="Mais ações: ' + esc(rotulo) + '">⋯</summary>' +
+      '<div class="menu-acoes-lista">' + opcoes.map(function (op) {
+        return '<button type="button"' + (op.perigo ? ' class="perigo"' : '') + ' ' + op.attr + '>' + op.texto + '</button>';
+      }).join('') + '</div></details>';
+  }
+
   // Menu "⋯" de um pedido concluído: correções de status e excluir.
   function menuPedido(o) {
     var opcoes = [];
@@ -2775,11 +2828,9 @@
       if (o.status === 'cancelado') opcoes.push(['enviado', 'Reabrir como novo']);
       if (o.status !== 'cancelado') opcoes.push(['cancelado', 'Cancelar pedido']);
     }
-    return '<details class="menu-acoes"><summary class="btn btn-dark-outline btn-sm" aria-label="Mais ações do ' + esc(o.numero) + '">⋯</summary>' +
-      '<div class="menu-acoes-lista">' +
-        opcoes.map(function (op) { return '<button type="button" data-mudar-status="' + op[0] + '" data-num="' + esc(o.numero) + '">' + op[1] + '</button>'; }).join('') +
-        '<button type="button" class="perigo" data-remove-order="' + esc(o.numero) + '">Excluir pedido</button>' +
-      '</div></details>';
+    return menuAcoes(o.numero, opcoes.map(function (op) {
+      return { attr: 'data-mudar-status="' + op[0] + '" data-num="' + esc(o.numero) + '"', texto: op[1] };
+    }).concat([{ attr: 'data-remove-order="' + esc(o.numero) + '"', texto: 'Excluir pedido', perigo: true }]));
   }
 
   async function renderOrders() {
@@ -2788,7 +2839,9 @@
         // Concluídos = o que não está mais na fila (entregue, cancelado e todo o balcão).
         return o.origem === 'loja' || o.status === 'entregue' || o.status === 'cancelado';
       })
-      .filter(function (o) { return bateBusca([o.numero, o.revendedorNome]); });
+      .filter(function (o) { return bateBusca([o.numero, o.revendedorNome]); })
+      // Período (a busca procura em tudo, senão "não achei" engana).
+      .filter(function (o) { return buscaPedidos || !periodoDias || String(o.data) >= desde(periodoDias); });
     var body = document.getElementById('ordersBody');
     if (!orders.length) {
       body.innerHTML = '<tr><td colspan="7"><div class="empty-state">' + (buscaPedidos ? 'Nenhum pedido encontrado com essa busca.' : 'Nenhum pedido neste recorte.') + '</div></td></tr>';
@@ -2830,7 +2883,8 @@
         '<td><strong>' + o.numero + '</strong>' +
           (o.items.length > 1 ? ' <span class="status-badge enviado">' + o.items.length + ' itens</span>' : '') +
           (o.parcial ? ' <span class="status-badge processando" title="Pedido misto: aqui aparecem só os itens deste recorte; o valor é a parte correspondente.">parcial</span>' : '') +
-          (o.usaEstoque ? '' : ' <span class="status-badge neutro" title="Copo e self-service não controlam estoque por unidade">não usa estoque</span>') +
+          // No balcão (copo/self-service) não mexer no estoque é o normal: o selo só aparece em pedido de revenda.
+          (o.usaEstoque || o.origem === 'loja' ? '' : ' <span class="status-badge neutro" title="Lançado sem mexer no estoque (pedido antigo)">fora do estoque</span>') +
         '</td>' +
         '<td>' + esc(o.revendedorNome) + '</td>' +
         '<td>' + formatDate(o.data) + '</td>' +
@@ -2868,6 +2922,12 @@
   }
 
   var ordersAtuais = [], porDiaAtual = {}, linhaPedidoAtual = null;
+  var periodoDias = 30;
+  function desde(dias) { return new Date(Date.parse(hojeCuiaba()) - dias * 864e5).toISOString().slice(0, 10); }
+  document.getElementById('ordPeriodo').addEventListener('change', function () {
+    periodoDias = +this.value;
+    renderOrders();
+  });
   function pedidoPorNumero(num) { return ordersAtuais.filter(function (x) { return x.numero === num; })[0]; }
 
   // Um ouvinte só pra tabela inteira (as linhas mudam a cada render/abertura de dia).
@@ -3156,7 +3216,7 @@
         '<td>' + esc(c.desc) + '</td>' +
         '<td>' + formatDate(c.validade) + '</td>' +
         '<td>' + (c.usado ? 'Sim' : 'Não') + '</td>' +
-        '<td><button class="btn btn-dark-outline btn-sm" data-delete-coupon="' + c.id + '">Apagar</button></td>' +
+        '<td class="admin-table-actions">' + menuAcoes(c.code, [{ attr: 'data-delete-coupon="' + c.id + '"', texto: 'Apagar cupom', perigo: true }]) + '</td>' +
         '</tr>';
     }).join('');
 
@@ -3294,6 +3354,19 @@
   document.getElementById('cadSubnav').addEventListener('click', function (e) {
     var b = e.target.closest('[data-sub]');
     if (b) goTo('cadastros', b.getAttribute('data-sub'));
+  });
+  // Setas ←/→ andam entre as sub-abas e as etapas (padrão de abas pra teclado).
+  ['cadSubnav', 'pedEtapas'].forEach(function (id) {
+    document.getElementById(id).addEventListener('keydown', function (e) {
+      if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+      var bs = Array.prototype.slice.call(this.querySelectorAll('[role="tab"]'));
+      var i = bs.indexOf(document.activeElement);
+      if (i < 0) return;
+      e.preventDefault();
+      var prox = bs[(i + (e.key === 'ArrowRight' ? 1 : bs.length - 1)) % bs.length];
+      prox.focus();
+      prox.click();
+    });
   });
   window.addEventListener('popstate', function () {
     var e = lerEndereco();
@@ -3683,7 +3756,7 @@
           '<td class="admin-table-actions">' +
             '<button class="btn btn-dark-outline btn-sm" data-prod-det="' + l.id + '">Detalhes</button>' +
             '<button class="btn btn-dark-outline btn-sm" data-prod-edit="' + l.id + '">Editar</button>' +
-            '<button class="btn btn-link-perigo btn-sm" data-prod-del="' + l.id + '">Excluir</button>' +
+            menuAcoes('leva', [{ attr: 'data-prod-del="' + l.id + '"', texto: 'Excluir leva', perigo: true }]) +
           '</td>' +
         '</tr>' +
         '<tr class="order-details hidden" data-prod-det-row="' + l.id + '"><td colspan="6">' + det + '</td></tr>';
@@ -3746,7 +3819,7 @@
       var base = admPrecoProduto(pr.produtoId);
       var desc = pr.tipo === 'combo' ? 'leve ' + pr.comboQtd + ' por ' + moeda(pr.precoPromo) : 'de ' + moeda(base) + ' por ' + moeda(pr.precoPromo);
       return '<tr><td>' + admNomeProduto(pr.produtoId) + '</td><td>' + desc + '</td>' +
-        '<td class="admin-table-actions"><button class="btn btn-danger-outline btn-sm" data-adm-promo-del="' + pr.id + '">Remover</button></td></tr>';
+        '<td class="admin-table-actions">' + menuAcoes('promoção', [{ attr: 'data-adm-promo-del="' + pr.id + '"', texto: 'Remover promoção', perigo: true }]) + '</td></tr>';
     }).join('');
     body.querySelectorAll('[data-adm-promo-del]').forEach(function (btn) {
       btn.addEventListener('click', async function () { btn.disabled = true; await DupuroAdmin.deletePromocao(btn.getAttribute('data-adm-promo-del')); await renderPromocoesAdmin(); });
@@ -3798,7 +3871,7 @@
     estoque: [renderProducts, resetProdForm, renderProducoes],
     numeros: [renderOverview, renderAudits, renderCaixaFechamentos],
     cadastros: [renderPending, renderResellers, renderProducts, renderAcompanhamentos, renderPromocoesAdmin, renderCoupons, loadLimiteLitros, populateResellerSelect],
-    equipe: [renderAdmins, renderAtendentes],
+    equipe: [renderAdmins, renderAtendentes, preencherAcesso],
     conta: []
   };
   var jaRodou = new Map();
