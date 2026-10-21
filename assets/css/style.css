@@ -1285,10 +1285,10 @@ select:focus-visible,
   font-size: 20px;
 }
 
-.tab-panel { animation: fadeUp 0.4s ease both; }
+.tab-panel { animation: fadeUp 0.4s ease backwards; /* backwards: não deixa transform preso (quebraria menus position:fixed) */ }
 .tab-panel.hidden { animation: none; }
 .tab-panel .stat-card,
-.tab-panel .panel { animation: fadeUp 0.45s ease both; }
+.tab-panel .panel { animation: fadeUp 0.45s ease backwards; }
 .tab-panel .stat-card:nth-child(1) { animation-delay: 0.03s; }
 .tab-panel .stat-card:nth-child(2) { animation-delay: 0.09s; }
 .tab-panel .stat-card:nth-child(3) { animation-delay: 0.15s; }
@@ -2465,3 +2465,59 @@ a.stat-card.alerta .stat-sub { color: var(--warning); font-weight: 800; }
   .bottom-nav .badge-pill { position: absolute; top: 3px; left: 50%; margin-left: 7px; min-width: 18px; height: 18px; padding: 0 5px; font-size: 11px; }
   body:has(.bottom-nav) .app-main { padding-bottom: 100px; }
 }
+
+/* Fila de pedidos (A confirmar / Em andamento) */
+.ped-barra { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; margin-bottom: 18px; }
+.ped-barra .subnav { margin: 0; flex: 1 1 auto; }
+.ped-busca { flex: 0 1 260px; min-width: 0; padding: 10px 14px; border: 1px solid rgba(96,16,80,0.18); border-radius: var(--radius-full); background: #fff; font: inherit; font-size: 15px; color: var(--roxo-950); }
+.ped-busca:focus-visible { outline: 3px solid var(--gold); outline-offset: 1px; }
+.subnav-btn .badge-pill.neutro { background: rgba(96,16,80,0.12); color: var(--roxo-700); }
+.subnav-btn.active .badge-pill.neutro { background: rgba(255,255,255,0.22); color: #fff; }
+.ped-fila { display: grid; gap: 12px; margin-bottom: 24px; }
+.ped-fila:empty { display: none; }
+.ped-fila > .fila-vazia { background: #fff; border: 1px solid rgba(96,16,80,0.10); border-radius: 16px; }
+.ped-card { background: #fff; border: 1px solid rgba(96,16,80,0.10); border-radius: 16px; padding: 18px 20px; }
+.ped-topo { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
+.ped-num { font-size: 16px; color: var(--roxo-950); font-variant-numeric: tabular-nums; }
+.ped-quando { font-size: 13px; color: var(--text-light); }
+.ped-total { margin-left: auto; font-size: 17px; font-weight: 800; color: var(--roxo-950); font-variant-numeric: tabular-nums; }
+.ped-cliente { margin-top: 6px; font-size: 15px; font-weight: 600; color: var(--roxo-900); }
+.ped-whats { margin-left: 8px; font-size: 13px; font-weight: 700; color: var(--verde-dark); }
+.ped-endereco { margin-top: 2px; font-size: 13.5px; color: var(--text-light); }
+.ped-itens { list-style: none; margin: 12px 0 0; padding: 0; border-top: 1px solid rgba(96,16,80,0.08); }
+.ped-itens li { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 8px 0; border-bottom: 1px solid rgba(96,16,80,0.06); font-size: 14.5px; color: var(--roxo-950); }
+.ped-estoque { flex: none; font-size: 12.5px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.ped-estoque.ok { color: var(--verde-dark); }
+.ped-estoque.falta { color: var(--danger); }
+.ped-aviso { margin: 10px 0 0; font-size: 13.5px; font-weight: 600; color: var(--danger); }
+.ped-acoes { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+.ped-acoes .btn[disabled] { opacity: 0.45; cursor: not-allowed; }
+.status-badge.canal-delivery { background: rgba(31,158,142,0.14); color: #0F6B60; }
+@media (max-width: 600px) {
+  .ped-busca { flex: 1 1 100%; }
+  .ped-card { padding: 16px; }
+  .ped-acoes .btn { flex: 1 1 auto; }
+}
+
+/* Aviso com "Desfazer" (fica acima da barra inferior no celular) */
+.admin-toast { position: fixed; left: 50%; bottom: 24px; z-index: 1300; display: flex; align-items: center; gap: 16px; max-width: calc(100vw - 32px); padding: 12px 14px 12px 18px; border-radius: 14px; background: var(--roxo-950); color: #fff; font-size: 14.5px; box-shadow: 0 10px 30px rgba(36,8,32,0.35); transform: translate(-50%, 20px); opacity: 0; pointer-events: none; transition: transform 0.2s ease, opacity 0.2s ease; }
+.admin-toast.show { transform: translate(-50%, 0); opacity: 1; pointer-events: auto; }
+.admin-toast button { flex: none; border: 0; background: none; padding: 6px 8px; font: inherit; font-weight: 800; color: var(--gold); cursor: pointer; border-radius: 8px; }
+.admin-toast button:focus-visible { outline: 2px solid var(--gold); }
+@media (max-width: 900px) { .admin-toast { bottom: calc(76px + env(safe-area-inset-bottom)); } }
+@media (prefers-reduced-motion: reduce) { .admin-toast { transition: none; } }
+
+/* Menu "⋯" de ações menos comuns (fica por cima da tabela, não é cortado) */
+.menu-acoes { position: relative; display: inline-block; }
+.menu-acoes > summary { list-style: none; cursor: pointer; min-width: 38px; justify-content: center; }
+.menu-acoes > summary::-webkit-details-marker { display: none; }
+.menu-acoes-lista { position: absolute; right: 0; top: calc(100% + 6px); z-index: 50; min-width: 220px; padding: 6px; background: #fff; border: 1px solid rgba(96,16,80,0.14); border-radius: 12px; box-shadow: 0 12px 28px rgba(36,8,32,0.16); display: grid; }
+.menu-acoes-lista button { text-align: left; border: 0; background: none; padding: 10px 12px; border-radius: 8px; font: inherit; font-size: 14px; font-weight: 600; color: var(--roxo-950); cursor: pointer; white-space: nowrap; }
+.menu-acoes-lista button:hover, .menu-acoes-lista button:focus-visible { background: rgba(96,16,80,0.06); outline: none; }
+.menu-acoes-lista button.perigo { color: var(--danger); }
+.btn-link-perigo { background: none; border: 0; color: var(--danger); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; margin-left: 6px; }
+.btn-link-perigo:hover { color: #8E2A1F; }
+
+/* Produção: sabor ao lado do produto */
+.item-row .i-sabor { flex: 0 1 190px; min-width: 0; }
+@media (max-width: 600px) { .item-row .i-sabor { flex: 1 1 100%; } }

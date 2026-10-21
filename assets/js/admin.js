@@ -650,6 +650,26 @@ var DupuroAdmin = (function () {
     return r.error ? [] : (r.data || []);
   }
 
+  // Pago → saiu pra entrega → entregue (o horário de cada passo fica gravado).
+  async function setDeliveryStatus(id, status) {
+    var campos = { status: status, atualizado_em: new Date().toISOString() };
+    if (status === 'em_rota') campos.saiu_em = campos.atualizado_em;
+    if (status === 'entregue') campos.entregue_em = campos.atualizado_em;
+    var r = await client.from('delivery_pedidos').update(campos).eq('id', id);
+    return { error: r.error };
+  }
+
+  // Contagem leve pro aviso de pedido novo (o admin confere a cada minuto, sem
+  // baixar a lista inteira): pedidos de revendedor esperando confirmação e
+  // entregas do delivery já pagas.
+  async function getContagemNovos() {
+    var r = await Promise.all([
+      client.from('orders').select('numero', { count: 'exact', head: true }).eq('status', 'enviado'),
+      client.from('delivery_pedidos').select('id', { count: 'exact', head: true }).eq('status', 'pago')
+    ]);
+    return { pedidos: r[0].count || 0, delivery: r[1].count || 0 };
+  }
+
   // ---------- Cupons ----------
   // Só o admin gera e apaga cupons (ver migration_004_cupons_admin.sql).
   async function getAllCoupons() {
@@ -719,7 +739,7 @@ var DupuroAdmin = (function () {
       .in('producao_id', ids);
     var itensResult = await client
       .from('producao_itens')
-      .select('id, producao_id, produto_id, produto_nome, quantidade, litros_unit')
+      .select('id, producao_id, produto_id, produto_nome, sabor, quantidade, litros_unit')
       .in('producao_id', ids);
 
     var gastosBy = {};
@@ -733,7 +753,7 @@ var DupuroAdmin = (function () {
       var qtd = Number(it.quantidade) || 0;
       var lu = Number(it.litros_unit) || 0;
       (itensBy[it.producao_id] = itensBy[it.producao_id] || []).push({
-        id: it.id, produtoId: it.produto_id, nome: it.produto_nome,
+        id: it.id, produtoId: it.produto_id, nome: it.produto_nome, sabor: it.sabor || null,
         quantidade: qtd, litrosUnit: lu, litrosTotal: qtd * lu
       });
     });
@@ -758,49 +778,30 @@ var DupuroAdmin = (function () {
   // header = { data, rotulo, observacao }
   // gastos = [{ descricao, categoria, valor }]
   // itens  = [{ produtoId, nome, quantidade, litrosUnit }]
-  async function createProducao(header, gastos, itens) {
-    var ins = await client.from('producoes').insert({
-      data: header.data || null,
-      rotulo: header.rotulo || null,
-      observacao: header.observacao || null
-    }).select('id').single();
-    if (ins.error) return { error: ins.error };
-    var id = ins.data.id;
-    var filhosErro = await inserirFilhosProducao(id, gastos, itens);
-    return { error: filhosErro, id: id };
-  }
-
-  async function updateProducao(id, header, gastos, itens) {
-    var upd = await client.from('producoes').update({
-      data: header.data || null,
-      rotulo: header.rotulo || null,
-      observacao: header.observacao || null
-    }).eq('id', id);
-    if (upd.error) return { error: upd.error };
-    // Recria os filhos: tabela só-admin, então apagar e reinserir é seguro.
-    await client.from('producao_gastos').delete().eq('producao_id', id);
-    await client.from('producao_itens').delete().eq('producao_id', id);
-    var filhosErro = await inserirFilhosProducao(id, gastos, itens);
-    return { error: filhosErro };
-  }
-
-  async function inserirFilhosProducao(id, gastos, itens) {
-    var gRows = (gastos || []).map(function (g) {
-      return { producao_id: id, descricao: g.descricao || null, categoria: g.categoria, valor: g.valor || 0 };
+  // Gravar e apagar leva passam pelo banco numa transação só (migration_040):
+  // a leva SOMA no estoque, e editar aplica só a diferença entre itens novos e
+  // antigos. Se o estoque já foi vendido, o banco recusa e nada muda.
+  async function salvarProducao(id, header, gastos, itens) {
+    var r = await client.rpc('salvar_producao', {
+      p_id: id || null,
+      p_header: { data: header.data || null, rotulo: header.rotulo || null, observacao: header.observacao || null },
+      p_gastos: (gastos || []).map(function (g) {
+        return { descricao: g.descricao || null, categoria: g.categoria, valor: g.valor || 0 };
+      }),
+      p_itens: (itens || []).map(function (it) {
+        return {
+          produto_id: it.produtoId || null, produto_nome: it.nome || null, sabor: it.sabor || null,
+          quantidade: it.quantidade || 0, litros_unit: it.litrosUnit || 0
+        };
+      })
     });
-    var iRows = (itens || []).map(function (it) {
-      return {
-        producao_id: id, produto_id: it.produtoId || null, produto_nome: it.nome || null,
-        quantidade: it.quantidade || 0, litros_unit: it.litrosUnit || 0
-      };
-    });
-    if (gRows.length) { var gr = await client.from('producao_gastos').insert(gRows); if (gr.error) return gr.error; }
-    if (iRows.length) { var ir = await client.from('producao_itens').insert(iRows); if (ir.error) return ir.error; }
-    return null;
+    return { error: r.error, id: r.data };
   }
+  async function createProducao(header, gastos, itens) { return salvarProducao(null, header, gastos, itens); }
+  async function updateProducao(id, header, gastos, itens) { return salvarProducao(id, header, gastos, itens); }
 
   async function deleteProducao(id) {
-    var result = await client.from('producoes').delete().eq('id', id);
+    var result = await client.rpc('excluir_producao', { p_id: id });
     return { error: result.error };
   }
 
@@ -888,6 +889,8 @@ var DupuroAdmin = (function () {
     changePassword: changePassword,
     getAllOrders: getAllOrders,
     getDeliveryPedidos: getDeliveryPedidos,
+    setDeliveryStatus: setDeliveryStatus,
+    getContagemNovos: getContagemNovos,
     getNextOrderNumber: getNextOrderNumber,
     createOrder: createOrder,
     createOrderCart: createOrderCart,

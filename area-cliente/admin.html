@@ -9,7 +9,7 @@
 <link rel="apple-touch-icon" href="../assets/img/brand/favicon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/css/style.css?v=32">
+<link rel="stylesheet" href="../assets/css/style.css?v=33">
 </head>
 <body>
 <svg class="sprite" aria-hidden="true" focusable="false"><symbol id="m-grafico" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></symbol><symbol id="m-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol><symbol id="m-usuarios" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"/></symbol><symbol id="m-caixa" viewBox="0 0 24 24"><path d="M3 8l9-4 9 4v9l-9 4-9-4z"/><path d="M3 8l9 4 9-4M12 12v9"/></symbol><symbol id="m-painel" viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 10h6M9 14h6M9 18h3"/></symbol><symbol id="m-fabrica" viewBox="0 0 24 24"><path d="M3 21V10l5 3v-3l5 3V7l8 4v10z"/><path d="M7 17h2M12 17h2M17 17h1"/></symbol><symbol id="m-etiqueta" viewBox="0 0 24 24"><path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.4"/></symbol><symbol id="m-engrenagem" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></symbol><symbol id="m-casa" viewBox="0 0 24 24"><path d="M3 11l9-7 9 7M5 9.5V20h14V9.5M10 20v-6h4v6"/></symbol><symbol id="m-sair" viewBox="0 0 24 24"><path d="M14 4h5a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-5M10 16l-4-4 4-4M6 12h10"/></symbol><symbol id="m-carrinho" viewBox="0 0 24 24"><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2.5 3.5h3l2.4 11.2a1.5 1.5 0 0 0 1.5 1.3h8.4a1.5 1.5 0 0 0 1.5-1.2L21 7H6.3"/></symbol><symbol id="m-recibo" viewBox="0 0 24 24"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6M9 16h3"/></symbol><symbol id="m-calendario" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></symbol><symbol id="m-chat" viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></symbol><symbol id="m-usuario" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol><symbol id="m-globo" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></symbol><symbol id="m-hoje" viewBox="0 0 24 24"><path d="M4 13h4l2 3h4l2-3h4"/><path d="M4 13l2.5-8h11L20 13v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/></symbol><symbol id="m-pasta" viewBox="0 0 24 24"><path d="M3 6.5A1.5 1.5 0 0 1 4.5 5H9l2 2.5h8.5A1.5 1.5 0 0 1 21 9v9.5a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 18.5z"/></symbol><symbol id="m-mais" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol></svg>
@@ -58,6 +58,15 @@
         <div><h1>Pedidos</h1><div class="subtitle">Confirme os pedidos dos revendedores e acompanhe todas as vendas</div></div>
       </div>
 
+      <div class="ped-barra">
+        <div class="subnav ped-etapas" id="pedEtapas" role="tablist" aria-label="Etapa dos pedidos">
+          <button type="button" class="subnav-btn active" role="tab" aria-selected="true" data-etapa="confirmar">A confirmar <span class="badge-pill hidden" id="nConfirmar"></span></button>
+          <button type="button" class="subnav-btn" role="tab" aria-selected="false" data-etapa="andamento">Em andamento <span class="badge-pill neutro hidden" id="nAndamento"></span></button>
+          <button type="button" class="subnav-btn" role="tab" aria-selected="false" data-etapa="concluidos">Concluídos</button>
+        </div>
+        <input type="search" id="pedBusca" class="ped-busca" placeholder="Buscar nº ou cliente" aria-label="Buscar pedido por número ou cliente" autocomplete="off">
+      </div>
+
       <details class="bloco-novo" id="novoPedidoBox">
         <summary class="btn btn-primary"><span aria-hidden="true">+</span> Lançar pedido</summary>
       <div class="panel">
@@ -81,8 +90,8 @@
           <div class="field" style="margin-bottom:0;">
             <label for="orderStatus">Status</label>
             <select id="orderStatus">
-              <option value="processando">Processando</option>
-              <option value="enviado">Enviado</option>
+              <option value="enviado">Novo (esperando confirmação)</option>
+              <option value="processando" selected>Confirmado (baixa o estoque)</option>
               <option value="entregue">Entregue</option>
               <option value="cancelado">Cancelado</option>
             </select>
@@ -126,9 +135,11 @@
       </div>
       </details>
 
-      <div class="panel">
+      <div class="ped-fila" id="pedFila" aria-live="polite"></div>
+
+      <div class="panel hidden" id="pedConcluidos">
         <div class="panel-header" style="flex-wrap:wrap; gap:10px;">
-          <h2>Todos os pedidos</h2>
+          <div><h2>Pedidos concluídos</h2><div class="subtitle">Entregues, vendas do balcão e cancelados, agrupados por dia</div></div>
           <div class="seg ord-filter" id="ordFilter">
             <button type="button" class="seg-btn active" data-ord="tudo">Tudo</button>
             <button type="button" class="seg-btn" data-ord="balcao">🛍️ Balcão</button>
@@ -160,7 +171,7 @@
 
       <div class="panel">
         <div class="panel-header">
-          <div><h2 id="prodFormTitle">Nova leva</h2><div class="subtitle" id="prodFormSubtitle">Lance os gastos e o que foi produzido — o custo por litro sai sozinho</div></div>
+          <div><h2 id="prodFormTitle">Nova leva</h2><div class="subtitle" id="prodFormSubtitle">O que foi produzido entra no estoque, e o custo por litro sai sozinho</div></div>
           <button type="button" class="btn btn-dark-outline btn-sm hidden" id="prodEditCancel">Cancelar edição</button>
         </div>
         <form id="prodForm">
@@ -184,7 +195,7 @@
 
           <!-- Produtos produzidos -->
           <div class="cart-head" style="margin-top:22px;">O que foi produzido</div>
-          <div class="field-note-inline" style="margin-bottom:8px;">Escolha os produtos e a quantidade. O volume (litros) vem do cadastro do produto.</div>
+          <div class="field-note-inline" style="margin-bottom:8px;">Escolha o produto, o sabor e quantas unidades saíram. Ao salvar, elas <strong>entram no estoque</strong>.</div>
           <div id="prodItens"></div>
           <button type="button" class="btn btn-dark-outline btn-sm" id="prodAddItem">+ Adicionar produto</button>
 
@@ -649,6 +660,8 @@
   </main>
 </div>
 
+<div class="admin-toast" id="adminToast" role="status" aria-live="polite"></div>
+
 <nav class="bottom-nav" aria-label="Navegação principal">
   <a href="#inicio" data-tab="inicio" class="active"><span class="ic"><svg><use href="#m-hoje"/></svg></span><span>Início</span></a>
   <a href="#pedidos" data-tab="pedidos"><span class="ic"><svg><use href="#m-painel"/></svg></span><span>Pedidos</span><span class="badge-pill hidden" data-badge="pedidos"></span></a>
@@ -667,13 +680,13 @@
 <script>
   // Escapa texto antes de ir pro innerHTML (dado de revendedor/cliente nunca vira HTML).
   // Link de WhatsApp pro cadastro (telefone vem em formatos variados: +55..., (66) 9..., 659...).
-  function linkWhats(p) {
+  function linkWhats(p, assunto) {
     var d = String(p.telefone || '').replace(/\D/g, '');
     if (d.length === 10 || d.length === 11) d = '55' + d;
     if (d.length < 12 || d.length > 13) return '';
     var nome = String(p.nome || '').trim().split(/\s+/)[0] || '';
     nome = nome.charAt(0).toUpperCase() + nome.slice(1).toLowerCase();
-    var msg = 'Olá' + (nome ? ', ' + nome : '') + '! Aqui é da Dupuro Açaí. Recebemos seu cadastro pra revenda' + (p.empresa ? ' (' + p.empresa + ')' : '') + ' e queremos conversar com você.';
+    var msg = 'Olá' + (nome ? ', ' + nome : '') + '! Aqui é da Dupuro Açaí. ' + (assunto || 'Recebemos seu cadastro pra revenda' + (p.empresa ? ' (' + p.empresa + ')' : '') + ' e queremos conversar com você.');
     return 'https://wa.me/' + d + '?text=' + encodeURIComponent(msg);
   }
   // Diálogos na própria tela (no lugar de window.confirm/alert, que destoam e
@@ -741,6 +754,7 @@
         };
       }
     });
+    DupuroAdmin.limparCache = function () { cache = {}; };
   })();
 
   function formatDate(d) {
@@ -749,9 +763,13 @@
     return parts[2] + '/' + parts[1] + '/' + parts[0];
   }
 
-  function statusBadge(status) {
-    var labels = { entregue: 'Entregue', enviado: 'Enviado', processando: 'Processando', cancelado: 'Cancelado' };
-    return '<span class="status-badge ' + status + '">' + (labels[status] || status) + '</span>';
+  // Nomes na tela (o banco continua com enviado/processando/entregue/cancelado):
+  // pedido do revendedor chega "Novo", o admin confirma (baixa o estoque) e
+  // depois marca "Entregue". Venda do balcão já nasce entregue = "Vendido".
+  var STATUS_LABEL = { enviado: 'Novo', processando: 'Confirmado', entregue: 'Entregue', cancelado: 'Cancelado' };
+  function statusBadge(status, origem) {
+    var label = origem === 'loja' && status === 'entregue' ? 'Vendido' : (STATUS_LABEL[status] || status);
+    return '<span class="status-badge ' + status + '">' + label + '</span>';
   }
 
   // ---- Visão geral (gráficos) ----
@@ -1394,28 +1412,33 @@
         '<td class="admin-table-actions">' +
           (linkWhats(p) ? '<a class="btn btn-whats btn-sm" href="' + linkWhats(p) + '" target="_blank" rel="noopener" title="Conversar no WhatsApp">WhatsApp</a>' : '') +
           '<button class="btn btn-green btn-sm" data-approve="' + p.id + '">Aprovar</button>' +
-          '<button class="btn btn-dark-outline btn-sm" data-reject="' + p.id + '">Rejeitar</button>' +
+          '<button class="btn btn-link-perigo btn-sm" data-reject="' + p.id + '">Rejeitar</button>' +
         '</td>' +
         '</tr>';
     }).join('');
 
-    body.querySelectorAll('[data-approve]').forEach(function (btn) {
-      btn.addEventListener('click', async function () {
-        btn.disabled = true;
-        await DupuroAdmin.setProfileStatus(btn.getAttribute('data-approve'), 'aprovado');
-        await renderPending();
-        await renderResellers();
-        await populateResellerSelect();
-        await renderOverview();
+    // Aprovar e rejeitar mostram "Desfazer" (volta o cadastro pra pendente).
+    async function decidir(id, status) {
+      var p = pending.filter(function (x) { return String(x.id) === String(id); })[0];
+      var nome = p ? (p.empresa || p.nome || 'Cadastro') : 'Cadastro';
+      var r = await DupuroAdmin.setProfileStatus(id, status);
+      if (r && r.error) { aviso('Não foi possível ' + (status === 'aprovado' ? 'aprovar' : 'rejeitar') + ' ' + nome + ': ' + r.error.message); await renderPending(); return; }
+      await renderPending();
+      await renderResellers();
+      await populateResellerSelect();
+      renderInicio();
+      renderOverview();
+      toast(nome + (status === 'aprovado' ? ' aprovado. Já pode pedir pelo painel.' : ' rejeitado.'), async function () {
+        await DupuroAdmin.setProfileStatus(id, 'pendente');
+        await renderPending(); await renderResellers(); await populateResellerSelect(); renderInicio();
+        toast(nome + ' voltou para esperando aprovação.');
       });
+    }
+    body.querySelectorAll('[data-approve]').forEach(function (btn) {
+      btn.addEventListener('click', function () { btn.disabled = true; decidir(btn.getAttribute('data-approve'), 'aprovado'); });
     });
     body.querySelectorAll('[data-reject]').forEach(function (btn) {
-      btn.addEventListener('click', async function () {
-        btn.disabled = true;
-        await DupuroAdmin.setProfileStatus(btn.getAttribute('data-reject'), 'rejeitado');
-        await renderPending();
-        await renderOverview();
-      });
+      btn.addEventListener('click', function () { btn.disabled = true; decidir(btn.getAttribute('data-reject'), 'rejeitado'); });
     });
   }
 
@@ -1522,9 +1545,11 @@
         '<td>' + formatDate(r.created_at) + '</td>' +
         '<td class="admin-table-actions">' +
           '<button class="btn btn-dark-outline btn-sm" data-edit-reseller="' + r.id + '">Editar</button>' +
-          '<button class="btn btn-dark-outline btn-sm" data-make-atendente="' + r.id + '">Caixa</button>' +
-          '<button class="btn btn-dark-outline btn-sm" data-make-admin="' + r.id + '">Tornar admin</button>' +
-          '<button class="btn btn-dark-outline btn-sm" data-remove-reseller="' + r.id + '">Remover</button>' +
+          '<details class="menu-acoes"><summary class="btn btn-dark-outline btn-sm" aria-label="Mais ações de ' + esc(r.empresa || r.nome || '') + '">⋯</summary><div class="menu-acoes-lista">' +
+            '<button type="button" data-make-atendente="' + r.id + '">Dar acesso ao caixa da loja</button>' +
+            '<button type="button" data-make-admin="' + r.id + '">Tornar administrador</button>' +
+            '<button type="button" class="perigo" data-remove-reseller="' + r.id + '">Remover revendedor</button>' +
+          '</div></details>' +
         '</td>' +
         '</tr>';
     }).join('');
@@ -2444,6 +2469,7 @@
   function fmtLitros(v) { return (Math.round(v * 100) / 100).toLocaleString('pt-BR') + ' L'; }
   var editingItemId = null;  // id da linha (item) sendo editada; null = criando
   var diasAbertos = null;    // dias expandidos no histórico; null = ainda não renderizou
+  var diaTopoVisto = null;   // dia mais recente da última renderização
 
   var moeda = function (v) { return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); };
 
@@ -2537,6 +2563,7 @@
     document.getElementById('orderUsaEstoque').checked = true;  // padrão: usa estoque
     document.getElementById('orderEditingId').value = '';
     document.getElementById('orderFormTitle').textContent = 'Novo pedido';
+    document.getElementById('orderStatus').value = 'processando';
     document.getElementById('orderFormSubtitle').textContent = 'Monte o pedido adicionando itens e depois clique em criar';
     document.getElementById('orderSubmitBtn').textContent = 'Criar pedido';
     document.getElementById('orderEditCancel').classList.add('hidden');
@@ -2558,11 +2585,277 @@
     diasAbertos = null; // reabre o dia mais recente do novo recorte
     renderOrders();
   });
+  // ---- Fila de pedidos: A confirmar · Em andamento ----
+  // Pedido do revendedor (e entrega do delivery) vira um card com o que fazer:
+  // confirmar/recusar, depois marcar entregue. Mudança de status mostra um aviso
+  // com "Desfazer" (o estoque acompanha: o banco devolve o que tinha baixado).
+  var etapaPedidos = 'confirmar';
+  var buscaPedidos = '';
+  function semAcento(s) { return String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase(); }
+  function bateBusca(textos) {
+    if (!buscaPedidos) return true;
+    return textos.some(function (t) { return semAcento(t).indexOf(buscaPedidos) !== -1; });
+  }
+
+  // Estoque disponível pra um item (sabor, se o produto é multissabor).
+  function estoqueDe(produtoId, sabor) {
+    var p = productsCache.filter(function (x) { return String(x.id) === String(produtoId); })[0];
+    if (!p || p.modo !== 'embalado') return null;
+    if (p.multissabor && sabor) {
+      var s = p.sabores.filter(function (x) { return x.sabor === sabor; })[0];
+      return s ? s.estoque : 0;
+    }
+    return p.estoqueTotal;
+  }
+
+  var toastTimer = null;
+  function toast(msg, desfazer) {
+    var el = document.getElementById('adminToast');
+    el.innerHTML = '<span></span>' + (desfazer ? '<button type="button">Desfazer</button>' : '');
+    el.firstChild.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(toastTimer);
+    if (desfazer) el.querySelector('button').addEventListener('click', function () { el.classList.remove('show'); desfazer(); });
+    toastTimer = setTimeout(function () { el.classList.remove('show'); }, desfazer ? 9000 : 4000);
+  }
+
+  // Menus "⋯": a lista abre em position:fixed ao lado do botão, porque as tabelas
+  // rolam na horizontal e cortariam um menu absoluto. Um aberto por vez; fecha
+  // ao escolher, ao clicar fora e ao rolar a página.
+  function fecharMenusAcoes(exceto) {
+    document.querySelectorAll('details.menu-acoes[open]').forEach(function (d) { if (d !== exceto) d.open = false; });
+  }
+  document.addEventListener('toggle', function (e) {
+    var d = e.target;
+    if (!d.classList || !d.classList.contains('menu-acoes') || !d.open) return;
+    fecharMenusAcoes(d);
+    var r = d.querySelector('summary').getBoundingClientRect();
+    var lista = d.querySelector('.menu-acoes-lista');
+    lista.style.position = 'fixed';
+    lista.style.right = 'auto';
+    lista.style.top = Math.max(8, Math.min(r.bottom + 6, innerHeight - lista.offsetHeight - 8)) + 'px';
+    lista.style.left = Math.max(8, Math.min(r.right - lista.offsetWidth, innerWidth - lista.offsetWidth - 8)) + 'px';
+  }, true);
+  document.addEventListener('click', function (e) {
+    var escolhido = e.target.closest('.menu-acoes-lista button');
+    if (escolhido) { escolhido.closest('details').open = false; return; }
+    if (!e.target.closest('details.menu-acoes')) fecharMenusAcoes();
+  });
+  window.addEventListener('scroll', function () { fecharMenusAcoes(); }, { passive: true, capture: true });
+
+  function mensagemStatus(o, novo, anterior) {
+    var mexeu = o.usaEstoque;
+    if (novo === 'processando' && anterior === 'enviado') return o.numero + ' confirmado.' + (mexeu ? ' Estoque baixado.' : '');
+    if (novo === 'entregue') return o.numero + ' marcado como entregue.';
+    if (novo === 'cancelado') return o.numero + (anterior === 'enviado' ? ' recusado.' : ' cancelado.' + (mexeu ? ' O estoque voltou.' : ''));
+    return o.numero + ' agora está como ' + (STATUS_LABEL[novo] || novo).toLowerCase() + '.';
+  }
+
+  async function atualizarDepoisDePedido() {
+    await renderProducts();
+    await renderPedidosFila();
+    await renderOrders();
+    renderInicio();
+    renderOverview();
+  }
+
+  // Muda o status do pedido inteiro. Confirmar ('processando'/'entregue') baixa o
+  // estoque no banco; cancelar devolve. Faltando estoque, o banco recusa.
+  async function mudarStatus(o, novo, opcoes) {
+    opcoes = opcoes || {};
+    var anterior = o.status;
+    var r = await DupuroAdmin.updateOrderStatusByNumero(o.numero, novo);
+    if (r && r.error) {
+      var e = r.error;
+      aviso((e.code === '23514' || /estoque/i.test(e.message || ''))
+        ? 'Não deu pra ' + (novo === 'processando' ? 'confirmar' : 'mudar') + ' o ' + o.numero + ': falta estoque de um ou mais itens. Registre a produção em Produção e estoque ou edite o pedido.'
+        : 'Não foi possível mudar o status do ' + o.numero + ': ' + e.message);
+      return false;
+    }
+    await atualizarDepoisDePedido();
+    if (opcoes.desfeito) toast(o.numero + ' voltou para ' + (STATUS_LABEL[novo] || novo).toLowerCase() + '.');
+    else toast(mensagemStatus(o, novo, anterior), function () {
+      mudarStatus(Object.assign({}, o, { status: novo }), anterior, { desfeito: true });
+    });
+    return true;
+  }
+
+  function cardPedido(o, revPorId) {
+    var precisa = {};
+    o.items.forEach(function (it) {
+      var k = it.produtoId + '|' + (it.sabor || '');
+      precisa[k] = (precisa[k] || 0) + (it.quantidade || 0);
+    });
+    var falta = false;
+    var itensHtml = o.items.map(function (it) {
+      var est = o.usaEstoque && o.status === 'enviado' ? estoqueDe(it.produtoId, it.sabor) : null;
+      var marca = '';
+      if (est !== null) {
+        var ok = est >= precisa[it.produtoId + '|' + (it.sabor || '')];
+        if (!ok) falta = true;
+        marca = '<span class="ped-estoque ' + (ok ? 'ok' : 'falta') + '">' + (ok ? 'estoque: ' + est : 'só tem ' + est) + '</span>';
+      }
+      return '<li><span>' + esc(it.itens) + '</span>' + marca + '</li>';
+    }).join('');
+    var rev = revPorId[o.revendedorId];
+    var whats = rev ? linkWhats(rev, 'Sobre o seu pedido ' + o.numero + ':') : null;
+    var acoes = o.status === 'enviado'
+      ? '<button type="button" class="btn btn-primary btn-sm" data-ped-acao="confirmar" data-num="' + esc(o.numero) + '"' + (falta ? ' disabled' : '') + '>Confirmar pedido</button>' +
+        '<button type="button" class="btn btn-dark-outline btn-sm" data-ped-acao="recusar" data-num="' + esc(o.numero) + '">Recusar</button>'
+      : '<button type="button" class="btn btn-primary btn-sm" data-ped-acao="entregar" data-num="' + esc(o.numero) + '">Marcar como entregue</button>' +
+        '<button type="button" class="btn btn-dark-outline btn-sm" data-ped-acao="cancelar" data-num="' + esc(o.numero) + '">Cancelar pedido</button>';
+    return '<article class="ped-card">' +
+      '<header class="ped-topo">' +
+        '<strong class="ped-num">' + esc(o.numero) + '</strong>' +
+        statusBadge(o.status, o.origem) +
+        '<span class="ped-quando">' + formatDate(o.data) + ' · ' + haQuanto(o.data) + '</span>' +
+        '<span class="ped-total">' + moeda(o.valor) + '</span>' +
+      '</header>' +
+      '<div class="ped-cliente">' + esc(o.revendedorNome) +
+        (whats ? ' <a class="ped-whats" href="' + whats + '" target="_blank" rel="noopener">WhatsApp</a>' : '') + '</div>' +
+      '<ul class="ped-itens">' + itensHtml + '</ul>' +
+      (falta ? '<p class="ped-aviso">Falta estoque pra confirmar. Registre a produção ou edite o pedido em Concluídos › Detalhes.</p>' : '') +
+      '<div class="ped-acoes">' + acoes + '</div>' +
+      '</article>';
+  }
+
+  var DELIVERY_LABEL = { pago: 'Pago', em_rota: 'Saiu pra entrega', entregue: 'Entregue', aguardando_pagamento: 'Aguardando pagamento', cancelado: 'Cancelado', expirado: 'Expirado' };
+  function cardDelivery(d) {
+    var itens = Array.isArray(d.itens) ? d.itens : [];
+    var whats = linkWhats({ telefone: d.cliente_telefone, nome: d.cliente_nome }, 'Sobre o seu pedido de delivery ' + d.codigo + ':');
+    var acao = d.status === 'pago'
+      ? '<button type="button" class="btn btn-primary btn-sm" data-dlv-acao="em_rota" data-id="' + d.id + '">Saiu pra entrega</button>'
+      : '<button type="button" class="btn btn-primary btn-sm" data-dlv-acao="entregue" data-id="' + d.id + '">Marcar como entregue</button>';
+    return '<article class="ped-card">' +
+      '<header class="ped-topo">' +
+        '<strong class="ped-num">' + esc(d.codigo) + '</strong>' +
+        '<span class="status-badge canal-delivery">Delivery · ' + (DELIVERY_LABEL[d.status] || esc(d.status)) + '</span>' +
+        '<span class="ped-quando">' + (d.data_entrega ? 'Entrega ' + formatDate(d.data_entrega) : '') + (d.periodo ? ' · ' + esc(d.periodo) : '') + '</span>' +
+        '<span class="ped-total">' + moeda(Number(d.total) || 0) + '</span>' +
+      '</header>' +
+      '<div class="ped-cliente">' + esc(d.cliente_nome) +
+        (whats ? ' <a class="ped-whats" href="' + whats + '" target="_blank" rel="noopener">WhatsApp</a>' : '') + '</div>' +
+      '<div class="ped-endereco">' + esc(d.endereco) + (d.complemento ? ' · ' + esc(d.complemento) : '') + '</div>' +
+      '<ul class="ped-itens">' + itens.map(function (it) {
+        return '<li><span>' + esc((it.quantidade || 1) + '× ' + (it.nome || '') + (it.sabor ? ' · ' + it.sabor : '')) + '</span></li>';
+      }).join('') + '</ul>' +
+      '<div class="ped-acoes">' + acao + '</div>' +
+      '</article>';
+  }
+
+  var filaPedidos = { pedidos: [], delivery: [] };
+  async function renderPedidosFila() {
+    var r = await Promise.all([DupuroAdmin.getAllOrders(), DupuroAdmin.getDeliveryPedidos(), DupuroAdmin.getResellers()]);
+    var revPorId = {};
+    r[2].forEach(function (x) { revPorId[x.id] = x; });
+    var naoLoja = r[0].filter(function (o) { return o.origem !== 'loja'; });
+    var novos = naoLoja.filter(function (o) { return o.status === 'enviado'; });
+    var andamento = naoLoja.filter(function (o) { return o.status === 'processando'; });
+    var dPagos = r[1].filter(function (d) { return d.status === 'pago'; });
+    var dRota = r[1].filter(function (d) { return d.status === 'em_rota'; });
+    filaPedidos = { pedidos: novos.concat(andamento), delivery: dPagos.concat(dRota) };
+
+    function contar(el, n) { el.textContent = n || ''; el.classList.toggle('hidden', !n); }
+    contar(document.getElementById('nConfirmar'), novos.length + dPagos.length);
+    contar(document.getElementById('nAndamento'), andamento.length + dRota.length);
+    marcarBadge('pedidos', novos.length + dPagos.length);
+
+    var box = document.getElementById('pedFila');
+    document.getElementById('pedConcluidos').classList.toggle('hidden', etapaPedidos !== 'concluidos');
+    box.classList.toggle('hidden', etapaPedidos === 'concluidos');
+    if (etapaPedidos === 'concluidos') return;
+
+    var lista = etapaPedidos === 'confirmar' ? novos : andamento;
+    var listaD = etapaPedidos === 'confirmar' ? dPagos : dRota;
+    // Mais antigo primeiro: é o que está esperando há mais tempo.
+    lista = lista.filter(function (o) { return bateBusca([o.numero, o.revendedorNome]); }).slice().sort(function (a, b) { return String(a.data).localeCompare(String(b.data)); });
+    listaD = listaD.filter(function (d) { return bateBusca([d.codigo, d.cliente_nome]); });
+    if (!lista.length && !listaD.length) {
+      box.innerHTML = '<div class="fila-vazia"><svg aria-hidden="true"><use href="#m-check"/></svg><div>' +
+        (buscaPedidos ? 'Nenhum pedido com “' + esc(document.getElementById('pedBusca').value) + '” nesta etapa.'
+          : etapaPedidos === 'confirmar' ? '<strong>Nenhum pedido esperando confirmação.</strong> Quando um revendedor pedir pelo painel, ele aparece aqui.'
+          : '<strong>Nenhum pedido em andamento.</strong> Os confirmados ficam aqui até você marcar como entregue.') +
+        '</div></div>';
+      return;
+    }
+    box.innerHTML = listaD.map(cardDelivery).join('') + lista.map(function (o) { return cardPedido(o, revPorId); }).join('');
+  }
+
+  document.getElementById('pedEtapas').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-etapa]');
+    if (!b) return;
+    etapaPedidos = b.getAttribute('data-etapa');
+    this.querySelectorAll('[data-etapa]').forEach(function (x) {
+      x.classList.toggle('active', x === b);
+      x.setAttribute('aria-selected', x === b ? 'true' : 'false');
+    });
+    renderPedidosFila();
+  });
+  var buscaTimer = null;
+  document.getElementById('pedBusca').addEventListener('input', function () {
+    var v = this.value;
+    clearTimeout(buscaTimer);
+    buscaTimer = setTimeout(function () {
+      buscaPedidos = semAcento(v.trim());
+      renderPedidosFila();
+      renderOrders();
+    }, 200);
+  });
+
+  document.getElementById('pedFila').addEventListener('click', async function (e) {
+    var b = e.target.closest('[data-ped-acao], [data-dlv-acao]');
+    if (!b || b.disabled) return;
+    if (b.hasAttribute('data-dlv-acao')) {
+      var d = filaPedidos.delivery.filter(function (x) { return String(x.id) === b.getAttribute('data-id'); })[0];
+      if (!d) return;
+      var antes = d.status, depois = b.getAttribute('data-dlv-acao');
+      b.disabled = true;
+      var rd = await DupuroAdmin.setDeliveryStatus(d.id, depois);
+      if (rd.error) { b.disabled = false; aviso('Não foi possível atualizar a entrega ' + d.codigo + ': ' + rd.error.message); return; }
+      await renderPedidosFila(); renderInicio();
+      toast(d.codigo + (depois === 'em_rota' ? ' saiu pra entrega.' : ' entregue.'), async function () {
+        await DupuroAdmin.setDeliveryStatus(d.id, antes);
+        await renderPedidosFila(); renderInicio();
+      });
+      return;
+    }
+    var o = filaPedidos.pedidos.filter(function (x) { return x.numero === b.getAttribute('data-num'); })[0];
+    if (!o) return;
+    var acao = b.getAttribute('data-ped-acao');
+    if (acao === 'recusar' && !await confirmar('Recusar o pedido ' + o.numero + (o.revendedorNome && o.revendedorNome !== '—' ? ' de ' + o.revendedorNome : '') + '? Ele fica como cancelado, e o revendedor vê isso no painel.', { ok: 'Recusar pedido', perigo: true })) return;
+    if (acao === 'cancelar' && !await confirmar('Cancelar o pedido ' + o.numero + '?' + (o.usaEstoque ? ' O estoque desses itens volta.' : ''), { ok: 'Cancelar pedido', perigo: true })) return;
+    b.disabled = true;
+    var alvo = { confirmar: 'processando', recusar: 'cancelado', entregar: 'entregue', cancelar: 'cancelado' }[acao];
+    if (!await mudarStatus(o, alvo)) b.disabled = false;
+  });
+
+  // Menu "⋯" de um pedido concluído: correções de status e excluir.
+  function menuPedido(o) {
+    var opcoes = [];
+    if (o.origem === 'loja') {
+      if (o.status !== 'cancelado') opcoes.push(['cancelado', 'Cancelar venda']);
+    } else {
+      if (o.status === 'entregue') opcoes.push(['processando', 'Voltar para confirmado']);
+      if (o.status === 'cancelado') opcoes.push(['enviado', 'Reabrir como novo']);
+      if (o.status !== 'cancelado') opcoes.push(['cancelado', 'Cancelar pedido']);
+    }
+    return '<details class="menu-acoes"><summary class="btn btn-dark-outline btn-sm" aria-label="Mais ações do ' + esc(o.numero) + '">⋯</summary>' +
+      '<div class="menu-acoes-lista">' +
+        opcoes.map(function (op) { return '<button type="button" data-mudar-status="' + op[0] + '" data-num="' + esc(o.numero) + '">' + op[1] + '</button>'; }).join('') +
+        '<button type="button" class="perigo" data-remove-order="' + esc(o.numero) + '">Excluir pedido</button>' +
+      '</div></details>';
+  }
+
   async function renderOrders() {
-    var orders = recortarPorCategoria(await DupuroAdmin.getAllOrders(), ordersFilter);
+    var orders = recortarPorCategoria(await DupuroAdmin.getAllOrders(), ordersFilter)
+      .filter(function (o) {
+        // Concluídos = o que não está mais na fila (entregue, cancelado e todo o balcão).
+        return o.origem === 'loja' || o.status === 'entregue' || o.status === 'cancelado';
+      })
+      .filter(function (o) { return bateBusca([o.numero, o.revendedorNome]); });
     var body = document.getElementById('ordersBody');
     if (!orders.length) {
-      body.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="icon">📦</div>Nenhum pedido neste recorte.</div></td></tr>';
+      body.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="icon">📦</div>' + (buscaPedidos ? 'Nenhum pedido encontrado com essa busca.' : 'Nenhum pedido neste recorte.') + '</div></td></tr>';
       return;
     }
     // Agrupa por DIA: cada dia vira uma faixa clicável com o faturamento do dia,
@@ -2581,6 +2874,13 @@
     // admin deixou aberto (renderOrders roda de novo a cada edição/exclusão, e
     // fechar tudo no meio do trabalho seria irritante).
     if (!diasAbertos) diasAbertos = dias.length ? [dias[0]] : [];
+    // Dia novo no topo (virou o dia, chegou venda) já aparece aberto.
+    if (dias.length && dias[0] !== diaTopoVisto) {
+      if (diasAbertos.indexOf(dias[0]) === -1) diasAbertos.push(dias[0]);
+      diaTopoVisto = dias[0];
+    }
+    // Com busca, mostra todos os dias que têm resultado.
+    if (buscaPedidos) dias.forEach(function (d) { if (diasAbertos.indexOf(d) === -1) diasAbertos.push(d); });
 
     function linhaPedido(o) {
       var itemsHtml = o.items.map(function (it) {
@@ -2600,16 +2900,10 @@
         '<td>' + formatDate(o.data) + '</td>' +
         '<td class="itens-cell">' + o.items.map(function (it) { return '<div class="item-linha"><span class="item-nome">' + esc(it.itens) + '</span><span class="item-val">' + moeda(it.valor) + '</span></div>'; }).join('') + '</td>' +
         '<td class="num">' + moeda(o.valor) + '</td>' +
-        '<td>' +
-          '<select class="status-select" data-num="' + o.numero + '">' +
-            ['processando', 'enviado', 'entregue', 'cancelado'].map(function (s) {
-              return '<option value="' + s + '"' + (s === o.status ? ' selected' : '') + '>' + s.charAt(0).toUpperCase() + s.slice(1) + '</option>';
-            }).join('') +
-          '</select>' +
-        '</td>' +
+        '<td>' + statusBadge(o.status, o.origem) + '</td>' +
         '<td class="admin-table-actions">' +
           '<button class="btn btn-dark-outline btn-sm" data-details="' + o.numero + '">Detalhes</button>' +
-          '<button class="btn btn-dark-outline btn-sm" data-remove-order="' + o.numero + '">Excluir</button>' +
+          menuPedido(o) +
         '</td>' +
         '</tr>' +
         '<tr class="order-details hidden" data-details-row="' + o.numero + '" data-dia-row="' + (o.data || 'sem-data') + '"><td colspan="7">' + itemsHtml + '</td></tr>';
@@ -2661,29 +2955,15 @@
       });
     });
 
-    // Status do pedido inteiro (todas as linhas do mesmo numero). Confirmar um
-    // pedido ('processando'/'entregue') é o que baixa o estoque; cancelar devolve.
-    // Se faltar estoque, o banco recusa: avisa e volta o select ao valor anterior.
-    body.querySelectorAll('.status-select').forEach(function (select) {
-      select.dataset.prev = select.value;
-      select.addEventListener('change', async function () {
-        var anterior = select.dataset.prev;
-        select.disabled = true;
-        var result = await DupuroAdmin.updateOrderStatusByNumero(select.getAttribute('data-num'), select.value);
-        select.disabled = false;
-        if (result && result.error) {
-          var e = result.error;
-          aviso(
-            (e.code === '23514' || /estoque/i.test(e.message || ''))
-              ? 'Não foi possível confirmar: estoque insuficiente para um ou mais itens deste pedido.'
-              : 'Não foi possível alterar o status: ' + e.message
-          );
-          select.value = anterior;
-          return;
-        }
-        select.dataset.prev = select.value;
-        await renderOverview();
-        await renderProducts();
+    // Correções de status pelo menu "⋯" (o caminho normal é a fila).
+    body.querySelectorAll('[data-mudar-status]').forEach(function (btn) {
+      btn.addEventListener('click', async function () {
+        var o = orders.filter(function (x) { return x.numero === btn.getAttribute('data-num'); })[0];
+        if (!o) return;
+        var novo = btn.getAttribute('data-mudar-status');
+        if (novo === 'cancelado' && !await confirmar('Cancelar ' + (o.origem === 'loja' ? 'a venda ' : 'o pedido ') + o.numero + '?' + (o.usaEstoque ? ' O estoque desses itens volta.' : ''), { ok: 'Cancelar', perigo: true })) return;
+        btn.closest('details').open = false;
+        await mudarStatus(o, novo);
       });
     });
 
@@ -2699,12 +2979,11 @@
     body.querySelectorAll('[data-remove-order]').forEach(function (btn) {
       btn.addEventListener('click', async function () {
         var num = btn.getAttribute('data-remove-order');
-        if (!await confirmar('Excluir o pedido ' + num + ' inteiro? Essa ação não pode ser desfeita.')) return;
+        if (!await confirmar('Excluir o pedido ' + num + ' inteiro? Ele some dos relatórios e não dá pra desfazer. Pra só anular, use "Cancelar".', { ok: 'Excluir pedido', perigo: true })) return;
         btn.disabled = true;
         await DupuroAdmin.deleteOrderByNumero(num);
         resetOrderForm();
-        await renderOrders();
-        await renderOverview();
+        await atualizarDepoisDePedido();
       });
     });
 
@@ -2927,6 +3206,7 @@
 
     body.querySelectorAll('[data-delete-coupon]').forEach(function (btn) {
       btn.addEventListener('click', async function () {
+        if (!await confirmar('Apagar este cupom? O revendedor perde o desconto e não dá pra desfazer.', { ok: 'Apagar cupom', perigo: true })) return;
         btn.disabled = true;
         await DupuroAdmin.deleteCoupon(btn.getAttribute('data-delete-coupon'));
         await renderCoupons();
@@ -3249,7 +3529,7 @@
     var box = document.getElementById('prodItens');
     var disp = prodProdutosDisponiveis();
     if (!disp.length) {
-      box.innerHTML = '<div class="field-note-inline" style="padding:6px 0;">Nenhum produto com volume (litros) cadastrado. Defina os litros na aba Produtos.</div>';
+      box.innerHTML = '<div class="field-note-inline" style="padding:6px 0;">Nenhum produto com volume (litros) cadastrado. Defina os litros em Cadastros › Produtos.</div>';
       return;
     }
     if (!prodItensData.length) {
@@ -3261,8 +3541,15 @@
         return '<option value="' + p.id + '"' + (String(p.id) === String(it.produtoId) ? ' selected' : '') + '>' + esc(p.nome) + ' (' + fmtLitrosProd(p.litros) + '/un)</option>';
       }).join('');
       var litrosTot = (numBR(it.quantidade) * (it.litrosUnit || 0));
-      return '<div class="item-row" data-i="' + i + '">' +
-          '<select class="i-prod" data-i="' + i + '">' + opts + '</select>' +
+      var prod = disp.filter(function (p) { return String(p.id) === String(it.produtoId); })[0];
+      var sabores = prod && prod.multissabor && !prod.estoqueRefSabor ? applicableFlavors(prod.multissaborIncluirAcai) : [];
+      var saborSel = sabores.length
+        ? '<select class="i-sabor" data-i="' + i + '" aria-label="Sabor"><option value="">Sabor…</option>' + sabores.map(function (s) {
+            return '<option' + (s === it.sabor ? ' selected' : '') + '>' + esc(s) + '</option>';
+          }).join('') + '</select>'
+        : '';
+      return '<div class="item-row' + (saborSel ? ' com-sabor' : '') + '" data-i="' + i + '">' +
+          '<select class="i-prod" data-i="' + i + '">' + opts + '</select>' + saborSel +
           '<input type="text" inputmode="decimal" class="i-qtd" data-i="' + i + '" placeholder="Qtd" value="' + (it.quantidade ? String(it.quantidade).replace('.', ',') : '') + '">' +
           '<span class="i-litros">' + (litrosTot ? fmtLitrosProd(litrosTot) : '—') + '</span>' +
           '<button type="button" class="link-btn i-del" data-i="' + i + '" title="Remover">✕</button>' +
@@ -3272,9 +3559,12 @@
       el.addEventListener('change', function () {
         var p = disp.filter(function (x) { return String(x.id) === el.value; })[0];
         var it = prodItensData[+el.dataset.i];
-        it.produtoId = p ? p.id : null; it.nome = p ? p.nome : null; it.litrosUnit = p ? p.litros : 0;
+        it.produtoId = p ? p.id : null; it.nome = p ? p.nome : null; it.litrosUnit = p ? p.litros : 0; it.sabor = null;
         renderItemRows(); recomputeProd();
       });
+    });
+    box.querySelectorAll('.i-sabor').forEach(function (el) {
+      el.addEventListener('change', function () { prodItensData[+el.dataset.i].sabor = el.value || null; recomputeProd(); });
     });
     box.querySelectorAll('.i-qtd').forEach(function (el) {
       el.addEventListener('input', function () {
@@ -3304,7 +3594,7 @@
       var lt = numBR(it.quantidade) * (it.litrosUnit || 0);
       var custoProduto = custoLitro != null ? custoLitro * lt : null;
       var custoUnidade = custoLitro != null ? custoLitro * (it.litrosUnit || 0) : null;
-      return '<div class="calc-item"><span>' + esc(it.nome) + ' · ' + fmtLitrosProd(lt) + '</span>' +
+      return '<div class="calc-item"><span>' + esc(it.nome) + (it.sabor ? ' · ' + esc(it.sabor) : '') + ' · ' + fmtLitrosProd(lt) + '</span>' +
         '<span>' + (custoProduto != null ? moeda(custoProduto) + ' (' + moeda(custoUnidade) + '/un)' : '—') + '</span></div>';
     }).join('');
 
@@ -3323,7 +3613,7 @@
     editingProducaoId = null;
     document.getElementById('prodEditingId').value = '';
     document.getElementById('prodFormTitle').textContent = 'Nova leva';
-    document.getElementById('prodFormSubtitle').textContent = 'Lance os gastos e o que foi produzido — o custo por litro sai sozinho';
+    document.getElementById('prodFormSubtitle').textContent = 'O que foi produzido entra no estoque, e o custo por litro sai sozinho';
     document.getElementById('prodSubmitBtn').textContent = 'Salvar leva';
     document.getElementById('prodEditCancel').classList.add('hidden');
     document.getElementById('prodData').value = todayIso();
@@ -3351,9 +3641,15 @@
     var itens = prodItensData.filter(function (it) { return it.produtoId && numBR(it.quantidade) > 0; });
     if (!gastos.length) { msg.textContent = 'Adicione ao menos um gasto com valor.'; msg.className = 'limite-msg erro'; return; }
     if (!itens.length) { msg.textContent = 'Adicione ao menos um produto produzido (com quantidade).'; msg.className = 'limite-msg erro'; return; }
+    var semSabor = itens.filter(function (it) {
+      var p = productsCache.filter(function (x) { return String(x.id) === String(it.produtoId); })[0];
+      return p && p.multissabor && !p.estoqueRefSabor && !it.sabor;
+    });
+    if (semSabor.length) { msg.textContent = 'Escolha o sabor de ' + semSabor[0].nome + ': é ele que diz qual estoque sobe.'; msg.className = 'limite-msg erro'; return; }
 
     var header = { data: document.getElementById('prodData').value || null, rotulo: document.getElementById('prodRotulo').value.trim() || null };
-    var itensClean = itens.map(function (it) { return { produtoId: it.produtoId, nome: it.nome, quantidade: numBR(it.quantidade), litrosUnit: it.litrosUnit || 0 }; });
+    var itensClean = itens.map(function (it) { return { produtoId: it.produtoId, nome: it.nome, sabor: it.sabor || null, quantidade: numBR(it.quantidade), litrosUnit: it.litrosUnit || 0 }; });
+    var unidades = itensClean.reduce(function (s, it) { return s + Math.round(it.quantidade); }, 0);
 
     var btn = document.getElementById('prodSubmitBtn');
     btn.disabled = true;
@@ -3361,12 +3657,20 @@
       ? await DupuroAdmin.updateProducao(editingProducaoId, header, gastos, itensClean)
       : await DupuroAdmin.createProducao(header, gastos, itensClean);
     btn.disabled = false;
-    if (result.error) { msg.textContent = 'Não foi possível salvar: ' + result.error.message; msg.className = 'limite-msg erro'; return; }
-    msg.textContent = editingProducaoId ? 'Leva atualizada!' : 'Leva registrada!';
-    msg.className = 'limite-msg ok';
+    if (result.error) {
+      msg.textContent = /estoque_check/.test(result.error.message || '')
+        ? 'Não foi possível salvar: parte do estoque desta leva já foi vendida, então não dá pra diminuir tanto.'
+        : 'Não foi possível salvar: ' + result.error.message;
+      msg.className = 'limite-msg erro'; return;
+    }
+    var textoOk = editingProducaoId ? 'Leva atualizada. O estoque foi ajustado pela diferença.' : 'Leva registrada. ' + unidades + plural(unidades, ' unidade entrou', ' unidades entraram') + ' no estoque.';
     resetProdForm();
+    msg.textContent = textoOk;
+    msg.className = 'limite-msg ok';
     await renderProducoes();
-    setTimeout(function () { msg.textContent = ''; }, 2500);
+    await renderProducts();
+    renderInicio();
+    setTimeout(function () { msg.textContent = ''; }, 5000);
   });
 
   function enterEditProducao(leva) {
@@ -3379,7 +3683,7 @@
     document.getElementById('prodData').value = leva.data || todayIso();
     document.getElementById('prodRotulo').value = leva.rotulo || '';
     prodGastosData = leva.gastos.length ? leva.gastos.map(function (g) { return { descricao: g.descricao || '', categoria: g.categoria, valor: g.valor }; }) : [{ descricao: '', categoria: 'materia_prima', valor: 0 }];
-    prodItensData = leva.itens.length ? leva.itens.map(function (it) { return { produtoId: it.produtoId, nome: it.nome, litrosUnit: it.litrosUnit, quantidade: it.quantidade }; }) : [{ produtoId: null, nome: null, litrosUnit: 0, quantidade: 0 }];
+    prodItensData = leva.itens.length ? leva.itens.map(function (it) { return { produtoId: it.produtoId, nome: it.nome, sabor: it.sabor || null, litrosUnit: it.litrosUnit, quantidade: it.quantidade }; }) : [{ produtoId: null, nome: null, litrosUnit: 0, quantidade: 0 }];
     renderGastoRows(); renderItemRows(); recomputeProd();
     document.getElementById('prodForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
@@ -3393,7 +3697,7 @@
       return;
     }
     body.innerHTML = producoesCache.map(function (l) {
-      var produzido = l.itens.map(function (it) { return it.nome + ' ×' + (Math.round(it.quantidade * 100) / 100).toLocaleString('pt-BR'); }).join(', ') || '—';
+      var produzido = l.itens.map(function (it) { return esc(it.nome) + (it.sabor ? ' (' + esc(it.sabor) + ')' : '') + ' ×' + (Math.round(it.quantidade * 100) / 100).toLocaleString('pt-BR'); }).join(', ') || '—';
       var det = '<div class="prod-det-block"><strong>Gastos</strong>' + (l.gastos.length ? l.gastos.map(function (g) {
         return '<div class="order-item-line"><span>' + esc(g.descricao || '(sem descrição)') + ' · ' + PROD_CAT_LABEL[g.categoria] + '</span><span>' + moeda(g.valor) + '</span></div>';
       }).join('') : '<div class="field-note-inline">—</div>') + '</div>' +
@@ -3430,11 +3734,20 @@
     });
     body.querySelectorAll('[data-prod-del]').forEach(function (btn) {
       btn.addEventListener('click', async function () {
-        if (!await confirmar('Excluir esta leva? Essa ação não pode ser desfeita.')) return;
+        if (!await confirmar('Excluir esta leva? As unidades que ela somou saem do estoque.', { ok: 'Excluir leva', perigo: true })) return;
         btn.disabled = true;
-        await DupuroAdmin.deleteProducao(btn.getAttribute('data-prod-del'));
+        var r = await DupuroAdmin.deleteProducao(btn.getAttribute('data-prod-del'));
+        btn.disabled = false;
+        if (r && r.error) {
+          aviso(/estoque_check/.test(r.error.message || '')
+            ? 'Não dá pra excluir esta leva: parte do que ela produziu já foi vendida. Se precisar, edite a leva e ajuste a quantidade.'
+            : 'Não foi possível excluir a leva: ' + r.error.message);
+          return;
+        }
         if (String(editingProducaoId) === btn.getAttribute('data-prod-del')) resetProdForm();
         await renderProducoes();
+        await renderProducts();
+        renderInicio();
       });
     });
   }
@@ -3514,7 +3827,7 @@
   // outras carregam em segundo plano pra troca de aba ficar instantânea.
   var CARREGA = {
     inicio: [renderInicio],
-    pedidos: [renderProducts, populateResellerSelect, updateOrderNumberPreview, renderOrders, loadLimiteLitros],
+    pedidos: [renderProducts, renderPedidosFila, renderOrders, populateResellerSelect, updateOrderNumberPreview, loadLimiteLitros],
     estoque: [renderProducts, resetProdForm, renderProducoes],
     numeros: [renderOverview, renderAudits, renderCaixaFechamentos],
     cadastros: [renderPending, renderResellers, renderProducts, renderAcompanhamentos, renderPromocoesAdmin, renderCoupons, loadLimiteLitros, populateResellerSelect],
@@ -3548,6 +3861,25 @@
   goTo(inicial.tab, inicial.sub, { substituir: true });
   await carregarAba(inicial.tab);
   for (var a = 0; a < ABAS.length; a++) await carregarAba(ABAS[a]);
+
+  // ---- Aviso de pedido novo ----
+  // A cada minuto (com a aba do navegador visível) conta os pedidos esperando
+  // confirmação. Mudou a contagem, relê as listas: o pedido aparece sozinho,
+  // sem precisar recarregar.
+  var ultimaContagem = null;
+  setInterval(async function () {
+    if (document.visibilityState !== 'visible') return;
+    var c = await DupuroAdmin.getContagemNovos();
+    var chave = c.pedidos + '|' + c.delivery;
+    if (ultimaContagem !== null && chave !== ultimaContagem) {
+      DupuroAdmin.limparCache();
+      await renderPedidosFila();
+      await renderOrders();
+      renderInicio();
+      if (c.pedidos + c.delivery > 0) toast('Chegou pedido novo pra confirmar.');
+    }
+    ultimaContagem = chave;
+  }, 60000);
 
 })();
 </script>
