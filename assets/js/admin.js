@@ -55,12 +55,25 @@ var DupuroAdmin = (function () {
   }
 
   async function setProfileStatus(id, status) {
+    esquecerRevendedores();
     var result = await client.from('profiles').update({ status: status }).eq('id', id);
     return { error: result.error };
   }
 
   // ---------- Revendedores ----------
-  async function getResellers() {
+  // Pedidos, cupons e a Visão geral pedem a lista de revendedores ao mesmo
+  // tempo; dentro de 5 s elas dividem a mesma consulta. Qualquer gravação em
+  // profiles (abaixo) descarta a lista guardada.
+  var revendedoresMemo = null;
+  function esquecerRevendedores() { revendedoresMemo = null; }
+  async function getResellers() { // async: a camada de cache do admin.html só embrulha funções async
+    if (revendedoresMemo && Date.now() - revendedoresMemo.t < 5000) return revendedoresMemo.p;
+    var p = buscarRevendedores();
+    revendedoresMemo = { t: Date.now(), p: p };
+    p.catch(esquecerRevendedores);
+    return p;
+  }
+  async function buscarRevendedores() {
     var result = await client
       .from('profiles')
       .select('id, nome, empresa, email, telefone, cidade, created_at')
@@ -71,6 +84,7 @@ var DupuroAdmin = (function () {
   }
 
   async function updateReseller(id, data) {
+    esquecerRevendedores();
     var result = await client
       .from('profiles')
       .update({ nome: data.nome, empresa: data.empresa, telefone: data.telefone, cidade: data.cidade })
@@ -83,6 +97,7 @@ var DupuroAdmin = (function () {
   // (deploy feito via MCP). Pedidos/cupons do revendedor NÃO são apagados,
   // só perdem a referência ao dono (ver migration_006).
   async function deleteReseller(userId) {
+    esquecerRevendedores();
     var session = await getSession();
     if (!session) return { error: new Error('Sem sessão ativa') };
 
@@ -139,6 +154,7 @@ var DupuroAdmin = (function () {
   // admin ou atendente, força status 'aprovado' (precisam poder entrar). A policy
   // profiles_update_own_or_admin deixa um admin alterar qualquer perfil.
   async function setProfileRole(id, role) {
+    esquecerRevendedores();
     var patch = { role: role };
     if (role === 'admin' || role === 'atendente') patch.status = 'aprovado';
     var result = await client.from('profiles').update(patch).eq('id', id);

@@ -682,12 +682,11 @@
 </nav>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js"></script>
 <script src="../assets/js/graficos.js?v=1"></script>
 <script src="../assets/js/supabase-config.js"></script>
 <script src="../assets/js/supabase-client.js"></script>
 <script src="../assets/js/app-ui.js"></script>
-<script src="../assets/js/admin.js"></script>
+<script src="../assets/js/admin.js?v=2"></script>
 <script>
   // Escapa texto antes de ir pro innerHTML (dado de revendedor/cliente nunca vira HTML).
   // Link de WhatsApp pro cadastro (telefone vem em formatos variados: +55..., (66) 9..., 659...).
@@ -970,10 +969,30 @@
   // tamanho 0). Nas próximas chamadas só ATUALIZA os dados; nunca destrói/recria.
   // É isso que impede o gráfico de sumir ao alternar abas. Sem animação nem
   // plugin custom, pra não ter mais o bug de sumiço.
+  // Chart.js (204 KB) só é baixado quando um gráfico vai aparecer de fato:
+  // Início, Pedidos e Cadastros abrem sem ele.
+  var chartJsPromessa = null;
+  function carregarChart() {
+    if (window.Chart) return Promise.resolve();
+    if (!chartJsPromessa) chartJsPromessa = new Promise(function (ok, falha) {
+      var s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js';
+      s.onload = ok;
+      s.onerror = function () { chartJsPromessa = null; falha(new Error('Chart.js não carregou')); };
+      document.head.appendChild(s);
+    });
+    return chartJsPromessa;
+  }
+
   function upsertChart(canvasId, type, data, options) {
-    setupChartTheme(); // tema + rótulos (idempotente; antes nunca era chamado)
     var canvas = document.getElementById(canvasId);
     if (!canvas) return;
+    if (!window.Chart) {
+      if (canvas.offsetParent === null) return; // aba escondida: nem baixa ainda
+      carregarChart().then(function () { upsertChart(canvasId, type, data, options); }, function () {});
+      return;
+    }
+    setupChartTheme(); // tema + rótulos (idempotente)
     if (chartInstances[canvasId]) {
       // Trocar o TIPO exige recriar (só trocar os dados manteria o tipo antigo).
       if (chartInstances[canvasId].config.type !== type) {
@@ -2921,7 +2940,11 @@
         '<tr class="order-details hidden" data-details-row="' + o.numero + '" data-dia-row="' + (o.data || 'sem-data') + '"><td colspan="7">' + itemsHtml + '</td></tr>';
     }
 
-    body.innerHTML = dias.map(function (dia, i) {
+    // Só os dias abertos têm linhas no DOM; os outros montam ao abrir.
+    ordersAtuais = orders;
+    porDiaAtual = porDia;
+    linhaPedidoAtual = linhaPedido;
+    body.innerHTML = dias.map(function (dia) {
       var doDia = porDia[dia];
       var faturado = doDia.reduce(function (s, o) { return s + (o.status === 'cancelado' ? 0 : o.valor); }, 0);
       var aberto = diasAbertos.indexOf(dia) !== -1;
@@ -2935,110 +2958,98 @@
             '</button>' +
           '</td>' +
         '</tr>' +
-        doDia.map(linhaPedido).join('');
+        (aberto ? doDia.map(linhaPedido).join('') : '');
     }).join('');
+  }
 
-    // Recolhe todos os dias menos o primeiro. As linhas de detalhe do pedido
-    // continuam com o próprio 'hidden' — expandir o dia não abre os detalhes.
-    dias.forEach(function (dia) {
-      if (diasAbertos.indexOf(dia) !== -1) return;
-      body.querySelectorAll('[data-dia-row="' + dia + '"]').forEach(function (tr) { tr.classList.add('hidden'); });
-    });
+  var ordersAtuais = [], porDiaAtual = {}, linhaPedidoAtual = null;
+  function pedidoPorNumero(num) { return ordersAtuais.filter(function (x) { return x.numero === num; })[0]; }
 
-    body.querySelectorAll('[data-dia-toggle]').forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        var dia = btn.getAttribute('data-dia-toggle');
-        var faixa = body.querySelector('.day-group[data-dia="' + dia + '"]');
-        var abrindo = !faixa.classList.contains('is-open');
-        faixa.classList.toggle('is-open', abrindo);
-        btn.setAttribute('aria-expanded', String(abrindo));
-        var pos = diasAbertos.indexOf(dia);
-        if (abrindo && pos === -1) diasAbertos.push(dia);
-        if (!abrindo && pos !== -1) diasAbertos.splice(pos, 1);
-        body.querySelectorAll('[data-dia-row="' + dia + '"]').forEach(function (tr) {
-          // Detalhe de item só reaparece se estava aberto antes de recolher o dia.
-          if (tr.classList.contains('order-details')) {
-            if (abrindo) { if (tr.dataset.wasOpen === '1') tr.classList.remove('hidden'); }
-            else { tr.dataset.wasOpen = tr.classList.contains('hidden') ? '0' : '1'; tr.classList.add('hidden'); }
-            return;
-          }
-          tr.classList.toggle('hidden', !abrindo);
-        });
-      });
-    });
+  // Um ouvinte só pra tabela inteira (as linhas mudam a cada render/abertura de dia).
+  document.getElementById('ordersBody').addEventListener('click', async function (e) {
+    var body = this;
+    var b = e.target.closest('button');
+    if (!b || !body.contains(b)) return;
 
-    // Correções de status pelo menu "⋯" (o caminho normal é a fila).
-    body.querySelectorAll('[data-mudar-status]').forEach(function (btn) {
-      btn.addEventListener('click', async function () {
-        var o = orders.filter(function (x) { return x.numero === btn.getAttribute('data-num'); })[0];
-        if (!o) return;
-        var novo = btn.getAttribute('data-mudar-status');
-        if (novo === 'cancelado' && !await confirmar('Cancelar ' + (o.origem === 'loja' ? 'a venda ' : 'o pedido ') + o.numero + '?' + (o.usaEstoque ? ' O estoque desses itens volta.' : ''), { ok: 'Cancelar', perigo: true })) return;
-        btn.closest('details').open = false;
-        await mudarStatus(o, novo);
-      });
-    });
+    // Abrir/fechar um dia: abrir monta as linhas dele; fechar tira do DOM.
+    if (b.hasAttribute('data-dia-toggle')) {
+      var dia = b.getAttribute('data-dia-toggle');
+      var faixa = b.closest('tr');
+      var abrindo = !faixa.classList.contains('is-open');
+      faixa.classList.toggle('is-open', abrindo);
+      b.setAttribute('aria-expanded', String(abrindo));
+      var pos = diasAbertos.indexOf(dia);
+      if (abrindo && pos === -1) diasAbertos.push(dia);
+      if (!abrindo && pos !== -1) diasAbertos.splice(pos, 1);
+      body.querySelectorAll('[data-dia-row="' + dia + '"]').forEach(function (tr) { tr.remove(); });
+      if (abrindo && porDiaAtual[dia]) faixa.insertAdjacentHTML('afterend', porDiaAtual[dia].map(linhaPedidoAtual).join(''));
+      return;
+    }
 
     // Expandir/recolher os itens do pedido.
-    body.querySelectorAll('[data-details]').forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        var row = body.querySelector('[data-details-row="' + btn.getAttribute('data-details') + '"]');
-        if (row) row.classList.toggle('hidden');
-      });
-    });
+    if (b.hasAttribute('data-details')) {
+      var row = body.querySelector('[data-details-row="' + b.getAttribute('data-details') + '"]');
+      if (row) row.classList.toggle('hidden');
+      return;
+    }
+
+    // Correções de status pelo menu "⋯" (o caminho normal é a fila).
+    if (b.hasAttribute('data-mudar-status')) {
+      var o = pedidoPorNumero(b.getAttribute('data-num'));
+      if (!o) return;
+      var novo = b.getAttribute('data-mudar-status');
+      if (novo === 'cancelado' && !await confirmar('Cancelar ' + (o.origem === 'loja' ? 'a venda ' : 'o pedido ') + o.numero + '?' + (o.usaEstoque ? ' O estoque desses itens volta.' : ''), { ok: 'Cancelar', perigo: true })) return;
+      await mudarStatus(o, novo);
+      return;
+    }
 
     // Excluir o pedido inteiro.
-    body.querySelectorAll('[data-remove-order]').forEach(function (btn) {
-      btn.addEventListener('click', async function () {
-        var num = btn.getAttribute('data-remove-order');
-        if (!await confirmar('Excluir o pedido ' + num + ' inteiro? Ele some dos relatórios e não dá pra desfazer. Pra só anular, use "Cancelar".', { ok: 'Excluir pedido', perigo: true })) return;
-        btn.disabled = true;
-        await DupuroAdmin.deleteOrderByNumero(num);
-        resetOrderForm();
-        await atualizarDepoisDePedido();
-      });
-    });
+    if (b.hasAttribute('data-remove-order')) {
+      var num = b.getAttribute('data-remove-order');
+      if (!await confirmar('Excluir o pedido ' + num + ' inteiro? Ele some dos relatórios e não dá pra desfazer. Pra só anular, use "Cancelar".', { ok: 'Excluir pedido', perigo: true })) return;
+      b.disabled = true;
+      await DupuroAdmin.deleteOrderByNumero(num);
+      resetOrderForm();
+      await atualizarDepoisDePedido();
+      return;
+    }
 
     // Remover um item do pedido.
-    body.querySelectorAll('[data-remove-item]').forEach(function (btn) {
-      btn.addEventListener('click', async function () {
-        if (!await confirmar('Remover este item do pedido?')) return;
-        btn.disabled = true;
-        await DupuroAdmin.deleteOrder(btn.getAttribute('data-remove-item'));
-        await renderOrders();
-        await renderOverview();
-      });
-    });
+    if (b.hasAttribute('data-remove-item')) {
+      if (!await confirmar('Remover este item do pedido?', { ok: 'Remover item', perigo: true })) return;
+      b.disabled = true;
+      await DupuroAdmin.deleteOrder(b.getAttribute('data-remove-item'));
+      await atualizarDepoisDePedido();
+      return;
+    }
 
     // Editar um item do pedido (carrega no montador, em modo edição).
-    body.querySelectorAll('[data-edit-item]').forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        var num = btn.getAttribute('data-num');
-        var o = orders.filter(function (x) { return x.numero === num; })[0];
-        var it = o && o.items.filter(function (x) { return String(x.id) === btn.getAttribute('data-edit-item'); })[0];
-        if (!it) return;
-        editingItemId = it.id;
-        document.getElementById('orderEditingId').value = it.id;
-        document.getElementById('orderFormTitle').textContent = 'Editar item de ' + num;
-        document.getElementById('orderFormSubtitle').textContent = 'Altere o item e salve — o número do pedido não muda';
-        document.getElementById('orderSubmitBtn').textContent = 'Salvar item';
-        document.getElementById('orderEditCancel').classList.remove('hidden');
-        document.getElementById('orderAddItemBtn').classList.add('hidden');
-        document.getElementById('orderNumeroPreview').value = num;
-        document.getElementById('orderRevendedor').value = o.revendedorId || '';
-        document.getElementById('orderData').value = o.data;
-        document.getElementById('orderStatus').value = it.status;
-        if (it.produtoId) document.getElementById('orderProduto').value = it.produtoId;
-        document.getElementById('orderQtd').value = it.quantidade || 1;
-        updateOrderValuePreview();
-        updateOrderSaborField();
-        if (it.sabor) document.getElementById('orderSabor').value = it.sabor;
-        renderOrderCart();
-        document.getElementById('novoPedidoBox').open = true;
-        document.querySelector('#orderForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
-      });
-    });
-  }
+    if (b.hasAttribute('data-edit-item')) {
+      var numE = b.getAttribute('data-num');
+      var oe = pedidoPorNumero(numE);
+      var it = oe && oe.items.filter(function (x) { return String(x.id) === b.getAttribute('data-edit-item'); })[0];
+      if (!it) return;
+      editingItemId = it.id;
+      document.getElementById('orderEditingId').value = it.id;
+      document.getElementById('orderFormTitle').textContent = 'Editar item de ' + numE;
+      document.getElementById('orderFormSubtitle').textContent = 'Altere o item e salve. O número do pedido não muda.';
+      document.getElementById('orderSubmitBtn').textContent = 'Salvar item';
+      document.getElementById('orderEditCancel').classList.remove('hidden');
+      document.getElementById('orderAddItemBtn').classList.add('hidden');
+      document.getElementById('orderNumeroPreview').value = numE;
+      document.getElementById('orderRevendedor').value = oe.revendedorId || '';
+      document.getElementById('orderData').value = oe.data;
+      document.getElementById('orderStatus').value = it.status;
+      if (it.produtoId) document.getElementById('orderProduto').value = it.produtoId;
+      document.getElementById('orderQtd').value = it.quantidade || 1;
+      updateOrderValuePreview();
+      updateOrderSaborField();
+      if (it.sabor) document.getElementById('orderSabor').value = it.sabor;
+      renderOrderCart();
+      document.getElementById('novoPedidoBox').open = true;
+      document.querySelector('#orderForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  });
 
   // ---- Limite de litros que dispensa o pedido mínimo ----
   async function loadLimiteLitros() {
