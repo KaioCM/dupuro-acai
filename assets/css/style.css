@@ -2521,3 +2521,81 @@ a.stat-card.alerta .stat-sub { color: var(--warning); font-weight: 800; }
 /* Produção: sabor ao lado do produto */
 .item-row .i-sabor { flex: 0 1 190px; min-width: 0; }
 @media (max-width: 600px) { .item-row .i-sabor { flex: 1 1 100%; } }
+
+/* ---------- Admin no celular (etapa adapt) ---------- */
+@media (max-width: 700px) {
+  /* Tabela vira lista de cartões: cada célula mostra o nome da coluna (data-label). */
+  .pg-admin .panel > .data-table { min-width: 0; }
+  .pg-admin .panel:has(> .data-table) { overflow-x: visible; }
+  .pg-admin .data-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .pg-admin .data-table, .pg-admin .data-table tbody, .pg-admin .data-table tr { display: block; width: 100%; }
+  .pg-admin .data-table tr { padding: 12px 2px; border-bottom: 1px solid rgba(96,16,80,0.10); }
+  .pg-admin .data-table tr.hidden { display: none; }
+  .pg-admin .data-table td { display: flex; justify-content: space-between; align-items: baseline; gap: 14px; padding: 4px 0; border: 0; text-align: right; font-size: 15px; overflow-wrap: anywhere; }
+  .pg-admin .data-table td[data-label]::before { content: attr(data-label); flex: none; max-width: 45%; text-align: left; font-size: 12.5px; font-weight: 700; letter-spacing: 0.02em; color: var(--text-light); }
+  .pg-admin .data-table td[colspan] { display: block; text-align: left; }
+  .pg-admin .data-table td:first-child { font-size: 15.5px; }
+  .pg-admin .data-table td.admin-table-actions { justify-content: flex-start; flex-wrap: wrap; gap: 8px; padding-top: 10px; }
+  .pg-admin .data-table td.admin-table-actions::before { content: none; }
+  .pg-admin .data-table td.itens-cell { display: block; text-align: left; }
+  .pg-admin .data-table td.itens-cell::before { display: block; margin-bottom: 4px; }
+  .pg-admin .data-table tr.day-group { padding: 0; border: 0; }
+  .pg-admin .data-table tr.order-details { padding-top: 0; }
+
+  /* Alvos de toque de 44 px e texto de 16 px nos campos (iPhone não dá zoom). */
+  .pg-admin .btn-sm, .pg-admin .seg-btn, .pg-admin .subnav-btn { min-height: 44px; }
+  .pg-admin input, .pg-admin select, .pg-admin textarea { font-size: 16px; }
+
+  /* Menu "⋯" vira painel que sobe de baixo, ao alcance do polegar. */
+  .pg-admin .menu-acoes-lista { position: fixed !important; left: 0 !important; right: 0 !important; top: auto !important; bottom: 0; min-width: 0; padding: 10px 10px calc(14px + env(safe-area-inset-bottom)); border-radius: 18px 18px 0 0; box-shadow: 0 -10px 30px rgba(36,8,32,0.25); z-index: 1400; }
+  .pg-admin .menu-acoes-lista button { padding: 14px 16px; font-size: 16px; }
+  .pg-admin .menu-acoes[open]::before { content: ""; position: fixed; inset: 0; background: rgba(36,8,32,0.35); z-index: 1350; }
+
+  /* Números: indicadores em 2×2. */
+  .pg-admin .stat-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .pg-admin .stat-card { padding: 14px; }
+  .pg-admin .stat-card .value { font-size: 22px; }
+  .pg-admin .stat-card .stat-sub { font-size: 12px; }
+
+  .pg-admin .bloco-novo > summary { width: 100%; justify-content: center; }
+}
+
+/* ---------- Admin mais calmo (etapa distill · typeset · quieter) ----------
+   Ferramenta de trabalho: Klinko só no título da página e nos números grandes;
+   seções em Inter; um botão principal chapado; um nível só de cartão. */
+.pg-admin .app-main h2, .pg-admin .app-main h3 { font-family: var(--font-body); font-weight: 700; text-transform: none; letter-spacing: -0.01em; line-height: 1.25; color: var(--roxo-950); text-wrap: balance; }
+.pg-admin .app-main h2, .pg-admin .chart-card h2, .pg-admin .panel-header h2 { font-size: 18px; text-transform: none; color: var(--roxo-950); }
+.pg-admin .app-main h3 { font-size: 15.5px; }
+.pg-admin .app-main h2.secao-titulo { font-size: 20px; }
+.pg-admin .app-main .subtitle { text-wrap: pretty; }
+
+.pg-admin .btn-primary, .pg-admin .btn-green { background: var(--gold); color: var(--roxo-950); box-shadow: none; }
+.pg-admin .btn-primary:hover, .pg-admin .btn-green:hover { background: #E6A800; transform: none; box-shadow: none; }
+.pg-admin .btn-primary:active, .pg-admin .btn-green:active { background: #D49B00; transform: none; box-shadow: none; }
+.pg-admin .btn-primary:focus-visible, .pg-admin .btn-green:focus-visible, .pg-admin .btn-dark-outline:focus-visible { outline: 3px solid var(--roxo-700); outline-offset: 2px; }
+.pg-admin .btn-dark-outline { border-width: 1.5px; }
+
+.pg-admin .sidebar-link.active { background: var(--gold); box-shadow: none; }
+.pg-admin .sidebar-link:hover { transform: none; }
+.pg-admin .sidebar-link:hover .ic { transform: none; }
+.pg-admin .seg-btn.active { box-shadow: none; }
+
+.pg-admin .panel { box-shadow: none; border: 1px solid rgba(96,16,80,0.10); border-radius: 16px; padding: 24px; }
+.pg-admin .stat-card { box-shadow: none; border: 1px solid rgba(96,16,80,0.10); }
+.pg-admin .stat-card::before { display: none; }
+
+/* Estoque: grupos separados por espaço (não por cartão) e contador legível */
+.pg-admin .stock-summary-card { background: transparent; border: 0; border-radius: 0; padding: 4px 0; }
+.pg-admin .stock-summary-card .stock-summary-count { background: rgba(96,16,80,0.08); color: var(--roxo-950); }
+.pg-admin .stock-summary-card.is-danger .stock-summary-count { background: var(--danger); color: #fff; }
+
+/* Resultado da leva sem cartões dentro do cartão */
+.pg-admin .calc-block, .pg-admin .calc-block.calc-hl { background: transparent; border: 0; border-radius: 0; padding: 0; }
+.pg-admin .calc-block.calc-hl .calc-label { color: var(--text-light); }
+.pg-admin .calc-block.calc-hl .calc-big { color: var(--roxo-700); }
+.pg-admin .admin-product-card { box-shadow: none; }
+
+/* Emoji decorativo de estado vazio sai: o texto já diz o que é */
+.pg-admin .empty-state .icon { display: none; }
+.pg-admin .prod-fiscal { margin-top: 4px; font-size: 12.5px; color: var(--text-light); font-variant-numeric: tabular-nums; }
+.pg-admin .calc-label, .pg-admin .day-count { font-size: 12px; }

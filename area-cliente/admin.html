@@ -9,9 +9,9 @@
 <link rel="apple-touch-icon" href="../assets/img/brand/favicon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/css/style.css?v=33">
+<link rel="stylesheet" href="../assets/css/style.css?v=35">
 </head>
-<body>
+<body class="pg-admin">
 <svg class="sprite" aria-hidden="true" focusable="false"><symbol id="m-grafico" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></symbol><symbol id="m-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol><symbol id="m-usuarios" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"/></symbol><symbol id="m-caixa" viewBox="0 0 24 24"><path d="M3 8l9-4 9 4v9l-9 4-9-4z"/><path d="M3 8l9 4 9-4M12 12v9"/></symbol><symbol id="m-painel" viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 10h6M9 14h6M9 18h3"/></symbol><symbol id="m-fabrica" viewBox="0 0 24 24"><path d="M3 21V10l5 3v-3l5 3V7l8 4v10z"/><path d="M7 17h2M12 17h2M17 17h1"/></symbol><symbol id="m-etiqueta" viewBox="0 0 24 24"><path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.4"/></symbol><symbol id="m-engrenagem" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></symbol><symbol id="m-casa" viewBox="0 0 24 24"><path d="M3 11l9-7 9 7M5 9.5V20h14V9.5M10 20v-6h4v6"/></symbol><symbol id="m-sair" viewBox="0 0 24 24"><path d="M14 4h5a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-5M10 16l-4-4 4-4M6 12h10"/></symbol><symbol id="m-carrinho" viewBox="0 0 24 24"><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2.5 3.5h3l2.4 11.2a1.5 1.5 0 0 0 1.5 1.3h8.4a1.5 1.5 0 0 0 1.5-1.2L21 7H6.3"/></symbol><symbol id="m-recibo" viewBox="0 0 24 24"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6M9 16h3"/></symbol><symbol id="m-calendario" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></symbol><symbol id="m-chat" viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></symbol><symbol id="m-usuario" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol><symbol id="m-globo" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></symbol><symbol id="m-hoje" viewBox="0 0 24 24"><path d="M4 13h4l2 3h4l2-3h4"/><path d="M4 13l2.5-8h11L20 13v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/></symbol><symbol id="m-pasta" viewBox="0 0 24 24"><path d="M3 6.5A1.5 1.5 0 0 1 4.5 5H9l2 2.5h8.5A1.5 1.5 0 0 1 21 9v9.5a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 18.5z"/></symbol><symbol id="m-mais" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol></svg>
 
 
@@ -120,9 +120,9 @@
             <label>Valor do item</label>
             <input type="text" id="orderValorPreview" disabled>
           </div>
-          <button type="button" class="btn btn-green" id="orderAddItemBtn" style="grid-column:1/-1;">➕ Adicionar item ao pedido</button>
+          <button type="button" class="btn btn-green" id="orderAddItemBtn" style="grid-column:1/-1;">Adicionar item ao pedido</button>
           <div class="field hidden" id="orderCartField" style="margin-bottom:0; grid-column:1/-1;">
-            <div class="cart-head">🛒 Itens do pedido</div>
+            <div class="cart-head">Itens do pedido</div>
             <ul class="cart-list" id="orderCartList"></ul>
             <div class="order-total-row"><span class="lbl">Total</span><span class="val" id="orderCartTotal">—</span></div>
             <div class="cart-volume-note hidden" id="orderVolumeNote"></div>
@@ -142,8 +142,8 @@
           <div><h2>Pedidos concluídos</h2><div class="subtitle">Entregues, vendas do balcão e cancelados, agrupados por dia</div></div>
           <div class="seg ord-filter" id="ordFilter">
             <button type="button" class="seg-btn active" data-ord="tudo">Tudo</button>
-            <button type="button" class="seg-btn" data-ord="balcao">🛍️ Balcão</button>
-            <button type="button" class="seg-btn" data-ord="atacado">🤝 Atacado</button>
+            <button type="button" class="seg-btn" data-ord="balcao">Balcão</button>
+            <button type="button" class="seg-btn" data-ord="atacado">Atacado</button>
           </div>
         </div>
         <table class="data-table">
@@ -169,6 +169,8 @@
         </details>
       </div>
 
+      <details class="bloco-novo" id="novaLevaBox">
+        <summary class="btn btn-primary"><span aria-hidden="true">+</span> Registrar produção</summary>
       <div class="panel">
         <div class="panel-header">
           <div><h2 id="prodFormTitle">Nova leva</h2><div class="subtitle" id="prodFormSubtitle">O que foi produzido entra no estoque, e o custo por litro sai sozinho</div></div>
@@ -208,11 +210,12 @@
           </div>
         </form>
       </div>
+      </details>
 
       <div class="panel">
         <div class="panel-header">
           <div><h2>Levas registradas</h2><div class="subtitle">Histórico de produções — clique para ver os detalhes</div></div>
-          <button type="button" class="btn btn-dark-outline btn-sm" id="refreshProducoesBtn">↻ Atualizar</button>
+          <button type="button" class="btn btn-dark-outline btn-sm" id="refreshProducoesBtn">Atualizar</button>
         </div>
         <table class="data-table">
           <thead><tr><th>Data</th><th>Leva</th><th>Produzido</th><th class="num">Gasto</th><th class="num">Custo/L</th><th>Ações</th></tr></thead>
@@ -229,8 +232,8 @@
 
       <div class="seg ov-filter" id="ovFilter" style="margin-bottom:18px;">
         <button type="button" class="seg-btn active" data-ov="tudo">Tudo</button>
-        <button type="button" class="seg-btn" data-ov="balcao">🛍️ Balcão (loja)</button>
-        <button type="button" class="seg-btn" data-ov="atacado">🤝 Atacado (revendedor)</button>
+        <button type="button" class="seg-btn" data-ov="balcao">Balcão</button>
+        <button type="button" class="seg-btn" data-ov="atacado">Atacado</button>
       </div>
 
       <div class="stat-grid">
@@ -285,7 +288,7 @@
             <h2>Fechamentos de caixa</h2>
             <div class="subtitle">Aberturas e fechamentos da loja: totais, fundo de troco, dinheiro conferido e diferença</div>
           </div>
-          <button type="button" class="btn btn-dark-outline btn-sm" id="refreshCaixaBtn">↻ Atualizar</button>
+          <button type="button" class="btn btn-dark-outline btn-sm" id="refreshCaixaBtn">Atualizar</button>
         </div>
         <table class="data-table">
           <thead><tr><th>Abertura</th><th>Fechamento</th><th>Atendente</th><th class="num">Vendas</th><th class="num">Dinheiro</th><th class="num">Diferença</th><th></th></tr></thead>
@@ -299,7 +302,7 @@
             <h2>Alterações e cancelamentos da loja (caixa)</h2>
             <div class="subtitle">Registro de quem editou ou cancelou vendas presenciais, quando e por quê</div>
           </div>
-          <button type="button" class="btn btn-dark-outline btn-sm" id="refreshAuditsBtn">↻ Atualizar</button>
+          <button type="button" class="btn btn-dark-outline btn-sm" id="refreshAuditsBtn">Atualizar</button>
         </div>
         <table class="data-table">
           <thead><tr><th>Quando</th><th>Venda</th><th>Ação</th><th>Atendente</th><th>Motivo</th><th>Antes</th></tr></thead>
@@ -369,11 +372,10 @@
       </div>
 
       <div class="sub-panel hidden" data-sub-panel="produtos">
-      <div class="panel">
-        <div class="panel-header"><h2>Catálogo</h2></div>
-        <div class="admin-products-grid" id="productsGrid"></div>
-      </div>
 
+
+      <details class="bloco-novo" id="novoProdutoBox">
+        <summary class="btn btn-primary"><span aria-hidden="true">+</span> Novo produto</summary>
       <div class="panel">
         <div class="panel-header">
           <div><h2 id="productFormTitle">Novo produto</h2><div class="subtitle" id="productFormSubtitle">Nome, preço e uma foto opcional</div></div>
@@ -387,9 +389,9 @@
           <div class="field" style="margin-bottom:0; grid-column:1/-1;">
             <label for="productModo">Tipo de venda</label>
             <select id="productModo">
-              <option value="embalado">📦 Produto embalado (caixa, pote, bebida)</option>
-              <option value="copo">🥤 Copo / tigela com acompanhamentos (loja)</option>
-              <option value="peso">⚖️ Self-service por peso (loja)</option>
+              <option value="embalado">Produto embalado (caixa, pote, bebida)</option>
+              <option value="copo">Copo / tigela com acompanhamentos (loja)</option>
+              <option value="peso">Self-service por peso (loja)</option>
             </select>
             <div class="field-note-inline">Copo e self-service são vendidos só no balcão (caixa) — não aparecem para o revendedor.</div>
           </div>
@@ -423,8 +425,8 @@
           <div class="field" style="margin-bottom:0; grid-column:1/-1;" id="productTipoField">
             <label>Vender como</label>
             <div class="tipo-checks">
-              <label class="checkbox-line"><input type="checkbox" id="productTipoVarejo" checked><span>🛍️ Varejo</span></label>
-              <label class="checkbox-line"><input type="checkbox" id="productTipoAtacado"><span>📦 Atacado</span></label>
+              <label class="checkbox-line"><input type="checkbox" id="productTipoVarejo" checked><span>Varejo</span></label>
+              <label class="checkbox-line"><input type="checkbox" id="productTipoAtacado"><span>Atacado</span></label>
             </div>
             <div class="field-note-inline">Marque os dois para vender o mesmo produto nos dois preços — eles dividem o mesmo estoque.</div>
           </div>
@@ -473,6 +475,12 @@
           <button type="button" class="btn btn-dark-outline hidden" id="productEditCancel">Cancelar edição</button>
         </form>
         <div class="field-note" id="productError">Não foi possível salvar o produto. Confira os dados.</div>
+      </div>
+      </details>
+
+      <div class="panel">
+        <div class="panel-header"><h2>Catálogo</h2></div>
+        <div class="admin-products-grid" id="productsGrid"></div>
       </div>
       </div>
 
@@ -549,6 +557,8 @@
       </div>
 
       <div class="sub-panel hidden" data-sub-panel="cupons">
+      <details class="bloco-novo" id="novoCupomBox">
+        <summary class="btn btn-primary"><span aria-hidden="true">+</span> Gerar cupom</summary>
       <div class="panel">
         <div class="panel-header">
           <div><h2>Gerar novo cupom</h2><div class="subtitle">Crie um cupom para um revendedor específico</div></div>
@@ -574,6 +584,7 @@
         </form>
         <div class="field-note" id="couponError">Não foi possível gerar o cupom. Confira os dados.</div>
       </div>
+      </details>
 
       <div class="panel">
         <div class="panel-header"><h2>Todos os cupons</h2></div>
@@ -651,7 +662,7 @@
             <input type="password" id="aSenha2" autocomplete="new-password" minlength="6">
           </div>
           <button type="submit" class="btn btn-primary">Alterar senha</button>
-          <span id="adminPasswordSaved" class="hidden" style="margin-left:14px; color:var(--verde-dark); font-weight:700; font-size:13px;">✓ Senha alterada!</span>
+          <span id="adminPasswordSaved" class="hidden" style="margin-left:14px; color:var(--verde-dark); font-weight:700; font-size:13px;">Senha alterada.</span>
           <div id="adminPasswordError" class="hidden" style="margin-top:10px; color:#c0392b; font-weight:600; font-size:13px;"></div>
         </form>
       </div>
@@ -1379,16 +1390,16 @@
     function card(mod, icon, titulo, list, withQty) {
       return '<div class="stock-summary-card ' + mod + '">' +
         '<div class="stock-summary-head">' +
-          '<span class="ic">' + icon + '</span>' +
+          (icon ? '<span class="ic">' + icon + '</span>' : '') +
           '<span class="stock-summary-title">' + titulo + '</span>' +
           '<span class="stock-summary-count">' + contar(list) + '</span>' +
         '</div>' + chips(list, withQty) + '</div>';
     }
 
     box.innerHTML =
-      card('is-danger', '🚫', 'Esgotado', buckets.esgotado, false) +
-      card('is-warning', '⚠️', 'Estoque baixo', buckets.baixo, true) +
-      card('is-green', '✅', 'Estoque saudável', buckets.saudavel, true);
+      card('is-danger', '', 'Esgotado', buckets.esgotado, false) +
+      card('is-warning', '', 'Estoque baixo', buckets.baixo, true) +
+      card('is-green', '', 'Estoque saudável', buckets.saudavel, true);
   }
 
   // ---- Aprovações ----
@@ -1720,7 +1731,7 @@
             minHtml + stockHtml +
             '<h3>' + esc(p.nome) + '</h3>' +
             priceHtml +
-            '<div style="font-size:11px;color:var(--text-light);margin-top:4px;">🧾 NCM ' + (p.ncm || '—') + ' · CSOSN ' + (p.csosn || '—') + ' · CFOP ' + (p.cfop || '—') + '</div>' +
+            '<div class="prod-fiscal">NCM ' + esc(p.ncm || '—') + ' · CSOSN ' + esc(p.csosn || '—') + ' · CFOP ' + esc(p.cfop || '—') + '</div>' +
             '<div class="admin-table-actions">' +
               '<button class="btn btn-dark-outline btn-sm" data-edit-product="' + p.id + '">Editar</button>' +
               '<button class="btn btn-dark-outline btn-sm" data-delete-product="' + p.id + '">Excluir</button>' +
@@ -1746,6 +1757,7 @@
             else if (c.kind === 'single') openDualEditor(p, null);
             else openLegacyEditor(p, false);
           }
+          document.getElementById('novoProdutoBox').open = true;
           document.querySelector('#productForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
         });
       });
@@ -3239,6 +3251,23 @@
     await renderCoupons();
   });
 
+  // ---- Tabelas no celular ----
+  // Abaixo de 700 px cada linha vira um cartão (CSS .pg-admin .data-table). Pra
+  // isso cada célula precisa do nome da coluna: lido do <thead> sempre que o
+  // corpo da tabela é redesenhado.
+  function rotularTabela(tbody) {
+    var nomes = Array.prototype.map.call(tbody.closest('table').querySelectorAll('thead th'), function (th) { return th.textContent.trim(); });
+    tbody.querySelectorAll(':scope > tr').forEach(function (tr) {
+      Array.prototype.forEach.call(tr.children, function (td, i) {
+        if (!td.hasAttribute('colspan') && nomes[i] && !td.hasAttribute('data-label')) td.setAttribute('data-label', nomes[i]);
+      });
+    });
+  }
+  document.querySelectorAll('.data-table > tbody').forEach(function (tb) {
+    rotularTabela(tb);
+    new MutationObserver(function () { rotularTabela(tb); }).observe(tb, { childList: true });
+  });
+
   // ---- Navegação: cada aba tem endereço próprio (#pedidos, #cadastros/produtos) ----
   // Recarregar a página volta pra mesma aba, e o Voltar do navegador funciona.
   var ABAS = ['inicio', 'pedidos', 'estoque', 'numeros', 'cadastros', 'equipe', 'conta'];
@@ -3685,6 +3714,7 @@
     prodGastosData = leva.gastos.length ? leva.gastos.map(function (g) { return { descricao: g.descricao || '', categoria: g.categoria, valor: g.valor }; }) : [{ descricao: '', categoria: 'materia_prima', valor: 0 }];
     prodItensData = leva.itens.length ? leva.itens.map(function (it) { return { produtoId: it.produtoId, nome: it.nome, sabor: it.sabor || null, litrosUnit: it.litrosUnit, quantidade: it.quantidade }; }) : [{ produtoId: null, nome: null, litrosUnit: 0, quantidade: 0 }];
     renderGastoRows(); renderItemRows(); recomputeProd();
+    document.getElementById('novaLevaBox').open = true;
     document.getElementById('prodForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 
