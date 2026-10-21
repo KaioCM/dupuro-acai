@@ -2637,3 +2637,16 @@ a.stat-card.alerta .stat-sub { color: var(--warning); font-weight: 800; }
 .pg-admin .bloco-novo[open] > summary { background: #fff; color: var(--roxo-700); box-shadow: inset 0 0 0 1.5px var(--roxo-700); }
 .ped-periodo { padding: 8px 12px; border: 1px solid rgba(96,16,80,0.18); border-radius: 10px; background: #fff; font: inherit; font-size: 14px; color: var(--roxo-950); margin-left: auto; }
 #pedConcluidos .panel-header { align-items: center; }
+
+/* ---------- Correções da critique 3 ---------- */
+/* "Equipe e acessos" mora no rodapé do menu: ativo precisa da cor escura (estava 1,4:1) */
+.pg-admin .sidebar-footer .sidebar-link.active { color: var(--roxo-950); }
+/* Placeholder com contraste AA sobre o creme (o cinza padrão dava 4,3:1) */
+.pg-admin ::placeholder { color: var(--text-light); opacity: 1; }
+.pg-admin .data-table td:first-child strong { white-space: nowrap; }
+@media (max-width: 900px) {
+  /* Menu lateral fechado sai da ordem do Tab (antes o foco caía em links fora da tela) */
+  .pg-admin .sidebar:not(.open) { visibility: hidden; transition: transform 0.25s ease, visibility 0s 0.25s; }
+  .pg-admin .sidebar.open { visibility: visible; transition: transform 0.25s ease; }
+  .pg-admin #mobileMenuBtn { width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; }
+}
