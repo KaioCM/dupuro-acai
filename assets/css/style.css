@@ -2577,3 +2577,15 @@ a.stat-card.alerta .stat-sub { color: var(--warning); font-weight: 800; }
 
 .pg-admin .prod-fiscal { margin-top: 4px; font-size: 12.5px; color: var(--text-light); font-variant-numeric: tabular-nums; }
 .pg-admin .calc-label, .pg-admin .day-count { font-size: 12px; }
+
+/* ---------- Admin: acabamento (etapa polish) ---------- */
+.fila-secao { margin-bottom: 30px; }
+.fila-secao > .subtitle { margin: 4px 0 14px; }
+.ped-acoes .btn-link-perigo { margin-left: auto; }
+.pg-admin .day-count { text-transform: none; letter-spacing: 0; }
+@media (min-width: 701px) {
+  /* Ações da linha lado a lado (a célula não vira flex: quebrava em coluna) */
+  .pg-admin .data-table td.admin-table-actions { display: table-cell; white-space: nowrap; }
+  .pg-admin .data-table td.admin-table-actions > * + * { margin-left: 8px; }
+}
+@media (min-width: 701px) { .pg-admin #tab-numeros .stat-grid { grid-template-columns: repeat(3, 1fr); } }
