@@ -55,25 +55,12 @@ var DupuroAdmin = (function () {
   }
 
   async function setProfileStatus(id, status) {
-    esquecerRevendedores();
     var result = await client.from('profiles').update({ status: status }).eq('id', id);
     return { error: result.error };
   }
 
   // ---------- Revendedores ----------
-  // Pedidos, cupons e a Visão geral pedem a lista de revendedores ao mesmo
-  // tempo; dentro de 5 s elas dividem a mesma consulta. Qualquer gravação em
-  // profiles (abaixo) descarta a lista guardada.
-  var revendedoresMemo = null;
-  function esquecerRevendedores() { revendedoresMemo = null; }
-  async function getResellers() { // async: a camada de cache do admin.html só embrulha funções async
-    if (revendedoresMemo && Date.now() - revendedoresMemo.t < 5000) return revendedoresMemo.p;
-    var p = buscarRevendedores();
-    revendedoresMemo = { t: Date.now(), p: p };
-    p.catch(esquecerRevendedores);
-    return p;
-  }
-  async function buscarRevendedores() {
+  async function getResellers() {
     var result = await client
       .from('profiles')
       .select('id, nome, empresa, email, telefone, cidade, created_at')
@@ -84,7 +71,6 @@ var DupuroAdmin = (function () {
   }
 
   async function updateReseller(id, data) {
-    esquecerRevendedores();
     var result = await client
       .from('profiles')
       .update({ nome: data.nome, empresa: data.empresa, telefone: data.telefone, cidade: data.cidade })
@@ -97,7 +83,6 @@ var DupuroAdmin = (function () {
   // (deploy feito via MCP). Pedidos/cupons do revendedor NÃO são apagados,
   // só perdem a referência ao dono (ver migration_006).
   async function deleteReseller(userId) {
-    esquecerRevendedores();
     var session = await getSession();
     if (!session) return { error: new Error('Sem sessão ativa') };
 
@@ -154,7 +139,6 @@ var DupuroAdmin = (function () {
   // admin ou atendente, força status 'aprovado' (precisam poder entrar). A policy
   // profiles_update_own_or_admin deixa um admin alterar qualquer perfil.
   async function setProfileRole(id, role) {
-    esquecerRevendedores();
     var patch = { role: role };
     if (role === 'admin' || role === 'atendente') patch.status = 'aprovado';
     var result = await client.from('profiles').update(patch).eq('id', id);
@@ -228,13 +212,6 @@ var DupuroAdmin = (function () {
     return result.data;
   }
 
-  async function createOrder(order) {
-    return createOrderCart(
-      { revendedorId: order.revendedorId, data: order.data, status: order.status },
-      [{ produtoId: order.produtoId, quantidade: order.quantidade, itens: order.itens, valor: order.valor, sabor: order.sabor }]
-    );
-  }
-
   // Pedido com vários itens ("carrinho"): N linhas com o MESMO numero, para o
   // mesmo revendedor/data/status. Insert de array = atômico (se um item faltar
   // estoque, o pedido inteiro é revertido).
@@ -262,11 +239,6 @@ var DupuroAdmin = (function () {
     });
     var result = await client.from('orders').insert(rows);
     return { error: result.error, numero: numero };
-  }
-
-  async function updateOrderStatus(orderId, status) {
-    var result = await client.from('orders').update({ status: status }).eq('id', orderId);
-    return { error: result.error };
   }
 
   async function updateOrder(orderId, order) {
@@ -409,10 +381,6 @@ var DupuroAdmin = (function () {
 
   // Cria um produto; se houver arquivo de imagem, sobe pro bucket 'produtos'
   // (público para leitura, upload restrito ao admin via RLS de storage).
-  function createProduct(nome, preco, file, tipo, multissabor, multissaborIncluirAcai, estoque, pedidoMinimo) {
-    return uploadAndSaveProduct(null, nome, preco, tipo, multissabor, multissaborIncluirAcai, estoque, pedidoMinimo, file);
-  }
-
   // Atualiza um produto; se houver novo arquivo de imagem, sobe pro bucket e
   // apaga a imagem antiga (best-effort). Sem arquivo novo, mantém a imagem atual.
   function updateProduct(product, nome, preco, tipo, multissabor, multissaborIncluirAcai, estoque, pedidoMinimo, file, litros) {
@@ -889,7 +857,55 @@ var DupuroAdmin = (function () {
     return { error: result.error };
   }
 
-  return {
+  // ---------- Cache de leitura ----------
+  // Várias telas pedem a mesma lista ao mesmo tempo (revendedores, pedidos,
+  // produtos...). Cada leitura fica guardada por 30 s, e qualquer gravação limpa
+  // tudo, então a tela seguinte sempre lê o dado novo. Mora aqui, e não na
+  // página, pra valer também nas chamadas internas (getAllOrders → getResellers).
+  var cacheLeitura = {};
+  function limparCache() { cacheLeitura = {}; }
+  function comCache(nome, fn) {
+    return function () {
+      var chave = nome + JSON.stringify(Array.prototype.slice.call(arguments));
+      var c = cacheLeitura[chave];
+      if (c && Date.now() - c.t < 30000) return c.p;
+      var p = fn.apply(null, arguments);
+      cacheLeitura[chave] = { t: Date.now(), p: p };
+      p.catch(function () { if (cacheLeitura[chave] && cacheLeitura[chave].p === p) delete cacheLeitura[chave]; });
+      return p;
+    };
+  }
+  getPendingProfiles = comCache('getPendingProfiles', getPendingProfiles);
+  getResellers = comCache('getResellers', getResellers);
+  getAdmins = comCache('getAdmins', getAdmins);
+  getAtendentes = comCache('getAtendentes', getAtendentes);
+  getAllOrders = comCache('getAllOrders', getAllOrders);
+  getOrderAudits = comCache('getOrderAudits', getOrderAudits);
+  getProducts = comCache('getProducts', getProducts);
+  getLitrosDispensaMinimo = comCache('getLitrosDispensaMinimo', getLitrosDispensaMinimo);
+  getAcompanhamentos = comCache('getAcompanhamentos', getAcompanhamentos);
+  getDeliveryPedidos = comCache('getDeliveryPedidos', getDeliveryPedidos);
+  getAllCoupons = comCache('getAllCoupons', getAllCoupons);
+  getProducoes = comCache('getProducoes', getProducoes);
+  getCaixaFechamentos = comCache('getCaixaFechamentos', getCaixaFechamentos);
+  getPromocoesHoje = comCache('getPromocoesHoje', getPromocoesHoje);
+
+  // Toda função exportada que não é leitura nem sessão é gravação: limpa o
+  // cache antes e depois (vale também pras que devolvem promessa sem async).
+  var NAO_GRAVA = {
+    requireAdmin: 1, logout: 1, onAuthStateChange: 1, getCurrentUserId: 1,
+    getNextOrderNumber: 1, getContagemNovos: 1, limparCache: 1
+  };
+  function gravando(fn) {
+    return function () {
+      limparCache();
+      var r = fn.apply(null, arguments);
+      return r && typeof r.then === 'function' ? r.finally(limparCache) : r;
+    };
+  }
+
+  var api = {
+    limparCache: limparCache,
     requireAdmin: requireAdmin,
     logout: logout,
     onAuthStateChange: onAuthStateChange,
@@ -908,10 +924,8 @@ var DupuroAdmin = (function () {
     setDeliveryStatus: setDeliveryStatus,
     getContagemNovos: getContagemNovos,
     getNextOrderNumber: getNextOrderNumber,
-    createOrder: createOrder,
     createOrderCart: createOrderCart,
     updateOrder: updateOrder,
-    updateOrderStatus: updateOrderStatus,
     updateOrderStatusByNumero: updateOrderStatusByNumero,
     deleteOrder: deleteOrder,
     deleteOrderByNumero: deleteOrderByNumero,
@@ -920,7 +934,6 @@ var DupuroAdmin = (function () {
     generateCoupon: generateCoupon,
     deleteCoupon: deleteCoupon,
     getProducts: getProducts,
-    createProduct: createProduct,
     updateProduct: updateProduct,
     saveDualProduct: saveDualProduct,
     saveStoreProduct: saveStoreProduct,
@@ -943,5 +956,9 @@ var DupuroAdmin = (function () {
     createPromocao: createPromocao,
     deletePromocao: deletePromocao
   };
+  Object.keys(api).forEach(function (nome) {
+    if (!NAO_GRAVA[nome] && !/^get/.test(nome)) api[nome] = gravando(api[nome]);
+  });
+  return api;
 
 })();
