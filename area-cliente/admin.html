@@ -903,6 +903,7 @@
   // É isso que impede o gráfico de sumir ao alternar abas. Sem animação nem
   // plugin custom, pra não ter mais o bug de sumiço.
   function upsertChart(canvasId, type, data, options) {
+    setupChartTheme(); // tema + rótulos (idempotente; antes nunca era chamado)
     var canvas = document.getElementById(canvasId);
     if (!canvas) return;
     if (chartInstances[canvasId]) {
