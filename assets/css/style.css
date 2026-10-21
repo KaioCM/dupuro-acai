@@ -2394,3 +2394,12 @@ a.stat-card.alerta .stat-sub { color: var(--warning); font-weight: 800; }
 .pg-caixa .shop-card .body h3 { font-size: 14px; margin-bottom: 2px; }
 @media (max-width: 640px) { .pg-revenda .shop-card .body h3 { font-size: 13px; } }
 .app-main h2.order-summary-head { font-size: 17px; margin: 0; line-height: 1.2; }
+
+/* Gráficos: visão em tabela (skill dataviz — obrigatória quando há cor com contraste < 3:1) */
+.ver-tabela { margin-top: 10px; background: none; border: 0; padding: 4px 0; font: 700 13px var(--font-body); color: var(--roxo-500); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.tabela-grafico { margin-top: 10px; overflow-x: auto; }
+.tabela-grafico-t { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+.tabela-grafico-t th, .tabela-grafico-t td { padding: 7px 10px; border-bottom: 1px solid rgba(56,12,47,0.08); text-align: right; white-space: nowrap; }
+.tabela-grafico-t thead th { font-weight: 700; color: var(--text-light); font-size: 12px; }
+.tabela-grafico-t th[scope="row"], .tabela-grafico-t thead th:first-child { text-align: left; color: var(--roxo-900); }
+.tabela-grafico-t .tg-cor { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: 1px; }
