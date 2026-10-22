@@ -9,9 +9,10 @@
 <link rel="apple-touch-icon" href="../assets/img/brand/favicon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/css/style.css?v=47">
+<link rel="stylesheet" href="../assets/css/style.css?v=48">
 </head>
 <body class="pg-revenda">
+<a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
 <svg class="sprite" aria-hidden="true" focusable="false"><symbol id="m-grafico" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></symbol><symbol id="m-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol><symbol id="m-usuarios" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"/></symbol><symbol id="m-caixa" viewBox="0 0 24 24"><path d="M3 8l9-4 9 4v9l-9 4-9-4z"/><path d="M3 8l9 4 9-4M12 12v9"/></symbol><symbol id="m-painel" viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 10h6M9 14h6M9 18h3"/></symbol><symbol id="m-fabrica" viewBox="0 0 24 24"><path d="M3 21V10l5 3v-3l5 3V7l8 4v10z"/><path d="M7 17h2M12 17h2M17 17h1"/></symbol><symbol id="m-etiqueta" viewBox="0 0 24 24"><path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.4"/></symbol><symbol id="m-engrenagem" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></symbol><symbol id="m-casa" viewBox="0 0 24 24"><path d="M3 11l9-7 9 7M5 9.5V20h14V9.5M10 20v-6h4v6"/></symbol><symbol id="m-sair" viewBox="0 0 24 24"><path d="M14 4h5a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-5M10 16l-4-4 4-4M6 12h10"/></symbol><symbol id="m-carrinho" viewBox="0 0 24 24"><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2.5 3.5h3l2.4 11.2a1.5 1.5 0 0 0 1.5 1.3h8.4a1.5 1.5 0 0 0 1.5-1.2L21 7H6.3"/></symbol><symbol id="m-recibo" viewBox="0 0 24 24"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6M9 16h3"/></symbol><symbol id="m-calendario" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></symbol><symbol id="m-chat" viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></symbol><symbol id="m-usuario" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol><symbol id="m-globo" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></symbol><symbol id="m-mais" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol><symbol id="m-repetir" viewBox="0 0 24 24"><path d="M4 12a8 8 0 0 1 14-5.3L20 9M20 4v5h-5M20 12a8 8 0 0 1-14 5.3L4 15M4 20v-5h5"/></symbol><symbol id="m-caminhao" viewBox="0 0 24 24"><path d="M2.5 6h11v10h-11zM13.5 9.5h4.2l3.3 3.5V16h-7.5"/><circle cx="7" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/></symbol></svg>
 
 
@@ -39,7 +40,7 @@
     </div>
   </aside>
 
-  <main class="app-main">
+  <main class="app-main" id="conteudo" tabindex="-1">
 
     <!-- ============ INÍCIO ============ -->
     <!-- Começa pela ação (critique 2): repetir o pedido de sempre ou montar um novo;
@@ -94,7 +95,7 @@
               Toque num produto da vitrine pra escolher o sabor e a quantidade.
             </div>
 
-            <div id="summaryContent" class="hidden" role="dialog" aria-modal="false" aria-labelledby="summaryName">
+            <div id="summaryContent" class="hidden" role="group" aria-labelledby="summaryName">
               <button type="button" class="sheet-fechar" id="sheetFechar" aria-label="Fechar sem adicionar">×</button>
               <div class="picked">
                 <div class="thumb" id="summaryThumb"></div>
@@ -337,7 +338,7 @@
     <div class="caixa-barra" id="pedidoBarra" hidden>
       <span class="cb-qtd" id="barraQtd">0 itens</span>
       <strong id="barraTotal">R$ 0,00</strong>
-      <button type="button" class="btn btn-primary btn-sm" id="barraVer">Ver pedido</button>
+      <button type="button" class="btn btn-primary btn-sm" id="barraVer">Revisar e enviar</button>
     </div>
   </main>
 </div>
@@ -444,7 +445,7 @@
     var passo = { enviado: 1, processando: 2, entregue: 3 }[o.status] || 1;
     var etapas = [
       ['Enviado', 'A Dupuro recebeu'],
-      ['Confirmado', passo >= 2 ? 'Estoque separado pra você' : 'A Dupuro confere o estoque e confirma aqui'],
+      [passo >= 2 ? 'Confirmado' : 'Confirmação', passo >= 2 ? 'Estoque separado pra você' : 'A Dupuro confere o estoque e confirma aqui'],
       [retira ? 'Retirado' : 'Entregue', quandoTxt(o).replace(/^(Entrega|Retirada na fábrica) · /, '') || (retira ? 'Na fábrica' : 'No seu endereço')]
     ];
     return '<ol class="linha-tempo">' + etapas.map(function (e, i) {
@@ -452,9 +453,14 @@
       return '<li' + (cls ? ' class="' + cls + '"' : '') + '><strong>' + e[0] + '</strong><span>' + esc(e[1]) + '</span></li>';
     }).join('') + '</ol>';
   }
+  function nomeItem(i) {
+    var nome = nomePorId[i.produtoId];
+    if (!nome) return i.itens; // produto removido: fica o texto gravado no pedido
+    return (i.quantidade || 1) + '× ' + nome + (i.sabor ? ' · ' + i.sabor : '');
+  }
   function itensHtml(o) {
     return '<ul class="rev-itens">' + o.items.map(function (i) {
-      return '<li><span>' + esc(i.itens) + '</span><span class="num">' + brl(i.valor) + '</span></li>';
+      return '<li><span>' + esc(nomeItem(i)) + '</span><span class="num">' + brl(i.valor) + '</span></li>';
     }).join('') + '</ul>';
   }
 
@@ -479,6 +485,15 @@
   // Meus pedidos: um cartão por pedido (a tabela rolava de lado e escondia o status no celular).
   function renderPedidos() {
     var lista = document.getElementById('allOrdersList');
+    if (!lista.dataset.ligado) {
+      lista.dataset.ligado = '1';
+      lista.addEventListener('click', function (e) {
+        var b = e.target.closest('[data-repetir]');
+        if (!b) return;
+        var o = sortedByDate.filter(function (x) { return x.id === b.getAttribute('data-repetir'); })[0];
+        if (o) repetirPedido(itensRepetiveis(o));
+      });
+    }
     if (!sortedByDate.length) {
       lista.innerHTML = '<li class="panel rev-vazio"><svg aria-hidden="true"><use href="#m-painel"/></svg>' +
         '<p><strong>Nenhum pedido ainda.</strong> Quando você enviar um, ele aparece aqui com o dia da entrega e o andamento.</p>' +
@@ -494,6 +509,7 @@
           '<span class="rev-pedido-total">' + brl(o.valor) + '</span></div>' +
         '<p class="rev-pedido-sub">Feito em ' + formatDate(o.data) + (q ? ' · ' + esc(q) : '') + '</p>' +
         (aberto ? linhaTempo(o) : '') +
+        (o.status === 'entregue' ? '<button type="button" class="btn-link-acao rev-repetir-este" data-repetir="' + esc(o.id) + '">Pedir de novo</button>' : '') +
         '<details class="rev-itens-det"' + (i === 0 && aberto ? ' open' : '') + '><summary>' + o.items.length + (o.items.length === 1 ? ' item' : ' itens') + '</summary>' + itensHtml(o) + '</details>' +
         '</li>';
     }).join('');
@@ -514,12 +530,12 @@
     });
   }
 
+  var nomePorId = {};
+  produtos.forEach(function (p) { nomePorId[p.id] = p.nome; });
+
   renderUltimo();
   renderPedidos();
   renderHistoricoResumo();
-
-  var nomePorId = {};
-  produtos.forEach(function (p) { nomePorId[p.id] = p.nome; });
 
   // ---- Gráficos: Chart.js só baixa quando o revendedor abre "Meu histórico" ----
   var chartJsPromessa = null;
@@ -850,11 +866,11 @@
         return '<option value="' + esc(s) + '"' + (ok ? '' : ' disabled') + '>' + esc(s) + '</option>';
       }).join('');
       // Sabores em botões (um toque, sem abrir lista); esgotados aparecem riscados.
-      document.getElementById('saborChips').innerHTML = opcoes.map(function (s) {
-        var ok = byName[s].disponivel;
-        return '<button type="button" class="sabor-chip" role="radio" aria-checked="false" data-sabor="' + esc(s) + '"' + (ok ? '' : ' disabled aria-disabled="true"') + '>' +
-          esc(s.replace(/^Creme de /, '')) + (ok ? '' : ' <small>esgotado</small>') + '</button>';
-      }).join('');
+      var curto = function (x) { return x.replace(/^Creme de /, ''); };
+      var esgotados = opcoes.filter(function (x) { return !byName[x].disponivel; });
+      document.getElementById('saborChips').innerHTML = opcoes.filter(function (x) { return byName[x].disponivel; }).map(function (x) {
+        return '<button type="button" class="sabor-chip" role="radio" aria-checked="false" data-sabor="' + esc(x) + '">' + esc(curto(x)) + '</button>';
+      }).join('') + (esgotados.length ? '<p class="sabor-esgotados">Esgotado agora: ' + esgotados.map(function (x) { return esc(curto(x)); }).join(', ') + '</p>' : '');
 
       // Um <option disabled> não pode ficar como escolhido: seleciona o 1º disponível.
       var primeiroDisponivel = opcoes.filter(function (s) { return byName[s].disponivel; })[0];
@@ -903,6 +919,8 @@
       document.body.appendChild(sheetWrap);
     }
     document.body.classList.add('escolhendo');
+    document.querySelector('.app-shell').inert = true;
+    document.querySelector('.bottom-nav').inert = true;
     document.getElementById('sheetFundo').hidden = false;
     var primeiro = document.querySelector('#saborChips .sabor-chip.active') || document.getElementById('summaryQty');
     setTimeout(function () { primeiro.focus({ preventScroll: true }); }, 60);
@@ -910,6 +928,8 @@
   function fecharPainelEscolha() {
     if (!document.body.classList.contains('escolhendo')) return;
     document.body.classList.remove('escolhendo');
+    document.querySelector('.app-shell').inert = false;
+    document.querySelector('.bottom-nav').inert = false;
     document.getElementById('sheetFundo').hidden = true;
     if (sheetWrap.parentNode) {
       marcadorSheet.parentNode.insertBefore(summaryContent, marcadorSheet);
@@ -977,18 +997,25 @@
   function atualizarBarra() {
     var b = document.getElementById('pedidoBarra');
     var naTela = !document.getElementById('tab-fazer-pedido').classList.contains('hidden');
-    b.hidden = !cart.length || !naTela;
+    var revisando = !document.getElementById('checkoutSection').classList.contains('hidden');
+    b.hidden = !cart.length || !naTela || carrinhoVisivel || revisando;
     var total = cart.reduce(function (s, it) { return s + it.preco * it.quantidade; }, 0);
     var n = cart.reduce(function (s, it) { return s + it.quantidade; }, 0);
-    document.getElementById('barraQtd').textContent = n + (n === 1 ? ' item' : ' itens');
+    document.getElementById('barraQtd').textContent = n + ' un.';
     document.getElementById('barraTotal').textContent = brl(total);
     var nb = document.getElementById('navCarrinho');
     nb.textContent = n;
     nb.classList.toggle('hidden', !n);
   }
-  document.getElementById('barraVer').addEventListener('click', function () {
-    document.querySelector('.order-summary').scrollIntoView({ behavior: 'smooth', block: 'start' });
-  });
+  document.getElementById('barraVer').addEventListener('click', function () { abrirRevisao(); });
+  // Com o carrinho à vista, a barra some (não cobre o botão "Revisar e enviar" dele).
+  var carrinhoVisivel = false;
+  if ('IntersectionObserver' in window) {
+    new IntersectionObserver(function (ent) {
+      carrinhoVisivel = ent[0].isIntersecting;
+      atualizarBarra();
+    }).observe(document.getElementById('sendCartBtn'));
+  }
 
   // Carrinho guardado no aparelho: se o celular bloquear ou a página recarregar
   // no meio do pedido, nada se perde. Preço e estoque são recalculados no banco.
@@ -1018,6 +1045,7 @@
     atualizarBarra();
     var section = document.getElementById('cartSection');
     var list = document.getElementById('cartList');
+    summaryPlaceholder.classList.toggle('hidden', !!cart.length || !!selectedProduct);
     if (!cart.length) { list.innerHTML = ''; section.classList.add('hidden'); return; }
     section.classList.remove('hidden');
     list.innerHTML = cart.map(function (it, i) {
@@ -1058,7 +1086,7 @@
     selectedProduct = null;
     summaryContent.classList.add('hidden');
     summarySuccess.classList.add('hidden');
-    summaryPlaceholder.classList.remove('hidden');
+    summaryPlaceholder.classList.toggle('hidden', !!cart.length);
     shopCatalog.querySelectorAll('.shop-card').forEach(function (c) {
       c.classList.remove('selected');
       c.setAttribute('aria-pressed', 'false');
@@ -1168,8 +1196,8 @@
     checkoutError.classList.remove('show');
     atualizarCheckout();
     document.getElementById('cartSection').classList.add('hidden');
-    document.getElementById('pedidoBarra').hidden = true;
     checkout.classList.remove('hidden');
+    atualizarBarra();
     document.querySelector('.order-summary').scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
   function fecharRevisao() {
@@ -1231,7 +1259,7 @@
     checkout.classList.add('hidden');
     document.getElementById('checkoutObs').value = '';
     document.getElementById('sucessoTitulo').textContent = (result.numero || 'Pedido') + ' enviado';
-    document.getElementById('summarySuccessDetail').textContent = n + (n === 1 ? ' item' : ' itens') + ' · ' + brl(total);
+    document.getElementById('summarySuccessDetail').textContent = n + (n === 1 ? ' produto' : ' produtos') + ' · ' + brl(total);
     document.getElementById('sucessoUltimo').textContent = tipo === 'entrega' ? 'Entregue' : 'Retirado na fábrica';
     document.getElementById('sucessoQuando').textContent = rotuloDia(entrega.data) + ', ' + TURNOS[entrega.turno].nome.toLowerCase() + ' (' + TURNOS[entrega.turno].faixa + ')' +
       (tipo === 'entrega' ? ' · ' + endereco : ' · Av. das Torres, 16');
@@ -1276,17 +1304,16 @@
     renderPedidos();
     renderHistoricoResumo();
     setupRepeatButton();
+    primeiraData = orders.reduce(function (min, o) { return o.data && (!min || o.data < min) ? o.data : min; }, null) || hojeISO();
+    fromEl.min = primeiraData; toEl.min = primeiraData;
   }
 
   // ---- Repetir último pedido ----
   var repeatBtn = document.getElementById('repeatOrderBtn');
   var repeatable = [];
-  function setupRepeatButton() {
-    var last = sortedByDate.filter(function (o) { return o.status !== 'cancelado'; })[0];
-    repeatBtn.classList.add('hidden');
-    if (!last || !last.items || !last.items.length) return;
-    // Só os itens que ainda existem e têm estoque/sabor disponível.
-    repeatable = last.items.map(function (it) {
+  // Itens de um pedido que ainda dá pra pedir (produto existe, tem estoque e o sabor).
+  function itensRepetiveis(pedido) {
+    return pedido.items.map(function (it) {
       var product = productsCache.find(function (p) { return String(p.id) === String(it.produtoId) && p.emEstoque; });
       if (!product) return null;
       if (product.multissabor && it.sabor && (product.saboresDisponiveis || []).indexOf(it.sabor) === -1) return null;
@@ -1294,25 +1321,35 @@
         litros: product.litros || 0,
         quantidade: Math.min(99, Math.max(product.pedidoMinimo || 1, it.quantidade || 1)) };
     }).filter(Boolean);
+  }
+  function setupRepeatButton() {
+    var last = sortedByDate.filter(function (o) { return o.status !== 'cancelado'; })[0];
+    repeatBtn.classList.add('hidden');
+    if (!last || !last.items || !last.items.length) return;
+    repeatable = itensRepetiveis(last);
     if (!repeatable.length) return;
+    // Pedido ainda em aberto: repetir vira opção secundária (evita mandar o mesmo duas vezes).
+    var emAberto = last.status === 'enviado' || last.status === 'processando';
+    repeatBtn.classList.toggle('rev-acao-sec', emAberto);
     var total = repeatable.reduce(function (s, r) { return s + r.preco * r.quantidade; }, 0);
     var falta = last.items.length - repeatable.length;
-    document.getElementById('repeatResumo').textContent = 'Pedido de ' + formatDate(last.data) + ' · ' + repeatable.length +
-      (repeatable.length === 1 ? ' item' : ' itens') + ' · ' + brl(total) + (falta ? ' (' + falta + ' sem estoque agora)' : '');
+    document.getElementById('repeatResumo').textContent = (emAberto ? last.id + ' ainda está em andamento · ' : 'Pedido de ' + formatDate(last.data) + ' · ') +
+      repeatable.length + (repeatable.length === 1 ? ' produto' : ' produtos') + ' · ' + brl(total) + (falta ? ' (' + falta + ' sem estoque agora)' : '');
     repeatBtn.classList.remove('hidden');
   }
   // Coloca os itens no carrinho e já abre a revisão: confere e envia.
-  repeatBtn.addEventListener('click', function () {
-    if (!repeatable.length) return;
+  repeatBtn.addEventListener('click', function () { repetirPedido(repeatable); });
+  function repetirPedido(itens) {
+    if (!itens || !itens.length) { goTo('fazer-pedido'); return; }
     goTo('fazer-pedido');
-    repeatable.forEach(function (r) {
+    itens.forEach(function (r) {
       var existing = cart.filter(function (it) { return it.productId === r.productId && (it.sabor || null) === (r.sabor || null); })[0];
       if (existing) existing.quantidade = Math.min(99, existing.quantidade + r.quantidade);
       else cart.push({ productId: r.productId, nome: r.nome, preco: r.preco, sabor: r.sabor, quantidade: r.quantidade, litros: r.litros || 0, tipo: (productsCache.find(function (p) { return p.id === r.productId; }) || {}).tipo });
     });
     renderCart();
     abrirRevisao();
-  });
+  }
 
   productsCache = produtos;
   renderShop();
@@ -1444,7 +1481,7 @@
     });
     document.getElementById('sidebar').classList.remove('open');
     if (mobileBtn) mobileBtn.setAttribute('aria-expanded', 'false');
-    window.scrollTo(0, 0);
+    window.scrollTo({ top: 0, behavior: 'instant' });
     if (typeof atualizarBarra === 'function') atualizarBarra();
   }
   navItems.forEach(function (link) {

@@ -2947,3 +2947,31 @@ a.stat-card.alerta .stat-sub { color: var(--warning); font-weight: 800; }
 .pg-revenda .order-summary h3, .sheet-escolha h3 { font-family: var(--font-body); font-weight: 700; text-transform: none; letter-spacing: -0.01em; font-size: 16px; line-height: 1.3; color: var(--roxo-950); }
 .pg-revenda .order-summary .picked { background: rgba(96,16,80,0.04); border: 0; }
 @media (max-width: 900px) { .pg-revenda .bottom-nav a { font-size: 12px; } }
+
+/* ---------- Revendedor: correções da critique 3 ---------- */
+/* Espaço pra barra de baixo + barra do pedido (o seletor com :has do admin vencia por especificidade) */
+@media (max-width: 900px) { body.pg-revenda .app-main { padding-bottom: 170px; } }
+/* Totais em Inter (Klinko fica só no título da página); rótulo em letra normal */
+.pg-revenda .order-total-row .lbl { text-transform: none; letter-spacing: 0; font-size: 14px; }
+.pg-revenda .order-total-row .val { font-family: var(--font-body); font-weight: 800; font-size: 22px; color: var(--roxo-950); font-variant-numeric: tabular-nums; }
+.pg-revenda .order-total-row { border-top: 1px solid rgba(96,16,80,0.10); }
+/* No computador o resumo cabe na tela e rola por dentro */
+@media (min-width: 1101px) {
+  .pg-revenda .order-summary { max-height: calc(100vh - 48px); display: flex; flex-direction: column; }
+  .pg-revenda .order-summary-body { overflow-y: auto; }
+}
+/* Sabores esgotados numa linha de texto */
+.sabor-esgotados { flex-basis: 100%; margin: 4px 0 0; font-size: 13px; color: var(--text-light); }
+/* Repetir com pedido ainda em aberto: vira opção secundária e "Fazer pedido" assume o dourado */
+.rev-acao-repetir.rev-acao-sec { background: #fff; border-color: rgba(96,16,80,0.14); }
+.rev-acao-repetir.rev-acao-sec .rev-acao-ic { background: rgba(96,16,80,0.07); color: var(--roxo-700); }
+.rev-acao-repetir.rev-acao-sec small { color: var(--text-light); }
+.rev-acao-repetir.rev-acao-sec:hover { background: rgba(96,16,80,0.03); border-color: rgba(96,16,80,0.32); }
+.rev-acao-repetir.rev-acao-sec + .rev-acao-novo { background: var(--gold); border-color: var(--gold); }
+.rev-acao-repetir.rev-acao-sec + .rev-acao-novo .rev-acao-ic { background: rgba(36,8,32,0.10); color: var(--roxo-950); }
+.rev-acao-repetir.rev-acao-sec + .rev-acao-novo small { color: var(--roxo-900); }
+.rev-repetir-este { display: inline-flex; align-items: center; min-height: 44px; margin-right: 18px; }
+/* E-mail só leitura não parece campo editável */
+.pg-revenda input[readonly] { background: rgba(96,16,80,0.04); border-color: transparent; color: var(--text-light); }
+/* Pagamento com uma opção só ocupa a linha inteira */
+.pg-revenda .opcoes-2:has(> .opcao.hidden) { grid-template-columns: 1fr; }
