@@ -64,7 +64,7 @@ var DupuroAdmin = (function () {
   async function getResellers() {
     var result = await client
       .from('profiles')
-      .select('id, nome, empresa, email, telefone, cidade, created_at')
+      .select('id, nome, empresa, email, telefone, cidade, endereco, pode_prazo, created_at')
       .eq('status', 'aprovado')
       .eq('role', 'revendedor')
       .eq('conta_teste', false)
@@ -77,6 +77,12 @@ var DupuroAdmin = (function () {
       .from('profiles')
       .update({ nome: data.nome, empresa: data.empresa, telefone: data.telefone, cidade: data.cidade })
       .eq('id', id);
+    return { error: result.error };
+  }
+
+  // "A prazo"/fiado só pra revendedor de confiança: o trigger do banco deixa só admin mudar.
+  async function setPodePrazo(id, pode) {
+    var result = await client.from('profiles').update({ pode_prazo: !!pode }).eq('id', id);
     return { error: result.error };
   }
 
@@ -158,7 +164,7 @@ var DupuroAdmin = (function () {
     var r = await Promise.all([
       client
         .from('orders')
-        .select('id, revendedor_id, numero, data, itens, valor, status, produto_id, quantidade, sabor, usa_estoque, origem, created_at, forma_pagamento, pagamentos, entrega')
+        .select('id, revendedor_id, numero, data, itens, valor, status, produto_id, quantidade, sabor, usa_estoque, origem, created_at, forma_pagamento, pagamentos, entrega, entrega_info')
         .order('data', { ascending: false }),
       getResellers(),
       client.from('products').select('id, tipo')
@@ -195,6 +201,8 @@ var DupuroAdmin = (function () {
           // pro 'Detalhes': quando foi lançado e como foi pago (repetidos por linha no banco)
           criadoEm: o.created_at || null, formaPagamento: o.forma_pagamento || null,
           pagamentos: o.pagamentos || null, entrega: !!o.entrega,
+          // pedido do revendedor: { tipo, data, turno, pagamento, forma, endereco, observacao }
+          entregaInfo: o.entrega_info || null,
           usaEstoque: o.usa_estoque !== false
         };
         order.push(g);
@@ -942,6 +950,7 @@ var DupuroAdmin = (function () {
     setProfileStatus: setProfileStatus,
     getResellers: getResellers,
     updateReseller: updateReseller,
+    setPodePrazo: setPodePrazo,
     deleteReseller: deleteReseller,
     getAdmins: getAdmins,
     getAtendentes: getAtendentes,
