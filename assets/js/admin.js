@@ -628,6 +628,28 @@ var DupuroAdmin = (function () {
     return { error: result.error };
   }
 
+  // ---------- Ajuste manual de estoque (migration_042) ----------
+  // delta > 0 soma, < 0 tira; o banco recusa se o estoque ficaria negativo.
+  async function ajustarEstoque(produtoId, sabor, delta, motivo) {
+    var r = await client.rpc('ajustar_estoque', { p_produto_id: produtoId, p_sabor: sabor || null, p_delta: delta, p_motivo: motivo });
+    return { error: r.error, estoque: r.data };
+  }
+  async function getAjustesEstoque() {
+    var r = await client.from('estoque_ajustes')
+      .select('id, produto_nome, sabor, delta, motivo, criado_em')
+      .order('criado_em', { ascending: false }).limit(15);
+    return r.error ? [] : (r.data || []);
+  }
+
+  // Vendas com cupom fiscal autorizado: no admin elas não podem ser excluídas nem
+  // corrigidas sem aviso (o cupom só se cancela pelo caixa, em até 30 min).
+  async function getNumerosComNfce() {
+    var r = await client.from('nfce_emissoes').select('venda_numero').eq('status', 'autorizado');
+    var set = {};
+    (r.data || []).forEach(function (e) { set[e.venda_numero] = true; });
+    return set;
+  }
+
   // ---------- Delivery ----------
   // Pedidos do Dupuro Delivery (clientes de casa). Só admin lê (RLS is_admin()).
   async function getDeliveryPedidos() {
@@ -890,6 +912,8 @@ var DupuroAdmin = (function () {
   getLitrosDispensaMinimo = comCache('getLitrosDispensaMinimo', getLitrosDispensaMinimo);
   getAcompanhamentos = comCache('getAcompanhamentos', getAcompanhamentos);
   getDeliveryPedidos = comCache('getDeliveryPedidos', getDeliveryPedidos);
+  getAjustesEstoque = comCache('getAjustesEstoque', getAjustesEstoque);
+  getNumerosComNfce = comCache('getNumerosComNfce', getNumerosComNfce);
   getAllCoupons = comCache('getAllCoupons', getAllCoupons);
   getProducoes = comCache('getProducoes', getProducoes);
   getCaixaFechamentos = comCache('getCaixaFechamentos', getCaixaFechamentos);
@@ -926,6 +950,9 @@ var DupuroAdmin = (function () {
     changePassword: changePassword,
     getAllOrders: getAllOrders,
     getDeliveryPedidos: getDeliveryPedidos,
+    ajustarEstoque: ajustarEstoque,
+    getAjustesEstoque: getAjustesEstoque,
+    getNumerosComNfce: getNumerosComNfce,
     setDeliveryStatus: setDeliveryStatus,
     getContagemNovos: getContagemNovos,
     getNextOrderNumber: getNextOrderNumber,

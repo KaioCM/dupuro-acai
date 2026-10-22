@@ -2677,3 +2677,29 @@ a.stat-card.alerta .stat-sub { color: var(--warning); font-weight: 800; }
   .pg-admin #pedConcluidos td[data-label="Data"] { display: none; }
 }
 @media (max-width: 700px) { .pg-admin .lote-sel { padding: 12px; margin: -12px 0 -12px -12px; } }
+
+/* ---------- Rodada 5: ajuste de estoque ---------- */
+.estoque-acoes { display: flex; align-items: center; gap: 10px; justify-content: flex-end; }
+.ajuste-linha { list-style: none; padding: 0 0 14px; }
+.ajuste-form { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px 14px; padding: 14px 16px; border-radius: 12px; background: rgba(96,16,80,0.05); }
+.ajuste-form > strong { flex: 1 0 100%; font-size: 14.5px; color: var(--roxo-950); }
+.ajuste-form label { display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; font-weight: 700; color: var(--text-light); }
+.ajuste-form select, .ajuste-form input { padding: 8px 10px; border: 1px solid rgba(96,16,80,0.2); border-radius: 10px; background: #fff; font: inherit; font-size: 15px; color: var(--roxo-950); min-width: 0; }
+.ajuste-form input[name="qtd"] { width: 96px; }
+.ajuste-atual { align-self: center; font-size: 14px; color: var(--text-light); }
+.ajuste-botoes { display: flex; align-items: center; gap: 12px; margin-left: auto; }
+.ajustes-recentes { margin-top: 14px; border-top: 1px solid rgba(96,16,80,0.08); padding-top: 10px; }
+.ajustes-recentes > summary { cursor: pointer; font-weight: 700; font-size: 14px; color: var(--roxo-700); }
+.ajustes-lista { list-style: none; margin: 8px 0 0; padding: 0; }
+.ajustes-lista li { display: grid; grid-template-columns: 110px 1fr auto; gap: 2px 14px; padding: 7px 0; border-bottom: 1px solid rgba(96,16,80,0.06); font-size: 14px; }
+.ajuste-quando { color: var(--text-light); font-variant-numeric: tabular-nums; }
+.ajuste-motivo { grid-column: 2 / -1; font-size: 13px; color: var(--text-light); }
+.ajustes-lista .ajuste-vazio { display: block; color: var(--text-light); }
+@media (max-width: 700px) {
+  .estoque-acoes { justify-content: flex-start; }
+  .ajuste-form label, .ajuste-form .seg { flex: 1 1 100%; }
+  .ajuste-form input[name="qtd"] { width: 100%; }
+  .ajuste-botoes { margin-left: 0; width: 100%; }
+  .ajustes-lista li { grid-template-columns: 1fr auto; }
+  .ajuste-quando { grid-column: 1 / -1; }
+}
