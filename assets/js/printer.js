@@ -248,22 +248,90 @@ var DupuroPrinter = (function () {
 
   // HTML da comanda (80mm) — compartilhado pela impressão do navegador (iframe)
   // e pela impressão nativa do app (Electron manda esse HTML pra impressora).
+  // Feita pra ler de longe na cozinha (queixa da atendente: letra pequena). Antes
+  // reusava as linhas de 48 colunas do ESC/POS em Courier 12px: em 74mm só cabem
+  // ~38, então o preço caía pra linha de baixo e os acompanhamentos quebravam
+  // sem recuo. Agora o HTML monta direto dos itens: número e itens grandes em
+  // negrito, cada acompanhamento numa linha, preço à direita sem quebrar.
   function htmlDaComanda(venda) {
-    var linhas = montarLinhas(venda).map(function (l) {
-      if (l.t === '-') return '<div class="hr"></div>';
-      var cls = (l.center ? ' center' : '') + (l.bold ? ' bold' : '') + (l.grande ? ' grande' : '');
-      return '<div class="l' + cls + '">' + (l.t === '' ? '&nbsp;' : l.t.replace(/&/g, '&amp;').replace(/</g, '&lt;')) + '</div>';
+    function e(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
+    function dupla(esq, dir, cls) {
+      return '<div class="dupla ' + (cls || '') + '"><span>' + esq + '</span><span class="dir">' + dir + '</span></div>';
+    }
+    var hora = new Date(venda.hora || Date.now())
+      .toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    var FP = { dinheiro: 'Dinheiro', debito: 'Cartão de débito', credito: 'Cartão de crédito', pix: 'Pix' };
+
+    var itens = (venda.items || []).map(function (it) {
+      var titulo, sub = [];
+      if (it.modo === 'peso') {
+        titulo = it.nome;
+        sub.push(Number(it.pesoKg || 0).toLocaleString('pt-BR', { minimumFractionDigits: 3 }) + ' kg x ' + brl(it.precoKg) + '/kg');
+      } else {
+        titulo = it.quantidade + 'x ' + it.nome;
+      }
+      if (it.sabor) sub.push('Sabor: ' + it.sabor);
+      return '<div class="item">' + dupla('<b>' + e(titulo) + '</b>', e(brl(it.valor)), 'item-l') +
+        sub.map(function (s) { return '<div class="sub">' + e(s) + '</div>'; }).join('') +
+        (it.acompanhamentos || []).map(function (a) { return '<div class="acomp">+ ' + e(a) + '</div>'; }).join('') +
+        '</div>';
     }).join('');
 
-    return '<!DOCTYPE html><html><head><meta charset="utf-8"><title>' + venda.numero + '</title><style>' +
+    var descontos = (venda.descontos || []).filter(function (d) { return d && Number(d.valor) > 0; }).map(function (d) {
+      return dupla(e(d.label || 'Promoção'), '- ' + e(brl(d.valor)), 'peq');
+    }).join('');
+
+    var pagamento = '';
+    if (venda.pagamentos && venda.pagamentos.length > 1) {
+      pagamento = '<div class="peq">Pagamento (dividido):</div>' + venda.pagamentos.map(function (p) {
+        return dupla('&nbsp;&nbsp;' + e(FP[p.forma] || p.forma), e(brl(p.valor)), 'peq');
+      }).join('');
+    } else if (venda.formaPagamento) {
+      pagamento = '<div class="peq">Pagamento: ' + e(FP[venda.formaPagamento] || venda.formaPagamento) + '</div>';
+    }
+    if (venda.pagamento && venda.pagamento.nsu) pagamento += '<div class="peq">NSU: ' + e(venda.pagamento.nsu) + '</div>';
+    if (Number(venda.troco) > 0) pagamento += dupla('Troco', e(brl(venda.troco)), 'peq');
+
+    var entrega = '';
+    if (venda.entrega) {
+      var ei = venda.entregaInfo || {};
+      entrega = '<div class="entrega">** ENTREGA **</div>' +
+        (ei.nome ? '<div class="sub">Cliente: ' + e(ei.nome) + '</div>' : '') +
+        (ei.endereco ? '<div class="sub">Endereço: ' + e(ei.endereco) + '</div>' : '');
+    }
+
+    return '<!DOCTYPE html><html><head><meta charset="utf-8"><title>' + e(venda.numero) + '</title><style>' +
       '@page { size: 80mm auto; margin: 0; }' +
-      'body { margin: 0; padding: 4mm 3mm; font-family: "Courier New", monospace; font-size: 12px; line-height: 1.35; color: #000; width: 74mm; }' +
-      '.l { white-space: pre-wrap; }' +
-      '.center { text-align: center; }' +
-      '.bold { font-weight: 700; }' +
-      '.grande { font-size: 19px; font-weight: 700; letter-spacing: 1px; }' +
-      '.hr { border-top: 1px dashed #000; margin: 4px 0; }' +
-      '</style></head><body>' + linhas + '</body></html>';
+      'body { margin: 0; padding: 3mm 3mm 5mm; font-family: Arial, Helvetica, sans-serif; font-size: 15px; line-height: 1.3; color: #000; width: 74mm; }' +
+      '.loja { text-align: center; font-size: 13px; }' +
+      '.loja b { display: block; font-size: 17px; letter-spacing: 1px; }' +
+      '.num { font-size: 24px; font-weight: 800; margin-top: 2px; }' +
+      '.meta { font-size: 14px; }' +
+      '.hr { border-top: 2px dashed #000; margin: 6px 0; }' +
+      '.item { margin: 0 0 7px; }' +
+      '.dupla { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }' +
+      '.dupla .dir { flex: none; white-space: nowrap; }' +
+      '.item-l { font-size: 19px; }' +
+      '.item-l .dir { font-size: 15px; }' +
+      '.sub { font-size: 16px; padding-left: 4mm; }' +
+      '.acomp { font-size: 17px; font-weight: 700; padding-left: 4mm; }' +
+      '.peq { font-size: 14px; }' +
+      '.total { font-size: 20px; font-weight: 800; margin-top: 2px; }' +
+      '.entrega { text-align: center; font-size: 19px; font-weight: 800; margin: 8px 0 2px; }' +
+      '.rodape { text-align: center; font-size: 12px; margin-top: 8px; }' +
+      '</style></head><body>' +
+      '<div class="loja"><b>DUPURO AÇAÍ</b>(65) 99288-8228</div>' +
+      '<div class="hr"></div>' +
+      '<div class="num">' + e(venda.numero) + '</div>' +
+      '<div class="meta">' + e(hora) + ' · ' + e(venda.cliente || 'Balcão') + '</div>' +
+      '<div class="hr"></div>' +
+      itens +
+      '<div class="hr"></div>' +
+      descontos +
+      dupla('TOTAL', e(brl(venda.total)), 'total') +
+      pagamento + entrega +
+      '<div class="rodape">Obrigado pela preferência! · Não é documento fiscal</div>' +
+      '</body></html>';
   }
 
   // ---------- Cupom fiscal (DANFE NFC-e) ----------
