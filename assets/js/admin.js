@@ -50,6 +50,7 @@ var DupuroAdmin = (function () {
       .from('profiles')
       .select('id, nome, empresa, email, telefone, cidade, created_at')
       .eq('status', 'pendente')
+      .eq('conta_teste', false) // conta de teste (migration_041) não aparece nas listas
       .order('created_at', { ascending: true });
     return result.data || [];
   }
@@ -66,6 +67,7 @@ var DupuroAdmin = (function () {
       .select('id, nome, empresa, email, telefone, cidade, created_at')
       .eq('status', 'aprovado')
       .eq('role', 'revendedor')
+      .eq('conta_teste', false)
       .order('nome', { ascending: true });
     return result.data || [];
   }
@@ -156,7 +158,7 @@ var DupuroAdmin = (function () {
     var r = await Promise.all([
       client
         .from('orders')
-        .select('id, revendedor_id, numero, data, itens, valor, status, produto_id, quantidade, sabor, usa_estoque, origem')
+        .select('id, revendedor_id, numero, data, itens, valor, status, produto_id, quantidade, sabor, usa_estoque, origem, created_at, forma_pagamento, pagamentos, entrega')
         .order('data', { ascending: false }),
       getResellers(),
       client.from('products').select('id, tipo')
@@ -190,6 +192,9 @@ var DupuroAdmin = (function () {
           origem: o.origem || null, // 'loja' = caixa/PDV; outro = painel do revendedor
           categoria: 'balcao',      // vira 'atacado' se algum item for produto de atacado
           data: o.data, status: o.status, valor: 0, items: [],
+          // pro 'Detalhes': quando foi lançado e como foi pago (repetidos por linha no banco)
+          criadoEm: o.created_at || null, formaPagamento: o.forma_pagamento || null,
+          pagamentos: o.pagamentos || null, entrega: !!o.entrega,
           usaEstoque: o.usa_estoque !== false
         };
         order.push(g);

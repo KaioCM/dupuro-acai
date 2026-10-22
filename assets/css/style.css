@@ -2650,3 +2650,29 @@ a.stat-card.alerta .stat-sub { color: var(--warning); font-weight: 800; }
   .pg-admin .sidebar.open { visibility: visible; transition: transform 0.25s ease; }
   .pg-admin #mobileMenuBtn { width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; }
 }
+
+/* ---------- Rodada 4: Detalhes, lote, pedido compacto no celular ---------- */
+.detalhe-resumo { margin: 0 0 8px; font-size: 13.5px; color: var(--text-light); }
+.btn-link-acao { border: 0; background: none; padding: 4px 2px; font: inherit; font-size: 13.5px; font-weight: 700; color: var(--roxo-700); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.ped-item-dir { display: inline-flex; align-items: baseline; gap: 12px; flex: none; }
+.lote-sel { display: inline-flex; align-items: center; padding: 4px; margin: -4px 2px -4px -4px; cursor: pointer; }
+.lote-sel input { width: 20px; height: 20px; accent-color: var(--roxo-700); cursor: pointer; }
+.lote-barra { position: sticky; top: 8px; z-index: 20; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin-bottom: 12px; padding: 10px 14px; background: var(--roxo-950); color: #fff; border-radius: 14px; font-weight: 700; }
+.lote-barra .btn-link-perigo { color: #FFB4A8; }
+.lote-barra .btn-link-acao { color: var(--gold); margin-left: auto; }
+@media (max-width: 900px) { .lote-barra { top: 70px; } }
+@media (max-width: 700px) {
+  /* Pedido concluído compacto: nº e valor na 1ª linha, cliente e status na 2ª,
+     itens em texto menor; "Data" sai (já está na faixa do dia). */
+  .pg-admin #pedConcluidos tr[data-dia-row]:not(.order-details):not(.pag-oculta) { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; }
+  .pg-admin #pedConcluidos tr[data-dia-row] > td { padding: 1px 0; }
+  .pg-admin #pedConcluidos tr[data-dia-row] > td::before { content: none; }
+  .pg-admin #pedConcluidos td[data-label="Pedido"] { order: 1; text-align: left; }
+  .pg-admin #pedConcluidos td[data-label="Valor"] { order: 2; font-weight: 800; }
+  .pg-admin #pedConcluidos td[data-label="Cliente"] { order: 3; text-align: left; color: var(--text-light); font-size: 14px; }
+  .pg-admin #pedConcluidos td[data-label="Status"] { order: 4; }
+  .pg-admin #pedConcluidos td[data-label="Itens"] { order: 5; grid-column: 1 / -1; font-size: 13.5px; color: var(--text-light); }
+  .pg-admin #pedConcluidos td[data-label="Itens"] .item-linha { display: flex; justify-content: space-between; gap: 10px; }
+  .pg-admin #pedConcluidos td.admin-table-actions { order: 6; grid-column: 1 / -1; padding-top: 6px; }
+  .pg-admin #pedConcluidos td[data-label="Data"] { display: none; }
+}
