@@ -2790,3 +2790,160 @@ a.stat-card.alerta .stat-sub { color: var(--warning); font-weight: 800; }
 .ped-endereco strong { color: var(--text); font-weight: 700; }
 /* Na revisão do pedido, a dica "toque num produto" sai da frente. */
 .order-summary:has(#checkoutSection:not(.hidden)) #summaryPlaceholder { display: none; }
+
+/* =====================================================================
+   Painel do revendedor — mesma linguagem do admin (critique 2, 2026-10-22)
+   Klinko só no título da página; seções em Inter; botão chapado; um nível
+   de cartão (borda fina, sem sombra, sem pulo no hover); ícones SVG.
+   ===================================================================== */
+.pg-revenda .panel, .pg-revenda .stat-card { background: #fff; border: 1px solid rgba(96,16,80,0.10); border-radius: 16px; box-shadow: none; }
+.pg-revenda .panel { padding: 22px; margin-bottom: 18px; }
+.pg-revenda .app-main h2, .pg-revenda .app-main h3,
+.pg-revenda .order-summary-head, .pg-revenda .shop-section-title { font-family: var(--font-body); font-weight: 700; text-transform: none; letter-spacing: -0.01em; line-height: 1.25; color: var(--roxo-950); text-wrap: balance; }
+.pg-revenda .app-main h2 { font-size: 18px; }
+.pg-revenda .app-main h3 { font-size: 15.5px; }
+.pg-revenda .app-main .subtitle { text-wrap: pretty; }
+
+/* botões chapados, sem brilho correndo */
+.pg-revenda .btn::before { display: none; }
+.pg-revenda .btn-primary, .pg-revenda .btn-green { background: var(--gold); color: var(--roxo-950); box-shadow: none; }
+.pg-revenda .btn-primary:hover, .pg-revenda .btn-green:hover { background: #E6A800; transform: none; box-shadow: none; }
+.pg-revenda .btn-primary:active, .pg-revenda .btn-green:active { background: #D49B00; transform: none; }
+.pg-revenda .btn-dark-outline { border-width: 1.5px; }
+.pg-revenda .btn-dark-outline:hover { transform: none; }
+
+/* menu lateral igual ao admin */
+.pg-revenda .sidebar-cta { background: var(--gold); box-shadow: none; border-radius: 12px; }
+.pg-revenda .sidebar-cta:hover, .pg-revenda .sidebar-cta:active { transform: none; box-shadow: none; background: #E6A800; }
+.pg-revenda .sidebar-cta .ic-svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.pg-revenda .sidebar-link.active { background: var(--gold); box-shadow: none; }
+.pg-revenda .sidebar-link:hover, .pg-revenda .sidebar-link:hover .ic { transform: none; }
+.pg-revenda .sidebar-footer .sidebar-link.active { color: var(--roxo-950); }
+@media (max-width: 900px) {
+  .pg-revenda .sidebar:not(.open) { visibility: hidden; transition: transform 0.25s ease, visibility 0s 0.25s; }
+  .pg-revenda .sidebar.open { visibility: visible; transition: transform 0.25s ease; }
+  .pg-revenda #mobileMenuBtn { width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; }
+}
+
+/* Início: duas ações grandes, a de repetir primeiro */
+.rev-acoes { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin-bottom: 18px; }
+.rev-acao { display: flex; align-items: center; gap: 14px; min-height: 76px; padding: 16px 18px; border: 1px solid rgba(96,16,80,0.14); border-radius: 16px; background: #fff; font: inherit; text-align: left; color: var(--roxo-950); text-decoration: none; cursor: pointer; transition: background 0.15s ease, border-color 0.15s ease; }
+.rev-acao:hover { border-color: rgba(96,16,80,0.32); background: rgba(96,16,80,0.03); }
+.rev-acao-ic { flex: none; display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 12px; background: rgba(96,16,80,0.07); color: var(--roxo-700); }
+.rev-acao-ic svg, .rev-atalhos svg, .rev-vazio svg, .rev-vazio-cupom svg, .sem-foto { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+.rev-acao-txt { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.rev-acao-txt strong { font-size: 16.5px; }
+.rev-acao-txt small { font-size: 13.5px; color: var(--text-light); font-variant-numeric: tabular-nums; }
+/* a ação principal (a primeira visível) ganha o dourado */
+.rev-acao-repetir, .rev-acao-repetir.hidden + .rev-acao-novo { background: var(--gold); border-color: var(--gold); }
+.rev-acao-repetir .rev-acao-ic, .rev-acao-repetir.hidden + .rev-acao-novo .rev-acao-ic { background: rgba(36,8,32,0.10); color: var(--roxo-950); }
+.rev-acao-repetir small, .rev-acao-repetir.hidden + .rev-acao-novo small { color: var(--roxo-900); }
+.rev-acao-repetir:hover, .rev-acao-repetir.hidden + .rev-acao-novo:hover { background: #E6A800; border-color: #E6A800; }
+
+/* último pedido e cartões de Meus pedidos */
+.rev-ultimo-topo { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.rev-pedidos { list-style: none; margin: 0; padding: 0; }
+.rev-pedido-linha { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+.rev-pedido-linha > strong { font-size: 16px; color: var(--roxo-950); font-variant-numeric: tabular-nums; }
+.rev-pedido-total { margin-left: auto; font-size: 16px; font-weight: 800; color: var(--roxo-950); font-variant-numeric: tabular-nums; }
+.rev-pedido-sub { margin: 4px 0 12px; font-size: 14px; color: var(--text-light); }
+.rev-pedido .linha-tempo, .rev-ultimo .linha-tempo { margin-bottom: 10px; }
+.linha-tempo li.proximo::before { border-color: var(--roxo-700); box-shadow: inset 0 0 0 3px #fff, inset 0 0 0 7px var(--roxo-700); }
+.rev-cancelado { margin: 0 0 10px; font-size: 14px; color: var(--danger); }
+.rev-itens-det > summary { display: inline-flex; align-items: center; min-height: 44px; cursor: pointer; font-size: 14px; font-weight: 700; color: var(--roxo-700); text-decoration: underline; text-underline-offset: 3px; }
+.rev-itens { list-style: none; margin: 0; padding: 0; }
+.rev-itens li, .checkout-itens li { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-top: 1px solid rgba(96,16,80,0.08); font-size: 14px; }
+.rev-itens .num, .checkout-itens .num { flex: none; font-variant-numeric: tabular-nums; font-weight: 700; }
+.rev-vazio { display: grid; justify-items: center; gap: 10px; padding: 32px 20px; text-align: center; color: var(--text-light); }
+.rev-vazio svg { width: 32px; height: 32px; color: var(--roxo-700); }
+.rev-vazio p { margin: 0; max-width: 42ch; }
+
+/* status com sentido: aguardando = neutro, confirmado = verde claro, entregue = verde */
+.pg-revenda .status-badge.enviado { background: rgba(96,16,80,0.08); color: var(--roxo-700); }
+.pg-revenda .status-badge.processando { background: rgba(139,184,49,0.18); color: var(--verde-dark); }
+.pg-revenda .status-badge.entregue { background: var(--verde-dark); color: #fff; }
+
+/* Meu histórico (números e gráficos recolhidos) */
+.rev-historico > summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px; cursor: pointer; list-style: none; }
+.rev-historico > summary::-webkit-details-marker { display: none; }
+.rev-historico > summary::after { content: ""; flex: none; width: 10px; height: 10px; border-right: 2px solid var(--roxo-700); border-bottom: 2px solid var(--roxo-700); transform: rotate(45deg); margin: -4px 4px 0 0; }
+.rev-historico[open] > summary::after { transform: rotate(-135deg); margin-top: 4px; }
+.rev-historico > summary span { display: flex; flex-direction: column; gap: 2px; }
+.rev-historico > summary h2, .pg-revenda .app-main .rev-historico > summary h2 { margin: 0; font-size: 16px; color: var(--roxo-950); }
+.rev-historico > summary small { font-size: 13.5px; color: var(--text-light); font-variant-numeric: tabular-nums; }
+.rev-historico[open] > summary { margin-bottom: 16px; }
+.rev-historico .chart-card { padding: 0; border: 0; }
+
+/* vitrine e resumo do pedido mais calmos */
+.pg-revenda .shop-section-title { font-size: 16px; margin: 4px 0 12px; }
+.pg-revenda .shop-section-title::after { display: none; }
+.pg-revenda .shop-card { border: 1px solid rgba(96,16,80,0.12); }
+.pg-revenda .shop-card:hover { transform: none; box-shadow: none; border-color: rgba(96,16,80,0.32); }
+.pg-revenda .shop-card:hover .ph img { transform: none; }
+.pg-revenda .shop-card.selected { border-color: var(--roxo-700); box-shadow: inset 0 0 0 1.5px var(--roxo-700); }
+.pg-revenda .shop-card.selected::after { display: none; }
+.pg-revenda .shop-card .ph { background: rgba(96,16,80,0.06); color: var(--roxo-700); }
+.pg-revenda .shop-card .ph .sem-foto { width: 40px; height: 40px; stroke-width: 1.5; }
+.pg-revenda .order-summary .picked .thumb { color: var(--roxo-700); }
+.pg-revenda .order-summary { box-shadow: none; border: 1px solid rgba(96,16,80,0.10); }
+.pg-revenda .order-summary-head { background: none; color: var(--roxo-950); font-size: 17px; padding: 18px 22px 0; }
+.pg-revenda .shop-varejo { border-style: solid; border-width: 1px; }
+.pg-revenda .shop-varejo > summary { min-height: 32px; display: flex; align-items: center; }
+.pg-revenda .campo-qtd { margin-bottom: 0; }
+.pg-revenda .campo-dia { margin-bottom: 10px; }
+.pg-revenda .campo-forma { margin: 10px 0 0; }
+.pg-revenda .sabor-chip small { font-size: 12px; }
+.pg-revenda .qty-stepper:focus-within { border-color: var(--roxo-700); box-shadow: 0 0 0 2px var(--roxo-700); }
+.sheet-escolha :focus-visible { outline: 3px solid var(--roxo-700); outline-offset: 2px; }
+.pg-revenda ::placeholder { color: var(--text-light); opacity: 1; }
+
+/* revisão: itens no topo, "Editar itens" com alvo de toque */
+.checkout-itens { padding-bottom: 4px; }
+.checkout-itens-topo { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.checkout-itens-topo strong { font-size: 14px; font-weight: 800; color: var(--roxo-950); }
+.checkout-itens ul { list-style: none; margin: 4px 0 0; padding: 0; }
+.pg-revenda .checkout-voltar { min-height: 44px; padding: 0 2px; }
+.sucesso-whats { margin: 0 0 16px; padding: 10px 12px; border-radius: 12px; background: rgba(139,184,49,0.14); font-size: 14px; font-weight: 600; color: var(--verde-dark); }
+.sucesso-ver { margin-top: 10px; }
+
+/* Perfil: atalhos (cupons, WhatsApp, sair) e mensagens */
+.pg-revenda .rev-perfil { max-width: 560px; }
+.rev-atalhos { max-width: 560px; padding: 6px 8px; }
+.rev-atalhos a { display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 6px 10px; border-radius: 10px; color: var(--roxo-950); font-weight: 600; text-decoration: none; }
+.rev-atalhos a + a { border-top: 1px solid rgba(96,16,80,0.08); }
+.rev-atalhos a:hover { background: rgba(96,16,80,0.04); }
+.rev-atalhos svg { color: var(--roxo-700); }
+.rev-atalhos .badge-pill { margin-left: auto; }
+.salvo-ok { margin-left: 14px; color: var(--verde-dark); font-weight: 700; font-size: 14px; }
+.erro-linha { margin-top: 10px; color: var(--danger); font-weight: 600; font-size: 14px; }
+
+/* cupons sem rotação/brilho */
+.pg-revenda .coupon-card { border: 1.5px dashed rgba(96,16,80,0.25); background: #fff; }
+.pg-revenda .coupon-card:hover { transform: none; box-shadow: none; border-color: var(--roxo-700); }
+.pg-revenda .coupon-card .copy-btn { min-height: 40px; padding: 8px 16px; font-size: 13px; }
+.rev-vazio-cupom { grid-column: 1 / -1; display: grid; justify-items: center; gap: 10px; }
+.rev-vazio-cupom svg { width: 32px; height: 32px; color: var(--roxo-700); }
+.rev-vazio-cupom p { margin: 0; max-width: 42ch; }
+
+/* barra de baixo com 4 itens; a barra do pedido sobe pra não cobrir */
+@media (max-width: 900px) {
+  .pg-revenda .bottom-nav { grid-template-columns: repeat(4, 1fr); }
+  .pg-revenda .caixa-barra:not([hidden]) { bottom: calc(72px + env(safe-area-inset-bottom)); }
+  .pg-revenda .aviso-carrinho { bottom: calc(140px + env(safe-area-inset-bottom)); }
+  .pg-revenda .app-main { padding-bottom: 160px; }
+  .pg-revenda .bottom-nav :focus-visible { outline: 3px solid var(--gold); outline-offset: -3px; }
+}
+/* o .ic genérico (ícone em linha, 1.2em) encolhia o ícone da barra e o rótulo subia por cima */
+.bottom-nav .ic { width: auto; height: auto; }
+/* botões de período cabem numa linha no celular (antes quebravam e esticavam em círculos) */
+.pg-revenda .period-presets { align-items: center; }
+.pg-revenda .period-btn { min-height: 40px; padding: 8px 11px; white-space: nowrap; font-size: 13px; }
+/* dica do card em texto discreto (o selo em caixa-alta quebrava em 2 linhas) */
+.pg-revenda .shop-card .flavor-hint { display: block; margin-top: 4px; padding: 0; background: none; text-transform: none; letter-spacing: 0; font-size: 13px; font-weight: 600; color: var(--text-light); }
+.pg-revenda .shop-card .flavor-hint.oos-hint { color: var(--danger); background: none; }
+/* no computador, Início e Pedidos não esticam de ponta a ponta */
+.pg-revenda #tab-inicio, .pg-revenda #tab-pedidos { max-width: 880px; }
+/* painel de escolha (fica fora do .app-main): mesma tipografia calma */
+.pg-revenda .order-summary h3, .sheet-escolha h3 { font-family: var(--font-body); font-weight: 700; text-transform: none; letter-spacing: -0.01em; font-size: 16px; line-height: 1.3; color: var(--roxo-950); }
+.pg-revenda .order-summary .picked { background: rgba(96,16,80,0.04); border: 0; }
+@media (max-width: 900px) { .pg-revenda .bottom-nav a { font-size: 12px; } }
