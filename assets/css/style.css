@@ -2676,3 +2676,4 @@ a.stat-card.alerta .stat-sub { color: var(--warning); font-weight: 800; }
   .pg-admin #pedConcluidos td.admin-table-actions { order: 6; grid-column: 1 / -1; padding-top: 6px; }
   .pg-admin #pedConcluidos td[data-label="Data"] { display: none; }
 }
+@media (max-width: 700px) { .pg-admin .lote-sel { padding: 12px; margin: -12px 0 -12px -12px; } }
