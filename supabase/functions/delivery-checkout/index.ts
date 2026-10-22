@@ -108,6 +108,7 @@ Deno.serve(async (req: Request) => {
     const { data: ped, error: e1 } = await sb.from('delivery_pedidos').insert({
       cliente_nome: nome, cliente_telefone: tel, endereco, complemento: b.complemento ? String(b.complemento).slice(0, 200) : null,
       lat, lng, distancia_km: km, taxa, subtotal, total, itens, periodo, data_entrega: data,
+      aceita_whatsapp: b.aceita_whatsapp !== false, // avisos do pedido no WhatsApp (migration_046)
     }).select('id, codigo, token').single()
     if (e1 || !ped) return json({ error: 'Não foi possível registrar o pedido.' }, 500)
 

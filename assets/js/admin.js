@@ -86,6 +86,29 @@ var DupuroAdmin = (function () {
     return { error: result.error };
   }
 
+  // ---------- Avisos no WhatsApp (Edge Function whatsapp-enviar) ----------
+  async function whatsappAcao(acao) {
+    var r = await client.functions.invoke('whatsapp-enviar', { body: { acao: acao } });
+    if (r.error) {
+      var msg = r.error.message;
+      try { var corpo = await r.error.context.json(); if (corpo && corpo.error) msg = corpo.error; } catch (e) {}
+      return { error: msg };
+    }
+    return r.data || {};
+  }
+  async function getWhatsappConfig() {
+    var r = await client.from('whatsapp_config').select('aviso_interno, ativo').eq('id', 1).maybeSingle();
+    return r.data;
+  }
+  async function setWhatsappConfig(cfg) {
+    var r = await client.from('whatsapp_config').update({ aviso_interno: cfg.aviso_interno, ativo: cfg.ativo, atualizado_em: new Date().toISOString() }).eq('id', 1);
+    return { error: r.error };
+  }
+  async function getWhatsappEnvios() {
+    var r = await client.from('whatsapp_envios').select('modelo, destino, status, erro, criado_em, enviado_em').order('id', { ascending: false }).limit(15);
+    return r.data || [];
+  }
+
   // Exclusão de verdade da conta (auth.users) via Edge Function — precisa da
   // service role key, que nunca fica no navegador. Ver supabase/functions
   // (deploy feito via MCP). Pedidos/cupons do revendedor NÃO são apagados,
@@ -951,6 +974,10 @@ var DupuroAdmin = (function () {
     getResellers: getResellers,
     updateReseller: updateReseller,
     setPodePrazo: setPodePrazo,
+    whatsappAcao: whatsappAcao,
+    getWhatsappConfig: getWhatsappConfig,
+    getWhatsappEnvios: getWhatsappEnvios,
+    setWhatsappConfig: setWhatsappConfig,
     deleteReseller: deleteReseller,
     getAdmins: getAdmins,
     getAtendentes: getAtendentes,

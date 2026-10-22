@@ -453,3 +453,6 @@ body.dl-travado { overflow: hidden; }
 .dl-timeline .dot svg.i { width: 18px; height: 18px; }
 .dl-mapa-pino svg { display: block; filter: drop-shadow(0 4px 4px rgba(0,0,0,.35)); }
 .dl-mapa-pino { font-size: 0; }
+/* aceite dos avisos no WhatsApp */
+.dl-aceite { display: flex; align-items: flex-start; gap: 10px; margin-top: 10px; font-size: 14px; color: var(--dl-texto, #33122B); cursor: pointer; }
+.dl-aceite input { flex: none; width: 20px; height: 20px; margin-top: 1px; accent-color: #601050; }

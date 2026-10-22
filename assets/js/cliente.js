@@ -21,7 +21,8 @@ var DupuroCliente = (function () {
           nome: data.nome,
           empresa: data.empresa || '',
           telefone: data.telefone,
-          cidade: data.cidade || ''
+          cidade: data.cidade || '',
+          aceita_whatsapp: data.aceitaWhatsapp !== false
         }
       }
     });
@@ -79,7 +80,7 @@ var DupuroCliente = (function () {
     if (!session) return {};
     var result = await client
       .from('profiles')
-      .select('nome, empresa, email, telefone, cidade, endereco, pode_prazo, status, role')
+      .select('nome, empresa, email, telefone, cidade, endereco, pode_prazo, aceita_whatsapp, status, role')
       .eq('id', session.user.id)
       .single();
     if (result.error) return { email: session.user.email };
@@ -93,6 +94,7 @@ var DupuroCliente = (function () {
     // Endereço só vai quando quem chamou mandou (o formulário antigo não tem o campo
     // e não pode apagá-lo).
     if (profile.endereco !== undefined) campos.endereco = profile.endereco || null;
+    if (profile.aceitaWhatsapp !== undefined) campos.aceita_whatsapp = !!profile.aceitaWhatsapp;
     var result = await client.from('profiles').update(campos).eq('id', session.user.id);
     return { error: result.error };
   }

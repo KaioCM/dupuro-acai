@@ -120,6 +120,7 @@ document.addEventListener('DOMContentLoaded', function () {
         telefone: telefone.value.trim(),
         email: email.value.trim(),
         cidade: document.getElementById('cidade').value.trim(),
+        aceitaWhatsapp: !document.getElementById('aceitaWhatsapp') || document.getElementById('aceitaWhatsapp').checked,
         senha: senha.value
       }).then(function (result) {
         if (result.error) {

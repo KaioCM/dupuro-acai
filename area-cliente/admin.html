@@ -9,7 +9,7 @@
 <link rel="apple-touch-icon" href="../assets/img/brand/favicon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/css/style.css?v=49">
+<link rel="stylesheet" href="../assets/css/style.css?v=50">
 </head>
 <body class="pg-admin">
 <svg class="sprite" aria-hidden="true" focusable="false"><symbol id="m-grafico" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></symbol><symbol id="m-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol><symbol id="m-usuarios" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"/></symbol><symbol id="m-caixa" viewBox="0 0 24 24"><path d="M3 8l9-4 9 4v9l-9 4-9-4z"/><path d="M3 8l9 4 9-4M12 12v9"/></symbol><symbol id="m-painel" viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 10h6M9 14h6M9 18h3"/></symbol><symbol id="m-fabrica" viewBox="0 0 24 24"><path d="M3 21V10l5 3v-3l5 3V7l8 4v10z"/><path d="M7 17h2M12 17h2M17 17h1"/></symbol><symbol id="m-etiqueta" viewBox="0 0 24 24"><path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.4"/></symbol><symbol id="m-engrenagem" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></symbol><symbol id="m-casa" viewBox="0 0 24 24"><path d="M3 11l9-7 9 7M5 9.5V20h14V9.5M10 20v-6h4v6"/></symbol><symbol id="m-sair" viewBox="0 0 24 24"><path d="M14 4h5a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-5M10 16l-4-4 4-4M6 12h10"/></symbol><symbol id="m-carrinho" viewBox="0 0 24 24"><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2.5 3.5h3l2.4 11.2a1.5 1.5 0 0 0 1.5 1.3h8.4a1.5 1.5 0 0 0 1.5-1.2L21 7H6.3"/></symbol><symbol id="m-recibo" viewBox="0 0 24 24"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6M9 16h3"/></symbol><symbol id="m-calendario" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></symbol><symbol id="m-chat" viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></symbol><symbol id="m-usuario" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol><symbol id="m-globo" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></symbol><symbol id="m-hoje" viewBox="0 0 24 24"><path d="M4 13h4l2 3h4l2-3h4"/><path d="M4 13l2.5-8h11L20 13v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/></symbol><symbol id="m-pasta" viewBox="0 0 24 24"><path d="M3 6.5A1.5 1.5 0 0 1 4.5 5H9l2 2.5h8.5A1.5 1.5 0 0 1 21 9v9.5a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 18.5z"/></symbol><symbol id="m-mais" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol></svg>
@@ -698,6 +698,32 @@
           <div id="adminPasswordError" class="hidden" style="margin-top:10px; color:#c0392b; font-weight:600; font-size:13px;"></div>
         </form>
       </div>
+
+      <!-- Avisos automáticos no WhatsApp (migration_046 + Edge Function whatsapp-enviar) -->
+      <div class="panel wa-painel">
+        <div class="panel-header">
+          <div><h2>Avisos no WhatsApp</h2><div class="subtitle">Mensagens automáticas: cadastro aprovado, andamento dos pedidos e do delivery, e avisos pra você</div></div>
+        </div>
+        <p class="wa-status" id="waStatus">Verificando…</p>
+        <form class="wa-config" id="waConfigForm">
+          <div class="field">
+            <label for="waAvisoInterno">Seu WhatsApp pros avisos internos</label>
+            <input type="tel" id="waAvisoInterno" inputmode="tel" autocomplete="off" placeholder="(65) 99999-9999">
+            <div class="field-note-inline">Cadastro novo, pedido novo de revenda e delivery pago chegam aqui.</div>
+          </div>
+          <label class="checkbox-line"><input type="checkbox" id="waAtivo"> <span>Avisos ligados</span></label>
+          <button type="submit" class="btn btn-dark-outline btn-sm">Salvar</button>
+          <span class="salvo-ok hidden" id="waSalvo" role="status">Salvo.</span>
+        </form>
+        <div class="wa-acoes">
+          <button type="button" class="btn btn-dark-outline btn-sm" data-wa="teste">Mandar mensagem de teste pra mim</button>
+          <button type="button" class="btn btn-dark-outline btn-sm" data-wa="criar_modelos">Criar os modelos na Meta</button>
+          <button type="button" class="btn btn-dark-outline btn-sm" data-wa="modelos">Ver situação dos modelos</button>
+        </div>
+        <div class="wa-resultado" id="waResultado" role="status" aria-live="polite"></div>
+        <h3 class="wa-titulo">Últimos avisos</h3>
+        <ul class="wa-envios" id="waEnvios"><li class="wa-vazio">Carregando…</li></ul>
+      </div>
     </section>
 
   </main>
@@ -718,7 +744,7 @@
 <script src="../assets/js/supabase-config.js"></script>
 <script src="../assets/js/supabase-client.js"></script>
 <script src="../assets/js/app-ui.js"></script>
-<script src="../assets/js/admin.js?v=6"></script>
+<script src="../assets/js/admin.js?v=7"></script>
 <script>
   // Escapa texto antes de ir pro innerHTML (dado de revendedor/cliente nunca vira HTML).
   // Link de WhatsApp pro cadastro (telefone vem em formatos variados: +55..., (66) 9..., 659...).
@@ -4119,6 +4145,55 @@
     await renderPromocoesAdmin();
   });
 
+  // ---- Avisos no WhatsApp (Minha conta) ----
+  var WA_STATUS = { pendente: 'na fila', enviando: 'enviando', enviado: 'enviado', erro: 'não saiu', ignorado: 'descartado' };
+  var WA_MODELO = { dupuro_cadastro_aprovado: 'Cadastro aprovado', dupuro_pedido_recebido: 'Pedido recebido', dupuro_pedido_confirmado: 'Pedido confirmado',
+    dupuro_pedido_concluido: 'Pedido entregue', dupuro_delivery_pago: 'Delivery pago', dupuro_delivery_saiu: 'Delivery saiu', dupuro_delivery_entregue: 'Delivery entregue',
+    dupuro_aviso_interno: 'Aviso pra você' };
+  function foneBonito(d) { d = String(d || '').replace(/^55/, ''); return d.length >= 10 ? '(' + d.slice(0, 2) + ') ' + d.slice(2, -4) + '-' + d.slice(-4) : d; }
+  async function renderWhatsapp() {
+    var dados = await Promise.all([DupuroAdmin.whatsappAcao('status'), DupuroAdmin.getWhatsappConfig(), DupuroAdmin.getWhatsappEnvios()]);
+    var st = dados[0], cfg = dados[1] || {}, envios = dados[2];
+    var el = document.getElementById('waStatus');
+    if (st.error) { el.textContent = 'Não foi possível verificar: ' + st.error; el.className = 'wa-status erro'; }
+    else if (!st.configurado) { el.textContent = 'Ainda não ligado na Meta. Os avisos ficam guardados na fila e saem quando o token for colocado no Supabase.'; el.className = 'wa-status alerta'; }
+    else { el.textContent = 'Ligado na Meta' + (st.waba ? '' : ' (falta a conta do WhatsApp pra criar modelos)') + '.'; el.className = 'wa-status ok'; }
+    document.getElementById('waAvisoInterno').value = foneBonito(cfg.aviso_interno);
+    document.getElementById('waAtivo').checked = cfg.ativo !== false;
+    var lista = document.getElementById('waEnvios');
+    lista.innerHTML = envios.length ? envios.map(function (e) {
+      var quando = new Date(e.enviado_em || e.criado_em).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+      return '<li><span class="wa-env-tipo">' + esc(WA_MODELO[e.modelo] || e.modelo) + '</span>' +
+        '<span class="wa-env-det">' + esc(foneBonito(e.destino)) + ' · ' + esc(quando) + (e.erro ? ' · ' + esc(e.erro) : '') + '</span>' +
+        '<span class="status-badge ' + (e.status === 'enviado' ? 'entregue' : e.status === 'erro' ? 'cancelado' : 'neutro') + '">' + (WA_STATUS[e.status] || esc(e.status)) + '</span></li>';
+    }).join('') : '<li class="wa-vazio">Nenhum aviso ainda.</li>';
+  }
+  document.getElementById('waConfigForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    var d = document.getElementById('waAvisoInterno').value.replace(/\D/g, '');
+    if (d && d.length < 10) { aviso('Confira o número: DDD + número, ex.: (65) 99999-9999.'); return; }
+    var r = await DupuroAdmin.setWhatsappConfig({ aviso_interno: d ? (d.length <= 11 ? '55' + d : d) : null, ativo: document.getElementById('waAtivo').checked });
+    if (r.error) { aviso('Não foi possível salvar: ' + motivoErro(r.error) + '.'); return; }
+    var ok = document.getElementById('waSalvo'); ok.classList.remove('hidden'); setTimeout(function () { ok.classList.add('hidden'); }, 2000);
+  });
+  document.querySelectorAll('[data-wa]').forEach(function (btn) {
+    btn.addEventListener('click', async function () {
+      var acao = btn.getAttribute('data-wa'), out = document.getElementById('waResultado');
+      btn.disabled = true; out.textContent = 'Falando com a Meta…';
+      var r = await DupuroAdmin.whatsappAcao(acao);
+      btn.disabled = false;
+      if (r.error) { out.textContent = 'Não deu: ' + r.error; return; }
+      if (acao === 'teste') out.textContent = 'Mensagem de teste enviada. Confira seu WhatsApp.';
+      else if (acao === 'criar_modelos') out.innerHTML = (r.resultados || []).map(function (x) {
+        return esc(WA_MODELO[x.modelo] || x.modelo) + ': ' + (x.ok ? 'enviado pra aprovação' : esc(x.erro));
+      }).join('<br>');
+      else out.innerHTML = (r.modelos || []).length ? r.modelos.map(function (m) {
+        return esc(WA_MODELO[m.name] || m.name) + ': ' + ({ APPROVED: 'aprovado', PENDING: 'em análise', REJECTED: 'recusado' }[m.status] || esc(m.status)) + (m.rejected_reason && m.rejected_reason !== 'NONE' ? ' (' + esc(m.rejected_reason) + ')' : '');
+      }).join('<br>') : 'Nenhum modelo da Dupuro na Meta ainda. Toque em "Criar os modelos na Meta".';
+      renderWhatsapp();
+    });
+  });
+
   // ---- Carga sob demanda ----
   // Antes, as 8 abas carregavam tudo na abertura, uma consulta depois da outra
   // (25 consultas, ~12 s). Agora cada aba carrega o que precisa quando é aberta;
@@ -4131,7 +4206,7 @@
     numeros: [renderOverview, renderAudits, renderCaixaFechamentos],
     cadastros: [renderPending, renderResellers, renderProducts, renderAcompanhamentos, renderPromocoesAdmin, renderCoupons, loadLimiteLitros, populateResellerSelect],
     equipe: [renderAdmins, renderAtendentes, preencherAcesso],
-    conta: []
+    conta: [renderWhatsapp]
   };
   var jaRodou = new Map();
   function rodarUmaVez(fn) {

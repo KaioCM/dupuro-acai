@@ -9,7 +9,7 @@
 <link rel="apple-touch-icon" href="../assets/img/brand/favicon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/css/style.css?v=49">
+<link rel="stylesheet" href="../assets/css/style.css?v=50">
 </head>
 <body class="pg-revenda">
 <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
@@ -314,6 +314,7 @@
             <label for="pEndereco">Endereço de entrega</label>
             <textarea id="pEndereco" rows="2" maxlength="200" autocomplete="street-address" placeholder="Rua, número, bairro e ponto de referência"></textarea>
           </div>
+          <label class="checkbox-line campo-whats"><input type="checkbox" id="pAceitaWhatsapp"> <span>Receber no WhatsApp o andamento dos meus pedidos (recebido, confirmado, entregue)</span></label>
           <button type="submit" class="btn btn-primary">Salvar alterações</button>
           <span id="profileSaved" class="salvo-ok hidden" role="status">Salvo.</span>
           <div id="profileError" class="field-note" role="alert"></div>
@@ -363,7 +364,7 @@
 <script src="../assets/js/supabase-config.js"></script>
 <script src="../assets/js/supabase-client.js"></script>
 <script src="../assets/js/app-ui.js"></script>
-<script src="../assets/js/cliente.js?v=3"></script>
+<script src="../assets/js/cliente.js?v=4"></script>
 <script>
   // Escapa texto antes de ir pro innerHTML (dado de revendedor/cliente nunca vira HTML).
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
@@ -1447,6 +1448,7 @@
   document.getElementById('pTelefone').value = profile.telefone || '';
   document.getElementById('pCidade').value = profile.cidade || '';
   document.getElementById('pEndereco').value = profile.endereco || '';
+  document.getElementById('pAceitaWhatsapp').checked = profile.aceita_whatsapp !== false;
 
   document.getElementById('profileForm').addEventListener('submit', async function (e) {
     e.preventDefault();
@@ -1455,7 +1457,8 @@
       empresa: document.getElementById('pEmpresa').value.trim(),
       telefone: document.getElementById('pTelefone').value.trim(),
       cidade: document.getElementById('pCidade').value.trim(),
-      endereco: document.getElementById('pEndereco').value.trim()
+      endereco: document.getElementById('pEndereco').value.trim(),
+      aceitaWhatsapp: document.getElementById('pAceitaWhatsapp').checked
     };
     var erroPerfil = document.getElementById('profileError');
     erroPerfil.classList.remove('show');
