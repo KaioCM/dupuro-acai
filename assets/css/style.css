@@ -2975,3 +2975,8 @@ a.stat-card.alerta .stat-sub { color: var(--warning); font-weight: 800; }
 .pg-revenda input[readonly] { background: rgba(96,16,80,0.04); border-color: transparent; color: var(--text-light); }
 /* Pagamento com uma opção só ocupa a linha inteira */
 .pg-revenda .opcoes-2:has(> .opcao.hidden) { grid-template-columns: 1fr; }
+/* cupom na revisão */
+.cupom-opcoes { display: grid; gap: 8px; }
+.checkout-desconto { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; font-size: 14px; color: var(--text-light); }
+.checkout-desconto strong { color: var(--roxo-950); font-variant-numeric: tabular-nums; }
+#checkoutDescontoTxt { color: var(--verde-dark); font-weight: 700; }

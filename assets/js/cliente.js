@@ -257,12 +257,12 @@ var DupuroCliente = (function () {
     if (!session) return [];
     var result = await client
       .from('coupons')
-      .select('code, descricao, validade, usado')
+      .select('code, descricao, desconto_percent, validade, usado')
       .eq('revendedor_id', session.user.id)
       .order('created_at', { ascending: false });
     if (result.error) return [];
     return (result.data || []).map(function (c) {
-      return { code: c.code, desc: c.descricao, validade: c.validade, usado: c.usado };
+      return { code: c.code, desc: c.descricao, pct: c.desconto_percent || 0, validade: c.validade, usado: c.usado };
     });
   }
 

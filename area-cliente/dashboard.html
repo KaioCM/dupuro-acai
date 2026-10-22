@@ -9,7 +9,7 @@
 <link rel="apple-touch-icon" href="../assets/img/brand/favicon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/css/style.css?v=48">
+<link rel="stylesheet" href="../assets/css/style.css?v=49">
 </head>
 <body class="pg-revenda">
 <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
@@ -187,6 +187,14 @@
                 <label for="checkoutObs">Observação pro time Dupuro <span class="opcional">(opcional)</span></label>
                 <textarea id="checkoutObs" rows="2" maxlength="300" placeholder="Ex.: entregar pelos fundos, falar com o João"></textarea>
               </div>
+              <fieldset class="checkout-grupo hidden" id="checkoutCupomGrupo">
+                <legend>Cupom de desconto</legend>
+                <div class="cupom-opcoes" id="checkoutCupons"></div>
+              </fieldset>
+              <div class="checkout-desconto hidden" id="checkoutDesconto">
+                <span>Subtotal <strong id="checkoutSubtotal"></strong></span>
+                <span id="checkoutDescontoTxt"></span>
+              </div>
               <div class="order-total-row"><span class="lbl">Total</span><span class="val" id="checkoutTotal">—</span></div>
               <div class="field-note" id="checkoutError" role="alert"></div>
               <button type="submit" class="btn btn-primary btn-block" id="checkoutEnviar">Confirmar envio</button>
@@ -260,7 +268,7 @@
     <!-- ============ CUPONS ============ -->
     <section class="tab-panel hidden" id="tab-cupons">
       <div class="app-topbar">
-        <div><h1>Cupons</h1><div class="subtitle">Cupons de desconto que a Dupuro liberou pra você</div></div>
+        <div><h1>Cupons</h1><div class="subtitle">Descontos que a Dupuro liberou pra você. Eles aparecem na revisão do pedido, é só escolher.</div></div>
       </div>
 
       <div class="panel">
@@ -355,7 +363,7 @@
 <script src="../assets/js/supabase-config.js"></script>
 <script src="../assets/js/supabase-client.js"></script>
 <script src="../assets/js/app-ui.js"></script>
-<script src="../assets/js/cliente.js?v=2"></script>
+<script src="../assets/js/cliente.js?v=3"></script>
 <script>
   // Escapa texto antes de ir pro innerHTML (dado de revendedor/cliente nunca vira HTML).
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
@@ -435,7 +443,8 @@
     var e = o.entrega;
     if (!e || !e.tipo) return '';
     return (e.tipo === 'entrega' ? 'Entrega' : 'Retirada na fábrica') +
-      (e.data ? ' · ' + diaCurto(e.data) : '') + (TURNO_TXT[e.turno] ? ', ' + TURNO_TXT[e.turno] : '');
+      (e.data ? ' · ' + diaCurto(e.data) : '') + (TURNO_TXT[e.turno] ? ', ' + TURNO_TXT[e.turno] : '') +
+      (e.cupom ? ' · cupom ' + e.cupom + (e.desconto_percent ? ' (−' + e.desconto_percent + '%)' : '') : '');
   }
   function linhaTempo(o) {
     if (o.status === 'cancelado') {
@@ -1182,6 +1191,39 @@
       if (primeiro) primeiro.checked = true;
     }
   }
+  // Cupons que dá pra usar agora (do revendedor, não usados, na validade).
+  function cuponsValidos() {
+    var hoje = isoUTC(agoraCuiaba());
+    return currentCoupons.filter(function (c) { return !c.usado && c.pct > 0 && (!c.validade || c.validade >= hoje); })
+      .sort(function (a, b) { return b.pct - a.pct; });
+  }
+  function cupomEscolhido() {
+    var r = checkout.querySelector('[name="cupom"]:checked');
+    return r && r.value ? cuponsValidos().filter(function (c) { return c.code === r.value; })[0] || null : null;
+  }
+  // Mesma conta do banco: desconto em cada linha, arredondado em centavos.
+  function totalComDesconto(pct) {
+    return cart.reduce(function (s, it) { return s + Math.round(it.preco * it.quantidade * (100 - pct)) / 100; }, 0);
+  }
+  function atualizarTotalRevisao() {
+    var sub = cart.reduce(function (s, it) { return s + it.preco * it.quantidade; }, 0);
+    var c = cupomEscolhido();
+    var total = c ? totalComDesconto(c.pct) : sub;
+    document.getElementById('checkoutDesconto').classList.toggle('hidden', !c);
+    document.getElementById('checkoutSubtotal').textContent = brl(sub);
+    document.getElementById('checkoutDescontoTxt').textContent = c ? 'Cupom ' + c.code + ' (−' + c.pct + '%): −' + brl(sub - total) : '';
+    document.getElementById('checkoutTotal').textContent = brl(total);
+  }
+  function montarCupons() {
+    var validos = cuponsValidos();
+    document.getElementById('checkoutCupomGrupo').classList.toggle('hidden', !validos.length);
+    // O maior desconto já vem marcado; dá pra escolher outro ou não usar agora.
+    document.getElementById('checkoutCupons').innerHTML = validos.map(function (c, i) {
+      return '<label class="opcao"><input type="radio" name="cupom" value="' + esc(c.code) + '"' + (i === 0 ? ' checked' : '') + '><span><strong>' + esc(c.code) + ' · ' + c.pct + '% de desconto</strong>' +
+        '<small>' + (c.desc ? esc(c.desc) + ' · ' : '') + (c.validade ? 'vale até ' + formatDate(c.validade) : 'sem prazo') + '</small></span></label>';
+    }).join('') + (validos.length ? '<label class="opcao"><input type="radio" name="cupom" value=""><span><strong>Não usar agora</strong><small>Guarda o cupom pra outro pedido</small></span></label>' : '');
+  }
+
   function abrirRevisao() {
     cartError.classList.remove('show');
     if (!cart.length) return;
@@ -1189,7 +1231,9 @@
     document.getElementById('checkoutDia').innerHTML = dias.map(function (iso) { return '<option value="' + iso + '">' + rotuloDia(iso) + '</option>'; }).join('');
     document.getElementById('checkoutEndereco').value = document.getElementById('checkoutEndereco').value || profile.endereco || '';
     document.getElementById('checkoutPrazoOpcao').classList.toggle('hidden', !profile.pode_prazo);
-    document.getElementById('checkoutTotal').textContent = brl(cart.reduce(function (s, it) { return s + it.preco * it.quantidade; }, 0));
+    montarCupons();
+    atualizarTotalRevisao();
+    document.getElementById('avisoCarrinho').classList.remove('show'); // o aviso "no pedido" não fica por cima da revisão
     document.getElementById('checkoutItens').innerHTML = cart.map(function (it) {
       return '<li><span>' + it.quantidade + '× ' + esc(it.nome) + (it.sabor ? ' · ' + esc(it.sabor) : '') + '</span><span class="num">' + brl(it.preco * it.quantidade) + '</span></li>';
     }).join('');
@@ -1206,7 +1250,7 @@
   }
   sendBtn.addEventListener('click', abrirRevisao);
   document.getElementById('checkoutVoltar').addEventListener('click', fecharRevisao);
-  checkout.addEventListener('change', atualizarCheckout);
+  checkout.addEventListener('change', function () { atualizarCheckout(); atualizarTotalRevisao(); });
 
   checkout.addEventListener('submit', async function (e) {
     e.preventDefault();
@@ -1219,8 +1263,10 @@
       tipo: tipo, data: document.getElementById('checkoutDia').value, turno: turnoEl ? turnoEl.value : null,
       pagamento: pagamento, forma: pagamento === 'na_entrega' ? document.getElementById('checkoutForma').value : null,
       endereco: tipo === 'entrega' ? endereco : null,
-      observacao: document.getElementById('checkoutObs').value.trim() || null
+      observacao: document.getElementById('checkoutObs').value.trim() || null,
+      cupom: cupomEscolhido() ? cupomEscolhido().code : null
     };
+    var cupomUsado = cupomEscolhido();
     function falha(msg) { checkoutError.textContent = msg; checkoutError.classList.add('show'); }
     if (!entrega.data || !entrega.turno) return falha('Escolha o dia e o turno.');
     if (tipo === 'entrega' && endereco.length < 6) { document.getElementById('checkoutEndereco').focus(); return falha('Informe o endereço de entrega.'); }
@@ -1240,8 +1286,9 @@
         falha('Algum item ficou sem estoque. Volte aos itens e ajuste.');
         productsCache = await DupuroCliente.getProducts();
         renderShop();
-      } else if (/Pedido m[íi]nimo|dia\/turno|endereço|prazo|entrega ou retirada|Data/i.test(msg)) {
-        falha(msg.replace(/^.*?(Pedido m|Esse dia|Informe|Pagamento|Escolha|Data)/i, '$1')); // mensagens do banco, já em português
+      } else if (/Pedido m[íi]nimo|dia\/turno|endereço|prazo|entrega ou retirada|Data|Cupom/i.test(msg)) {
+        falha(msg.replace(/^.*?(Pedido m|Esse dia|Informe|Pagamento|Escolha|Data|Cupom)/i, '$1')); // mensagens do banco, já em português
+        if (/Cupom/i.test(msg)) DupuroCliente.getCoupons().then(function (l) { currentCoupons = l; montarCupons(); atualizarTotalRevisao(); });
       } else {
         falha('Não foi possível enviar agora. Confira a internet e tente de novo.');
       }
@@ -1252,14 +1299,20 @@
       DupuroCliente.saveProfile({ nome: profile.nome, empresa: profile.empresa, telefone: profile.telefone, cidade: profile.cidade, endereco: endereco })
         .then(function (r) { if (!r.error) { profile.endereco = endereco; document.getElementById('pEndereco').value = endereco; } });
     }
-    var total = cart.reduce(function (s, it) { return s + it.preco * it.quantidade; }, 0);
+    var total = cupomUsado ? totalComDesconto(cupomUsado.pct) : cart.reduce(function (s, it) { return s + it.preco * it.quantidade; }, 0);
     var n = cart.length;
     cart = [];
+    if (cupomUsado) {
+      cupomUsado.usado = true;
+      marcarCupons(currentCoupons.filter(function (c) { return !c.usado; }).length);
+      renderCoupons();
+    }
     renderCart();
     checkout.classList.add('hidden');
     document.getElementById('checkoutObs').value = '';
     document.getElementById('sucessoTitulo').textContent = (result.numero || 'Pedido') + ' enviado';
-    document.getElementById('summarySuccessDetail').textContent = n + (n === 1 ? ' produto' : ' produtos') + ' · ' + brl(total);
+    document.getElementById('summarySuccessDetail').textContent = n + (n === 1 ? ' produto' : ' produtos') + ' · ' + brl(total) +
+      (cupomUsado ? ' com o cupom ' + cupomUsado.code + ' (−' + cupomUsado.pct + '%)' : '');
     document.getElementById('sucessoUltimo').textContent = tipo === 'entrega' ? 'Entregue' : 'Retirado na fábrica';
     document.getElementById('sucessoQuando').textContent = rotuloDia(entrega.data) + ', ' + TURNOS[entrega.turno].nome.toLowerCase() + ' (' + TURNOS[entrega.turno].faixa + ')' +
       (tipo === 'entrega' ? ' · ' + endereco : ' · Av. das Torres, 16');
@@ -1375,20 +1428,14 @@
       return '<div class="coupon-card">' +
         '<div class="code">' + esc(c.code) + '</div>' +
         '<div class="desc">' + esc(c.desc) + '</div>' +
-        '<div class="meta"><span>' + (c.usado ? 'Já usado' : 'Válido até ' + formatDate(c.validade)) + '</span>' +
-        (c.usado ? '' : '<button type="button" class="copy-btn" data-code="' + esc(c.code) + '">Copiar código</button>') + '</div>' +
+        '<div class="meta"><span>' + (c.usado ? 'Já usado' : (c.pct ? c.pct + '% de desconto · ' : '') + (c.validade ? 'vale até ' + formatDate(c.validade) : 'sem prazo')) + '</span>' +
+        (c.usado ? '' : '<button type="button" class="copy-btn" data-usar-cupom>Usar num pedido</button>') + '</div>' +
         '</div>';
     }).join('');
 
-    grid.querySelectorAll('.copy-btn').forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        var code = btn.getAttribute('data-code');
-        if (navigator.clipboard) {
-          navigator.clipboard.writeText(code);
-        }
-        btn.textContent = 'Copiado';
-        setTimeout(function () { btn.textContent = 'Copiar código'; }, 1500);
-      });
+    // O cupom entra sozinho na revisão do pedido: o botão só leva até lá.
+    grid.querySelectorAll('[data-usar-cupom]').forEach(function (btn) {
+      btn.addEventListener('click', function () { goTo('fazer-pedido'); });
     });
   }
   renderCoupons();

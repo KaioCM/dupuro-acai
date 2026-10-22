@@ -16,7 +16,7 @@ web
 Site e sistema da Dupuro Açaí, fábrica de açaí em Cuiabá-MT. A meta central é tirar os pedidos do WhatsApp. Hoje o revendedor ainda avisa no WhatsApp que fez o pedido; o painel precisa ficar bom o bastante para que esse aviso deixe de ser necessário. Sucesso é cada pedido chegar, ser confirmado e baixar o estoque sem conversa paralela.
 
 ## Positioning
-Açaí direto da fábrica, sem pedido mínimo para revender. A mesma fábrica atende três canais: atacado (revenda), balcão da loja e delivery para casa. Estoque é por sabor.
+Açaí direto da fábrica; revenda a partir de 1 caixa de 10 L (mínimo por produto, dispensado com 50 L no pedido). A mesma fábrica atende três canais: atacado (revenda), balcão da loja e delivery para casa. Estoque é por sabor.
 
 ## Operating Context
 - Pedido de revendedor nasce com status `enviado` e **não reserva estoque**. Na criação o sistema só valida se há estoque disponível. O estoque baixa somente quando o admin confirma (`processando`/`entregue`), via trigger `adjust_stock_on_order_change`.
