@@ -2703,3 +2703,90 @@ a.stat-card.alerta .stat-sub { color: var(--warning); font-weight: 800; }
   .ajustes-lista li { grid-template-columns: 1fr auto; }
   .ajuste-quando { grid-column: 1 / -1; }
 }
+
+/* =====================================================================
+   Painel do revendedor — rodada 1 (2026-10-22): escolher no celular,
+   carrinho editável, revisão com entrega/turno/pagamento, sucesso.
+   ===================================================================== */
+.pg-revenda .campo-rotulo { display: block; margin-bottom: 8px; font-size: 13px; font-weight: 700; color: var(--roxo-900); }
+.sabor-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.sabor-chip { min-height: 44px; padding: 8px 14px; border: 1.5px solid rgba(96,16,80,0.2); border-radius: var(--radius-full); background: #fff; font: inherit; font-size: 15px; font-weight: 700; color: var(--roxo-900); cursor: pointer; }
+.sabor-chip.active { background: var(--roxo-700); border-color: var(--roxo-700); color: #fff; }
+.sabor-chip:disabled { opacity: 0.45; text-decoration: line-through; cursor: not-allowed; }
+.sabor-chip small { font-size: 11px; font-weight: 600; text-decoration: none; }
+.sheet-fechar { display: none; }
+.sheet-fundo { position: fixed; inset: 0; z-index: 1290; background: rgba(36,8,32,0.4); }
+@media (max-width: 1100px) {
+  .order-summary.sheet-escolha { position: fixed; top: auto; left: 0; right: 0; bottom: 0; z-index: 1300; max-height: 86vh; overflow-y: auto; padding: 22px 18px calc(18px + env(safe-area-inset-bottom)); background: #fff; border: 0; border-radius: 20px 20px 0 0; box-shadow: 0 -12px 34px rgba(36,8,32,0.28); }
+  .sheet-escolha .sheet-fechar { display: flex; position: absolute; top: 10px; right: 10px; width: 44px; height: 44px; align-items: center; justify-content: center; border: 0; border-radius: 50%; background: rgba(96,16,80,0.08); font-size: 24px; color: var(--roxo-900); cursor: pointer; }
+  body.escolhendo #pedidoBarra { display: none; }
+  body.escolhendo { overflow: hidden; }
+}
+@media (prefers-reduced-motion: no-preference) and (max-width: 1100px) {
+  .sheet-escolha { animation: sobeSheet 0.2s ease-out; }
+  @keyframes sobeSheet { from { transform: translateY(24px); opacity: 0.6; } to { transform: none; opacity: 1; } }
+}
+.aviso-carrinho { position: fixed; left: 50%; bottom: 84px; z-index: 1310; max-width: calc(100vw - 32px); padding: 10px 16px; border-radius: 12px; background: var(--roxo-950); color: #fff; font-size: 14.5px; font-weight: 600; transform: translate(-50%, 12px); opacity: 0; pointer-events: none; transition: transform 0.2s ease, opacity 0.2s ease; }
+.aviso-carrinho.show { transform: translate(-50%, 0); opacity: 1; }
+
+/* carrinho */
+.pg-revenda .cart-item { flex-wrap: wrap; }
+.pg-revenda .cart-item .ci-info { flex: 1 1 140px; }
+.pg-revenda .cart-item .ci-name { font-size: 14px; }
+.pg-revenda .cart-item .ci-sub { font-size: 13px; }
+.ci-tipo { display: inline-block; padding: 1px 7px; border-radius: 999px; background: rgba(96,16,80,0.08); color: var(--roxo-700); font-size: 11.5px; font-weight: 700; }
+.ci-qtd { display: inline-flex; align-items: center; gap: 2px; border: 1.5px solid rgba(96,16,80,0.16); border-radius: 12px; }
+.ci-qtd button { width: 36px; height: 36px; border: 0; background: none; font-size: 20px; font-weight: 700; color: var(--roxo-700); cursor: pointer; }
+.ci-qtd span { min-width: 26px; text-align: center; font-weight: 800; font-variant-numeric: tabular-nums; }
+.pg-revenda .cart-item .ci-remove { width: 36px; height: 36px; font-size: 20px; }
+@media (max-width: 700px) {
+  .ci-qtd button, .pg-revenda .cart-item .ci-remove { width: 44px; height: 44px; }
+}
+
+/* revisão */
+.checkout { display: grid; gap: 16px; }
+.checkout-voltar { justify-self: start; padding: 0; }
+.checkout-grupo { border: 0; margin: 0; padding: 0; min-width: 0; }
+.checkout-grupo legend { margin-bottom: 8px; font-size: 14px; font-weight: 800; color: var(--roxo-950); }
+.opcoes-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.opcao { position: relative; display: block; cursor: pointer; }
+.opcao input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.opcao > span { display: flex; flex-direction: column; gap: 2px; min-height: 60px; padding: 10px 12px; border: 1.5px solid rgba(96,16,80,0.18); border-radius: 12px; background: #fff; }
+.opcao strong { font-size: 15px; color: var(--roxo-950); }
+.opcao small { font-size: 12.5px; color: var(--text-light); line-height: 1.3; }
+.opcao input:checked + span { border-color: var(--roxo-700); box-shadow: inset 0 0 0 1.5px var(--roxo-700); background: rgba(96,16,80,0.04); }
+.opcao input:focus-visible + span { outline: 3px solid var(--roxo-700); outline-offset: 2px; }
+.opcao.indisponivel { opacity: 0.45; cursor: not-allowed; }
+.checkout textarea, .checkout select { width: 100%; padding: 10px 12px; border: 1.5px solid rgba(96,16,80,0.2); border-radius: 12px; background: #fff; font: inherit; font-size: 16px; color: var(--roxo-950); }
+.checkout .opcional { font-weight: 500; color: var(--text-light); }
+.checkout-nota { margin: 0; font-size: 12.5px; color: var(--text-light); text-align: center; }
+
+/* sucesso */
+.sucesso { padding: 6px 2px; }
+.sucesso-titulo { margin: 0 0 4px; font-size: 19px; color: var(--roxo-950); }
+.sucesso-resumo { margin: 0 0 14px; font-size: 14px; color: var(--text-light); }
+.linha-tempo { list-style: none; margin: 0 0 14px; padding: 0 0 0 22px; border-left: 2px solid rgba(96,16,80,0.14); }
+.linha-tempo li { position: relative; padding: 0 0 12px 8px; }
+.linha-tempo li::before { content: ""; position: absolute; left: -30px; top: 3px; width: 14px; height: 14px; border-radius: 50%; background: #fff; border: 2px solid rgba(96,16,80,0.3); }
+.linha-tempo li.feito::before { background: var(--verde-dark); border-color: var(--verde-dark); }
+.linha-tempo strong { display: block; font-size: 14.5px; color: var(--roxo-950); }
+.linha-tempo span { font-size: 13px; color: var(--text-light); }
+.sucesso-pagamento { margin: 0 0 16px; font-size: 14px; font-weight: 600; color: var(--roxo-900); }
+
+/* campos com 16 px (iPhone não dá zoom) e foco visível sobre o creme */
+.pg-revenda input, .pg-revenda select, .pg-revenda textarea { font-size: 16px; }
+.pg-revenda .app-main :focus-visible { outline: 3px solid var(--roxo-700); outline-offset: 2px; }
+.pg-revenda .sidebar :focus-visible, .pg-revenda .caixa-barra :focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+.pg-revenda .flavor-hint { font-size: 12px; }
+/* Painéis de trabalho sem animação de entrada a cada troca de aba (skill: operate
+   não anima carregamento). Além de atrasar, o transform da animação virava a
+   referência dos elementos fixos (painel de escolha, menus) e os jogava fora da tela. */
+.pg-revenda .tab-panel, .pg-revenda .tab-panel .panel, .pg-revenda .tab-panel .stat-card,
+.pg-admin .tab-panel, .pg-admin .tab-panel .panel, .pg-admin .tab-panel .stat-card { animation: none; }
+
+/* Chave "paga a prazo" na lista de revendedores (só admin liga). */
+.chave-prazo { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; cursor: pointer; font-size: 14px; }
+.chave-prazo input { width: 20px; height: 20px; accent-color: var(--roxo-700, #601050); }
+.ped-endereco strong { color: var(--text); font-weight: 700; }
+/* Na revisão do pedido, a dica "toque num produto" sai da frente. */
+.order-summary:has(#checkoutSection:not(.hidden)) #summaryPlaceholder { display: none; }

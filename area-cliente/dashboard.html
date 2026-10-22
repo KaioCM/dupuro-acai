@@ -9,7 +9,7 @@
 <link rel="apple-touch-icon" href="../assets/img/brand/favicon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/css/style.css?v=43">
+<link rel="stylesheet" href="../assets/css/style.css?v=46">
 </head>
 <body class="pg-revenda">
 <svg class="sprite" aria-hidden="true" focusable="false"><symbol id="m-grafico" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></symbol><symbol id="m-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol><symbol id="m-usuarios" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"/></symbol><symbol id="m-caixa" viewBox="0 0 24 24"><path d="M3 8l9-4 9 4v9l-9 4-9-4z"/><path d="M3 8l9 4 9-4M12 12v9"/></symbol><symbol id="m-painel" viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 10h6M9 14h6M9 18h3"/></symbol><symbol id="m-fabrica" viewBox="0 0 24 24"><path d="M3 21V10l5 3v-3l5 3V7l8 4v10z"/><path d="M7 17h2M12 17h2M17 17h1"/></symbol><symbol id="m-etiqueta" viewBox="0 0 24 24"><path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.4"/></symbol><symbol id="m-engrenagem" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></symbol><symbol id="m-casa" viewBox="0 0 24 24"><path d="M3 11l9-7 9 7M5 9.5V20h14V9.5M10 20v-6h4v6"/></symbol><symbol id="m-sair" viewBox="0 0 24 24"><path d="M14 4h5a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-5M10 16l-4-4 4-4M6 12h10"/></symbol><symbol id="m-carrinho" viewBox="0 0 24 24"><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2.5 3.5h3l2.4 11.2a1.5 1.5 0 0 0 1.5 1.3h8.4a1.5 1.5 0 0 0 1.5-1.2L21 7H6.3"/></symbol><symbol id="m-recibo" viewBox="0 0 24 24"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6M9 16h3"/></symbol><symbol id="m-calendario" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></symbol><symbol id="m-chat" viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></symbol><symbol id="m-usuario" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol><symbol id="m-globo" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></symbol></svg>
@@ -165,11 +165,11 @@
           <div class="order-summary-body">
 
             <div class="placeholder" id="summaryPlaceholder">
-              <span class="icon">👈</span>
-              Escolha um produto na vitrine ao lado para começar o pedido.
+              Toque num produto da vitrine pra escolher o sabor e a quantidade.
             </div>
 
-            <div id="summaryContent" class="hidden">
+            <div id="summaryContent" class="hidden" role="dialog" aria-modal="false" aria-labelledby="summaryName">
+              <button type="button" class="sheet-fechar" id="sheetFechar" aria-label="Fechar sem adicionar">×</button>
               <div class="picked">
                 <div class="thumb" id="summaryThumb">🫐</div>
                 <div>
@@ -179,8 +179,9 @@
               </div>
 
               <div class="field hidden" id="summarySaborField">
-                <label for="summarySabor">Sabor</label>
-                <select id="summarySabor"></select>
+                <span class="campo-rotulo" id="saborRotulo">Sabor</span>
+                <div class="sabor-chips" id="saborChips" role="radiogroup" aria-labelledby="saborRotulo"></div>
+                <select id="summarySabor" hidden aria-hidden="true" tabindex="-1"></select>
               </div>
 
               <div class="field" style="margin-bottom:0;">
@@ -199,25 +200,80 @@
               </div>
 
               <div class="field-note" id="clientOrderError">Confira os dados do item.</div>
-              <button type="button" class="btn btn-green btn-block" id="addToCartBtn">➕ Adicionar ao pedido</button>
+              <button type="button" class="btn btn-primary btn-block" id="addToCartBtn">Adicionar ao pedido</button>
             </div>
 
             <div id="cartSection" class="hidden">
-              <div class="cart-head">🛒 Itens do pedido</div>
+              <div class="cart-head">Itens do pedido</div>
               <ul class="cart-list" id="cartList"></ul>
               <div class="order-total-row"><span class="lbl">Total</span><span class="val" id="cartTotal">—</span></div>
               <div class="cart-volume-note hidden" id="cartVolumeNote"></div>
               <div class="field-note" id="cartError">Não foi possível enviar o pedido.</div>
-              <button type="button" class="btn btn-primary btn-block" id="sendCartBtn">Enviar pedido ✔</button>
-              <p style="font-size:12px; color:var(--text-light); text-align:center; margin-top:12px;">O pedido chega direto para o time Dupuro. Você acompanha a confirmação em <em>Meus pedidos</em>.</p>
+              <button type="button" class="btn btn-primary btn-block" id="sendCartBtn">Revisar e enviar</button>
             </div>
 
-            <div id="summarySuccess" class="hidden" style="text-align:center; padding:14px 4px;">
-              <div style="width:64px; height:64px; margin:0 auto 14px; background:rgba(139,184,49,0.18); border-radius:20px; display:flex; align-items:center; justify-content:center; font-size:30px;">🎉</div>
-              <h3 style="font-family:var(--font-display); color:var(--roxo-700); font-size:19px; text-transform:uppercase; margin-bottom:6px;">Pedido enviado!</h3>
-              <p style="font-size:13.5px; color:var(--text-light); margin-bottom:18px;" id="summarySuccessDetail">O time Dupuro já recebeu seu pedido.</p>
+            <!-- Revisão: como recebe, quando e como paga (validado de novo no banco) -->
+            <form id="checkoutSection" class="checkout hidden" novalidate>
+              <button type="button" class="btn-link-acao checkout-voltar" id="checkoutVoltar">‹ Voltar aos itens</button>
+              <fieldset class="checkout-grupo">
+                <legend>Como você recebe?</legend>
+                <div class="opcoes-2">
+                  <label class="opcao"><input type="radio" name="tipoEntrega" value="entrega" checked><span><strong>Entrega</strong><small>A Dupuro leva até você</small></span></label>
+                  <label class="opcao"><input type="radio" name="tipoEntrega" value="retirada"><span><strong>Retirada</strong><small>Na fábrica, Av. das Torres, 16</small></span></label>
+                </div>
+              </fieldset>
+              <div class="field" id="checkoutEnderecoField">
+                <label for="checkoutEndereco">Endereço de entrega</label>
+                <textarea id="checkoutEndereco" rows="2" maxlength="200" autocomplete="street-address" placeholder="Rua, número, bairro e ponto de referência"></textarea>
+                <label class="checkbox-line"><input type="checkbox" id="checkoutSalvarEndereco" checked><span>Usar este endereço nos próximos pedidos</span></label>
+              </div>
+              <fieldset class="checkout-grupo">
+                <legend id="checkoutQuandoLegenda">Quando?</legend>
+                <div class="field" style="margin-bottom:10px;">
+                  <label for="checkoutDia">Dia</label>
+                  <select id="checkoutDia"></select>
+                </div>
+                <div class="opcoes-2" id="checkoutTurnos">
+                  <label class="opcao"><input type="radio" name="turno" value="manha"><span><strong>Manhã</strong><small>8h às 12h · pedir até 7h</small></span></label>
+                  <label class="opcao"><input type="radio" name="turno" value="tarde"><span><strong>Tarde</strong><small>13h às 17h · pedir até 11h</small></span></label>
+                </div>
+              </fieldset>
+              <fieldset class="checkout-grupo">
+                <legend>Pagamento</legend>
+                <div class="opcoes-2" id="checkoutPagamentos">
+                  <label class="opcao"><input type="radio" name="pagamento" value="na_entrega" checked><span><strong id="checkoutNaHoraTitulo">Na entrega</strong><small>Dinheiro, Pix ou cartão</small></span></label>
+                  <label class="opcao hidden" id="checkoutPrazoOpcao"><input type="radio" name="pagamento" value="a_prazo"><span><strong>A prazo</strong><small>Como combinado com a Dupuro</small></span></label>
+                </div>
+                <div class="field" id="checkoutFormaField" style="margin:10px 0 0;">
+                  <label for="checkoutForma">Vai pagar com</label>
+                  <select id="checkoutForma">
+                    <option value="pix">Pix</option>
+                    <option value="dinheiro">Dinheiro</option>
+                    <option value="cartao">Cartão</option>
+                  </select>
+                </div>
+              </fieldset>
+              <div class="field">
+                <label for="checkoutObs">Observação pro time Dupuro <span class="opcional">(opcional)</span></label>
+                <textarea id="checkoutObs" rows="2" maxlength="300" placeholder="Ex.: entregar pelos fundos, falar com o João"></textarea>
+              </div>
+              <div class="order-total-row"><span class="lbl">Total</span><span class="val" id="checkoutTotal">—</span></div>
+              <div class="field-note" id="checkoutError" role="alert"></div>
+              <button type="submit" class="btn btn-primary btn-block" id="checkoutEnviar">Confirmar envio</button>
+              <p class="checkout-nota">A Dupuro confirma o pedido e o estoque. Você acompanha tudo em Meus pedidos.</p>
+            </form>
+
+            <div id="summarySuccess" class="sucesso hidden" role="status">
+              <h3 class="sucesso-titulo" id="sucessoTitulo">Pedido enviado</h3>
+              <p class="sucesso-resumo" id="summarySuccessDetail">O time Dupuro já recebeu seu pedido.</p>
+              <ol class="linha-tempo">
+                <li class="feito"><strong>Enviado</strong><span>Agora</span></li>
+                <li><strong>Confirmado pela Dupuro</strong><span>A gente confere o estoque e confirma aqui</span></li>
+                <li><strong id="sucessoUltimo">Entregue</strong><span id="sucessoQuando">—</span></li>
+              </ol>
+              <p class="sucesso-pagamento" id="sucessoPagamento"></p>
               <button type="button" class="btn btn-green btn-block" id="newOrderBtn">Fazer outro pedido</button>
-              <a href="#" class="btn btn-dark-outline btn-block" data-goto="pedidos" style="margin-top:10px;">Acompanhar pedido</a>
+              <a href="#" class="btn btn-dark-outline btn-block" data-goto="pedidos" style="margin-top:10px;">Ver em Meus pedidos</a>
             </div>
 
           </div>
@@ -264,26 +320,32 @@
         <form id="profileForm">
           <div class="field">
             <label for="pNome">Nome completo</label>
-            <input type="text" id="pNome">
+            <input type="text" id="pNome" autocomplete="name">
           </div>
           <div class="field">
             <label for="pEmpresa">Nome da revenda / negócio</label>
-            <input type="text" id="pEmpresa">
+            <input type="text" id="pEmpresa" autocomplete="organization">
           </div>
           <div class="field">
-            <label for="pEmail">E-mail</label>
-            <input type="email" id="pEmail">
+            <label for="pEmail">E-mail de acesso</label>
+            <input type="email" id="pEmail" readonly aria-describedby="pEmailNota">
+            <div class="field-note-inline" id="pEmailNota">Pra trocar o e-mail de acesso, fale com a Dupuro.</div>
           </div>
           <div class="field">
             <label for="pTelefone">Telefone / WhatsApp</label>
-            <input type="text" id="pTelefone">
+            <input type="tel" id="pTelefone" inputmode="tel" autocomplete="tel">
           </div>
           <div class="field">
             <label for="pCidade">Cidade e Estado</label>
-            <input type="text" id="pCidade">
+            <input type="text" id="pCidade" autocomplete="address-level2">
+          </div>
+          <div class="field">
+            <label for="pEndereco">Endereço de entrega</label>
+            <textarea id="pEndereco" rows="2" maxlength="200" autocomplete="street-address" placeholder="Rua, número, bairro e ponto de referência"></textarea>
           </div>
           <button type="submit" class="btn btn-primary">Salvar alterações</button>
-          <span id="profileSaved" class="hidden" style="margin-left:14px; color:var(--verde-dark); font-weight:700; font-size:13px;">✓ Salvo!</span>
+          <span id="profileSaved" class="hidden" role="status" style="margin-left:14px; color:var(--verde-dark); font-weight:700; font-size:13px;">Salvo.</span>
+          <div id="profileError" class="field-note" role="alert"></div>
         </form>
       </div>
 
@@ -307,6 +369,9 @@
       </div>
     </section>
 
+    <div class="sheet-fundo" id="sheetFundo" hidden></div>
+    <div class="aviso-carrinho" id="avisoCarrinho" role="status" aria-live="polite"></div>
+
     <div class="caixa-barra" id="pedidoBarra" hidden>
       <span class="cb-qtd" id="barraQtd">0 itens</span>
       <strong id="barraTotal">R$ 0,00</strong>
@@ -321,7 +386,7 @@
 <script src="../assets/js/supabase-config.js"></script>
 <script src="../assets/js/supabase-client.js"></script>
 <script src="../assets/js/app-ui.js"></script>
-<script src="../assets/js/cliente.js"></script>
+<script src="../assets/js/cliente.js?v=2"></script>
 <script>
   // Escapa texto antes de ir pro innerHTML (dado de revendedor/cliente nunca vira HTML).
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
@@ -702,6 +767,9 @@
   }
 
   function selectProduct(id, keepQty) {
+    // Revisão aberta e tocou outro produto: volta pros itens antes de escolher.
+    var rev = document.getElementById('checkoutSection');
+    if (rev && !rev.classList.contains('hidden')) { rev.classList.add('hidden'); renderCart(); }
     selectedProduct = productsCache.find(function (p) { return String(p.id) === String(id) && p.emEstoque; }) || null;
 
     shopCatalog.querySelectorAll('.shop-card').forEach(function (c) {
@@ -733,12 +801,18 @@
 
       summarySabor.innerHTML = opcoes.map(function (s) {
         var ok = byName[s].disponivel;
-        return '<option value="' + s + '"' + (ok ? '' : ' disabled') + '>' + s + '</option>';
+        return '<option value="' + esc(s) + '"' + (ok ? '' : ' disabled') + '>' + esc(s) + '</option>';
+      }).join('');
+      // Sabores em botões (um toque, sem abrir lista); esgotados aparecem riscados.
+      document.getElementById('saborChips').innerHTML = opcoes.map(function (s) {
+        var ok = byName[s].disponivel;
+        return '<button type="button" class="sabor-chip" role="radio" aria-checked="false" data-sabor="' + esc(s) + '"' + (ok ? '' : ' disabled aria-disabled="true"') + '>' +
+          esc(s.replace(/^Creme de /, '')) + (ok ? '' : ' <small>esgotado</small>') + '</button>';
       }).join('');
 
       // Um <option disabled> não pode ficar como escolhido: seleciona o 1º disponível.
       var primeiroDisponivel = opcoes.filter(function (s) { return byName[s].disponivel; })[0];
-      if (primeiroDisponivel) summarySabor.value = primeiroDisponivel;
+      if (primeiroDisponivel) escolherSabor(primeiroDisponivel);
       summarySaborField.classList.remove('hidden');
     } else {
       summarySaborField.classList.add('hidden');
@@ -748,7 +822,61 @@
     errorNote.classList.remove('show');
     hideQtyHint();
     updateTotal();
+    abrirPainelEscolha();
   }
+
+  function escolherSabor(s) {
+    summarySabor.value = s;
+    document.querySelectorAll('#saborChips .sabor-chip').forEach(function (b) {
+      var on = b.getAttribute('data-sabor') === s;
+      b.classList.toggle('active', on);
+      b.setAttribute('aria-checked', on ? 'true' : 'false');
+    });
+  }
+  document.getElementById('saborChips').addEventListener('click', function (e) {
+    var b = e.target.closest('.sabor-chip');
+    if (b && !b.disabled) escolherSabor(b.getAttribute('data-sabor'));
+  });
+
+  // No celular/tablet o resumo fica longe da vitrine: a escolha abre num painel que
+  // sobe de baixo, junto do polegar (antes só aparecia um ✓ no card e o sabor e a
+  // quantidade ficavam ~1.200 px abaixo).
+  var telaPequena = window.matchMedia('(max-width: 1100px)');
+  var focoAntesDoPainel = null;
+  // O painel sai de dentro do resumo (que é sticky e prende z-index/posição) e vai
+  // pro body enquanto está aberto; volta pro lugar ao fechar.
+  var sheetWrap = document.createElement('div');
+  sheetWrap.className = 'order-summary sheet-escolha';
+  var marcadorSheet = document.createComment('lugar do painel de escolha');
+  function abrirPainelEscolha() {
+    if (!telaPequena.matches) return;
+    focoAntesDoPainel = document.activeElement;
+    if (!sheetWrap.parentNode) {
+      summaryContent.parentNode.insertBefore(marcadorSheet, summaryContent);
+      sheetWrap.appendChild(summaryContent);
+      document.body.appendChild(sheetWrap);
+    }
+    document.body.classList.add('escolhendo');
+    document.getElementById('sheetFundo').hidden = false;
+    var primeiro = document.querySelector('#saborChips .sabor-chip.active') || document.getElementById('summaryQty');
+    setTimeout(function () { primeiro.focus({ preventScroll: true }); }, 60);
+  }
+  function fecharPainelEscolha() {
+    if (!document.body.classList.contains('escolhendo')) return;
+    document.body.classList.remove('escolhendo');
+    document.getElementById('sheetFundo').hidden = true;
+    if (sheetWrap.parentNode) {
+      marcadorSheet.parentNode.insertBefore(summaryContent, marcadorSheet);
+      marcadorSheet.remove();
+      sheetWrap.remove();
+    }
+    if (focoAntesDoPainel && focoAntesDoPainel.focus) focoAntesDoPainel.focus({ preventScroll: true });
+  }
+  document.getElementById('sheetFechar').addEventListener('click', function () { fecharPainelEscolha(); deselectProduct(); });
+  document.getElementById('sheetFundo').addEventListener('click', function () { fecharPainelEscolha(); deselectProduct(); });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && document.body.classList.contains('escolhendo')) { fecharPainelEscolha(); deselectProduct(); }
+  });
 
   // Linha de preço/mínimo do item selecionado. Precisa ser reavaliada sempre que
   // o carrinho muda: o pedido mínimo pode ter sido dispensado pelo volume.
@@ -813,22 +941,48 @@
     document.querySelector('.order-summary').scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
 
+  // Carrinho guardado no aparelho: se o celular bloquear ou a página recarregar
+  // no meio do pedido, nada se perde. Preço e estoque são recalculados no banco.
+  var CHAVE_CARRINHO = 'dupuro-carrinho-' + session.user.id;
+  function salvarCarrinho() {
+    try { if (cart.length) localStorage.setItem(CHAVE_CARRINHO, JSON.stringify(cart)); else localStorage.removeItem(CHAVE_CARRINHO); } catch (e) {}
+  }
+  function carregarCarrinho() {
+    try {
+      var salvo = JSON.parse(localStorage.getItem(CHAVE_CARRINHO) || '[]');
+      // Só volta o que ainda existe, com o preço atual do catálogo.
+      cart = salvo.map(function (it) {
+        var p = productsCache.find(function (x) { return String(x.id) === String(it.productId) && x.emEstoque; });
+        if (!p) return null;
+        return { productId: p.id, nome: p.nome, preco: p.preco, sabor: it.sabor || null, quantidade: Math.min(99, Math.max(1, it.quantidade | 0)), litros: p.litros || 0, tipo: p.tipo };
+      }).filter(Boolean);
+    } catch (e) { cart = []; }
+  }
+  function minDoItem(it) {
+    if (dispensaMinimo()) return 1;
+    var p = productsCache.find(function (x) { return String(x.id) === String(it.productId); });
+    return p ? (p.pedidoMinimo || 1) : 1;
+  }
+
   function renderCart() {
+    salvarCarrinho();
     atualizarBarra();
     var section = document.getElementById('cartSection');
     var list = document.getElementById('cartList');
-    sendBtn.textContent = 'Enviar pedido' + (cart.length ? ' (' + cart.length + ')' : '') + ' ✔';
-    if (!cart.length) { section.classList.add('hidden'); return; }
+    if (!cart.length) { list.innerHTML = ''; section.classList.add('hidden'); return; }
     section.classList.remove('hidden');
     list.innerHTML = cart.map(function (it, i) {
-      return '<li class="cart-item"><div class="ci-info"><span class="ci-name">' + esc(it.nome) + (it.sabor ? ' · ' + it.sabor : '') + '</span>' +
-        '<span class="ci-sub">' + it.quantidade + ' × ' + brl(it.preco) + ' = ' + brl(it.preco * it.quantidade) + '</span></div>' +
-        '<button type="button" class="ci-remove" data-cart-i="' + i + '" aria-label="Remover item">×</button></li>';
+      var tipo = TIPO_LABELS[it.tipo] || '';
+      return '<li class="cart-item"><div class="ci-info"><span class="ci-name">' + esc(it.nome) + (it.sabor ? ' · ' + esc(it.sabor) : '') + '</span>' +
+        '<span class="ci-sub">' + (tipo ? '<span class="ci-tipo">' + tipo + '</span> ' : '') + brl(it.preco) + ' · ' + brl(it.preco * it.quantidade) + '</span></div>' +
+        '<div class="ci-qtd" role="group" aria-label="Quantidade de ' + esc(it.nome) + '">' +
+          '<button type="button" data-cart-menos="' + i + '" aria-label="Diminuir">−</button>' +
+          '<span aria-live="polite">' + it.quantidade + '</span>' +
+          '<button type="button" data-cart-mais="' + i + '" aria-label="Aumentar">+</button>' +
+        '</div>' +
+        '<button type="button" class="ci-remove" data-cart-i="' + i + '" aria-label="Remover ' + esc(it.nome) + '">×</button></li>';
     }).join('');
     document.getElementById('cartTotal').textContent = brl(cart.reduce(function (s, it) { return s + it.preco * it.quantidade; }, 0));
-    list.querySelectorAll('[data-cart-i]').forEach(function (b) {
-      b.addEventListener('click', function () { cart.splice(parseInt(b.getAttribute('data-cart-i'), 10), 1); renderCart(); });
-    });
     renderVolumeNote();
     // O carrinho mudou: a dispensa do mínimo pode ter ligado/desligado.
     refreshMinUI();
@@ -880,49 +1034,183 @@
       return;
     }
 
-    var existing = cart.filter(function (it) { return it.productId === selectedProduct.id && (it.sabor || null) === (sabor || null); })[0];
+    var existing = cart.filter(function (it) { return String(it.productId) === String(selectedProduct.id) && (it.sabor || null) === (sabor || null); })[0];
     if (existing) existing.quantidade = Math.min(99, existing.quantidade + qty);
-    else cart.push({ productId: selectedProduct.id, nome: selectedProduct.nome, preco: selectedProduct.preco, sabor: sabor, quantidade: qty, litros: selectedProduct.litros || 0 });
+    else cart.push({ productId: selectedProduct.id, nome: selectedProduct.nome, preco: selectedProduct.preco, sabor: sabor, quantidade: qty, litros: selectedProduct.litros || 0, tipo: selectedProduct.tipo });
+    var nomeAdd = selectedProduct.nome;
     renderCart();
+    fecharPainelEscolha();
     deselectProduct();
+    avisoCarrinho(qty + 'x ' + nomeAdd + (sabor ? ' · ' + sabor : '') + ' no pedido.');
   });
 
-  // "Enviar pedido (N)": manda o carrinho inteiro num pedido só.
-  sendBtn.addEventListener('click', async function () {
+  // Aviso curto depois de adicionar (no celular o carrinho fica fora da tela).
+  var avisoTimer = null;
+  function avisoCarrinho(msg) {
+    var el = document.getElementById('avisoCarrinho');
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(avisoTimer);
+    avisoTimer = setTimeout(function () { el.classList.remove('show'); }, 2600);
+  }
+
+  // ---- Revisão: entrega/retirada, dia e turno (regra do delivery), pagamento ----
+  // Turnos: manhã 8–12h (pedir até 7h), tarde 13–17h (pedir até 11h), seg a sáb,
+  // fuso de Cuiabá. O banco (turno_aberto) confere de novo na hora de gravar.
+  var TURNOS = { manha: { nome: 'Manhã', faixa: '8h às 12h', corte: 7 }, tarde: { nome: 'Tarde', faixa: '13h às 17h', corte: 11 } };
+  function agoraCuiaba() { return new Date(Date.now() - 4 * 3600e3); } // campos UTC = hora de Cuiabá
+  function isoUTC(d) { return d.toISOString().slice(0, 10); }
+  function turnosDoDia(iso) {
+    var agora = agoraCuiaba(), hoje = isoUTC(agora);
+    return Object.keys(TURNOS).filter(function (k) { return iso > hoje || (iso === hoje && agora.getUTCHours() < TURNOS[k].corte); });
+  }
+  function diasDisponiveis() {
+    var dias = [], d = agoraCuiaba();
+    for (var i = 0; dias.length < 6 && i < 14; i++) {
+      var dia = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() + i));
+      if (dia.getUTCDay() === 0) continue; // domingo não tem
+      var iso = isoUTC(dia);
+      if (turnosDoDia(iso).length) dias.push(iso);
+    }
+    return dias;
+  }
+  var SEMANA = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
+  function rotuloDia(iso) {
+    var hoje = isoUTC(agoraCuiaba());
+    var amanha = isoUTC(new Date(Date.parse(hoje) + 864e5));
+    var d = new Date(iso + 'T12:00:00Z');
+    var base = SEMANA[d.getUTCDay()] + ' ' + iso.slice(8, 10) + '/' + iso.slice(5, 7);
+    return iso === hoje ? 'Hoje, ' + base : iso === amanha ? 'Amanhã, ' + base : base.charAt(0).toUpperCase() + base.slice(1);
+  }
+  var checkout = document.getElementById('checkoutSection');
+  var checkoutError = document.getElementById('checkoutError');
+  function tipoEscolhido() { return checkout.querySelector('[name="tipoEntrega"]:checked').value; }
+  function atualizarCheckout() {
+    var entrega = tipoEscolhido() === 'entrega';
+    document.getElementById('checkoutEnderecoField').classList.toggle('hidden', !entrega);
+    document.getElementById('checkoutQuandoLegenda').textContent = entrega ? 'Quando entregar?' : 'Quando você retira?';
+    document.getElementById('checkoutNaHoraTitulo').textContent = entrega ? 'Na entrega' : 'Na retirada';
+    var aPrazo = checkout.querySelector('[name="pagamento"]:checked').value === 'a_prazo';
+    document.getElementById('checkoutFormaField').classList.toggle('hidden', aPrazo);
+    var dia = document.getElementById('checkoutDia').value;
+    var livres = turnosDoDia(dia);
+    checkout.querySelectorAll('[name="turno"]').forEach(function (r) {
+      var ok = livres.indexOf(r.value) !== -1;
+      r.disabled = !ok;
+      r.closest('.opcao').classList.toggle('indisponivel', !ok);
+      if (!ok && r.checked) r.checked = false;
+    });
+    if (!checkout.querySelector('[name="turno"]:checked')) {
+      var primeiro = checkout.querySelector('[name="turno"]:not(:disabled)');
+      if (primeiro) primeiro.checked = true;
+    }
+  }
+  function abrirRevisao() {
     cartError.classList.remove('show');
     if (!cart.length) return;
+    var dias = diasDisponiveis();
+    document.getElementById('checkoutDia').innerHTML = dias.map(function (iso) { return '<option value="' + iso + '">' + rotuloDia(iso) + '</option>'; }).join('');
+    document.getElementById('checkoutEndereco').value = document.getElementById('checkoutEndereco').value || profile.endereco || '';
+    document.getElementById('checkoutPrazoOpcao').classList.toggle('hidden', !profile.pode_prazo);
+    document.getElementById('checkoutTotal').textContent = brl(cart.reduce(function (s, it) { return s + it.preco * it.quantidade; }, 0));
+    checkoutError.classList.remove('show');
+    atualizarCheckout();
+    document.getElementById('cartSection').classList.add('hidden');
+    document.getElementById('pedidoBarra').hidden = true;
+    checkout.classList.remove('hidden');
+    document.querySelector('.order-summary').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  function fecharRevisao() {
+    checkout.classList.add('hidden');
+    renderCart();
+  }
+  sendBtn.addEventListener('click', abrirRevisao);
+  document.getElementById('checkoutVoltar').addEventListener('click', fecharRevisao);
+  checkout.addEventListener('change', atualizarCheckout);
+
+  checkout.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    checkoutError.classList.remove('show');
+    var tipo = tipoEscolhido();
+    var turnoEl = checkout.querySelector('[name="turno"]:checked');
+    var pagamento = checkout.querySelector('[name="pagamento"]:checked').value;
+    var endereco = document.getElementById('checkoutEndereco').value.trim();
+    var entrega = {
+      tipo: tipo, data: document.getElementById('checkoutDia').value, turno: turnoEl ? turnoEl.value : null,
+      pagamento: pagamento, forma: pagamento === 'na_entrega' ? document.getElementById('checkoutForma').value : null,
+      endereco: tipo === 'entrega' ? endereco : null,
+      observacao: document.getElementById('checkoutObs').value.trim() || null
+    };
+    function falha(msg) { checkoutError.textContent = msg; checkoutError.classList.add('show'); }
+    if (!entrega.data || !entrega.turno) return falha('Escolha o dia e o turno.');
+    if (tipo === 'entrega' && endereco.length < 6) { document.getElementById('checkoutEndereco').focus(); return falha('Informe o endereço de entrega.'); }
+    if (/[<>]/.test(endereco + (entrega.observacao || ''))) return falha('Tire os sinais < e > do endereço e da observação.');
+
     var items = cart.map(function (it) {
       return { productId: it.productId, quantidade: it.quantidade, sabor: it.sabor,
         itens: it.nome + (it.sabor ? ' - ' + it.sabor : '') + ' x' + it.quantidade, valor: it.preco * it.quantidade };
     });
-    sendBtn.disabled = true; sendBtn.textContent = 'Enviando...';
-    var result = await DupuroCliente.createOrderCart(items);
-    sendBtn.disabled = false;
+    var botao = document.getElementById('checkoutEnviar');
+    botao.disabled = true; botao.textContent = 'Enviando...';
+    var result = await DupuroCliente.createOrderCart(items, entrega);
+    botao.disabled = false; botao.textContent = 'Confirmar envio';
     if (result.error) {
       var msg = result.error.message || '';
       if (result.error.code === '23514' || /estoque/i.test(msg)) {
-        cartError.textContent = 'Algum item ficou sem estoque. Revise o pedido.';
+        falha('Algum item ficou sem estoque. Volte aos itens e ajuste.');
         productsCache = await DupuroCliente.getProducts();
         renderShop();
-      } else if (/Pedido m[íi]nimo/i.test(msg)) {
-        // Mensagem vinda da função do banco (criar_pedido_revendedor).
-        cartError.textContent = msg.replace(/^.*?Pedido m/i, 'Pedido m');
+      } else if (/Pedido m[íi]nimo|dia\/turno|endereço|prazo|entrega ou retirada|Data/i.test(msg)) {
+        falha(msg.replace(/^.*?(Pedido m|Esse dia|Informe|Pagamento|Escolha|Data)/i, '$1')); // mensagens do banco, já em português
       } else {
-        cartError.textContent = 'Não foi possível enviar o pedido. Tente novamente.';
+        falha('Não foi possível enviar agora. Confira a internet e tente de novo.');
       }
-      cartError.classList.add('show');
-      renderCart();
       return;
+    }
+    // Endereço novo vira o padrão do perfil (se marcado).
+    if (tipo === 'entrega' && document.getElementById('checkoutSalvarEndereco').checked && endereco !== (profile.endereco || '')) {
+      DupuroCliente.saveProfile({ nome: profile.nome, empresa: profile.empresa, telefone: profile.telefone, cidade: profile.cidade, endereco: endereco })
+        .then(function (r) { if (!r.error) { profile.endereco = endereco; document.getElementById('pEndereco').value = endereco; } });
     }
     var total = cart.reduce(function (s, it) { return s + it.preco * it.quantidade; }, 0);
     var n = cart.length;
     cart = [];
     renderCart();
+    checkout.classList.add('hidden');
+    document.getElementById('checkoutObs').value = '';
+    document.getElementById('sucessoTitulo').textContent = (result.numero || 'Pedido') + ' enviado';
     document.getElementById('summarySuccessDetail').textContent = n + (n === 1 ? ' item' : ' itens') + ' · ' + brl(total);
+    document.getElementById('sucessoUltimo').textContent = tipo === 'entrega' ? 'Entregue' : 'Retirado na fábrica';
+    document.getElementById('sucessoQuando').textContent = rotuloDia(entrega.data) + ', ' + TURNOS[entrega.turno].nome.toLowerCase() + ' (' + TURNOS[entrega.turno].faixa + ')' +
+      (tipo === 'entrega' ? ' · ' + endereco : ' · Av. das Torres, 16');
+    document.getElementById('sucessoPagamento').textContent = pagamento === 'a_prazo' ? 'Pagamento a prazo, como combinado.'
+      : 'Pagamento ' + (tipo === 'entrega' ? 'na entrega' : 'na retirada') + ' (' + checkout.querySelector('#checkoutForma').selectedOptions[0].textContent + ').';
     summaryContent.classList.add('hidden');
     summaryPlaceholder.classList.add('hidden');
     summarySuccess.classList.remove('hidden');
+    document.querySelector('.order-summary').scrollIntoView({ behavior: 'smooth', block: 'start' });
     refreshOrdersSoft();
+  });
+
+  document.getElementById('cartList').addEventListener('click', function (e) {
+    var b = e.target.closest('button');
+    if (!b) return;
+    cartError.classList.remove('show');
+    if (b.hasAttribute('data-cart-i')) { cart.splice(+b.getAttribute('data-cart-i'), 1); renderCart(); return; }
+    var i = +(b.getAttribute('data-cart-menos') || b.getAttribute('data-cart-mais'));
+    var it = cart[i];
+    if (!it) return;
+    if (b.hasAttribute('data-cart-mais')) { it.quantidade = Math.min(99, it.quantidade + 1); renderCart(); return; }
+    var min = minDoItem(it);
+    if (it.quantidade <= min) {
+      cartError.textContent = min > 1
+        ? 'O mínimo de ' + it.nome + ' é ' + min + ' unidades (com ' + fmtLitros(LIMITE_LITROS) + ' no pedido o mínimo some). Pra tirar, use o ×.'
+        : 'Pra tirar este item, use o ×.';
+      cartError.classList.add('show');
+      return;
+    }
+    it.quantidade -= 1;
+    renderCart();
   });
 
   document.getElementById('newOrderBtn').addEventListener('click', function () {
@@ -965,7 +1253,7 @@
       repeatable.forEach(function (r) {
         var existing = cart.filter(function (it) { return it.productId === r.productId && (it.sabor || null) === (r.sabor || null); })[0];
         if (existing) existing.quantidade = Math.min(99, existing.quantidade + r.quantidade);
-        else cart.push({ productId: r.productId, nome: r.nome, preco: r.preco, sabor: r.sabor, quantidade: r.quantidade, litros: r.litros || 0 });
+        else cart.push({ productId: r.productId, nome: r.nome, preco: r.preco, sabor: r.sabor, quantidade: r.quantidade, litros: r.litros || 0, tipo: (productsCache.find(function (p) { return p.id === r.productId; }) || {}).tipo });
       });
       renderCart();
     });
@@ -973,6 +1261,8 @@
 
   productsCache = produtos;
   renderShop();
+  carregarCarrinho();
+  renderCart();
   setupRepeatButton();
   // Limite de litros que dispensa os pedidos mínimos (configurável pelo admin).
   DupuroCliente.getLitrosDispensaMinimo().then(function (litros) {
@@ -1017,18 +1307,29 @@
   document.getElementById('pEmail').value = profile.email || '';
   document.getElementById('pTelefone').value = profile.telefone || '';
   document.getElementById('pCidade').value = profile.cidade || '';
+  document.getElementById('pEndereco').value = profile.endereco || '';
 
   document.getElementById('profileForm').addEventListener('submit', async function (e) {
     e.preventDefault();
     var updated = {
       nome: document.getElementById('pNome').value.trim(),
       empresa: document.getElementById('pEmpresa').value.trim(),
-      email: document.getElementById('pEmail').value.trim(),
       telefone: document.getElementById('pTelefone').value.trim(),
-      cidade: document.getElementById('pCidade').value.trim()
+      cidade: document.getElementById('pCidade').value.trim(),
+      endereco: document.getElementById('pEndereco').value.trim()
     };
+    var erroPerfil = document.getElementById('profileError');
+    erroPerfil.classList.remove('show');
     var result = await DupuroCliente.saveProfile(updated);
-    if (result.error) return;
+    if (result.error) {
+      // Antes falhava em silêncio; agora diz o que houve.
+      erroPerfil.textContent = /<|>/.test(JSON.stringify(updated))
+        ? 'Tire os sinais < e > dos campos e salve de novo.'
+        : 'Não foi possível salvar agora. Confira a internet e tente de novo.';
+      erroPerfil.classList.add('show');
+      return;
+    }
+    profile.endereco = updated.endereco;
     document.getElementById('greetName').textContent = updated.nome.split(' ')[0] || 'revendedor(a)';
     document.getElementById('chipName').textContent = updated.nome;
     document.getElementById('avatarInitial').textContent = (updated.nome || 'R').charAt(0).toUpperCase();

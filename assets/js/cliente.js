@@ -79,7 +79,7 @@ var DupuroCliente = (function () {
     if (!session) return {};
     var result = await client
       .from('profiles')
-      .select('nome, empresa, email, telefone, cidade, status, role')
+      .select('nome, empresa, email, telefone, cidade, endereco, pode_prazo, status, role')
       .eq('id', session.user.id)
       .single();
     if (result.error) return { email: session.user.email };
@@ -89,15 +89,11 @@ var DupuroCliente = (function () {
   async function saveProfile(profile) {
     var session = await getSession();
     if (!session) return { error: new Error('Sem sessão ativa') };
-    var result = await client
-      .from('profiles')
-      .update({
-        nome: profile.nome,
-        empresa: profile.empresa,
-        telefone: profile.telefone,
-        cidade: profile.cidade
-      })
-      .eq('id', session.user.id);
+    var campos = { nome: profile.nome, empresa: profile.empresa, telefone: profile.telefone, cidade: profile.cidade };
+    // Endereço só vai quando quem chamou mandou (o formulário antigo não tem o campo
+    // e não pode apagá-lo).
+    if (profile.endereco !== undefined) campos.endereco = profile.endereco || null;
+    var result = await client.from('profiles').update(campos).eq('id', session.user.id);
     return { error: result.error };
   }
 
@@ -207,7 +203,8 @@ var DupuroCliente = (function () {
   // pedido atinge o limite. A policy orders_insert_self valida linha a linha e
   // não enxergaria os outros itens, por isso a criação passa pela função.
   // Tudo numa transação só: se um item faltar estoque, nada é criado.
-  async function createOrderCart(items) {
+  // entrega = { tipo, data, turno, pagamento, forma, endereco, observacao } (migration_044).
+  async function createOrderCart(items, entrega) {
     var session = await getSession();
     if (!session) return { error: new Error('Sem sessão ativa') };
     if (!items || !items.length) return { error: new Error('Carrinho vazio') };
@@ -220,7 +217,7 @@ var DupuroCliente = (function () {
         valor: it.valor
       };
     });
-    var result = await client.rpc('criar_pedido_revendedor', { p_rows: rows });
+    var result = await client.rpc('criar_pedido_revendedor', { p_rows: rows, p_entrega: entrega || null });
     return { error: result.error, numero: result.data || null };
   }
 
@@ -232,7 +229,7 @@ var DupuroCliente = (function () {
     rows.forEach(function (o) {
       var g = byNum[o.numero];
       if (!g) {
-        g = byNum[o.numero] = { id: o.numero, numero: o.numero, data: o.data, status: o.status, valor: 0, items: [] };
+        g = byNum[o.numero] = { id: o.numero, numero: o.numero, data: o.data, status: o.status, valor: 0, items: [], entrega: o.entrega_info || null };
         order.push(g);
       }
       g.valor += Number(o.valor);
@@ -248,7 +245,7 @@ var DupuroCliente = (function () {
     if (!session) return [];
     var result = await client
       .from('orders')
-      .select('numero, data, itens, valor, status, produto_id, quantidade, sabor')
+      .select('numero, data, itens, valor, status, produto_id, quantidade, sabor, entrega_info')
       .eq('revendedor_id', session.user.id)
       .order('data', { ascending: false });
     if (result.error) return [];
