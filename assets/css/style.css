@@ -3146,3 +3146,36 @@ a.stat-card.alerta .stat-sub { color: var(--warning); font-weight: 800; }
 .pg-caixa #tab-vendas td:first-child, .pg-caixa #tab-historico td:first-child { white-space: nowrap; }
 .pg-caixa #tab-vendas td:last-child, .pg-caixa #tab-historico td:last-child { white-space: nowrap; }
 .pg-caixa #tab-vendas td:last-child .btn + .btn, .pg-caixa #tab-historico td:last-child .btn + .btn { margin-left: 6px; }
+
+/* ---------- Caixa: correções da critique 2 (28/40) ---------- */
+/* Troco legível (estava verde-claro no verde, 2,3:1) */
+.pg-caixa .troco-badge { color: var(--verde-dark); background: rgba(139,184,49,0.18); font-variant-numeric: tabular-nums; }
+.pg-caixa .troco-badge.neg { color: var(--danger); background: rgba(192,57,43,0.10); }
+/* Dourado só no Registrar (e no Abrir caixa quando está fechado); Adicionar é roxo */
+.pg-caixa #addToCartBtn { background: var(--roxo-700); color: #fff; }
+.pg-caixa #addToCartBtn:hover { background: var(--roxo-900); }
+/* Adicional pago: preço embaixo do nome (antes se sobrepunham) */
+.pg-caixa .acomp-list .acomp-chip.pago { display: grid; grid-template-columns: 20px minmax(0, 1fr); column-gap: 9px; row-gap: 1px; align-items: center; }
+.pg-caixa .acomp-list .acomp-chip.pago .acomp-tag { grid-column: 2; margin-left: 0; }
+/* PC: a lista de itens nunca some atrás do rodapé (rodapé deixa de flutuar; a lista rola) */
+@media (min-width: 1101px) {
+  .pg-caixa #tab-venda .app-topbar h1 { font-size: 24px; }
+  .pg-caixa .order-summary-body { display: flex; flex-direction: column; }
+  .pg-caixa #cartSection:not(.hidden) { display: flex; flex-direction: column; flex: 1 0 auto; min-height: 100%; }
+  .pg-caixa #cartSection > * { flex: none; }
+  .pg-caixa #cartSection > .cart-list { flex: 1 1 auto; min-height: 120px; overflow-y: auto; }
+  .pg-caixa .cx-rodape { position: static; }
+  .pg-caixa .cx-rodape .pay-seg { grid-template-columns: repeat(4, 1fr); }
+  .pg-caixa .cx-rodape .pay-btn { padding-left: 4px; padding-right: 4px; }
+  .pg-caixa .cx-rodape .simple-troco { display: grid; grid-template-columns: 1fr; gap: 4px; }
+  .pg-caixa .notas-rapidas { margin: 2px 0 4px; }
+  .pg-caixa .notas-rapidas button { min-height: 40px; padding: 6px 10px; font-size: 14px; }
+}
+@media (min-width: 1101px) {
+  .pg-caixa .order-summary-body { overflow-y: auto; }
+  .pg-caixa #cartSection:not(.hidden) { flex: 1 1 auto; min-height: 0; }
+  .pg-caixa #cartSection > .cart-list { flex: 1 1 auto; min-height: 96px; }
+  .pg-caixa .cx-dica { display: none; }
+  .pg-caixa .atalhos-dica { margin-top: 6px; font-size: 12px; line-height: 1.7; }
+  .pg-caixa #saveSlotBtn { margin-top: 8px; }
+}

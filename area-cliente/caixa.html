@@ -9,7 +9,7 @@
 <link rel="apple-touch-icon" href="../assets/img/brand/favicon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/css/style.css?v=57">
+<link rel="stylesheet" href="../assets/css/style.css?v=59">
 <link rel="manifest" href="../manifest.webmanifest">
 <meta name="theme-color" content="#601050">
 </head>
@@ -192,7 +192,7 @@
                   <div class="notas-rapidas" id="notasRapidas" aria-label="Valor entregue pelo cliente"></div>
                   <div class="simple-troco-row">
                     <input type="text" inputmode="decimal" id="simpleRecebido" placeholder="quanto o cliente deu" autocomplete="off">
-                    <span class="troco-badge" id="simpleTroco"></span>
+                    <span class="troco-badge" id="simpleTroco" aria-live="polite"></span>
                   </div>
                 </div>
                 <!-- Pagamento dividido: N formas. Cartão/Pix = valor de cada um;
@@ -208,7 +208,7 @@
                 <label for="editMotivo">Motivo da alteração</label>
                 <input type="text" id="editMotivo" placeholder="Ex: cliente trocou um item" autocomplete="off">
               </div>
-              <div class="field-note" id="cartError">Não foi possível registrar a venda.</div>
+              <div class="field-note" id="cartError" role="alert">Não foi possível registrar a venda.</div>
               <button type="button" class="btn btn-primary btn-block" id="sendCartBtn">Registrar venda </button>
               </div>
               <button type="button" class="btn btn-dark-outline btn-block btn-sm" id="saveSlotBtn">Deixar em aberto (sem pagamento)</button>
@@ -959,7 +959,13 @@
     marcarQtdNosCards();
     renderNotasRapidas();
     summaryPlaceholder.classList.toggle('hidden', !!cart.length || !!editingSale || !saleSuccess.classList.contains('hidden'));
-    if (!cart.length && !editingSale) { list.innerHTML = ''; section.classList.add('hidden'); return; }
+    if (!cart.length && !editingSale) {
+      list.innerHTML = ''; section.classList.add('hidden');
+      if (pagamentoDividido) setDividido(false);
+      if (formaPagamento) setForma(null);
+      document.getElementById('simpleRecebido').value = '';
+      return;
+    }
     section.classList.remove('hidden');
     var itensHtml = cart.map(function (it, i) {
       var linha = it.modo === 'peso'
@@ -984,7 +990,7 @@
         (it.promoLabel && !it.precoManual ? '<span class="ci-sub ci-promo">' + it.promoLabel + '</span>' : '') + '</div>' +
         '<div class="ci-actions">' +
         '<button type="button" class="ci-edit" data-cart-edit="' + i + '" aria-label="Editar preço" title="Editar preço"><svg aria-hidden="true"><use href="#m-lapis"/></svg></button>' +
-        '<button type="button" class="ci-remove" data-cart-i="' + i + '" aria-label="Remover item">×</button></div></li>';
+        '<button type="button" class="ci-remove" data-cart-i="' + i + '" aria-label="Remover ' + esc(it.nome) + '">×</button></div></li>';
     }).join('');
     // Combos: uma linha de desconto por produto que fechou grupo(s).
     var combos = combosCarrinho();
@@ -1087,6 +1093,7 @@
   document.getElementById('cxFundo').addEventListener('click', function () { deselectProduct(); });
 
   function deselectProduct() {
+    if (summaryContent.contains(document.activeElement)) document.activeElement.blur();
     selectedProduct = null;
     summaryContent.classList.add('hidden');
     saleSuccess.classList.add('hidden');
@@ -1214,7 +1221,11 @@
   var payButtons = document.querySelectorAll('#payMethods .pay-btn');
   function setForma(f) {
     formaPagamento = f;
-    payButtons.forEach(function (b) { b.classList.toggle('active', b.getAttribute('data-pay') === f); });
+    payButtons.forEach(function (b) {
+      var on = b.getAttribute('data-pay') === f;
+      b.classList.toggle('active', on);
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
     var note = document.getElementById('payTefNote');
     var cartao = (f === 'debito' || f === 'credito');
     if (cartao && tefIntegrado) {
