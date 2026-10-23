@@ -6,6 +6,12 @@ não roda no site. Só biblioteca padrão; a chave vem de $TYPESAFE_API_KEY (nun
   jev pick  "PERGUNTA" chave="descrição" chave2="descrição" [--outro] [--state ...]
   jev score "PERGUNTA" "nível 0" "nível 1" ... [--state ...]
   jev trechos "PERGUNTA" arquivo [arquivo...] [--linhas 100] [--top 3] [--min 0.5]
+  jev box   "O QUE ACHAR em `imagem`" --imagem foto.jpg [--recorte saida.jpg]
+
+Imagens (experimental na TypeSafe — header TypeSafe-Danger-Zone-Images): yes/pick/score
+aceitam --imagem foto.jpg (repetível); a 1ª vira `imagem` no state, as outras `imagem_2`,
+`imagem_3`... Cite pelo nome na pergunta: "Is there a box in `imagem`?". Com Pillow
+instalado a foto é girada pelo EXIF e reduzida a 1568 px; sem ele vai como está.
 
 Saída curta (feita pra quem lê ser o Claude): uma linha por resposta.
 Códigos de saída: yes → 0 sim / 1 não; pick/score → 0 / 1 se confiança < --min-conf;
@@ -20,14 +26,51 @@ MODEL = os.environ.get("JEV_MODEL", "jev-latest")
 PRECO_MTOK = 0.042  # US$ por milhão de tokens de entrada (docs.typesafe.ai/models)
 
 
-def chamar(state, questions):
+def imagens(caminhos):
+    """Lê as fotos e devolve (refs por nome no state, assets). Box precisa do jev-1.14."""
+    import base64, io, uuid
+    refs, assets = {}, {}
+    for n, cam in enumerate(caminhos or []):
+        try:
+            from PIL import Image, ImageOps
+            with Image.open(cam) as im:
+                im = ImageOps.exif_transpose(im).convert("RGB")
+                im.thumbnail((1568, 1568))
+                buf = io.BytesIO(); im.save(buf, "JPEG", quality=88)
+                dados, fmt = buf.getvalue(), "jpg"
+        except ImportError:
+            dados = open(cam, "rb").read()
+            fmt = "png" if cam.lower().endswith(".png") else "jpg"
+        ref = str(uuid.uuid4())
+        refs["imagem" if n == 0 else f"imagem_{n + 1}"] = ref
+        assets[ref] = {"type": "image", "format": fmt, "data_base64": base64.b64encode(dados).decode()}
+    return refs, assets
+
+
+def montar_state(texto, caminhos):
+    refs, assets = imagens(caminhos)
+    if not refs:
+        return texto, None
+    state = dict(refs)
+    if texto:
+        state["texto"] = texto
+    return state, assets
+
+
+def chamar(state, questions, assets=None):
     key = os.environ.get("TYPESAFE_API_KEY")
     if not key:
         sys.exit("jev: defina TYPESAFE_API_KEY no ambiente")
-    body = json.dumps({"model": MODEL, "state": state, "questions": questions}).encode()
+    corpo = {"model": MODEL, "state": state, "questions": questions}
+    cab = {"Authorization": "Bearer " + key, "Content-Type": "application/json"}
+    if assets or any(q.get("type") == "box" for q in questions.values()):
+        corpo["assets"] = assets or {}
+        cab["TypeSafe-Danger-Zone-Images"] = "true"
+        if corpo["model"] == "jev-latest" and any(q.get("type") == "box" for q in questions.values()):
+            corpo["model"] = "jev-1.14.0"
+    body = json.dumps(corpo).encode()
     for tentativa in range(5):
-        req = urllib.request.Request(URL, data=body, headers={
-            "Authorization": "Bearer " + key, "Content-Type": "application/json"})
+        req = urllib.request.Request(URL, data=body, headers=cab)
         try:
             with urllib.request.urlopen(req, timeout=90) as r:
                 return json.load(r)
@@ -60,7 +103,8 @@ def custo(tokens):
 
 
 def cmd_yes(a):
-    r = chamar(ler_state(a.state), {"q": {"type": "noul", "instructions": a.pergunta}})
+    st, assets = montar_state(ler_state(a.state), a.imagem)
+    r = chamar(st, {"q": {"type": "noul", "instructions": a.pergunta}}, assets)
     p = r["answers"]["q"]["noul"]
     print(f"{'yes' if p >= 0.5 else 'no'}\t{p:.2f}\t({custo(r['usage']['input_tokens'])})")
     return 0 if p >= 0.5 else 1
@@ -73,7 +117,8 @@ def cmd_pick(a):
         crit[k.strip()] = d.strip() or k.strip()
     if a.outro:
         crit["outro"] = "None of the other options fits."
-    r = chamar(ler_state(a.state), {"q": {"type": "choice", "instructions": a.pergunta, "criteria": crit}})
+    st, assets = montar_state(ler_state(a.state), a.imagem)
+    r = chamar(st, {"q": {"type": "choice", "instructions": a.pergunta, "criteria": crit}}, assets)
     ans = r["answers"]["q"]
     probs = " ".join(f"{k}={v:.2f}" for k, v in sorted(ans["probabilities"].items(), key=lambda kv: -kv[1]))
     print(f"{ans['choice']}\tconf {ans['confidence']:.2f}\t{probs}\t({custo(r['usage']['input_tokens'])})")
@@ -81,11 +126,32 @@ def cmd_pick(a):
 
 
 def cmd_score(a):
-    r = chamar(ler_state(a.state), {"q": {"type": "score", "instructions": a.pergunta, "criteria": a.niveis}})
+    st, assets = montar_state(ler_state(a.state), a.imagem)
+    r = chamar(st, {"q": {"type": "score", "instructions": a.pergunta, "criteria": a.niveis}}, assets)
     ans = r["answers"]["q"]
     probs = " ".join(f"{k}={v:.2f}" for k, v in ans["probabilities"].items())
     print(f"{ans['score']:.2f}\tconf {ans['confidence']:.2f}\t{probs}\t({custo(r['usage']['input_tokens'])})")
     return 0 if ans["confidence"] >= a.min_conf else 1
+
+
+def cmd_box(a):
+    """Onde está o alvo na foto. Junto vai uma Noul de presença: a Box sempre devolve
+    uma caixa, mesmo se o alvo não existir — sem presença, ignore a caixa."""
+    st, assets = montar_state(ler_state(a.state), a.imagem)
+    r = chamar(st, {"tem": {"type": "noul", "instructions": "Is this in the image? " + a.alvo},
+                    "box": {"type": "box", "instructions": a.alvo}}, assets)
+    tem, bx = r["answers"]["tem"]["noul"], r["answers"]["box"]
+    e = bx["box"]
+    print(f"presenca {tem:.2f}\tconf {bx['confidence']:.2f}\tleft {e['left']:.2f} top {e['top']:.2f} "
+          f"right {e['right']:.2f} bottom {e['bottom']:.2f}\t({custo(r['usage']['input_tokens'])})")
+    if a.recorte:
+        from PIL import Image, ImageOps
+        with Image.open(a.imagem[0]) as im:
+            im = ImageOps.exif_transpose(im)
+            W, H = im.size
+            im.convert("RGB").crop((round(e["left"] * W), round(e["top"] * H),
+                                    round(e["right"] * W), round(e["bottom"] * H))).save(a.recorte)
+    return 0 if tem >= 0.5 else 1
 
 
 def cmd_trechos(a):
@@ -118,15 +184,20 @@ def main():
     ap = argparse.ArgumentParser(prog="jev", description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
     s = sub.add_parser("yes"); s.add_argument("pergunta"); s.add_argument("--state")
+    s.add_argument("--imagem", action="append")
     s = sub.add_parser("pick"); s.add_argument("pergunta"); s.add_argument("opcoes", nargs="+")
     s.add_argument("--state"); s.add_argument("--outro", action="store_true"); s.add_argument("--min-conf", type=float, default=0.0)
+    s.add_argument("--imagem", action="append")
     s = sub.add_parser("score"); s.add_argument("pergunta"); s.add_argument("niveis", nargs="+")
     s.add_argument("--state"); s.add_argument("--min-conf", type=float, default=0.0)
+    s.add_argument("--imagem", action="append")
+    s = sub.add_parser("box"); s.add_argument("alvo"); s.add_argument("--imagem", action="append", required=True)
+    s.add_argument("--state"); s.add_argument("--recorte")
     s = sub.add_parser("trechos"); s.add_argument("pergunta"); s.add_argument("arquivos", nargs="+")
     s.add_argument("--linhas", type=int, default=100); s.add_argument("--top", type=int, default=3)
     s.add_argument("--min", type=float, default=0.5)
     a = ap.parse_args()
-    sys.exit({"yes": cmd_yes, "pick": cmd_pick, "score": cmd_score, "trechos": cmd_trechos}[a.cmd](a))
+    sys.exit({"yes": cmd_yes, "pick": cmd_pick, "score": cmd_score, "box": cmd_box, "trechos": cmd_trechos}[a.cmd](a))
 
 
 if __name__ == "__main__":

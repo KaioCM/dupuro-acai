@@ -45,6 +45,27 @@ tools/jev score "How urgent?" "can wait" "today" "right now" --state @arquivo.tx
 (2026-10-23): no `admin.html` o bloco certo ficou em 1º em 4 de 5 perguntas e em 2º na
 outra, por ~US$ 0,004 o arquivo inteiro. Leia o bloco vizinho se a resposta parecer cortada.
 
+## Imagens e Box (experimental desde o Jev 1.14)
+
+Header `TypeSafe-Danger-Zone-Images: true` (o `tools/jev` põe sozinho). A foto pode ir no
+state, nas instructions ou nas criteria (opção definida por foto de exemplo). **Box** devolve
+um retângulo (frações 0–1) e precisa do `jev-1.14.0`. A TypeSafe chama de "dreamer-ready":
+**protótipo, não produção** — formato e precisão podem mudar.
+
+```bash
+tools/jev pick "Which flavor is the ice cream in `imagem`?" morango="pink" maracuja="yellow" --outro --imagem foto.jpg
+tools/jev box "the açaí box in `imagem`" --imagem foto.jpg --recorte caixa.jpg   # junto vai a Noul de presença
+```
+
+- Limites: PNG/JPEG, 280–1568 px por lado, rotação **nos pixels** (o EXIF é descartado).
+- ~1,5k tokens por foto de 768 px; ~2,4k a 1024 px.
+- A **Box sempre devolve uma caixa**: só confie com a Noul "tem X?" alta.
+- Confiança alta em imagem **não garante** acerto (sabor errado com 0,99 no teste) — imagem
+  serve pra sugerir/triar, com pessoa confirmando.
+- Pro Claude: perguntar ao Jev sobre uma foto custa ~2k tokens dele (centavos) contra abrir a
+  imagem no próprio contexto — útil pra triar muitas fotos (orientação, "tem produto?") antes de abrir.
+- Números em `experimentos/typesafe/README.md` (seção 5).
+
 ## Como escrever as perguntas (o que funcionou aqui)
 
 - **Instruções e descrições das opções em inglês**; o dado (nome do produto, texto) fica em português.
