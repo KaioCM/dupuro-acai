@@ -541,3 +541,15 @@ body.dl-travado { overflow: hidden; }
 .dl-frete-aviso[hidden], #janelasNota[hidden] { display: none; }
 #barBtn[hidden] { display: none; }
 .dl-steps .ok span::after { content: none; }
+
+/* ---------- Delivery: correções da avaliação 2 (28/40) ---------- */
+/* hidden sempre vence (o display de vários componentes passava por cima) */
+.dl-body [hidden] { display: none !important; }
+/* erro e bloco não ficam escondidos atrás do topo fixo */
+.dl-bloco { scroll-margin-top: 124px; }
+/* campos em 16px: o iPhone não dá zoom ao tocar */
+.dl-input input, .dl-input select { font-size: 16px; }
+/* "Mais pedido" sai: ainda não há pedidos pra afirmar isso */
+.dl-tam.top::after { content: none; }
+/* botão secundário legível no fundo creme */
+.dl-acomp-vazio .dl-btn-line { background: #fff; color: var(--roxo-700); border-color: rgba(96,16,80,.25); }

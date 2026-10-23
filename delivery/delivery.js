@@ -62,7 +62,7 @@ var DupuroDelivery = (function () {
         if (d === 0 && minAgora >= hhmmMin(j.corte)) return; // passou do corte de hoje
         var dataTxt = String(dia.getUTCDate()).padStart(2, '0') + '/' + String(dia.getUTCMonth() + 1).padStart(2, '0');
         // "Amanhã" com a data (antes não dizia o dia)
-        var quando = d === 0 ? 'Hoje' : (d === 1 ? 'Amanhã, ' + NOMES_DIA[dia.getUTCDay()].slice(0, 3).toLowerCase() + ' ' + dataTxt : NOMES_DIA[dia.getUTCDay()] + ' ' + dataTxt);
+        var quando = d === 0 ? 'Hoje, ' + NOMES_DIA[dia.getUTCDay()].slice(0, 3).toLowerCase() + ' ' + dataTxt : (d === 1 ? 'Amanhã, ' + NOMES_DIA[dia.getUTCDay()].slice(0, 3).toLowerCase() + ' ' + dataTxt : NOMES_DIA[dia.getUTCDay()] + ' ' + dataTxt);
         out.push({
           data: isoData(dia), periodo: per,
           titulo: quando + ' · ' + (per === 'manha' ? 'Manhã' : 'Tarde'),
