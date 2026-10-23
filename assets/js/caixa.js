@@ -101,6 +101,26 @@ var DupuroCaixa = (function () {
   }
 
   // Acompanhamentos ativos (lista da loja, usada na montagem do copo).
+  // Quantas vezes cada acompanhamento saiu nos últimos 60 dias (o copo mostra os
+  // mais usados primeiro). Offline usa a última contagem.
+  async function getAcompRanking() {
+    if (window.DupuroOffline && !DupuroOffline.estaOnline()) {
+      return (await DupuroOffline.lerCache('acompRanking')) || {};
+    }
+    var desde = new Date(Date.now() - 60 * 864e5).toISOString().slice(0, 10);
+    var r = await client.from('orders').select('detalhes').eq('origem', 'loja').gte('data', desde)
+      .not('detalhes', 'is', null).limit(3000);
+    if (r.error) return (window.DupuroOffline && await DupuroOffline.lerCache('acompRanking')) || {};
+    var cont = {};
+    (r.data || []).forEach(function (o) {
+      var lista = o.detalhes && o.detalhes.acompanhamentos;
+      if (!Array.isArray(lista)) return;
+      lista.forEach(function (a) { var n = a && (a.nome || a); if (n) cont[n] = (cont[n] || 0) + 1; });
+    });
+    if (window.DupuroOffline) DupuroOffline.salvarCache('acompRanking', cont);
+    return cont;
+  }
+
   async function getAcompanhamentos() {
     if (window.DupuroOffline && !DupuroOffline.estaOnline()) {
       var co = await DupuroOffline.lerCache('acompanhamentos'); if (co) return co;
@@ -623,6 +643,7 @@ var DupuroCaixa = (function () {
     requireCaixa: requireCaixa,
     getProducts: getProducts,
     getAcompanhamentos: getAcompanhamentos,
+    getAcompRanking: getAcompRanking,
     getPromocoesHoje: getPromocoesHoje,
     definirPromocao: definirPromocao,
     removerPromocao: removerPromocao,

@@ -33,6 +33,16 @@ var DupuroUI = (function () {
     return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   }
 
-  return { countUp: countUp, brl: brl };
+  // Foto de produto do Storage já no tamanho em que aparece (as originais têm
+  // 1,5-2 MB cada; no caixa eram ~16 MB pra mostrar quadradinhos de 56 px).
+  // Usa a transformação de imagem do Supabase; outra URL passa como veio.
+  function miniatura(url, px) {
+    if (!url || url.indexOf('/storage/v1/object/public/') === -1) return url;
+    var lado = Math.round((px || 160) * 2); // 2x pra tela de alta densidade
+    return url.replace('/storage/v1/object/public/', '/storage/v1/render/image/public/') +
+      (url.indexOf('?') === -1 ? '?' : '&') + 'width=' + lado + '&height=' + lado + '&resize=contain&quality=75';
+  }
+
+  return { countUp: countUp, brl: brl, miniatura: miniatura };
 
 })();

@@ -9,7 +9,7 @@
 <link rel="apple-touch-icon" href="../assets/img/brand/favicon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/css/style.css?v=50">
+<link rel="stylesheet" href="../assets/css/style.css?v=57">
 </head>
 <body class="pg-revenda">
 <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
@@ -363,7 +363,7 @@
 <script src="../assets/js/graficos.js?v=1"></script>
 <script src="../assets/js/supabase-config.js"></script>
 <script src="../assets/js/supabase-client.js"></script>
-<script src="../assets/js/app-ui.js"></script>
+<script src="../assets/js/app-ui.js?v=2"></script>
 <script src="../assets/js/cliente.js?v=4"></script>
 <script>
   // Escapa texto antes de ir pro innerHTML (dado de revendedor/cliente nunca vira HTML).
@@ -763,7 +763,7 @@
   function shopCardHtml(p) {
     var oos = !p.emEstoque;
     return '<button type="button" class="shop-card' + (oos ? ' out-of-stock' : '') + '" data-product-id="' + p.id + '" aria-pressed="false"' + (oos ? ' disabled aria-disabled="true"' : '') + '>' +
-      '<div class="ph">' + (p.imagemUrl ? '<img src="' + p.imagemUrl + '" alt="" loading="lazy">' : SEM_FOTO) + '</div>' +
+      '<div class="ph">' + (p.imagemUrl ? '<img src="' + DupuroUI.miniatura(p.imagemUrl, 220) + '" alt="" loading="lazy">' : SEM_FOTO) + '</div>' +
       '<div class="body">' +
         '<h3>' + esc(p.nome) + '</h3>' +
         '<div class="price">' + brl(p.preco) + '</div>' +
@@ -857,7 +857,7 @@
     summaryContent.classList.remove('hidden');
 
     var thumb = document.getElementById('summaryThumb');
-    thumb.innerHTML = selectedProduct.imagemUrl ? '<img src="' + selectedProduct.imagemUrl + '" alt="">' : SEM_FOTO;
+    thumb.innerHTML = selectedProduct.imagemUrl ? '<img src="' + DupuroUI.miniatura(selectedProduct.imagemUrl, 64) + '" alt="">' : SEM_FOTO;
     document.getElementById('summaryName').textContent = selectedProduct.nome;
     refreshMinUI();
 
