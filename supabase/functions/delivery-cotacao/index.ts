@@ -14,6 +14,11 @@
 //   2. coordenada do CEP (AwesomeAPI, grátis, sem chave) — no Brasil o CEP
 //      costuma ser da rua/trecho, bem preciso pra taxa;
 //   3. Pelias no nível da rua/bairro (marca impreciso).
+// Entre os candidatos do Pelias, o Jev (TypeSafe, pergunta Choice) escolhe o
+// que é o mesmo lugar do endereço digitado — o Pelias às vezes põe primeiro
+// outra rua parecida ou o mesmo número em outro bairro. Só o endereço vai pro
+// Jev (nunca nome/telefone). Sem TYPESAFE_API_KEY, erro ou dúvida: segue a
+// ordem do Pelias, como antes.
 //
 // Secrets: ORS_API_KEY (openrouteservice.org → Dashboard → Tokens).
 // ==========================================================================
@@ -56,6 +61,47 @@ async function pelias(texto: string, key: string) {
     lng: f.geometry.coordinates[0], lat: f.geometry.coordinates[1],
     layer: f.properties.layer as string, label: f.properties.label as string,
   })).filter((f: any) => naArea(f.lat, f.lng) && ['address', 'street', 'venue', 'neighbourhood'].includes(f.layer)) // centro da cidade (locality) não serve pra taxa
+}
+
+// Devolve o índice do candidato escolhido, -1 se o Jev tem certeza de que
+// nenhum é o endereço, ou null (sem resposta/dúvida → manter a ordem).
+async function escolherCandidato(digitado: string, cands: { label: string }[]): Promise<number | null> {
+  const key = Deno.env.get('TYPESAFE_API_KEY')
+  if (!key || !cands.length) return null
+  const criteria: Record<string, string> = {}
+  cands.forEach((c, i) => { criteria['c' + i] = c.label })
+  criteria.nenhum = "None of the candidates is the customer's address."
+  const ctrl = new AbortController()
+  const timer = setTimeout(() => ctrl.abort(), 3000)
+  try {
+    const r = await fetch('https://api.typesafe.ai/v1/systemone', {
+      method: 'POST',
+      signal: ctrl.signal,
+      headers: { Authorization: 'Bearer ' + key, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'jev-latest',
+        state: 'Customer typed: ' + digitado,
+        questions: {
+          lugar: {
+            type: 'choice',
+            instructions: 'Which candidate from the map search is the same place as the address the customer typed? ' +
+              "Same street (abbreviations like R., Av. and accents don't matter), same house number when there is one, " +
+              "same neighbourhood or city. Pick 'nenhum' if none is that place.",
+            criteria,
+          },
+        },
+      }),
+    })
+    if (!r.ok) return null
+    const a = (await r.json())?.answers?.lugar
+    if (!a || !(a.choice in criteria)) return null
+    if (a.choice === 'nenhum') return a.confidence >= 0.7 ? -1 : null
+    return a.confidence >= 0.5 ? Number(a.choice.slice(1)) : null
+  } catch (_e) {
+    return null
+  } finally {
+    clearTimeout(timer)
+  }
 }
 
 async function pontoDoCep(cep: string) {
@@ -109,7 +155,10 @@ Deno.serve(async (req: Request) => {
     let impreciso = false
     if (!dest) {
       // 1) número exato; 2) CEP; 3) rua/bairro.
-      const achados = await pelias(`${rua} ${numero}, ${bairro}, ${cidade}, MT`, key)
+      let achados = await pelias(`${rua} ${numero}, ${bairro}, ${cidade}, MT`, key)
+      const escolha = await escolherCandidato(endereco, achados)
+      if (escolha === -1) achados = []
+      else if (escolha != null) achados = [achados[escolha], ...achados.filter((_: any, i: number) => i !== escolha)]
       dest = achados.find((f: any) => f.layer === 'address')
       if (!dest) {
         let c = await pontoDoCep(cep)

@@ -2695,6 +2695,9 @@ a.stat-card.alerta .stat-sub { color: var(--warning); font-weight: 800; }
 .ajuste-quando { color: var(--text-light); font-variant-numeric: tabular-nums; }
 .ajuste-motivo { grid-column: 2 / -1; font-size: 13px; color: var(--text-light); }
 .ajustes-lista .ajuste-vazio { display: block; color: var(--text-light); }
+.fiscal-auditoria { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 0 0 16px; }
+.fiscal-auditoria-nota { flex: 1 1 260px; font-size: 13px; color: var(--text-light); }
+.fiscal-auditoria .ajustes-lista { flex: 1 1 100%; }
 @media (max-width: 700px) {
   .estoque-acoes { justify-content: flex-start; }
   .ajuste-form label, .ajuste-form .seg { flex: 1 1 100%; }

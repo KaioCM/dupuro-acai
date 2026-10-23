@@ -410,6 +410,7 @@
           <div class="field" style="margin-bottom:0; grid-column:1/-1;" id="productFiscalField">
             <label for="productFiscalPerfil">Classificação fiscal (NFC-e)</label>
             <select id="productFiscalPerfil"></select>
+            <div class="field-note-inline hidden" id="productFiscalSugestao" role="status" aria-live="polite"></div>
             <div class="tipo-price-row" id="productFiscalCodigos" style="margin-top:8px;">
               <div class="field" style="margin-bottom:0;"><label for="productNcm">NCM</label><input type="text" id="productNcm" inputmode="numeric" autocomplete="off" disabled></div>
               <div class="field" style="margin-bottom:0;"><label for="productCsosn">CSOSN</label><input type="text" id="productCsosn" inputmode="numeric" autocomplete="off" disabled></div>
@@ -493,6 +494,11 @@
       <section class="fila-secao" aria-labelledby="tituloCatalogo">
         <h2 id="tituloCatalogo">Catálogo</h2>
         <p class="subtitle">Tudo o que o caixa, o revendedor e o delivery podem vender.</p>
+        <div class="fiscal-auditoria">
+          <button type="button" class="btn btn-dark-outline btn-sm" id="fiscalAuditarBtn">Conferir classificação fiscal</button>
+          <span class="fiscal-auditoria-nota" id="fiscalAuditarStatus">Compara os códigos salvos com o que o nome de cada produto sugere. Só aponta; quem decide é você com o contador.</span>
+          <ul class="ajustes-lista hidden" id="fiscalAuditarLista"></ul>
+        </div>
         <div class="admin-products-grid" id="productsGrid"></div>
       </section>
       </div>
@@ -2187,6 +2193,8 @@
   // Ajusta o seletor a partir dos códigos de um produto (edição). Sem produto
   // (novo) cai no padrão de açaí/self-service.
   function setFiscalFromProduct(p) {
+    fiscalEscolhidoAMao = false;
+    limparSugestaoFiscal();
     var ncm = (p && p.ncm) || '21050010', csosn = (p && p.csosn) || '500', cfop = (p && p.cfop) || '5405';
     document.getElementById('productFiscalPerfil').value = fiscalPerfilPorCodigos(ncm, csosn, cfop);
     document.getElementById('productNcm').value = ncm;
@@ -2208,7 +2216,123 @@
       origem: '0'
     };
   }
+  // Personalizado exige os 3 códigos completos (vazio ou incompleto o SEFAZ recusa o cupom).
+  function fiscalValido() {
+    var f = lerFiscalSelecionado();
+    return /^\d{8}$/.test(f.ncm) && /^\d{3}$/.test(f.csosn) && /^\d{4}$/.test(f.cfop);
+  }
+
+  // Sugestão do perfil pelo nome (Jev, via Edge Function sugerir-fiscal). Só em
+  // produto novo e enquanto o admin não escolheu o perfil à mão; nunca salva
+  // sozinha. Confiança ≥ 0,8 aplica (com aviso), 0,5–0,8 só oferece, abaixo
+  // disso pede atenção. Sem internet/erro: some calada, o formulário segue igual.
+  var fiscalEscolhidoAMao = false, fiscalSugSeq = 0;
+  function limparSugestaoFiscal() {
+    fiscalSugSeq++;
+    var el = document.getElementById('productFiscalSugestao');
+    el.classList.add('hidden');
+    el.innerHTML = '';
+  }
+  function aplicarPerfilFiscal(id) {
+    document.getElementById('productFiscalPerfil').value = id;
+    if (id === 'custom') {
+      document.getElementById('productNcm').value = '';
+      document.getElementById('productCsosn').value = '';
+      document.getElementById('productCfop').value = '';
+    }
+    syncFiscalUI();
+  }
+  async function sugerirFiscalPeloNome() {
+    if (editingProductId || fiscalEscolhidoAMao) return;
+    var nome = document.getElementById('productNome').value.trim();
+    if (nome.length < 3) { limparSugestaoFiscal(); return; }
+    var seq = ++fiscalSugSeq;
+    var r = await DupuroAdmin.sugerirFiscal(nome, currentModo());
+    if (seq !== fiscalSugSeq || editingProductId || fiscalEscolhidoAMao) return;
+    if (r.error || !r.perfil) { limparSugestaoFiscal(); return; }
+    var el = document.getElementById('productFiscalSugestao');
+    var perfil = FISCAL_PERFIS.filter(function (x) { return x.id === r.perfil; })[0];
+    var rotulo = perfil ? perfil.label : 'Personalizado';
+    var conf = r.confianca || 0;
+    var custom = r.perfil === 'custom';
+    if (conf >= 0.8 || (conf >= 0.5 && document.getElementById('productFiscalPerfil').value === r.perfil)) {
+      aplicarPerfilFiscal(r.perfil);
+      el.innerHTML = custom
+        ? 'Nenhum perfil pronto serve para este produto. Preencha NCM, CSOSN e CFOP com o contador.'
+        : 'Perfil sugerido pelo nome: <strong>' + esc(rotulo) + '</strong>. Confira antes de salvar.';
+    } else if (conf >= 0.5) {
+      el.innerHTML = (custom
+        ? 'Parece que nenhum perfil pronto serve, mas não é certeza. '
+        : 'Parece <strong>' + esc(rotulo) + '</strong>, mas não é certeza. ') +
+        '<button type="button" class="btn btn-dark-outline btn-sm" id="productFiscalUsar">' +
+        (custom ? 'Preencher os códigos à mão' : 'Usar este perfil') + '</button>';
+      document.getElementById('productFiscalUsar').addEventListener('click', function () {
+        aplicarPerfilFiscal(r.perfil);
+        fiscalEscolhidoAMao = true;
+        el.textContent = custom ? 'Preencha NCM, CSOSN e CFOP com o contador.' : 'Perfil aplicado. Confira antes de salvar.';
+      });
+    } else {
+      el.textContent = 'Não deu pra sugerir o perfil com segurança. Escolha com atenção ou confirme com o contador.';
+    }
+    el.classList.remove('hidden');
+  }
+  // Auditoria do catálogo (Jev, mesma Edge Function em lote): lista os produtos cujo
+  // perfil salvo diverge do que o nome sugere. Confiança ≥ 0,8 = "confira";
+  // abaixo disso vai pra "na dúvida". Nunca altera nada sozinha.
+  async function conferirFiscal() {
+    var btn = document.getElementById('fiscalAuditarBtn');
+    var status = document.getElementById('fiscalAuditarStatus');
+    var lista = document.getElementById('fiscalAuditarLista');
+    var produtos = productCards().map(function (c) { return c.main; });
+    if (!produtos.length) return;
+    btn.disabled = true;
+    status.textContent = 'Conferindo ' + produtos.length + ' produtos…';
+    lista.classList.add('hidden');
+    var r = await DupuroAdmin.auditarFiscal(produtos.map(function (p) { return { id: p.id, nome: p.nome, modo: p.modo }; }));
+    btn.disabled = false;
+    if (r.error || !r.itens) { status.textContent = 'Não deu pra conferir agora (' + (r.error || 'sem resposta') + '). Tente de novo.'; return; }
+    var rotulo = function (id) { var f = FISCAL_PERFIS.filter(function (x) { return x.id === id; })[0]; return f ? f.label : 'Personalizado'; };
+    var porId = {};
+    produtos.forEach(function (p) { porId[p.id] = p; });
+    var certas = [], duvidas = [], falhas = 0;
+    r.itens.forEach(function (it) {
+      var p = porId[it.id];
+      if (!p) return;
+      if (it.erro) { falhas++; return; }
+      var atual = fiscalPerfilPorCodigos(p.ncm, p.csosn, p.cfop);
+      if (it.perfil === atual) return;
+      (it.confianca >= 0.8 ? certas : duvidas).push({ p: p, atual: atual, sug: it.perfil, conf: it.confianca });
+    });
+    var linha = function (d) {
+      return '<li><span>' + Math.round(d.conf * 100) + '%</span>' +
+        '<span>' + esc(d.p.nome) + '</span>' +
+        '<button type="button" class="btn btn-dark-outline btn-sm" data-fiscal-abrir="' + d.p.id + '">Abrir</button>' +
+        '<span class="ajuste-motivo">Salvo: ' + esc(rotulo(d.atual)) + (d.p.ncm ? ' (NCM ' + esc(d.p.ncm) + ')' : '') +
+        ' · o nome sugere: <strong>' + esc(rotulo(d.sug)) + '</strong></span></li>';
+    };
+    var html = certas.map(linha).join('');
+    if (duvidas.length) html += '<li class="ajuste-vazio"><strong>Na dúvida</strong> — o nome não deixa claro; confirme com o contador:</li>' + duvidas.map(linha).join('');
+    status.textContent = (certas.length || duvidas.length)
+      ? produtos.length + ' produtos conferidos: ' + certas.length + ' pra conferir' + (duvidas.length ? ', ' + duvidas.length + ' na dúvida' : '') + '.'
+      : 'Os ' + produtos.length + ' produtos batem com o que o nome sugere.';
+    if (falhas) status.textContent += ' ' + falhas + ' não puderam ser conferidos.';
+    lista.innerHTML = html;
+    lista.classList.toggle('hidden', !html);
+  }
+  document.getElementById('fiscalAuditarBtn').addEventListener('click', conferirFiscal);
+  document.getElementById('fiscalAuditarLista').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-fiscal-abrir]');
+    if (!b) return;
+    var ed = document.querySelector('#productsGrid [data-edit-product="' + b.getAttribute('data-fiscal-abrir') + '"]');
+    if (ed) ed.click();
+  });
   initFiscalSelect();
+  document.getElementById('productFiscalPerfil').addEventListener('change', function () {
+    fiscalEscolhidoAMao = true;
+    limparSugestaoFiscal();
+  });
+  document.getElementById('productNome').addEventListener('change', sugerirFiscalPeloNome);
+  document.getElementById('productModo').addEventListener('change', sugerirFiscalPeloNome);
 
   document.getElementById('productModo').addEventListener('change', syncModoUI);
   document.getElementById('productTipoVarejo').addEventListener('change', syncTipoBlocks);
@@ -2251,6 +2375,11 @@
     var errorNote = document.getElementById('productError');
     errorNote.classList.remove('show');
     errorNote.textContent = 'Não foi possível salvar o produto. Confira os dados.';
+    if (!fiscalValido()) {
+      errorNote.textContent = 'Preencha NCM (8 dígitos), CSOSN (3) e CFOP (4) — ou escolha um perfil pronto.';
+      errorNote.classList.add('show');
+      return;
+    }
 
     var nome = document.getElementById('productNome').value.trim();
     var modo = currentModo();

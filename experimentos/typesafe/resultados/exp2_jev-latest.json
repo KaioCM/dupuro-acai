@@ -1,0 +1,226 @@
+[
+ {
+  "fonte": "VND-0004",
+  "texto": "teste",
+  "esperado": "teste",
+  "choice": "teste",
+  "confidence": 1.0
+ },
+ {
+  "fonte": "VND-0006",
+  "texto": "teste",
+  "esperado": "teste",
+  "choice": "teste",
+  "confidence": 1.0
+ },
+ {
+  "fonte": "VND-0008",
+  "texto": "teste",
+  "esperado": "teste",
+  "choice": "teste",
+  "confidence": 1.0
+ },
+ {
+  "fonte": "VND-0053",
+  "texto": "teste",
+  "esperado": "teste",
+  "choice": "teste",
+  "confidence": 1.0
+ },
+ {
+  "fonte": "VND-0080",
+  "texto": "teste",
+  "esperado": "teste",
+  "choice": "teste",
+  "confidence": 1.0
+ },
+ {
+  "fonte": "VND-0195",
+  "texto": "teste",
+  "esperado": "teste",
+  "choice": "teste",
+  "confidence": 1.0
+ },
+ {
+  "fonte": "VND-0196",
+  "texto": "teste",
+  "esperado": "teste",
+  "choice": "teste",
+  "confidence": 1.0
+ },
+ {
+  "fonte": "VND-0197",
+  "texto": "Teste exemplo de NFC-e em um sistema novo.",
+  "esperado": "teste",
+  "choice": "teste",
+  "confidence": 1.0
+ },
+ {
+  "fonte": "VND-0250",
+  "texto": "teste",
+  "esperado": "teste",
+  "choice": "teste",
+  "confidence": 1.0
+ },
+ {
+  "fonte": "VND-0290",
+  "texto": "teste",
+  "esperado": "teste",
+  "choice": "teste",
+  "confidence": 1.0
+ },
+ {
+  "fonte": "VND-0326",
+  "texto": "desistiu",
+  "esperado": "desistencia",
+  "choice": "desistencia",
+  "confidence": 1.0
+ },
+ {
+  "fonte": "VND-0452",
+  "texto": "teste",
+  "esperado": "teste",
+  "choice": "teste",
+  "confidence": 1.0
+ },
+ {
+  "fonte": "VND-0527",
+  "texto": "troca",
+  "esperado": "troca_item",
+  "choice": "troca_item",
+  "confidence": 0.98
+ },
+ {
+  "fonte": "sintético",
+  "texto": "lancei 2x a mesma venda",
+  "esperado": "erro_lancamento",
+  "choice": "erro_lancamento",
+  "confidence": 1.0
+ },
+ {
+  "fonte": "sintético",
+  "texto": "valor errado, era 18 e nao 28",
+  "esperado": "erro_lancamento",
+  "choice": "erro_lancamento",
+  "confidence": 1.0
+ },
+ {
+  "fonte": "sintético",
+  "texto": "cliente quis trocar o copo de 300 pelo de 500",
+  "esperado": "troca_item",
+  "choice": "troca_item",
+  "confidence": 1.0
+ },
+ {
+  "fonte": "sintético",
+  "texto": "trocou o sabor pra cupuaçu",
+  "esperado": "troca_item",
+  "choice": "troca_item",
+  "confidence": 1.0
+ },
+ {
+  "fonte": "sintético",
+  "texto": "cliente foi embora sem pagar",
+  "esperado": "desistencia",
+  "choice": "desistencia",
+  "confidence": 1.0
+ },
+ {
+  "fonte": "sintético",
+  "texto": "cliente desistiu do pedido",
+  "esperado": "desistencia",
+  "choice": "desistencia",
+  "confidence": 1.0
+ },
+ {
+  "fonte": "sintético",
+  "texto": "maquininha recusou o cartao",
+  "esperado": "pagamento",
+  "choice": "pagamento",
+  "confidence": 0.94
+ },
+ {
+  "fonte": "sintético",
+  "texto": "pix nao caiu",
+  "esperado": "pagamento",
+  "choice": "pagamento",
+  "confidence": 1.0
+ },
+ {
+  "fonte": "sintético",
+  "texto": "cobrei no debito era credito",
+  "esperado": "erro_lancamento",
+  "choice": "erro_lancamento",
+  "confidence": 0.98
+ },
+ {
+  "fonte": "sintético",
+  "texto": "impressora travou e refiz",
+  "esperado": "problema_tecnico",
+  "choice": "problema_tecnico",
+  "confidence": 1.0
+ },
+ {
+  "fonte": "sintético",
+  "texto": "sistema caiu, refiz a venda",
+  "esperado": "problema_tecnico",
+  "choice": "problema_tecnico",
+  "confidence": 0.99
+ },
+ {
+  "fonte": "sintético",
+  "texto": "treinamento da nova atendente",
+  "esperado": "teste",
+  "choice": "teste",
+  "confidence": 1.0
+ },
+ {
+  "fonte": "sintético",
+  "texto": "produto acabou, sem estoque",
+  "esperado": "sem_estoque",
+  "choice": "sem_estoque",
+  "confidence": 1.0
+ },
+ {
+  "fonte": "sintético",
+  "texto": "acabou o creme de ninho",
+  "esperado": "sem_estoque",
+  "choice": "sem_estoque",
+  "confidence": 0.97
+ },
+ {
+  "fonte": "sintético",
+  "texto": "açaí veio derretido, cliente reclamou",
+  "esperado": "reclamacao",
+  "choice": "reclamacao",
+  "confidence": 1.0
+ },
+ {
+  "fonte": "sintético",
+  "texto": "cliente reclamou do atendimento",
+  "esperado": "reclamacao",
+  "choice": "reclamacao",
+  "confidence": 1.0
+ },
+ {
+  "fonte": "sintético",
+  "texto": "pedido do ifood duplicado",
+  "esperado": "erro_lancamento",
+  "choice": "erro_lancamento",
+  "confidence": 0.97
+ },
+ {
+  "fonte": "sintético",
+  "texto": "xxx",
+  "esperado": "outro",
+  "choice": "outro",
+  "confidence": 1.0
+ },
+ {
+  "fonte": "sintético",
+  "texto": "a pedido do Kayo",
+  "esperado": "outro",
+  "choice": "desistencia",
+  "confidence": 0.49
+ }
+]

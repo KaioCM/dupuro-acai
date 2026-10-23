@@ -1,0 +1,4502 @@
+[
+ {
+  "set": "holdout",
+  "nome": "Sorvete de flocos 2L",
+  "modo": "embalado",
+  "esperado": "acai",
+  "variant": "C",
+  "choice": "acai",
+  "confidence": 0.71,
+  "probabilities": {
+   "acai": 0.76,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.01,
+   "adicional": 0.0,
+   "custom": 0.23
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 627,
+  "ms": 475
+ },
+ {
+  "set": "holdout",
+  "nome": "Creme de morango 10L",
+  "modo": "embalado",
+  "esperado": "acai",
+  "variant": "C",
+  "choice": "acai",
+  "confidence": 0.92,
+  "probabilities": {
+   "acai": 0.93,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.02,
+   "custom": 0.04
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 628,
+  "ms": 413
+ },
+ {
+  "set": "holdout",
+  "nome": "Creme de Ninho 5 Litros",
+  "modo": "embalado",
+  "esperado": "acai",
+  "variant": "C",
+  "choice": "acai",
+  "confidence": 0.66,
+  "probabilities": {
+   "acai": 0.72,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.25,
+   "custom": 0.03
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 628,
+  "ms": 638
+ },
+ {
+  "set": "holdout",
+  "nome": "Creme de Ninho 10 Litros",
+  "modo": "embalado",
+  "esperado": "acai",
+  "variant": "C",
+  "choice": "adicional",
+  "confidence": 0.51,
+  "probabilities": {
+   "acai": 0.39,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.59,
+   "custom": 0.02
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 629,
+  "ms": 430
+ },
+ {
+  "set": "holdout",
+  "nome": "Creme de cupuaçu 5L",
+  "modo": "embalado",
+  "esperado": "acai",
+  "variant": "C",
+  "choice": "acai",
+  "confidence": 0.42,
+  "probabilities": {
+   "acai": 0.52,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.1,
+   "custom": 0.38
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 628,
+  "ms": 353
+ },
+ {
+  "set": "holdout",
+  "nome": "Copo Kids 200ml",
+  "modo": "copo",
+  "esperado": "acai",
+  "variant": "C",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 1.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 632,
+  "ms": 456
+ },
+ {
+  "set": "holdout",
+  "nome": "Açaí na tigela 700ml",
+  "modo": "copo",
+  "esperado": "acai",
+  "variant": "C",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 1.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 635,
+  "ms": 522
+ },
+ {
+  "set": "holdout",
+  "nome": "Pepsi lata 350ml",
+  "modo": "embalado",
+  "esperado": "refri",
+  "variant": "C",
+  "choice": "refri",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 0.0,
+   "agua": 0.0,
+   "refri": 1.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 627,
+  "ms": 419
+ },
+ {
+  "set": "holdout",
+  "nome": "Guaraná Kuat 2L",
+  "modo": "embalado",
+  "esperado": "refri",
+  "variant": "C",
+  "choice": "refri",
+  "confidence": 0.9,
+  "probabilities": {
+   "acai": 0.0,
+   "agua": 0.0,
+   "refri": 0.92,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.08
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 627,
+  "ms": 387
+ },
+ {
+  "set": "holdout",
+  "nome": "Água Crystal 1,5L",
+  "modo": "embalado",
+  "esperado": "agua",
+  "variant": "C",
+  "choice": "agua",
+  "confidence": 0.99,
+  "probabilities": {
+   "acai": 0.0,
+   "agua": 0.99,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.01
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 627,
+  "ms": 477
+ },
+ {
+  "set": "holdout",
+  "nome": "Água mineral com gás 500ml",
+  "modo": "embalado",
+  "esperado": "agua",
+  "variant": "C",
+  "choice": "agua",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 0.0,
+   "agua": 1.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 629,
+  "ms": 428
+ },
+ {
+  "set": "holdout",
+  "nome": "Granola com mel 250g",
+  "modo": "embalado",
+  "esperado": "granola",
+  "variant": "C",
+  "choice": "granola",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 0.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 1.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 628,
+  "ms": 1475
+ },
+ {
+  "set": "holdout",
+  "nome": "Leite Ninho porção",
+  "modo": "embalado",
+  "esperado": "adicional",
+  "variant": "C",
+  "choice": "adicional",
+  "confidence": 0.96,
+  "probabilities": {
+   "acai": 0.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.97,
+   "custom": 0.03
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 626,
+  "ms": 387
+ },
+ {
+  "set": "holdout",
+  "nome": "Chocoball porção 50g",
+  "modo": "embalado",
+  "esperado": "adicional",
+  "variant": "C",
+  "choice": "adicional",
+  "confidence": 0.58,
+  "probabilities": {
+   "acai": 0.02,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.02,
+   "adicional": 0.65,
+   "custom": 0.31
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 630,
+  "ms": 637
+ },
+ {
+  "set": "holdout",
+  "nome": "Chá gelado Leão lata",
+  "modo": "embalado",
+  "esperado": "custom",
+  "variant": "C",
+  "choice": "custom",
+  "confidence": 0.74,
+  "probabilities": {
+   "acai": 0.0,
+   "agua": 0.01,
+   "refri": 0.21,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.78
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 626,
+  "ms": 383
+ },
+ {
+  "set": "holdout",
+  "nome": "Isotônico Gatorade 500ml",
+  "modo": "embalado",
+  "esperado": "custom",
+  "variant": "C",
+  "choice": "custom",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 0.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 1.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 631,
+  "ms": 432
+ },
+ {
+  "set": "holdout",
+  "nome": "Kombucha 300ml",
+  "modo": "embalado",
+  "esperado": "custom",
+  "variant": "C",
+  "choice": "custom",
+  "confidence": 0.98,
+  "probabilities": {
+   "acai": 0.0,
+   "agua": 0.0,
+   "refri": 0.02,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.98
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 627,
+  "ms": 425
+ },
+ {
+  "set": "holdout",
+  "nome": "Pão de queijo",
+  "modo": "embalado",
+  "esperado": "custom",
+  "variant": "C",
+  "choice": "custom",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 0.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 1.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 623,
+  "ms": 351
+ },
+ {
+  "set": "holdout",
+  "nome": "Vinho tinto 750ml",
+  "modo": "embalado",
+  "esperado": "custom",
+  "variant": "C",
+  "choice": "custom",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 0.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 1.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 628,
+  "ms": 301
+ },
+ {
+  "set": "holdout",
+  "nome": "Sacola plástica",
+  "modo": "embalado",
+  "esperado": "custom",
+  "variant": "C",
+  "choice": "custom",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 0.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 1.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 625,
+  "ms": 412
+ },
+ {
+  "set": "holdout",
+  "nome": "Coxinha",
+  "modo": "embalado",
+  "esperado": "custom",
+  "variant": "C",
+  "choice": "custom",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 0.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 1.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 622,
+  "ms": 346
+ },
+ {
+  "set": "holdout",
+  "nome": "Suco de uva integral 1L",
+  "modo": "embalado",
+  "esperado": "custom",
+  "variant": "C",
+  "choice": "custom",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 0.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 1.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 628,
+  "ms": 396
+ },
+ {
+  "set": "holdout",
+  "nome": "Gelo em cubo 5kg",
+  "modo": "embalado",
+  "esperado": "custom",
+  "variant": "C",
+  "choice": "custom",
+  "confidence": 0.98,
+  "probabilities": {
+   "acai": 0.0,
+   "agua": 0.01,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.01,
+   "custom": 0.98
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 627,
+  "ms": 441
+ },
+ {
+  "set": "gabarito",
+  "nome": "Caixa de Cremes 10 Litros",
+  "modo": "embalado",
+  "esperado": "acai",
+  "variant": "C",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 1.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 629,
+  "ms": 485
+ },
+ {
+  "set": "gabarito",
+  "nome": "Pote/Caixa de 1 Litro",
+  "modo": "embalado",
+  "esperado": "acai",
+  "variant": "C",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 1.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 629,
+  "ms": 399
+ },
+ {
+  "set": "gabarito",
+  "nome": "Caixa de 2 Litros",
+  "modo": "embalado",
+  "esperado": "acai",
+  "variant": "C",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 1.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 626,
+  "ms": 371
+ },
+ {
+  "set": "gabarito",
+  "nome": "Caixa de 5 Litros",
+  "modo": "embalado",
+  "esperado": "acai",
+  "variant": "C",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 1.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 626,
+  "ms": 385
+ },
+ {
+  "set": "gabarito",
+  "nome": "Caixa de Açaí 10 Litros",
+  "modo": "embalado",
+  "esperado": "acai",
+  "variant": "C",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 1.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 630,
+  "ms": 332
+ },
+ {
+  "set": "gabarito",
+  "nome": "Granola Tia Sônia 1kg",
+  "modo": "embalado",
+  "esperado": "granola",
+  "variant": "C",
+  "choice": "granola",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 0.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 1.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 629,
+  "ms": 337
+ },
+ {
+  "set": "gabarito",
+  "nome": "Pote de 500ml",
+  "modo": "embalado",
+  "esperado": "acai",
+  "variant": "C",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 1.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 627,
+  "ms": 432
+ },
+ {
+  "set": "gabarito",
+  "nome": "Pote de 500ml",
+  "modo": "embalado",
+  "esperado": "acai",
+  "variant": "C",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 1.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 627,
+  "ms": 395
+ },
+ {
+  "set": "gabarito",
+  "nome": "Pote/Caixa de 1 Litro",
+  "modo": "embalado",
+  "esperado": "acai",
+  "variant": "C",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 1.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 629,
+  "ms": 479
+ },
+ {
+  "set": "gabarito",
+  "nome": "Caixa de 2 Litros",
+  "modo": "embalado",
+  "esperado": "acai",
+  "variant": "C",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 1.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 626,
+  "ms": 416
+ },
+ {
+  "set": "gabarito",
+  "nome": "Caixa de 5 Litros",
+  "modo": "embalado",
+  "esperado": "acai",
+  "variant": "C",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 1.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 626,
+  "ms": 435
+ },
+ {
+  "set": "gabarito",
+  "nome": "Caixa de 10 Litros",
+  "modo": "embalado",
+  "esperado": "acai",
+  "variant": "C",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 1.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 627,
+  "ms": 422
+ },
+ {
+  "set": "gabarito",
+  "nome": "Coca",
+  "modo": "embalado",
+  "esperado": "refri",
+  "variant": "C",
+  "choice": "refri",
+  "confidence": 0.94,
+  "probabilities": {
+   "acai": 0.03,
+   "agua": 0.0,
+   "refri": 0.95,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.02
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 621,
+  "ms": 288
+ },
+ {
+  "set": "gabarito",
+  "nome": "Coca Zero",
+  "modo": "embalado",
+  "esperado": "refri",
+  "variant": "C",
+  "choice": "refri",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 0.0,
+   "agua": 0.0,
+   "refri": 1.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 622,
+  "ms": 391
+ },
+ {
+  "set": "gabarito",
+  "nome": "Água S/Gás",
+  "modo": "embalado",
+  "esperado": "agua",
+  "variant": "C",
+  "choice": "agua",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 0.0,
+   "agua": 1.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 624,
+  "ms": 379
+ },
+ {
+  "set": "gabarito",
+  "nome": "Água C/Gás",
+  "modo": "embalado",
+  "esperado": "agua",
+  "variant": "C",
+  "choice": "agua",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 0.0,
+   "agua": 1.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 624,
+  "ms": 359
+ },
+ {
+  "set": "gabarito",
+  "nome": "Granola Tia Sônia 1kg",
+  "modo": "embalado",
+  "esperado": "granola",
+  "variant": "C",
+  "choice": "granola",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 0.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 1.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 629,
+  "ms": 403
+ },
+ {
+  "set": "gabarito",
+  "nome": "Copo de 180ml",
+  "modo": "copo",
+  "esperado": "acai",
+  "variant": "C",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 1.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 632,
+  "ms": 605
+ },
+ {
+  "set": "gabarito",
+  "nome": "Copo de 300ml",
+  "modo": "copo",
+  "esperado": "acai",
+  "variant": "C",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 1.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 632,
+  "ms": 438
+ },
+ {
+  "set": "gabarito",
+  "nome": "Copo de 400ml",
+  "modo": "copo",
+  "esperado": "acai",
+  "variant": "C",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 1.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 632,
+  "ms": 492
+ },
+ {
+  "set": "gabarito",
+  "nome": "Copo de 500ml",
+  "modo": "copo",
+  "esperado": "acai",
+  "variant": "C",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 1.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 632,
+  "ms": 484
+ },
+ {
+  "set": "gabarito",
+  "nome": "Copo de 700ml",
+  "modo": "copo",
+  "esperado": "acai",
+  "variant": "C",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 1.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 632,
+  "ms": 534
+ },
+ {
+  "set": "gabarito",
+  "nome": "Marmita de 1 Litro",
+  "modo": "copo",
+  "esperado": "acai",
+  "variant": "C",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 1.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 632,
+  "ms": 522
+ },
+ {
+  "set": "gabarito",
+  "nome": "Marmita de 1,2 Litros",
+  "modo": "copo",
+  "esperado": "acai",
+  "variant": "C",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 1.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 634,
+  "ms": 473
+ },
+ {
+  "set": "gabarito",
+  "nome": "Copo/Tigela Kg",
+  "modo": "peso",
+  "esperado": "acai",
+  "variant": "C",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 1.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 628,
+  "ms": 369
+ },
+ {
+  "set": "inventado",
+  "nome": "Guaraná Antarctica lata 350ml",
+  "modo": "embalado",
+  "esperado": "refri",
+  "variant": "C",
+  "choice": "refri",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 0.0,
+   "agua": 0.0,
+   "refri": 1.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 629,
+  "ms": 398
+ },
+ {
+  "set": "inventado",
+  "nome": "Fanta Laranja 2L",
+  "modo": "embalado",
+  "esperado": "refri",
+  "variant": "C",
+  "choice": "refri",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 0.0,
+   "agua": 0.0,
+   "refri": 1.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 627,
+  "ms": 429
+ },
+ {
+  "set": "inventado",
+  "nome": "Sprite lata",
+  "modo": "embalado",
+  "esperado": "refri",
+  "variant": "C",
+  "choice": "refri",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 0.0,
+   "agua": 0.0,
+   "refri": 1.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 621,
+  "ms": 375
+ },
+ {
+  "set": "inventado",
+  "nome": "Coca-Cola 600ml",
+  "modo": "embalado",
+  "esperado": "refri",
+  "variant": "C",
+  "choice": "refri",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 0.0,
+   "agua": 0.0,
+   "refri": 1.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 627,
+  "ms": 400
+ },
+ {
+  "set": "inventado",
+  "nome": "Água mineral 500ml",
+  "modo": "embalado",
+  "esperado": "agua",
+  "variant": "C",
+  "choice": "agua",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 0.0,
+   "agua": 1.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 627,
+  "ms": 419
+ },
+ {
+  "set": "inventado",
+  "nome": "Água com gás 1,5L",
+  "modo": "embalado",
+  "esperado": "agua",
+  "variant": "C",
+  "choice": "agua",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 0.0,
+   "agua": 1.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 628,
+  "ms": 302
+ },
+ {
+  "set": "inventado",
+  "nome": "Creme de cupuaçu 5L",
+  "modo": "embalado",
+  "esperado": "acai",
+  "variant": "C",
+  "choice": "acai",
+  "confidence": 0.44,
+  "probabilities": {
+   "acai": 0.53,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.06,
+   "custom": 0.41
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 628,
+  "ms": 435
+ },
+ {
+  "set": "inventado",
+  "nome": "Creme de Ninho 10 Litros",
+  "modo": "embalado",
+  "esperado": "acai",
+  "variant": "C",
+  "choice": "adicional",
+  "confidence": 0.65,
+  "probabilities": {
+   "acai": 0.27,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.71,
+   "custom": 0.02
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 629,
+  "ms": 469
+ },
+ {
+  "set": "inventado",
+  "nome": "Açaí zero açúcar 1L",
+  "modo": "embalado",
+  "esperado": "acai",
+  "variant": "C",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 1.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 627,
+  "ms": 505
+ },
+ {
+  "set": "inventado",
+  "nome": "Pote de 250ml",
+  "modo": "embalado",
+  "esperado": "acai",
+  "variant": "C",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 1.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 627,
+  "ms": 412
+ },
+ {
+  "set": "inventado",
+  "nome": "Barca de açaí 1kg",
+  "modo": "copo",
+  "esperado": "acai",
+  "variant": "C",
+  "choice": "acai",
+  "confidence": 0.99,
+  "probabilities": {
+   "acai": 0.99,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.01
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 633,
+  "ms": 432
+ },
+ {
+  "set": "inventado",
+  "nome": "Tigela de 500ml",
+  "modo": "copo",
+  "esperado": "acai",
+  "variant": "C",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 1.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 633,
+  "ms": 365
+ },
+ {
+  "set": "inventado",
+  "nome": "Copo da Promoção 300ml",
+  "modo": "copo",
+  "esperado": "acai",
+  "variant": "C",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 1.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 635,
+  "ms": 501
+ },
+ {
+  "set": "inventado",
+  "nome": "Self-service Creme de Morango",
+  "modo": "peso",
+  "esperado": "acai",
+  "variant": "C",
+  "choice": "acai",
+  "confidence": 0.96,
+  "probabilities": {
+   "acai": 0.97,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.02,
+   "custom": 0.01
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 628,
+  "ms": 337
+ },
+ {
+  "set": "inventado",
+  "nome": "Picolé de açaí",
+  "modo": "embalado",
+  "esperado": "acai",
+  "variant": "C",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 1.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 626,
+  "ms": 435
+ },
+ {
+  "set": "inventado",
+  "nome": "Granola tradicional 500g",
+  "modo": "embalado",
+  "esperado": "granola",
+  "variant": "C",
+  "choice": "granola",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 0.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 1.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 627,
+  "ms": 250
+ },
+ {
+  "set": "inventado",
+  "nome": "Granola sem açúcar 800g",
+  "modo": "embalado",
+  "esperado": "granola",
+  "variant": "C",
+  "choice": "granola",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 0.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 1.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 628,
+  "ms": 399
+ },
+ {
+  "set": "inventado",
+  "nome": "Paçoca",
+  "modo": "embalado",
+  "esperado": "adicional",
+  "variant": "C",
+  "choice": "adicional",
+  "confidence": 0.99,
+  "probabilities": {
+   "acai": 0.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.99,
+   "custom": 0.01
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 622,
+  "ms": 475
+ },
+ {
+  "set": "inventado",
+  "nome": "Leite condensado bisnaga",
+  "modo": "embalado",
+  "esperado": "adicional",
+  "variant": "C",
+  "choice": "adicional",
+  "confidence": 0.99,
+  "probabilities": {
+   "acai": 0.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.99,
+   "custom": 0.01
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 627,
+  "ms": 368
+ },
+ {
+  "set": "inventado",
+  "nome": "Morango picado porção",
+  "modo": "embalado",
+  "esperado": "adicional",
+  "variant": "C",
+  "choice": "adicional",
+  "confidence": 0.93,
+  "probabilities": {
+   "acai": 0.04,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.94,
+   "custom": 0.02
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 626,
+  "ms": 436
+ },
+ {
+  "set": "inventado",
+  "nome": "Nutella porção 30g",
+  "modo": "embalado",
+  "esperado": "adicional",
+  "variant": "C",
+  "choice": "adicional",
+  "confidence": 0.94,
+  "probabilities": {
+   "acai": 0.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.95,
+   "custom": 0.05
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 628,
+  "ms": 386
+ },
+ {
+  "set": "inventado",
+  "nome": "Leite em pó 200g",
+  "modo": "embalado",
+  "esperado": "adicional",
+  "variant": "C",
+  "choice": "adicional",
+  "confidence": 0.99,
+  "probabilities": {
+   "acai": 0.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.99,
+   "custom": 0.01
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 628,
+  "ms": 411
+ },
+ {
+  "set": "inventado",
+  "nome": "Água de coco 1L",
+  "modo": "embalado",
+  "esperado": "custom",
+  "variant": "C",
+  "choice": "custom",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 0.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 1.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 626,
+  "ms": 346
+ },
+ {
+  "set": "inventado",
+  "nome": "Suco de laranja 300ml",
+  "modo": "embalado",
+  "esperado": "custom",
+  "variant": "C",
+  "choice": "custom",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 0.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 1.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 630,
+  "ms": 365
+ },
+ {
+  "set": "inventado",
+  "nome": "Energético lata 250ml",
+  "modo": "embalado",
+  "esperado": "custom",
+  "variant": "C",
+  "choice": "custom",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 0.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 1.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 629,
+  "ms": 434
+ },
+ {
+  "set": "inventado",
+  "nome": "Cerveja lata 350ml",
+  "modo": "embalado",
+  "esperado": "custom",
+  "variant": "C",
+  "choice": "custom",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 0.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 1.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 628,
+  "ms": 434
+ },
+ {
+  "set": "inventado",
+  "nome": "Colher descartável (pacote)",
+  "modo": "embalado",
+  "esperado": "custom",
+  "variant": "C",
+  "choice": "custom",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 0.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 1.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 629,
+  "ms": 335
+ },
+ {
+  "set": "holdout",
+  "nome": "Sorvete de flocos 2L",
+  "modo": "embalado",
+  "esperado": "acai",
+  "variant": "C2",
+  "choice": "acai",
+  "confidence": 0.83,
+  "probabilities": {
+   "acai": 0.86,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.14
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 599,
+  "ms": 495
+ },
+ {
+  "set": "holdout",
+  "nome": "Creme de morango 10L",
+  "modo": "embalado",
+  "esperado": "acai",
+  "variant": "C2",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 1.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 600,
+  "ms": 426
+ },
+ {
+  "set": "holdout",
+  "nome": "Creme de Ninho 5 Litros",
+  "modo": "embalado",
+  "esperado": "acai",
+  "variant": "C2",
+  "choice": "acai",
+  "confidence": 0.99,
+  "probabilities": {
+   "acai": 0.99,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.01
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 600,
+  "ms": 454
+ },
+ {
+  "set": "holdout",
+  "nome": "Creme de Ninho 10 Litros",
+  "modo": "embalado",
+  "esperado": "acai",
+  "variant": "C2",
+  "choice": "acai",
+  "confidence": 0.96,
+  "probabilities": {
+   "acai": 0.97,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.02,
+   "custom": 0.01
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 601,
+  "ms": 367
+ },
+ {
+  "set": "holdout",
+  "nome": "Creme de cupuaçu 5L",
+  "modo": "embalado",
+  "esperado": "acai",
+  "variant": "C2",
+  "choice": "acai",
+  "confidence": 0.98,
+  "probabilities": {
+   "acai": 0.98,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.02
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 600,
+  "ms": 368
+ },
+ {
+  "set": "holdout",
+  "nome": "Copo Kids 200ml",
+  "modo": "copo",
+  "esperado": "acai",
+  "variant": "C2",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 1.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 604,
+  "ms": 401
+ },
+ {
+  "set": "holdout",
+  "nome": "Açaí na tigela 700ml",
+  "modo": "copo",
+  "esperado": "acai",
+  "variant": "C2",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 1.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 607,
+  "ms": 482
+ },
+ {
+  "set": "holdout",
+  "nome": "Pepsi lata 350ml",
+  "modo": "embalado",
+  "esperado": "refri",
+  "variant": "C2",
+  "choice": "refri",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 0.0,
+   "agua": 0.0,
+   "refri": 1.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 599,
+  "ms": 359
+ },
+ {
+  "set": "holdout",
+  "nome": "Guaraná Kuat 2L",
+  "modo": "embalado",
+  "esperado": "refri",
+  "variant": "C2",
+  "choice": "refri",
+  "confidence": 0.93,
+  "probabilities": {
+   "acai": 0.0,
+   "agua": 0.0,
+   "refri": 0.9400000000000001,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.06
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 599,
+  "ms": 382
+ },
+ {
+  "set": "holdout",
+  "nome": "Água Crystal 1,5L",
+  "modo": "embalado",
+  "esperado": "agua",
+  "variant": "C2",
+  "choice": "agua",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 0.0,
+   "agua": 1.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 599,
+  "ms": 348
+ },
+ {
+  "set": "holdout",
+  "nome": "Água mineral com gás 500ml",
+  "modo": "embalado",
+  "esperado": "agua",
+  "variant": "C2",
+  "choice": "agua",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 0.0,
+   "agua": 1.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 601,
+  "ms": 524
+ },
+ {
+  "set": "holdout",
+  "nome": "Granola com mel 250g",
+  "modo": "embalado",
+  "esperado": "granola",
+  "variant": "C2",
+  "choice": "granola",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 0.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 1.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 600,
+  "ms": 452
+ },
+ {
+  "set": "holdout",
+  "nome": "Leite Ninho porção",
+  "modo": "embalado",
+  "esperado": "adicional",
+  "variant": "C2",
+  "choice": "adicional",
+  "confidence": 0.83,
+  "probabilities": {
+   "acai": 0.02,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.01,
+   "adicional": 0.86,
+   "custom": 0.11
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 598,
+  "ms": 321
+ },
+ {
+  "set": "holdout",
+  "nome": "Chocoball porção 50g",
+  "modo": "embalado",
+  "esperado": "adicional",
+  "variant": "C2",
+  "choice": "adicional",
+  "confidence": 0.45,
+  "probabilities": {
+   "acai": 0.03,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.02,
+   "adicional": 0.54,
+   "custom": 0.4
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 602,
+  "ms": 265
+ },
+ {
+  "set": "holdout",
+  "nome": "Chá gelado Leão lata",
+  "modo": "embalado",
+  "esperado": "custom",
+  "variant": "C2",
+  "choice": "custom",
+  "confidence": 0.9,
+  "probabilities": {
+   "acai": 0.0,
+   "agua": 0.02,
+   "refri": 0.06,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.92
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 598,
+  "ms": 382
+ },
+ {
+  "set": "holdout",
+  "nome": "Isotônico Gatorade 500ml",
+  "modo": "embalado",
+  "esperado": "custom",
+  "variant": "C2",
+  "choice": "custom",
+  "confidence": 0.89,
+  "probabilities": {
+   "acai": 0.0,
+   "agua": 0.04,
+   "refri": 0.05,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.91
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 603,
+  "ms": 384
+ },
+ {
+  "set": "holdout",
+  "nome": "Kombucha 300ml",
+  "modo": "embalado",
+  "esperado": "custom",
+  "variant": "C2",
+  "choice": "custom",
+  "confidence": 0.87,
+  "probabilities": {
+   "acai": 0.0,
+   "agua": 0.01,
+   "refri": 0.1,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.89
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 599,
+  "ms": 449
+ },
+ {
+  "set": "holdout",
+  "nome": "Pão de queijo",
+  "modo": "embalado",
+  "esperado": "custom",
+  "variant": "C2",
+  "choice": "custom",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 0.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 1.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 595,
+  "ms": 425
+ },
+ {
+  "set": "holdout",
+  "nome": "Vinho tinto 750ml",
+  "modo": "embalado",
+  "esperado": "custom",
+  "variant": "C2",
+  "choice": "custom",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 0.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 1.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 600,
+  "ms": 442
+ },
+ {
+  "set": "holdout",
+  "nome": "Sacola plástica",
+  "modo": "embalado",
+  "esperado": "custom",
+  "variant": "C2",
+  "choice": "custom",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 0.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 1.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 597,
+  "ms": 364
+ },
+ {
+  "set": "holdout",
+  "nome": "Coxinha",
+  "modo": "embalado",
+  "esperado": "custom",
+  "variant": "C2",
+  "choice": "custom",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 0.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 1.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 594,
+  "ms": 389
+ },
+ {
+  "set": "holdout",
+  "nome": "Suco de uva integral 1L",
+  "modo": "embalado",
+  "esperado": "custom",
+  "variant": "C2",
+  "choice": "custom",
+  "confidence": 0.99,
+  "probabilities": {
+   "acai": 0.0,
+   "agua": 0.0,
+   "refri": 0.01,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.99
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 600,
+  "ms": 397
+ },
+ {
+  "set": "holdout",
+  "nome": "Gelo em cubo 5kg",
+  "modo": "embalado",
+  "esperado": "custom",
+  "variant": "C2",
+  "choice": "custom",
+  "confidence": 0.96,
+  "probabilities": {
+   "acai": 0.0,
+   "agua": 0.02,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.01,
+   "custom": 0.97
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 599,
+  "ms": 365
+ },
+ {
+  "set": "gabarito",
+  "nome": "Caixa de Cremes 10 Litros",
+  "modo": "embalado",
+  "esperado": "acai",
+  "variant": "C2",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 1.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 601,
+  "ms": 447
+ },
+ {
+  "set": "gabarito",
+  "nome": "Pote/Caixa de 1 Litro",
+  "modo": "embalado",
+  "esperado": "acai",
+  "variant": "C2",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 1.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 601,
+  "ms": 403
+ },
+ {
+  "set": "gabarito",
+  "nome": "Caixa de 2 Litros",
+  "modo": "embalado",
+  "esperado": "acai",
+  "variant": "C2",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 1.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 598,
+  "ms": 450
+ },
+ {
+  "set": "gabarito",
+  "nome": "Caixa de 5 Litros",
+  "modo": "embalado",
+  "esperado": "acai",
+  "variant": "C2",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 1.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 598,
+  "ms": 333
+ },
+ {
+  "set": "gabarito",
+  "nome": "Caixa de Açaí 10 Litros",
+  "modo": "embalado",
+  "esperado": "acai",
+  "variant": "C2",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 1.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 602,
+  "ms": 469
+ },
+ {
+  "set": "gabarito",
+  "nome": "Granola Tia Sônia 1kg",
+  "modo": "embalado",
+  "esperado": "granola",
+  "variant": "C2",
+  "choice": "granola",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 0.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 1.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 601,
+  "ms": 275
+ },
+ {
+  "set": "gabarito",
+  "nome": "Pote de 500ml",
+  "modo": "embalado",
+  "esperado": "acai",
+  "variant": "C2",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 1.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 599,
+  "ms": 378
+ },
+ {
+  "set": "gabarito",
+  "nome": "Pote de 500ml",
+  "modo": "embalado",
+  "esperado": "acai",
+  "variant": "C2",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 1.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 599,
+  "ms": 383
+ },
+ {
+  "set": "gabarito",
+  "nome": "Pote/Caixa de 1 Litro",
+  "modo": "embalado",
+  "esperado": "acai",
+  "variant": "C2",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 1.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 601,
+  "ms": 513
+ },
+ {
+  "set": "gabarito",
+  "nome": "Caixa de 2 Litros",
+  "modo": "embalado",
+  "esperado": "acai",
+  "variant": "C2",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 1.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 598,
+  "ms": 496
+ },
+ {
+  "set": "gabarito",
+  "nome": "Caixa de 5 Litros",
+  "modo": "embalado",
+  "esperado": "acai",
+  "variant": "C2",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 1.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 598,
+  "ms": 416
+ },
+ {
+  "set": "gabarito",
+  "nome": "Caixa de 10 Litros",
+  "modo": "embalado",
+  "esperado": "acai",
+  "variant": "C2",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 1.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 599,
+  "ms": 405
+ },
+ {
+  "set": "gabarito",
+  "nome": "Coca",
+  "modo": "embalado",
+  "esperado": "refri",
+  "variant": "C2",
+  "choice": "refri",
+  "confidence": 0.86,
+  "probabilities": {
+   "acai": 0.04,
+   "agua": 0.0,
+   "refri": 0.88,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.08
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 593,
+  "ms": 410
+ },
+ {
+  "set": "gabarito",
+  "nome": "Coca Zero",
+  "modo": "embalado",
+  "esperado": "refri",
+  "variant": "C2",
+  "choice": "refri",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 0.0,
+   "agua": 0.0,
+   "refri": 1.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 594,
+  "ms": 339
+ },
+ {
+  "set": "gabarito",
+  "nome": "Água S/Gás",
+  "modo": "embalado",
+  "esperado": "agua",
+  "variant": "C2",
+  "choice": "agua",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 0.0,
+   "agua": 1.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 596,
+  "ms": 420
+ },
+ {
+  "set": "gabarito",
+  "nome": "Água C/Gás",
+  "modo": "embalado",
+  "esperado": "agua",
+  "variant": "C2",
+  "choice": "agua",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 0.0,
+   "agua": 1.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 596,
+  "ms": 296
+ },
+ {
+  "set": "gabarito",
+  "nome": "Granola Tia Sônia 1kg",
+  "modo": "embalado",
+  "esperado": "granola",
+  "variant": "C2",
+  "choice": "granola",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 0.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 1.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 601,
+  "ms": 237
+ },
+ {
+  "set": "gabarito",
+  "nome": "Copo de 180ml",
+  "modo": "copo",
+  "esperado": "acai",
+  "variant": "C2",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 1.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 604,
+  "ms": 387
+ },
+ {
+  "set": "gabarito",
+  "nome": "Copo de 300ml",
+  "modo": "copo",
+  "esperado": "acai",
+  "variant": "C2",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 1.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 604,
+  "ms": 454
+ },
+ {
+  "set": "gabarito",
+  "nome": "Copo de 400ml",
+  "modo": "copo",
+  "esperado": "acai",
+  "variant": "C2",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 1.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 604,
+  "ms": 319
+ },
+ {
+  "set": "gabarito",
+  "nome": "Copo de 500ml",
+  "modo": "copo",
+  "esperado": "acai",
+  "variant": "C2",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 1.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 604,
+  "ms": 425
+ },
+ {
+  "set": "gabarito",
+  "nome": "Copo de 700ml",
+  "modo": "copo",
+  "esperado": "acai",
+  "variant": "C2",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 1.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 604,
+  "ms": 235
+ },
+ {
+  "set": "gabarito",
+  "nome": "Marmita de 1 Litro",
+  "modo": "copo",
+  "esperado": "acai",
+  "variant": "C2",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 1.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 604,
+  "ms": 512
+ },
+ {
+  "set": "gabarito",
+  "nome": "Marmita de 1,2 Litros",
+  "modo": "copo",
+  "esperado": "acai",
+  "variant": "C2",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 1.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 606,
+  "ms": 446
+ },
+ {
+  "set": "gabarito",
+  "nome": "Copo/Tigela Kg",
+  "modo": "peso",
+  "esperado": "acai",
+  "variant": "C2",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 1.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 600,
+  "ms": 434
+ },
+ {
+  "set": "inventado",
+  "nome": "Guaraná Antarctica lata 350ml",
+  "modo": "embalado",
+  "esperado": "refri",
+  "variant": "C2",
+  "choice": "refri",
+  "confidence": 0.98,
+  "probabilities": {
+   "acai": 0.0,
+   "agua": 0.0,
+   "refri": 0.98,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.02
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 601,
+  "ms": 416
+ },
+ {
+  "set": "inventado",
+  "nome": "Fanta Laranja 2L",
+  "modo": "embalado",
+  "esperado": "refri",
+  "variant": "C2",
+  "choice": "refri",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 0.0,
+   "agua": 0.0,
+   "refri": 1.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 599,
+  "ms": 454
+ },
+ {
+  "set": "inventado",
+  "nome": "Sprite lata",
+  "modo": "embalado",
+  "esperado": "refri",
+  "variant": "C2",
+  "choice": "refri",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 0.0,
+   "agua": 0.0,
+   "refri": 1.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 593,
+  "ms": 506
+ },
+ {
+  "set": "inventado",
+  "nome": "Coca-Cola 600ml",
+  "modo": "embalado",
+  "esperado": "refri",
+  "variant": "C2",
+  "choice": "refri",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 0.0,
+   "agua": 0.0,
+   "refri": 1.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 599,
+  "ms": 428
+ },
+ {
+  "set": "inventado",
+  "nome": "Água mineral 500ml",
+  "modo": "embalado",
+  "esperado": "agua",
+  "variant": "C2",
+  "choice": "agua",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 0.0,
+   "agua": 1.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 599,
+  "ms": 360
+ },
+ {
+  "set": "inventado",
+  "nome": "Água com gás 1,5L",
+  "modo": "embalado",
+  "esperado": "agua",
+  "variant": "C2",
+  "choice": "agua",
+  "confidence": 0.99,
+  "probabilities": {
+   "acai": 0.0,
+   "agua": 0.99,
+   "refri": 0.01,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 600,
+  "ms": 396
+ },
+ {
+  "set": "inventado",
+  "nome": "Creme de cupuaçu 5L",
+  "modo": "embalado",
+  "esperado": "acai",
+  "variant": "C2",
+  "choice": "acai",
+  "confidence": 0.98,
+  "probabilities": {
+   "acai": 0.98,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.02
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 600,
+  "ms": 424
+ },
+ {
+  "set": "inventado",
+  "nome": "Creme de Ninho 10 Litros",
+  "modo": "embalado",
+  "esperado": "acai",
+  "variant": "C2",
+  "choice": "acai",
+  "confidence": 0.98,
+  "probabilities": {
+   "acai": 0.98,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.01,
+   "custom": 0.01
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 601,
+  "ms": 437
+ },
+ {
+  "set": "inventado",
+  "nome": "Açaí zero açúcar 1L",
+  "modo": "embalado",
+  "esperado": "acai",
+  "variant": "C2",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 1.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 599,
+  "ms": 397
+ },
+ {
+  "set": "inventado",
+  "nome": "Pote de 250ml",
+  "modo": "embalado",
+  "esperado": "acai",
+  "variant": "C2",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 1.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 599,
+  "ms": 311
+ },
+ {
+  "set": "inventado",
+  "nome": "Barca de açaí 1kg",
+  "modo": "copo",
+  "esperado": "acai",
+  "variant": "C2",
+  "choice": "acai",
+  "confidence": 0.99,
+  "probabilities": {
+   "acai": 0.99,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.01
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 605,
+  "ms": 398
+ },
+ {
+  "set": "inventado",
+  "nome": "Tigela de 500ml",
+  "modo": "copo",
+  "esperado": "acai",
+  "variant": "C2",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 1.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 605,
+  "ms": 328
+ },
+ {
+  "set": "inventado",
+  "nome": "Copo da Promoção 300ml",
+  "modo": "copo",
+  "esperado": "acai",
+  "variant": "C2",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 1.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 607,
+  "ms": 411
+ },
+ {
+  "set": "inventado",
+  "nome": "Self-service Creme de Morango",
+  "modo": "peso",
+  "esperado": "acai",
+  "variant": "C2",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 1.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 600,
+  "ms": 382
+ },
+ {
+  "set": "inventado",
+  "nome": "Picolé de açaí",
+  "modo": "embalado",
+  "esperado": "acai",
+  "variant": "C2",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 1.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 598,
+  "ms": 259
+ },
+ {
+  "set": "inventado",
+  "nome": "Granola tradicional 500g",
+  "modo": "embalado",
+  "esperado": "granola",
+  "variant": "C2",
+  "choice": "granola",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 0.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 1.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 599,
+  "ms": 317
+ },
+ {
+  "set": "inventado",
+  "nome": "Granola sem açúcar 800g",
+  "modo": "embalado",
+  "esperado": "granola",
+  "variant": "C2",
+  "choice": "granola",
+  "confidence": 1.0,
+  "probabilities": {
+   "acai": 0.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 1.0,
+   "adicional": 0.0,
+   "custom": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 600,
+  "ms": 367
+ },
+ {
+  "set": "inventado",
+  "nome": "Paçoca",
+  "modo": "embalado",
+  "esperado": "adicional",
+  "variant": "C2",
+  "choice": "adicional",
+  "confidence": 0.58,
+  "probabilities": {
+   "acai": 0.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.01,
+   "adicional": 0.65,
+   "custom": 0.34
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 594,
+  "ms": 235
+ },
+ {
+  "set": "inventado",
+  "nome": "Leite condensado bisnaga",
+  "modo": "embalado",
+  "esperado": "adicional",
+  "variant": "C2",
+  "choice": "adicional",
+  "confidence": 0.96,
+  "probabilities": {
+   "acai": 0.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.97,
+   "custom": 0.03
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 599,
+  "ms": 359
+ },
+ {
+  "set": "inventado",
+  "nome": "Morango picado porção",
+  "modo": "embalado",
+  "esperado": "adicional",
+  "variant": "C2",
+  "choice": "adicional",
+  "confidence": 0.68,
+  "probabilities": {
+   "acai": 0.23,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.73,
+   "custom": 0.04
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 598,
+  "ms": 268
+ },
+ {
+  "set": "inventado",
+  "nome": "Nutella porção 30g",
+  "modo": "embalado",
+  "esperado": "adicional",
+  "variant": "C2",
+  "choice": "adicional",
+  "confidence": 0.9,
+  "probabilities": {
+   "acai": 0.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.92,
+   "custom": 0.08
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 600,
+  "ms": 375
+ },
+ {
+  "set": "inventado",
+  "nome": "Leite em pó 200g",
+  "modo": "embalado",
+  "esperado": "adicional",
+  "variant": "C2",
+  "choice": "adicional",
+  "confidence": 0.84,
+  "probabilities": {
+   "acai": 0.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.87,
+   "custom": 0.13
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 600,
+  "ms": 375
+ },
+ {
+  "set": "inventado",
+  "nome": "Água de coco 1L",
+  "modo": "embalado",
+  "esperado": "custom",
+  "variant": "C2",
+  "choice": "custom",
+  "confidence": 0.51,
+  "probabilities": {
+   "acai": 0.0,
+   "agua": 0.41,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.59
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 598,
+  "ms": 460
+ },
+ {
+  "set": "inventado",
+  "nome": "Suco de laranja 300ml",
+  "modo": "embalado",
+  "esperado": "custom",
+  "variant": "C2",
+  "choice": "custom",
+  "confidence": 0.99,
+  "probabilities": {
+   "acai": 0.0,
+   "agua": 0.0,
+   "refri": 0.01,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.99
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 602,
+  "ms": 395
+ },
+ {
+  "set": "inventado",
+  "nome": "Energético lata 250ml",
+  "modo": "embalado",
+  "esperado": "custom",
+  "variant": "C2",
+  "choice": "custom",
+  "confidence": 0.92,
+  "probabilities": {
+   "acai": 0.0,
+   "agua": 0.0,
+   "refri": 0.07,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.93
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 601,
+  "ms": 427
+ },
+ {
+  "set": "inventado",
+  "nome": "Cerveja lata 350ml",
+  "modo": "embalado",
+  "esperado": "custom",
+  "variant": "C2",
+  "choice": "custom",
+  "confidence": 0.98,
+  "probabilities": {
+   "acai": 0.0,
+   "agua": 0.0,
+   "refri": 0.02,
+   "granola": 0.0,
+   "adicional": 0.0,
+   "custom": 0.98
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 600,
+  "ms": 424
+ },
+ {
+  "set": "inventado",
+  "nome": "Colher descartável (pacote)",
+  "modo": "embalado",
+  "esperado": "custom",
+  "variant": "C2",
+  "choice": "custom",
+  "confidence": 0.98,
+  "probabilities": {
+   "acai": 0.0,
+   "agua": 0.0,
+   "refri": 0.0,
+   "granola": 0.0,
+   "adicional": 0.02,
+   "custom": 0.98
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 601,
+  "ms": 378
+ },
+ {
+  "set": "holdout",
+  "nome": "Sorvete de flocos 2L",
+  "modo": "embalado",
+  "esperado": "acai",
+  "variant": "C2r",
+  "choice": "acai",
+  "confidence": 0.88,
+  "probabilities": {
+   "custom": 0.1,
+   "adicional": 0.0,
+   "granola": 0.0,
+   "refri": 0.0,
+   "agua": 0.0,
+   "acai": 0.9
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 599,
+  "ms": 419
+ },
+ {
+  "set": "holdout",
+  "nome": "Creme de morango 10L",
+  "modo": "embalado",
+  "esperado": "acai",
+  "variant": "C2r",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "custom": 0.0,
+   "adicional": 0.0,
+   "granola": 0.0,
+   "refri": 0.0,
+   "agua": 0.0,
+   "acai": 1.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 600,
+  "ms": 359
+ },
+ {
+  "set": "holdout",
+  "nome": "Creme de Ninho 5 Litros",
+  "modo": "embalado",
+  "esperado": "acai",
+  "variant": "C2r",
+  "choice": "acai",
+  "confidence": 0.96,
+  "probabilities": {
+   "custom": 0.01,
+   "adicional": 0.02,
+   "granola": 0.0,
+   "refri": 0.0,
+   "agua": 0.0,
+   "acai": 0.97
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 600,
+  "ms": 403
+ },
+ {
+  "set": "holdout",
+  "nome": "Creme de Ninho 10 Litros",
+  "modo": "embalado",
+  "esperado": "acai",
+  "variant": "C2r",
+  "choice": "acai",
+  "confidence": 0.94,
+  "probabilities": {
+   "custom": 0.01,
+   "adicional": 0.04,
+   "granola": 0.0,
+   "refri": 0.0,
+   "agua": 0.0,
+   "acai": 0.95
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 601,
+  "ms": 371
+ },
+ {
+  "set": "holdout",
+  "nome": "Creme de cupuaçu 5L",
+  "modo": "embalado",
+  "esperado": "acai",
+  "variant": "C2r",
+  "choice": "acai",
+  "confidence": 0.98,
+  "probabilities": {
+   "custom": 0.02,
+   "adicional": 0.0,
+   "granola": 0.0,
+   "refri": 0.0,
+   "agua": 0.0,
+   "acai": 0.98
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 600,
+  "ms": 491
+ },
+ {
+  "set": "holdout",
+  "nome": "Copo Kids 200ml",
+  "modo": "copo",
+  "esperado": "acai",
+  "variant": "C2r",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "custom": 0.0,
+   "adicional": 0.0,
+   "granola": 0.0,
+   "refri": 0.0,
+   "agua": 0.0,
+   "acai": 1.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 604,
+  "ms": 452
+ },
+ {
+  "set": "holdout",
+  "nome": "Açaí na tigela 700ml",
+  "modo": "copo",
+  "esperado": "acai",
+  "variant": "C2r",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "custom": 0.0,
+   "adicional": 0.0,
+   "granola": 0.0,
+   "refri": 0.0,
+   "agua": 0.0,
+   "acai": 1.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 607,
+  "ms": 465
+ },
+ {
+  "set": "holdout",
+  "nome": "Pepsi lata 350ml",
+  "modo": "embalado",
+  "esperado": "refri",
+  "variant": "C2r",
+  "choice": "refri",
+  "confidence": 1.0,
+  "probabilities": {
+   "custom": 0.0,
+   "adicional": 0.0,
+   "granola": 0.0,
+   "refri": 1.0,
+   "agua": 0.0,
+   "acai": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 599,
+  "ms": 362
+ },
+ {
+  "set": "holdout",
+  "nome": "Guaraná Kuat 2L",
+  "modo": "embalado",
+  "esperado": "refri",
+  "variant": "C2r",
+  "choice": "refri",
+  "confidence": 0.89,
+  "probabilities": {
+   "custom": 0.09,
+   "adicional": 0.0,
+   "granola": 0.0,
+   "refri": 0.91,
+   "agua": 0.0,
+   "acai": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 599,
+  "ms": 297
+ },
+ {
+  "set": "holdout",
+  "nome": "Água Crystal 1,5L",
+  "modo": "embalado",
+  "esperado": "agua",
+  "variant": "C2r",
+  "choice": "agua",
+  "confidence": 1.0,
+  "probabilities": {
+   "custom": 0.0,
+   "adicional": 0.0,
+   "granola": 0.0,
+   "refri": 0.0,
+   "agua": 1.0,
+   "acai": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 599,
+  "ms": 443
+ },
+ {
+  "set": "holdout",
+  "nome": "Água mineral com gás 500ml",
+  "modo": "embalado",
+  "esperado": "agua",
+  "variant": "C2r",
+  "choice": "agua",
+  "confidence": 1.0,
+  "probabilities": {
+   "custom": 0.0,
+   "adicional": 0.0,
+   "granola": 0.0,
+   "refri": 0.0,
+   "agua": 1.0,
+   "acai": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 601,
+  "ms": 401
+ },
+ {
+  "set": "holdout",
+  "nome": "Granola com mel 250g",
+  "modo": "embalado",
+  "esperado": "granola",
+  "variant": "C2r",
+  "choice": "granola",
+  "confidence": 0.99,
+  "probabilities": {
+   "custom": 0.0,
+   "adicional": 0.01,
+   "granola": 0.99,
+   "refri": 0.0,
+   "agua": 0.0,
+   "acai": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 600,
+  "ms": 322
+ },
+ {
+  "set": "holdout",
+  "nome": "Leite Ninho porção",
+  "modo": "embalado",
+  "esperado": "adicional",
+  "variant": "C2r",
+  "choice": "adicional",
+  "confidence": 0.94,
+  "probabilities": {
+   "custom": 0.04,
+   "adicional": 0.95,
+   "granola": 0.0,
+   "refri": 0.0,
+   "agua": 0.0,
+   "acai": 0.01
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 598,
+  "ms": 291
+ },
+ {
+  "set": "holdout",
+  "nome": "Chocoball porção 50g",
+  "modo": "embalado",
+  "esperado": "adicional",
+  "variant": "C2r",
+  "choice": "adicional",
+  "confidence": 0.68,
+  "probabilities": {
+   "custom": 0.24,
+   "adicional": 0.73,
+   "granola": 0.01,
+   "refri": 0.0,
+   "agua": 0.0,
+   "acai": 0.02
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 602,
+  "ms": 400
+ },
+ {
+  "set": "holdout",
+  "nome": "Chá gelado Leão lata",
+  "modo": "embalado",
+  "esperado": "custom",
+  "variant": "C2r",
+  "choice": "custom",
+  "confidence": 0.76,
+  "probabilities": {
+   "custom": 0.8,
+   "adicional": 0.0,
+   "granola": 0.0,
+   "refri": 0.18,
+   "agua": 0.02,
+   "acai": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 598,
+  "ms": 466
+ },
+ {
+  "set": "holdout",
+  "nome": "Isotônico Gatorade 500ml",
+  "modo": "embalado",
+  "esperado": "custom",
+  "variant": "C2r",
+  "choice": "custom",
+  "confidence": 0.87,
+  "probabilities": {
+   "custom": 0.89,
+   "adicional": 0.0,
+   "granola": 0.0,
+   "refri": 0.07,
+   "agua": 0.04,
+   "acai": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 603,
+  "ms": 756
+ },
+ {
+  "set": "holdout",
+  "nome": "Kombucha 300ml",
+  "modo": "embalado",
+  "esperado": "custom",
+  "variant": "C2r",
+  "choice": "custom",
+  "confidence": 0.8,
+  "probabilities": {
+   "custom": 0.83,
+   "adicional": 0.0,
+   "granola": 0.0,
+   "refri": 0.16,
+   "agua": 0.01,
+   "acai": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 599,
+  "ms": 500
+ },
+ {
+  "set": "holdout",
+  "nome": "Pão de queijo",
+  "modo": "embalado",
+  "esperado": "custom",
+  "variant": "C2r",
+  "choice": "custom",
+  "confidence": 0.99,
+  "probabilities": {
+   "custom": 0.99,
+   "adicional": 0.01,
+   "granola": 0.0,
+   "refri": 0.0,
+   "agua": 0.0,
+   "acai": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 595,
+  "ms": 323
+ },
+ {
+  "set": "holdout",
+  "nome": "Vinho tinto 750ml",
+  "modo": "embalado",
+  "esperado": "custom",
+  "variant": "C2r",
+  "choice": "custom",
+  "confidence": 1.0,
+  "probabilities": {
+   "custom": 1.0,
+   "adicional": 0.0,
+   "granola": 0.0,
+   "refri": 0.0,
+   "agua": 0.0,
+   "acai": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 600,
+  "ms": 406
+ },
+ {
+  "set": "holdout",
+  "nome": "Sacola plástica",
+  "modo": "embalado",
+  "esperado": "custom",
+  "variant": "C2r",
+  "choice": "custom",
+  "confidence": 0.99,
+  "probabilities": {
+   "custom": 0.99,
+   "adicional": 0.01,
+   "granola": 0.0,
+   "refri": 0.0,
+   "agua": 0.0,
+   "acai": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 597,
+  "ms": 379
+ },
+ {
+  "set": "holdout",
+  "nome": "Coxinha",
+  "modo": "embalado",
+  "esperado": "custom",
+  "variant": "C2r",
+  "choice": "custom",
+  "confidence": 0.99,
+  "probabilities": {
+   "custom": 0.99,
+   "adicional": 0.01,
+   "granola": 0.0,
+   "refri": 0.0,
+   "agua": 0.0,
+   "acai": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 594,
+  "ms": 366
+ },
+ {
+  "set": "holdout",
+  "nome": "Suco de uva integral 1L",
+  "modo": "embalado",
+  "esperado": "custom",
+  "variant": "C2r",
+  "choice": "custom",
+  "confidence": 0.99,
+  "probabilities": {
+   "custom": 0.99,
+   "adicional": 0.0,
+   "granola": 0.0,
+   "refri": 0.01,
+   "agua": 0.0,
+   "acai": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 600,
+  "ms": 386
+ },
+ {
+  "set": "holdout",
+  "nome": "Gelo em cubo 5kg",
+  "modo": "embalado",
+  "esperado": "custom",
+  "variant": "C2r",
+  "choice": "custom",
+  "confidence": 0.93,
+  "probabilities": {
+   "custom": 0.9400000000000001,
+   "adicional": 0.03,
+   "granola": 0.0,
+   "refri": 0.0,
+   "agua": 0.03,
+   "acai": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 599,
+  "ms": 358
+ },
+ {
+  "set": "gabarito",
+  "nome": "Caixa de Cremes 10 Litros",
+  "modo": "embalado",
+  "esperado": "acai",
+  "variant": "C2r",
+  "choice": "acai",
+  "confidence": 0.99,
+  "probabilities": {
+   "custom": 0.01,
+   "adicional": 0.0,
+   "granola": 0.0,
+   "refri": 0.0,
+   "agua": 0.0,
+   "acai": 0.99
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 601,
+  "ms": 299
+ },
+ {
+  "set": "gabarito",
+  "nome": "Pote/Caixa de 1 Litro",
+  "modo": "embalado",
+  "esperado": "acai",
+  "variant": "C2r",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "custom": 0.0,
+   "adicional": 0.0,
+   "granola": 0.0,
+   "refri": 0.0,
+   "agua": 0.0,
+   "acai": 1.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 601,
+  "ms": 487
+ },
+ {
+  "set": "gabarito",
+  "nome": "Caixa de 2 Litros",
+  "modo": "embalado",
+  "esperado": "acai",
+  "variant": "C2r",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "custom": 0.0,
+   "adicional": 0.0,
+   "granola": 0.0,
+   "refri": 0.0,
+   "agua": 0.0,
+   "acai": 1.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 598,
+  "ms": 407
+ },
+ {
+  "set": "gabarito",
+  "nome": "Caixa de 5 Litros",
+  "modo": "embalado",
+  "esperado": "acai",
+  "variant": "C2r",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "custom": 0.0,
+   "adicional": 0.0,
+   "granola": 0.0,
+   "refri": 0.0,
+   "agua": 0.0,
+   "acai": 1.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 598,
+  "ms": 297
+ },
+ {
+  "set": "gabarito",
+  "nome": "Caixa de Açaí 10 Litros",
+  "modo": "embalado",
+  "esperado": "acai",
+  "variant": "C2r",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "custom": 0.0,
+   "adicional": 0.0,
+   "granola": 0.0,
+   "refri": 0.0,
+   "agua": 0.0,
+   "acai": 1.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 602,
+  "ms": 408
+ },
+ {
+  "set": "gabarito",
+  "nome": "Granola Tia Sônia 1kg",
+  "modo": "embalado",
+  "esperado": "granola",
+  "variant": "C2r",
+  "choice": "granola",
+  "confidence": 1.0,
+  "probabilities": {
+   "custom": 0.0,
+   "adicional": 0.0,
+   "granola": 1.0,
+   "refri": 0.0,
+   "agua": 0.0,
+   "acai": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 601,
+  "ms": 382
+ },
+ {
+  "set": "gabarito",
+  "nome": "Pote de 500ml",
+  "modo": "embalado",
+  "esperado": "acai",
+  "variant": "C2r",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "custom": 0.0,
+   "adicional": 0.0,
+   "granola": 0.0,
+   "refri": 0.0,
+   "agua": 0.0,
+   "acai": 1.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 599,
+  "ms": 372
+ },
+ {
+  "set": "gabarito",
+  "nome": "Pote de 500ml",
+  "modo": "embalado",
+  "esperado": "acai",
+  "variant": "C2r",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "custom": 0.0,
+   "adicional": 0.0,
+   "granola": 0.0,
+   "refri": 0.0,
+   "agua": 0.0,
+   "acai": 1.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 599,
+  "ms": 268
+ },
+ {
+  "set": "gabarito",
+  "nome": "Pote/Caixa de 1 Litro",
+  "modo": "embalado",
+  "esperado": "acai",
+  "variant": "C2r",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "custom": 0.0,
+   "adicional": 0.0,
+   "granola": 0.0,
+   "refri": 0.0,
+   "agua": 0.0,
+   "acai": 1.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 601,
+  "ms": 284
+ },
+ {
+  "set": "gabarito",
+  "nome": "Caixa de 2 Litros",
+  "modo": "embalado",
+  "esperado": "acai",
+  "variant": "C2r",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "custom": 0.0,
+   "adicional": 0.0,
+   "granola": 0.0,
+   "refri": 0.0,
+   "agua": 0.0,
+   "acai": 1.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 598,
+  "ms": 348
+ },
+ {
+  "set": "gabarito",
+  "nome": "Caixa de 5 Litros",
+  "modo": "embalado",
+  "esperado": "acai",
+  "variant": "C2r",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "custom": 0.0,
+   "adicional": 0.0,
+   "granola": 0.0,
+   "refri": 0.0,
+   "agua": 0.0,
+   "acai": 1.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 598,
+  "ms": 376
+ },
+ {
+  "set": "gabarito",
+  "nome": "Caixa de 10 Litros",
+  "modo": "embalado",
+  "esperado": "acai",
+  "variant": "C2r",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "custom": 0.0,
+   "adicional": 0.0,
+   "granola": 0.0,
+   "refri": 0.0,
+   "agua": 0.0,
+   "acai": 1.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 599,
+  "ms": 313
+ },
+ {
+  "set": "gabarito",
+  "nome": "Coca",
+  "modo": "embalado",
+  "esperado": "refri",
+  "variant": "C2r",
+  "choice": "refri",
+  "confidence": 0.89,
+  "probabilities": {
+   "custom": 0.05,
+   "adicional": 0.0,
+   "granola": 0.0,
+   "refri": 0.91,
+   "agua": 0.0,
+   "acai": 0.04
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 593,
+  "ms": 346
+ },
+ {
+  "set": "gabarito",
+  "nome": "Coca Zero",
+  "modo": "embalado",
+  "esperado": "refri",
+  "variant": "C2r",
+  "choice": "refri",
+  "confidence": 0.99,
+  "probabilities": {
+   "custom": 0.01,
+   "adicional": 0.0,
+   "granola": 0.0,
+   "refri": 0.99,
+   "agua": 0.0,
+   "acai": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 594,
+  "ms": 345
+ },
+ {
+  "set": "gabarito",
+  "nome": "Água S/Gás",
+  "modo": "embalado",
+  "esperado": "agua",
+  "variant": "C2r",
+  "choice": "agua",
+  "confidence": 1.0,
+  "probabilities": {
+   "custom": 0.0,
+   "adicional": 0.0,
+   "granola": 0.0,
+   "refri": 0.0,
+   "agua": 1.0,
+   "acai": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 596,
+  "ms": 515
+ },
+ {
+  "set": "gabarito",
+  "nome": "Água C/Gás",
+  "modo": "embalado",
+  "esperado": "agua",
+  "variant": "C2r",
+  "choice": "agua",
+  "confidence": 1.0,
+  "probabilities": {
+   "custom": 0.0,
+   "adicional": 0.0,
+   "granola": 0.0,
+   "refri": 0.0,
+   "agua": 1.0,
+   "acai": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 596,
+  "ms": 386
+ },
+ {
+  "set": "gabarito",
+  "nome": "Granola Tia Sônia 1kg",
+  "modo": "embalado",
+  "esperado": "granola",
+  "variant": "C2r",
+  "choice": "granola",
+  "confidence": 1.0,
+  "probabilities": {
+   "custom": 0.0,
+   "adicional": 0.0,
+   "granola": 1.0,
+   "refri": 0.0,
+   "agua": 0.0,
+   "acai": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 601,
+  "ms": 483
+ },
+ {
+  "set": "gabarito",
+  "nome": "Copo de 180ml",
+  "modo": "copo",
+  "esperado": "acai",
+  "variant": "C2r",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "custom": 0.0,
+   "adicional": 0.0,
+   "granola": 0.0,
+   "refri": 0.0,
+   "agua": 0.0,
+   "acai": 1.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 604,
+  "ms": 348
+ },
+ {
+  "set": "gabarito",
+  "nome": "Copo de 300ml",
+  "modo": "copo",
+  "esperado": "acai",
+  "variant": "C2r",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "custom": 0.0,
+   "adicional": 0.0,
+   "granola": 0.0,
+   "refri": 0.0,
+   "agua": 0.0,
+   "acai": 1.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 604,
+  "ms": 457
+ },
+ {
+  "set": "gabarito",
+  "nome": "Copo de 400ml",
+  "modo": "copo",
+  "esperado": "acai",
+  "variant": "C2r",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "custom": 0.0,
+   "adicional": 0.0,
+   "granola": 0.0,
+   "refri": 0.0,
+   "agua": 0.0,
+   "acai": 1.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 604,
+  "ms": 523
+ },
+ {
+  "set": "gabarito",
+  "nome": "Copo de 500ml",
+  "modo": "copo",
+  "esperado": "acai",
+  "variant": "C2r",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "custom": 0.0,
+   "adicional": 0.0,
+   "granola": 0.0,
+   "refri": 0.0,
+   "agua": 0.0,
+   "acai": 1.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 604,
+  "ms": 389
+ },
+ {
+  "set": "gabarito",
+  "nome": "Copo de 700ml",
+  "modo": "copo",
+  "esperado": "acai",
+  "variant": "C2r",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "custom": 0.0,
+   "adicional": 0.0,
+   "granola": 0.0,
+   "refri": 0.0,
+   "agua": 0.0,
+   "acai": 1.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 604,
+  "ms": 421
+ },
+ {
+  "set": "gabarito",
+  "nome": "Marmita de 1 Litro",
+  "modo": "copo",
+  "esperado": "acai",
+  "variant": "C2r",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "custom": 0.0,
+   "adicional": 0.0,
+   "granola": 0.0,
+   "refri": 0.0,
+   "agua": 0.0,
+   "acai": 1.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 604,
+  "ms": 331
+ },
+ {
+  "set": "gabarito",
+  "nome": "Marmita de 1,2 Litros",
+  "modo": "copo",
+  "esperado": "acai",
+  "variant": "C2r",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "custom": 0.0,
+   "adicional": 0.0,
+   "granola": 0.0,
+   "refri": 0.0,
+   "agua": 0.0,
+   "acai": 1.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 606,
+  "ms": 438
+ },
+ {
+  "set": "gabarito",
+  "nome": "Copo/Tigela Kg",
+  "modo": "peso",
+  "esperado": "acai",
+  "variant": "C2r",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "custom": 0.0,
+   "adicional": 0.0,
+   "granola": 0.0,
+   "refri": 0.0,
+   "agua": 0.0,
+   "acai": 1.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 600,
+  "ms": 376
+ },
+ {
+  "set": "inventado",
+  "nome": "Guaraná Antarctica lata 350ml",
+  "modo": "embalado",
+  "esperado": "refri",
+  "variant": "C2r",
+  "choice": "refri",
+  "confidence": 0.95,
+  "probabilities": {
+   "custom": 0.04,
+   "adicional": 0.0,
+   "granola": 0.0,
+   "refri": 0.96,
+   "agua": 0.0,
+   "acai": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 601,
+  "ms": 385
+ },
+ {
+  "set": "inventado",
+  "nome": "Fanta Laranja 2L",
+  "modo": "embalado",
+  "esperado": "refri",
+  "variant": "C2r",
+  "choice": "refri",
+  "confidence": 0.99,
+  "probabilities": {
+   "custom": 0.01,
+   "adicional": 0.0,
+   "granola": 0.0,
+   "refri": 0.99,
+   "agua": 0.0,
+   "acai": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 599,
+  "ms": 375
+ },
+ {
+  "set": "inventado",
+  "nome": "Sprite lata",
+  "modo": "embalado",
+  "esperado": "refri",
+  "variant": "C2r",
+  "choice": "refri",
+  "confidence": 1.0,
+  "probabilities": {
+   "custom": 0.0,
+   "adicional": 0.0,
+   "granola": 0.0,
+   "refri": 1.0,
+   "agua": 0.0,
+   "acai": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 593,
+  "ms": 427
+ },
+ {
+  "set": "inventado",
+  "nome": "Coca-Cola 600ml",
+  "modo": "embalado",
+  "esperado": "refri",
+  "variant": "C2r",
+  "choice": "refri",
+  "confidence": 1.0,
+  "probabilities": {
+   "custom": 0.0,
+   "adicional": 0.0,
+   "granola": 0.0,
+   "refri": 1.0,
+   "agua": 0.0,
+   "acai": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 599,
+  "ms": 338
+ },
+ {
+  "set": "inventado",
+  "nome": "Água mineral 500ml",
+  "modo": "embalado",
+  "esperado": "agua",
+  "variant": "C2r",
+  "choice": "agua",
+  "confidence": 1.0,
+  "probabilities": {
+   "custom": 0.0,
+   "adicional": 0.0,
+   "granola": 0.0,
+   "refri": 0.0,
+   "agua": 1.0,
+   "acai": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 599,
+  "ms": 377
+ },
+ {
+  "set": "inventado",
+  "nome": "Água com gás 1,5L",
+  "modo": "embalado",
+  "esperado": "agua",
+  "variant": "C2r",
+  "choice": "agua",
+  "confidence": 1.0,
+  "probabilities": {
+   "custom": 0.0,
+   "adicional": 0.0,
+   "granola": 0.0,
+   "refri": 0.0,
+   "agua": 1.0,
+   "acai": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 600,
+  "ms": 410
+ },
+ {
+  "set": "inventado",
+  "nome": "Creme de cupuaçu 5L",
+  "modo": "embalado",
+  "esperado": "acai",
+  "variant": "C2r",
+  "choice": "acai",
+  "confidence": 0.98,
+  "probabilities": {
+   "custom": 0.02,
+   "adicional": 0.0,
+   "granola": 0.0,
+   "refri": 0.0,
+   "agua": 0.0,
+   "acai": 0.98
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 600,
+  "ms": 333
+ },
+ {
+  "set": "inventado",
+  "nome": "Creme de Ninho 10 Litros",
+  "modo": "embalado",
+  "esperado": "acai",
+  "variant": "C2r",
+  "choice": "acai",
+  "confidence": 0.92,
+  "probabilities": {
+   "custom": 0.01,
+   "adicional": 0.05,
+   "granola": 0.0,
+   "refri": 0.0,
+   "agua": 0.0,
+   "acai": 0.93
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 601,
+  "ms": 481
+ },
+ {
+  "set": "inventado",
+  "nome": "Açaí zero açúcar 1L",
+  "modo": "embalado",
+  "esperado": "acai",
+  "variant": "C2r",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "custom": 0.0,
+   "adicional": 0.0,
+   "granola": 0.0,
+   "refri": 0.0,
+   "agua": 0.0,
+   "acai": 1.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 599,
+  "ms": 343
+ },
+ {
+  "set": "inventado",
+  "nome": "Pote de 250ml",
+  "modo": "embalado",
+  "esperado": "acai",
+  "variant": "C2r",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "custom": 0.0,
+   "adicional": 0.0,
+   "granola": 0.0,
+   "refri": 0.0,
+   "agua": 0.0,
+   "acai": 1.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 599,
+  "ms": 452
+ },
+ {
+  "set": "inventado",
+  "nome": "Barca de açaí 1kg",
+  "modo": "copo",
+  "esperado": "acai",
+  "variant": "C2r",
+  "choice": "acai",
+  "confidence": 0.99,
+  "probabilities": {
+   "custom": 0.01,
+   "adicional": 0.0,
+   "granola": 0.0,
+   "refri": 0.0,
+   "agua": 0.0,
+   "acai": 0.99
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 605,
+  "ms": 306
+ },
+ {
+  "set": "inventado",
+  "nome": "Tigela de 500ml",
+  "modo": "copo",
+  "esperado": "acai",
+  "variant": "C2r",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "custom": 0.0,
+   "adicional": 0.0,
+   "granola": 0.0,
+   "refri": 0.0,
+   "agua": 0.0,
+   "acai": 1.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 605,
+  "ms": 307
+ },
+ {
+  "set": "inventado",
+  "nome": "Copo da Promoção 300ml",
+  "modo": "copo",
+  "esperado": "acai",
+  "variant": "C2r",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "custom": 0.0,
+   "adicional": 0.0,
+   "granola": 0.0,
+   "refri": 0.0,
+   "agua": 0.0,
+   "acai": 1.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 607,
+  "ms": 294
+ },
+ {
+  "set": "inventado",
+  "nome": "Self-service Creme de Morango",
+  "modo": "peso",
+  "esperado": "acai",
+  "variant": "C2r",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "custom": 0.0,
+   "adicional": 0.0,
+   "granola": 0.0,
+   "refri": 0.0,
+   "agua": 0.0,
+   "acai": 1.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 600,
+  "ms": 329
+ },
+ {
+  "set": "inventado",
+  "nome": "Picolé de açaí",
+  "modo": "embalado",
+  "esperado": "acai",
+  "variant": "C2r",
+  "choice": "acai",
+  "confidence": 1.0,
+  "probabilities": {
+   "custom": 0.0,
+   "adicional": 0.0,
+   "granola": 0.0,
+   "refri": 0.0,
+   "agua": 0.0,
+   "acai": 1.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 598,
+  "ms": 464
+ },
+ {
+  "set": "inventado",
+  "nome": "Granola tradicional 500g",
+  "modo": "embalado",
+  "esperado": "granola",
+  "variant": "C2r",
+  "choice": "granola",
+  "confidence": 1.0,
+  "probabilities": {
+   "custom": 0.0,
+   "adicional": 0.0,
+   "granola": 1.0,
+   "refri": 0.0,
+   "agua": 0.0,
+   "acai": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 599,
+  "ms": 427
+ },
+ {
+  "set": "inventado",
+  "nome": "Granola sem açúcar 800g",
+  "modo": "embalado",
+  "esperado": "granola",
+  "variant": "C2r",
+  "choice": "granola",
+  "confidence": 1.0,
+  "probabilities": {
+   "custom": 0.0,
+   "adicional": 0.0,
+   "granola": 1.0,
+   "refri": 0.0,
+   "agua": 0.0,
+   "acai": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 600,
+  "ms": 493
+ },
+ {
+  "set": "inventado",
+  "nome": "Paçoca",
+  "modo": "embalado",
+  "esperado": "adicional",
+  "variant": "C2r",
+  "choice": "adicional",
+  "confidence": 0.83,
+  "probabilities": {
+   "custom": 0.14,
+   "adicional": 0.86,
+   "granola": 0.0,
+   "refri": 0.0,
+   "agua": 0.0,
+   "acai": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 594,
+  "ms": 433
+ },
+ {
+  "set": "inventado",
+  "nome": "Leite condensado bisnaga",
+  "modo": "embalado",
+  "esperado": "adicional",
+  "variant": "C2r",
+  "choice": "adicional",
+  "confidence": 0.98,
+  "probabilities": {
+   "custom": 0.02,
+   "adicional": 0.98,
+   "granola": 0.0,
+   "refri": 0.0,
+   "agua": 0.0,
+   "acai": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 599,
+  "ms": 320
+ },
+ {
+  "set": "inventado",
+  "nome": "Morango picado porção",
+  "modo": "embalado",
+  "esperado": "adicional",
+  "variant": "C2r",
+  "choice": "adicional",
+  "confidence": 0.76,
+  "probabilities": {
+   "custom": 0.09,
+   "adicional": 0.8,
+   "granola": 0.0,
+   "refri": 0.0,
+   "agua": 0.0,
+   "acai": 0.11
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 598,
+  "ms": 444
+ },
+ {
+  "set": "inventado",
+  "nome": "Nutella porção 30g",
+  "modo": "embalado",
+  "esperado": "adicional",
+  "variant": "C2r",
+  "choice": "adicional",
+  "confidence": 0.9,
+  "probabilities": {
+   "custom": 0.08,
+   "adicional": 0.92,
+   "granola": 0.0,
+   "refri": 0.0,
+   "agua": 0.0,
+   "acai": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 600,
+  "ms": 301
+ },
+ {
+  "set": "inventado",
+  "nome": "Leite em pó 200g",
+  "modo": "embalado",
+  "esperado": "adicional",
+  "variant": "C2r",
+  "choice": "adicional",
+  "confidence": 0.96,
+  "probabilities": {
+   "custom": 0.03,
+   "adicional": 0.97,
+   "granola": 0.0,
+   "refri": 0.0,
+   "agua": 0.0,
+   "acai": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 600,
+  "ms": 356
+ },
+ {
+  "set": "inventado",
+  "nome": "Água de coco 1L",
+  "modo": "embalado",
+  "esperado": "custom",
+  "variant": "C2r",
+  "choice": "agua",
+  "confidence": 0.47,
+  "probabilities": {
+   "custom": 0.44,
+   "adicional": 0.0,
+   "granola": 0.0,
+   "refri": 0.0,
+   "agua": 0.56,
+   "acai": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 598,
+  "ms": 308
+ },
+ {
+  "set": "inventado",
+  "nome": "Suco de laranja 300ml",
+  "modo": "embalado",
+  "esperado": "custom",
+  "variant": "C2r",
+  "choice": "custom",
+  "confidence": 0.98,
+  "probabilities": {
+   "custom": 0.98,
+   "adicional": 0.0,
+   "granola": 0.0,
+   "refri": 0.01,
+   "agua": 0.01,
+   "acai": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 602,
+  "ms": 439
+ },
+ {
+  "set": "inventado",
+  "nome": "Energético lata 250ml",
+  "modo": "embalado",
+  "esperado": "custom",
+  "variant": "C2r",
+  "choice": "custom",
+  "confidence": 0.84,
+  "probabilities": {
+   "custom": 0.87,
+   "adicional": 0.0,
+   "granola": 0.0,
+   "refri": 0.13,
+   "agua": 0.0,
+   "acai": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 601,
+  "ms": 458
+ },
+ {
+  "set": "inventado",
+  "nome": "Cerveja lata 350ml",
+  "modo": "embalado",
+  "esperado": "custom",
+  "variant": "C2r",
+  "choice": "custom",
+  "confidence": 0.94,
+  "probabilities": {
+   "custom": 0.95,
+   "adicional": 0.0,
+   "granola": 0.0,
+   "refri": 0.05,
+   "agua": 0.0,
+   "acai": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 600,
+  "ms": 471
+ },
+ {
+  "set": "inventado",
+  "nome": "Colher descartável (pacote)",
+  "modo": "embalado",
+  "esperado": "custom",
+  "variant": "C2r",
+  "choice": "custom",
+  "confidence": 0.94,
+  "probabilities": {
+   "custom": 0.95,
+   "adicional": 0.05,
+   "granola": 0.0,
+   "refri": 0.0,
+   "agua": 0.0,
+   "acai": 0.0
+  },
+  "model": "jev-1.14.0",
+  "input_tokens": 601,
+  "ms": 402
+ }
+]
