@@ -48,3 +48,17 @@ continua melhor (de graça). Quando e como usar: `.claude/skills/dupuro-jev/SKIL
 Choice entre os rótulos devolvidos pelo Pelias + `nenhum`. Teste sintético com endereços
 de Cuiabá: 4/4, incluindo 3 em que o 1º candidato do Pelias era o errado (outra rua
 parecida, mesmo número em outro bairro, nº 1600 vs 16) e 1 em que nenhum servia.
+
+## 5. Imagens e Box (`exp4_imagens.py`, 2026-10-23 — experimental, "dreamer-ready")
+
+Header `TypeSafe-Danger-Zone-Images: true`; imagem em `assets` (ref UUID) e citada no
+`state`; Box só no `jev-1.14.0`. Fotos do próprio site, 1024 px (768 na orientação):
+
+| Teste | Resultado | Observação |
+|---|---|---|
+| Sabor do creme pela foto (Choice, 7 opções) | 5/6 | errou cupuaçu → maracujá com conf. 0,99 (confiança alta não garante acerto em imagem) |
+| Orientação (Choice, 4 fotos × 4 rotações) | 12/16 | as 4 falhas com conf. ≤ 0,39 (3 numa foto de paisagem sem pessoas) — usar o limiar resolve |
+| Box da caixa + Noul "tem caixa?" | caixa na mão: box certa (conf. 0,70); 2 fotos sem caixa: presença 0,03 e 0,50, box conf. 0,03 e 0,29 | a Box sempre devolve uma caixa — a Noul de presença é obrigatória |
+
+Custo: ~1,5k tokens por foto de 768 px, ~2,2–2,6k a 1024 px (US$ 0,0001 por pergunta).
+`tools/jev` aceita `--imagem` em yes/pick/score e tem `box ... --recorte`.
