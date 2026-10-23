@@ -553,3 +553,12 @@ body.dl-travado { overflow: hidden; }
 .dl-tam.top::after { content: none; }
 /* botão secundário legível no fundo creme */
 .dl-acomp-vazio .dl-btn-line { background: #fff; color: var(--roxo-700); border-color: rgba(96,16,80,.25); }
+/* botão verde com texto escuro (branco no verde dava 2,2:1) */
+.dl-btn-verde { color: var(--roxo-950); }
+/* foco visível no sabor escolhido e nos campos */
+.dl-sab button.on:focus-visible { outline: 3px solid var(--roxo-950); outline-offset: 2px; }
+.dl-input input:focus-visible, .dl-input select:focus-visible { outline: 2px solid var(--roxo-700); outline-offset: 1px; }
+/* nada abaixo de 12px */
+.dl-float, .dl-float small, #barSacola em { font-size: 12px; }
+/* botão claro dentro de cartão branco (o "Calcular de novo" ficava branco no branco) */
+.dl-card .dl-btn-line { background: #fff; color: var(--roxo-700); border-color: rgba(96,16,80,.25); }
