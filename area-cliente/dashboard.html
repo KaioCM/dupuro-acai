@@ -363,7 +363,7 @@
 <script src="../assets/js/graficos.js?v=1"></script>
 <script src="../assets/js/supabase-config.js"></script>
 <script src="../assets/js/supabase-client.js"></script>
-<script src="../assets/js/app-ui.js?v=2"></script>
+<script src="../assets/js/app-ui.js?v=3"></script>
 <script src="../assets/js/cliente.js?v=4"></script>
 <script>
   // Escapa texto antes de ir pro innerHTML (dado de revendedor/cliente nunca vira HTML).
@@ -779,8 +779,8 @@
     }
     // Revendedor compra no ATACADO: ele vem primeiro. O varejo (preço de consumidor
     // final) fica recolhido embaixo, pra quem quiser um item que só existe nele.
-    var atacado = productsCache.filter(function (p) { return p.tipo === 'atacado'; });
-    var varejo = productsCache.filter(function (p) { return (p.tipo || 'varejo') === 'varejo'; });
+    var atacado = productsCache.filter(function (p) { return p.tipo === 'atacado'; }).sort(DupuroUI.ordemVitrine);
+    var varejo = productsCache.filter(function (p) { return (p.tipo || 'varejo') === 'varejo'; }).sort(DupuroUI.ordemVitrine);
     var html = '';
     if (atacado.length) {
       html += '<h2 class="shop-section-title">Atacado: seus preços de revenda</h2>' +

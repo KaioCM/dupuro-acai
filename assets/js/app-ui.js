@@ -43,6 +43,18 @@ var DupuroUI = (function () {
       (url.indexOf('?') === -1 ? '?' : '&') + 'width=' + lado + '&height=' + lado + '&resize=contain&quality=75';
   }
 
-  return { countUp: countUp, brl: brl, miniatura: miniatura };
+  // Ordem da vitrine (pedido do Kayo): do menor pro maior — açaí/cremes por litragem
+  // (500 ml, 1 L, 2 L, 5 L, 10 L); o que não tem litragem (água, refri, granola)
+  // vem depois, do mais barato pro mais caro. Copo segue o preço; self-service no fim.
+  function ordemVitrine(a, b) {
+    var pa = a.modo === 'peso' ? 1 : 0, pb = b.modo === 'peso' ? 1 : 0;
+    if (pa !== pb) return pa - pb;
+    var la = Number(a.litros) || 0, lb = Number(b.litros) || 0;
+    if ((la > 0) !== (lb > 0)) return la > 0 ? -1 : 1;
+    if (la !== lb) return la - lb;
+    return (Number(a.preco) || 0) - (Number(b.preco) || 0) || String(a.nome).localeCompare(String(b.nome), 'pt-BR');
+  }
+
+  return { countUp: countUp, brl: brl, miniatura: miniatura, ordemVitrine: ordemVitrine };
 
 })();

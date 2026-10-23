@@ -535,9 +535,9 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.min.js"></script>
 <script src="../assets/js/supabase-config.js"></script>
 <script src="../assets/js/supabase-client.js"></script>
-<script src="../assets/js/app-ui.js?v=2"></script>
+<script src="../assets/js/app-ui.js?v=3"></script>
 <script src="../assets/js/offline-queue.js"></script>
-<script src="../assets/js/caixa.js?v=2"></script>
+<script src="../assets/js/caixa.js?v=3"></script>
 <script src="../assets/js/vendor/qrcode.js"></script>
 <script src="../assets/js/printer.js?v=2"></script>
 <script>
@@ -724,7 +724,7 @@
       shopCatalog.innerHTML = '<div class="panel"><div class="empty-state">Nenhum produto cadastrado.</div></div>';
       return;
     }
-    var loja = productsCache.filter(function (p) { return p.modo !== 'embalado'; });
+    var loja = productsCache.filter(function (p) { return p.modo !== 'embalado'; }).sort(DupuroUI.ordemVitrine);
     var html = '';
     if (loja.length) {
       html += '<div class="shop-section-title">Copo e self-service</div>' +
@@ -733,9 +733,9 @@
     // Atacado só aparece quando a venda é pra revendedor (decisão do Kayo): no
     // balcão não dá pra vender caixa com preço de atacado por engano.
     html += ['varejo'].concat(saleTarget === 'revendedor' ? ['atacado'] : []).map(function (tipo) {
-      var group = productsCache.filter(function (p) { return p.modo === 'embalado' && (p.tipo || 'varejo') === tipo; });
+      var group = productsCache.filter(function (p) { return p.modo === 'embalado' && (p.tipo || 'varejo') === tipo; }).sort(DupuroUI.ordemVitrine);
       if (!group.length) return '';
-      return '<div class="shop-section-title">' + (tipo === 'varejo' ? '' : '') + ' ' + TIPO_LABELS[tipo] + '</div>' +
+      return '<div class="shop-section-title">' + TIPO_LABELS[tipo] + '</div>' +
         '<div class="shop-grid">' + group.map(shopCardHtml).join('') + '</div>';
     }).join('');
     shopCatalog.innerHTML = html;
@@ -2597,9 +2597,9 @@
     if (!productsCache.length) { box.innerHTML = '<div class="empty-state">Nenhum produto.</div>'; return; }
     // Copo/self-service não entram: não têm estoque por unidade.
     box.innerHTML = ['varejo', 'atacado'].map(function (tipo) {
-      var group = productsCache.filter(function (p) { return p.modo === 'embalado' && (p.tipo || 'varejo') === tipo; });
+      var group = productsCache.filter(function (p) { return p.modo === 'embalado' && (p.tipo || 'varejo') === tipo; }).sort(DupuroUI.ordemVitrine);
       if (!group.length) return '';
-      return '<div class="shop-section-title">' + (tipo === 'varejo' ? '' : '') + ' ' + TIPO_LABELS[tipo] + '</div>' +
+      return '<div class="shop-section-title">' + TIPO_LABELS[tipo] + '</div>' +
         '<div class="estoque-group">' + group.map(function (p) {
           if (p.multissabor) {
             var sab = (p.sabores || []).slice().sort(function (a, b) { return a.estoque - b.estoque; });

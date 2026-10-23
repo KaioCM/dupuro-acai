@@ -43,7 +43,7 @@ var DupuroCaixa = (function () {
     }
     var result = await client
       .from('products')
-      .select('id, nome, preco, imagem_url, tipo, multissabor, multissabor_incluir_acai, estoque, estoque_ref, estoque_ref_sabor, modo, acomp_gratis, acomp_extra_preco, product_flavor_stock(sabor, estoque)')
+      .select('id, nome, preco, imagem_url, tipo, multissabor, multissabor_incluir_acai, estoque, estoque_ref, estoque_ref_sabor, modo, litros, acomp_gratis, acomp_extra_preco, product_flavor_stock(sabor, estoque)')
       .order('nome', { ascending: true });
     if (result.error) {
       if (window.DupuroOffline) { var c = await DupuroOffline.lerCache('produtos'); if (c) return c; }
@@ -59,7 +59,7 @@ var DupuroCaixa = (function () {
       if (modo !== 'embalado') {
         return {
           id: p.id, nome: p.nome, preco: Number(p.preco), imagemUrl: p.imagem_url,
-          tipo: p.tipo || 'varejo', modo: modo,
+          tipo: p.tipo || 'varejo', modo: modo, litros: Number(p.litros) || 0,
           multissabor: false, multissaborIncluirAcai: true,
           sabores: [], estoqueTotal: null, compartilhado: false,
           acompGratis: Number(p.acomp_gratis) || 0,
@@ -89,7 +89,7 @@ var DupuroCaixa = (function () {
 
       return {
         id: p.id, nome: p.nome, preco: Number(p.preco), imagemUrl: p.imagem_url,
-        tipo: p.tipo || 'varejo', modo: modo, multissabor: multissabor,
+        tipo: p.tipo || 'varejo', modo: modo, multissabor: multissabor, litros: Number(p.litros) || 0,
         multissaborIncluirAcai: incluiAcai,
         sabores: sabores, estoqueTotal: estoqueTotal,
         compartilhado: shared,
