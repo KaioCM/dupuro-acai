@@ -12,6 +12,9 @@
 // Só sugere: o admin confere e salva. Só admin chama (cada chamada custa).
 // A chave fica no secret TYPESAFE_API_KEY, nunca no navegador.
 // Entrada: { nome, modo }  ·  Saída: { perfil, confianca, probabilidades, modelo }
+// Lote (auditoria do catálogo, botão "Conferir classificação fiscal" no admin):
+// { itens: [{ id, nome, modo }] } (até 200)  ·  Saída: { itens: [{ id, perfil, confianca }] }
+// — o admin compara com os códigos salvos e lista só as divergências.
 
 import { createClient } from 'jsr:@supabase/supabase-js@2'
 
@@ -42,6 +45,37 @@ const CRITERIA = {
   custom: 'Anything that is not one of the options above; the tax codes must be entered by hand.',
 }
 
+async function perguntar(key: string, nome: string, modo: string) {
+  const ctrl = new AbortController()
+  const timer = setTimeout(() => ctrl.abort(), 8000)
+  let r: Response
+  try {
+    r = await fetch('https://api.typesafe.ai/v1/systemone', {
+      method: 'POST',
+      signal: ctrl.signal,
+      headers: { Authorization: 'Bearer ' + key, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'jev-latest',
+        state: { shop: SHOP, product_name: nome, sale_mode: MODO[modo] },
+        questions: {
+          perfil: {
+            type: 'choice',
+            instructions: 'Which tax profile (Brazilian NFC-e) fits the product in `product_name`?',
+            criteria: CRITERIA,
+          },
+        },
+      }),
+    })
+  } finally {
+    clearTimeout(timer)
+  }
+  if (!r.ok) throw new Error('TypeSafe ' + r.status)
+  const j = await r.json()
+  const a = j?.answers?.perfil
+  if (!a || !(a.choice in CRITERIA)) throw new Error('Resposta inesperada')
+  return { ...a, modelo: j.model }
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })
   if (req.method !== 'POST') return json({ error: 'Use POST' }, 405)
@@ -54,43 +88,38 @@ Deno.serve(async (req: Request) => {
     const { data: perfil } = u?.user ? await sb.from('profiles').select('role').eq('id', u.user.id).single() : { data: null }
     if (perfil?.role !== 'admin') return json({ error: 'Só o administrador.' }, 403)
 
+    const key = Deno.env.get('TYPESAFE_API_KEY')
+    if (!key) return json({ error: 'TYPESAFE_API_KEY não configurada' }, 500)
+
     const body = await req.json().catch(() => ({}))
+    const valido = (nome: unknown, modo: unknown) =>
+      typeof nome === 'string' && nome.trim() && nome.trim().length <= 120 && typeof modo === 'string' && !!MODO[modo]
+
+    if (Array.isArray(body.itens)) {
+      const itens = body.itens.slice(0, 200).filter((i: any) => i && valido(i.nome, i.modo))
+      const out: unknown[] = []
+      // 8 por vez: ~0,5 s cada, o catálogo inteiro sai em poucos segundos.
+      for (let i = 0; i < itens.length; i += 8) {
+        const lote = await Promise.all(itens.slice(i, i + 8).map(async (it: any) => {
+          try {
+            const a = await perguntar(key, it.nome.trim(), it.modo)
+            return { id: it.id, perfil: a.choice, confianca: a.confidence }
+          } catch (_e) {
+            return { id: it.id, erro: true }
+          }
+        }))
+        out.push(...lote)
+      }
+      return json({ itens: out })
+    }
+
     const nome = typeof body.nome === 'string' ? body.nome.trim() : ''
     const modo = typeof body.modo === 'string' ? body.modo : ''
     if (!nome || nome.length > 120) return json({ error: 'Nome inválido' }, 400)
     if (!MODO[modo]) return json({ error: 'Modo inválido' }, 400)
 
-    const key = Deno.env.get('TYPESAFE_API_KEY')
-    if (!key) return json({ error: 'TYPESAFE_API_KEY não configurada' }, 500)
-
-    const ctrl = new AbortController()
-    const timer = setTimeout(() => ctrl.abort(), 8000)
-    let r: Response
-    try {
-      r = await fetch('https://api.typesafe.ai/v1/systemone', {
-        method: 'POST',
-        signal: ctrl.signal,
-        headers: { Authorization: 'Bearer ' + key, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'jev-latest',
-          state: { shop: SHOP, product_name: nome, sale_mode: MODO[modo] },
-          questions: {
-            perfil: {
-              type: 'choice',
-              instructions: 'Which tax profile (Brazilian NFC-e) fits the product in `product_name`?',
-              criteria: CRITERIA,
-            },
-          },
-        }),
-      })
-    } finally {
-      clearTimeout(timer)
-    }
-    if (!r.ok) return json({ error: 'TypeSafe ' + r.status }, 502)
-    const j = await r.json()
-    const a = j?.answers?.perfil
-    if (!a || !(a.choice in CRITERIA)) return json({ error: 'Resposta inesperada' }, 502)
-    return json({ perfil: a.choice, confianca: a.confidence, probabilidades: a.probabilities, modelo: j.model })
+    const a = await perguntar(key, nome, modo)
+    return json({ perfil: a.choice, confianca: a.confidence, probabilidades: a.probabilities, modelo: a.modelo })
   } catch (e) {
     return json({ error: String(e) }, 500)
   }

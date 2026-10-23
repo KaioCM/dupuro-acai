@@ -1,0 +1,5 @@
+# Avisos no WhatsApp
+
+Parte do contexto do projeto (índice e regras gerais no `CLAUDE.md` da raiz).
+
+- **Avisos no WhatsApp (migration_046, 2026-10-22):** fila `whatsapp_envios` (ref única = não duplica) alimentada por triggers: cadastro novo/aprovado (`profiles`), pedido de revenda recebido/confirmado/entregue (`orders`, triggers por *statement* — o total vem da tabela), delivery pago/saiu/entregue (`delivery_pedidos`), e aviso interno pro número em `whatsapp_config` (só admin; é o celular pessoal do Kayo, NÃO a Dilene). `pg_cron` chama a Edge Function `whatsapp-enviar` (verify_jwt false; de fora só dispara a fila) a cada minuto quando há pendência; avisos de status esperam 60 s e são descartados se o status mudou ("Desfazer"). Envia **modelos** aprovados pela Meta (8, definidos na função; o admin cria pelo botão em Minha conta). Secrets: `WA_TOKEN`, `WA_PHONE_ID`, `WA_WABA_ID`. Aceite: `profiles.aceita_whatsapp` (caixinha no cadastro e no Perfil) e `delivery_pedidos.aceita_whatsapp` (checkout). Começa no **número de teste da Meta**; o número definitivo (chip novo ou parceiro com coexistência) é decisão pendente do Kayo.

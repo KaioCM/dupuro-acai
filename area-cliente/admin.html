@@ -494,6 +494,11 @@
       <section class="fila-secao" aria-labelledby="tituloCatalogo">
         <h2 id="tituloCatalogo">Catálogo</h2>
         <p class="subtitle">Tudo o que o caixa, o revendedor e o delivery podem vender.</p>
+        <div class="fiscal-auditoria">
+          <button type="button" class="btn btn-dark-outline btn-sm" id="fiscalAuditarBtn">Conferir classificação fiscal</button>
+          <span class="fiscal-auditoria-nota" id="fiscalAuditarStatus">Compara os códigos salvos com o que o nome de cada produto sugere. Só aponta; quem decide é você com o contador.</span>
+          <ul class="ajustes-lista hidden" id="fiscalAuditarLista"></ul>
+        </div>
         <div class="admin-products-grid" id="productsGrid"></div>
       </section>
       </div>
@@ -2271,6 +2276,56 @@
     }
     el.classList.remove('hidden');
   }
+  // Auditoria do catálogo (Jev, mesma Edge Function em lote): lista os produtos cujo
+  // perfil salvo diverge do que o nome sugere. Confiança ≥ 0,8 = "confira";
+  // abaixo disso vai pra "na dúvida". Nunca altera nada sozinha.
+  async function conferirFiscal() {
+    var btn = document.getElementById('fiscalAuditarBtn');
+    var status = document.getElementById('fiscalAuditarStatus');
+    var lista = document.getElementById('fiscalAuditarLista');
+    var produtos = productCards().map(function (c) { return c.main; });
+    if (!produtos.length) return;
+    btn.disabled = true;
+    status.textContent = 'Conferindo ' + produtos.length + ' produtos…';
+    lista.classList.add('hidden');
+    var r = await DupuroAdmin.auditarFiscal(produtos.map(function (p) { return { id: p.id, nome: p.nome, modo: p.modo }; }));
+    btn.disabled = false;
+    if (r.error || !r.itens) { status.textContent = 'Não deu pra conferir agora (' + (r.error || 'sem resposta') + '). Tente de novo.'; return; }
+    var rotulo = function (id) { var f = FISCAL_PERFIS.filter(function (x) { return x.id === id; })[0]; return f ? f.label : 'Personalizado'; };
+    var porId = {};
+    produtos.forEach(function (p) { porId[p.id] = p; });
+    var certas = [], duvidas = [], falhas = 0;
+    r.itens.forEach(function (it) {
+      var p = porId[it.id];
+      if (!p) return;
+      if (it.erro) { falhas++; return; }
+      var atual = fiscalPerfilPorCodigos(p.ncm, p.csosn, p.cfop);
+      if (it.perfil === atual) return;
+      (it.confianca >= 0.8 ? certas : duvidas).push({ p: p, atual: atual, sug: it.perfil, conf: it.confianca });
+    });
+    var linha = function (d) {
+      return '<li><span>' + Math.round(d.conf * 100) + '%</span>' +
+        '<span>' + esc(d.p.nome) + '</span>' +
+        '<button type="button" class="btn btn-dark-outline btn-sm" data-fiscal-abrir="' + d.p.id + '">Abrir</button>' +
+        '<span class="ajuste-motivo">Salvo: ' + esc(rotulo(d.atual)) + (d.p.ncm ? ' (NCM ' + esc(d.p.ncm) + ')' : '') +
+        ' · o nome sugere: <strong>' + esc(rotulo(d.sug)) + '</strong></span></li>';
+    };
+    var html = certas.map(linha).join('');
+    if (duvidas.length) html += '<li class="ajuste-vazio"><strong>Na dúvida</strong> — o nome não deixa claro; confirme com o contador:</li>' + duvidas.map(linha).join('');
+    status.textContent = (certas.length || duvidas.length)
+      ? produtos.length + ' produtos conferidos: ' + certas.length + ' pra conferir' + (duvidas.length ? ', ' + duvidas.length + ' na dúvida' : '') + '.'
+      : 'Os ' + produtos.length + ' produtos batem com o que o nome sugere.';
+    if (falhas) status.textContent += ' ' + falhas + ' não puderam ser conferidos.';
+    lista.innerHTML = html;
+    lista.classList.toggle('hidden', !html);
+  }
+  document.getElementById('fiscalAuditarBtn').addEventListener('click', conferirFiscal);
+  document.getElementById('fiscalAuditarLista').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-fiscal-abrir]');
+    if (!b) return;
+    var ed = document.querySelector('#productsGrid [data-edit-product="' + b.getAttribute('data-fiscal-abrir') + '"]');
+    if (ed) ed.click();
+  });
   initFiscalSelect();
   document.getElementById('productFiscalPerfil').addEventListener('change', function () {
     fiscalEscolhidoAMao = true;

@@ -34,3 +34,17 @@ em `exp2_motivos.py`). Reais: 13/13, mas são só 4 textos ("teste" ×10, teste 
 conf. 0,49 — cairia em revisão). Conclusão: hoje não vale — com 77% "teste" não há o que
 agrupar; melhor um seletor de categoria no modal de cancelar do caixa (texto livre como
 complemento) e o Jev, se um dia, só pro texto livre antigo.
+
+## 3. Filtrar trechos antes de ler (`exp3_trechos.py`, virou `tools/jev trechos`)
+
+`admin.html` (4.336 linhas, ~65k tokens) em 44 blocos de 100 linhas; 5 perguntas de
+comportamento, sem a palavra-chave do código ("deixa o admin liberar compra a prazo?").
+O bloco certo ficou em **1º em 4/5 e em 2º na outra**; em 3/5 foi o único com P ≥ 0,5.
+Custo: 92k tokens do Jev = **US$ 0,004**, 2,7 s. Quando se sabe o nome da função, `grep`
+continua melhor (de graça). Quando e como usar: `.claude/skills/dupuro-jev/SKILL.md`.
+
+## 4. Candidato de endereço no delivery (virou parte da `delivery-cotacao` v11)
+
+Choice entre os rótulos devolvidos pelo Pelias + `nenhum`. Teste sintético com endereços
+de Cuiabá: 4/4, incluindo 3 em que o 1º candidato do Pelias era o errado (outra rua
+parecida, mesmo número em outro bairro, nº 1600 vs 16) e 1 em que nenhum servia.
