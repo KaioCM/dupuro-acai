@@ -96,6 +96,18 @@ var DupuroAdmin = (function () {
     }
     return r.data || {};
   }
+  // ---------- Sugestão de classificação fiscal (Edge Function sugerir-fiscal, Jev) ----------
+  // Devolve { perfil, confianca } — perfil é um id de FISCAL_PERFIS ou 'custom'.
+  async function sugerirFiscal(nome, modo) {
+    try {
+      var r = await client.functions.invoke('sugerir-fiscal', { body: { nome: nome, modo: modo } });
+      if (r.error) return { error: r.error.message };
+      return r.data || {};
+    } catch (e) {
+      return { error: String(e) };
+    }
+  }
+
   async function getWhatsappConfig() {
     var r = await client.from('whatsapp_config').select('aviso_interno, ativo').eq('id', 1).maybeSingle();
     return r.data;
@@ -975,6 +987,7 @@ var DupuroAdmin = (function () {
     updateReseller: updateReseller,
     setPodePrazo: setPodePrazo,
     whatsappAcao: whatsappAcao,
+    sugerirFiscal: sugerirFiscal,
     getWhatsappConfig: getWhatsappConfig,
     getWhatsappEnvios: getWhatsappEnvios,
     setWhatsappConfig: setWhatsappConfig,
