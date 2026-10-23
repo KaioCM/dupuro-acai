@@ -60,7 +60,9 @@ var DupuroDelivery = (function () {
       ['manha', 'tarde'].forEach(function (per) {
         var j = jan[per]; if (!j || out.length >= (quantas || 6)) return;
         if (d === 0 && minAgora >= hhmmMin(j.corte)) return; // passou do corte de hoje
-        var quando = d === 0 ? 'Hoje' : (d === 1 ? 'Amanhã' : NOMES_DIA[dia.getUTCDay()] + ' ' + String(dia.getUTCDate()).padStart(2, '0') + '/' + String(dia.getUTCMonth() + 1).padStart(2, '0'));
+        var dataTxt = String(dia.getUTCDate()).padStart(2, '0') + '/' + String(dia.getUTCMonth() + 1).padStart(2, '0');
+        // "Amanhã" com a data (antes não dizia o dia)
+        var quando = d === 0 ? 'Hoje' : (d === 1 ? 'Amanhã, ' + NOMES_DIA[dia.getUTCDay()].slice(0, 3).toLowerCase() + ' ' + dataTxt : NOMES_DIA[dia.getUTCDay()] + ' ' + dataTxt);
         out.push({
           data: isoData(dia), periodo: per,
           titulo: quando + ' · ' + (per === 'manha' ? 'Manhã' : 'Tarde'),
@@ -94,6 +96,13 @@ var DupuroDelivery = (function () {
     if (p.multissabor) return '../assets/img/delivery/caixa-na-mao.jpg';
     return null;
   }
+  // Foto do Storage no tamanho em que aparece (as originais têm 1,5-2 MB).
+  function miniatura(url, px) {
+    if (!url || url.indexOf('/storage/v1/object/public/') === -1) return url;
+    var lado = Math.round((px || 160) * 2);
+    return url.replace('/storage/v1/object/public/', '/storage/v1/render/image/public/') +
+      (url.indexOf('?') === -1 ? '?' : '&') + 'width=' + lado + '&height=' + lado + '&resize=contain&quality=75';
+  }
   function litrosTxt(p) { var l = Number(p.litros) || 0; return l ? (String(l).replace('.', ',') + ' L') : ''; }
 
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
@@ -101,6 +110,6 @@ var DupuroDelivery = (function () {
   return {
     brl: brl, esc: esc, getConfig: getConfig, getCatalogo: getCatalogo, getRastreio: getRastreio,
     fn: fn, janelasDisponiveis: janelasDisponiveis,
-    corSabor: corSabor, nomeSabor: nomeSabor, idealPra: idealPra, litrosTxt: litrosTxt, fotoProduto: fotoProduto
+    corSabor: corSabor, nomeSabor: nomeSabor, idealPra: idealPra, litrosTxt: litrosTxt, fotoProduto: fotoProduto, miniatura: miniatura
   };
 })();

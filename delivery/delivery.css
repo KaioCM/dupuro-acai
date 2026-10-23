@@ -393,7 +393,7 @@ body.dl-travado { overflow: hidden; }
 .dl-steps .ok span::after { content: " ✓"; color: var(--gold); }
 .dl-etapa { animation: dlEntra .28s ease; }
 .dl-etapa[hidden] { display: none; }
-@keyframes dlEntra { from { opacity: 0; transform: translateX(14px); } to { opacity: 1; transform: none; } }
+@keyframes dlEntra { from { transform: translateX(14px); } to { transform: none; } }
 .dl-bloco h2 .dl-alterar { margin-left: auto; border: 0; background: var(--cream-2); color: var(--roxo-700); font: 800 12.5px 'Inter', sans-serif; padding: 7px 12px; border-radius: 10px; cursor: pointer; }
 .dl-rev .ln { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; border-bottom: 1px dashed rgba(96,16,80,.14); font-size: 14.5px; color: var(--roxo-900); }
 .dl-rev .ln:last-child { border-bottom: 0; }
@@ -456,3 +456,88 @@ body.dl-travado { overflow: hidden; }
 /* aceite dos avisos no WhatsApp */
 .dl-aceite { display: flex; align-items: flex-start; gap: 10px; margin-top: 10px; font-size: 14px; color: var(--dl-texto, #33122B); cursor: pointer; }
 .dl-aceite input { flex: none; width: 20px; height: 20px; margin-top: 1px; accent-color: #601050; }
+
+/* =====================================================================
+   Delivery — rodada 1 (critique 27/40, 2026-10-23)
+   ===================================================================== */
+/* Conteúdo nunca depende de animação: o texto da abertura já nasce visível */
+.dl-hero-txt > * { animation: none; }
+.dl-checks b svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+.dl-passo h3 { margin: 2px 0 4px; font: 800 16.5px 'Inter', sans-serif; color: var(--roxo-900); text-transform: none; }
+.dl-tam .ph > svg { width: 44px; height: 44px; fill: none; stroke: #fff; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Foco visível: roxo no claro, dourado no escuro (o dourado no creme dava 1,7:1) */
+.dl-body :focus-visible { outline: 3px solid var(--roxo-700); outline-offset: 2px; }
+.dl-nav :focus-visible, .dl-hero :focus-visible, .dl-app-top :focus-visible, .dl-barra :focus-visible,
+.dl-sabores :focus-visible, .dl-final :focus-visible, .dl-fixa :focus-visible { outline-color: var(--gold); }
+.dl-body ::placeholder { color: var(--text-light); opacity: 1; }
+
+/* Topo do pedido: Voltar com ícone e alvo de toque; passos legíveis */
+.dl-app-top a.vol { display: inline-flex; align-items: center; gap: 4px; min-height: 44px; padding: 0 4px; }
+.dl-app-top a.vol .i { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.dl-steps button { min-height: 40px; }
+.dl-steps span { font-size: 12.5px; }
+
+/* Aviso do frete na tela 1 */
+.dl-frete-aviso { display: flex; align-items: center; gap: 8px; margin: -4px 0 18px; padding: 10px 14px; border-radius: 14px; background: rgba(139,184,49,.14); color: #3f5c0e; font-size: 14px; font-weight: 600; line-height: 1.35; }
+.dl-frete-aviso .i { flex: none; width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Lista compacta: tamanho → sabor */
+.dl-produtos { gap: 10px; }
+.dl-pr { border-radius: 18px; box-shadow: none; }
+.dl-pr-top { width: 100%; grid-template-columns: 64px 1fr auto; gap: 12px; padding: 10px 12px; border: 0; background: none; font: inherit; text-align: left; color: inherit; cursor: pointer; }
+.dl-pr.esgot .dl-pr-top { cursor: default; opacity: .6; }
+.dl-pr-top .ph { width: 64px; height: 64px; border-radius: 14px; font-size: 26px; }
+.dl-pr-top .ph .i { width: 30px; height: 30px; fill: none; stroke: #fff; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.dl-pr-info { min-width: 0; }
+.dl-pr-top .lit { font-size: 12px; margin-bottom: 3px; }
+.dl-pr-top h3 { font-size: 16px; margin-bottom: 2px; }
+.dl-pr-linha { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; }
+.dl-pr-top .pr { font-family: 'Inter', sans-serif; font-weight: 800; font-size: 18px; }
+.dl-pr-sab { font-size: 13px; font-weight: 600; color: var(--text-light); }
+.dl-pr-seta { display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%; background: var(--cream-2); color: var(--roxo-700); transition: transform .2s; }
+.dl-pr-seta .i { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.dl-pr.aberto { border-color: var(--roxo-700); }
+.dl-pr.aberto .dl-pr-seta { transform: rotate(180deg); }
+.dl-pr-bd { padding: 2px 14px 14px; }
+.dl-sab button { min-height: 44px; }
+.dl-sab button.on { box-shadow: none; }
+.dl-sab button .pouco { font-size: 12px; }
+.dl-esg-linha { margin: -4px 0 14px; font-size: 13px; color: var(--text-light); }
+.dl-pr-pra { margin: 0 0 12px; font-size: 14px; color: var(--text-light); }
+.dl-btn .i { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; vertical-align: -3px; }
+.dl-toast .i { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+#barQtd { font-size: 12px; }
+
+/* Erro no lugar certo (bloco e campo) */
+.dl-sec-erro { margin: 0 0 12px; }
+.dl-input.erro input, .dl-input.erro select { border-color: var(--danger); background: #fff; }
+.dl-calculando { display: flex; align-items: center; gap: 10px; }
+.dl-calculando::before { content: ""; flex: none; width: 16px; height: 16px; border-radius: 50%; border: 2.5px solid currentColor; border-right-color: transparent; animation: dlGira .8s linear infinite; }
+@keyframes dlGira { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .dl-calculando::before { animation: none; } }
+.dl-link { border: 0; background: none; padding: 4px 0; font: inherit; font-weight: 800; color: var(--roxo-700); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+#mapaSug .dl-msg { margin-top: 10px; }
+#btnCotar { margin-top: 10px; }
+
+/* Campo travado pelo CEP: cadeado desenhado (era emoji) */
+.dl-input.travado::after { content: ""; width: 15px; height: 15px; opacity: .6;
+  background: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='5' y='10.5' width='14' height='10' rx='2'/%3E%3Cpath d='M8 10.5V7.5a4 4 0 0 1 8 0v3'/%3E%3C/svg%3E") center / contain no-repeat;
+          mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='5' y='10.5' width='14' height='10' rx='2'/%3E%3Cpath d='M8 10.5V7.5a4 4 0 0 1 8 0v3'/%3E%3C/svg%3E") center / contain no-repeat;
+  color: var(--roxo-900); }
+.dl-mapa-btn b .i { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Pagar: o que acontece depois + ajuda */
+.dl-pag-info { margin: 12px 0 0; font-size: 13.5px; line-height: 1.45; color: rgba(255,255,255,.82); }
+.dl-pag-ajuda { margin: 10px 0 0; font-size: 13px; color: rgba(255,255,255,.7); }
+.dl-pag-ajuda a { color: var(--gold-soft); font-weight: 700; }
+
+/* Acompanhar: sempre com explicação e saída */
+.dl-acomp-vazio { padding: 24px 0 8px; display: grid; gap: 12px; }
+.dl-acomp-vazio h1 { margin: 0; font: 800 24px 'Inter', sans-serif; color: var(--roxo-900); text-transform: none; }
+.dl-acomp-vazio p { margin: 0 0 6px; font-size: 15px; line-height: 1.5; color: var(--text-light); }
+.dl-resumo :focus-visible, .dl-gaveta-in .dl-btn-gold:focus-visible { outline-color: var(--gold); }
+.dl-frete-aviso[hidden], #janelasNota[hidden] { display: none; }
+#barBtn[hidden] { display: none; }
+.dl-steps .ok span::after { content: none; }
