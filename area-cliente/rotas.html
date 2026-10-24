@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#601050">
+<title>Rotas — Dupuro Açaí</title>
+<link rel="icon" href="../assets/img/brand/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="../assets/css/style.css?v=68">
+</head>
+<body class="pg-admin pg-rotas">
+<a class="skip-link" href="#rtLista">Pular para a lista de paradas</a>
+
+<header class="rt-topo">
+  <a class="rt-voltar" href="admin.html#pedidos">Admin</a>
+  <h1>Rotas</h1>
+  <span class="rt-gps" id="rtGps" hidden></span>
+</header>
+
+<main class="rt-main">
+  <div class="rt-filtros">
+    <label class="rt-dia"><span>Dia</span><input type="date" id="rtDia"></label>
+    <div class="seg" id="rtPeriodo" role="group" aria-label="Período">
+      <button type="button" class="seg-btn active" data-periodo="manha" aria-pressed="true">Manhã · 8h–12h</button>
+      <button type="button" class="seg-btn" data-periodo="tarde" aria-pressed="false">Tarde · 13h–17h</button>
+    </div>
+  </div>
+
+  <section class="rt-resumo" id="rtResumo" aria-live="polite"><p class="rt-vazio">Carregando…</p></section>
+  <div class="rt-mapa" id="rtMapa" role="region" aria-label="Mapa da rota"></div>
+  <ol class="rt-lista" id="rtLista"></ol>
+</main>
+
+<div class="admin-toast" id="adminToast" role="status" aria-live="polite"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.min.js"></script>
+<script src="../assets/js/supabase-config.js"></script>
+<script src="../assets/js/supabase-client.js"></script>
+<script src="../assets/js/admin.js?v=9"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+// Rotas de entrega (migration_050 + Edge Function `rota`). O admin monta a rota
+// do dia/período (delivery + revenda, ordem otimizada, segunda opinião do Jev);
+// no celular do entregador "Iniciar rota" liga o GPS, que vai pra rota_posicao
+// e aparece pro cliente quando a próxima parada é a dele.
+(async function () {
+  var session = await DupuroAdmin.requireAdmin('login.html');
+  if (!session) return;
+  var client = window.DupuroSupabaseClient;
+  var $ = function (id) { return document.getElementById(id); };
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function brl(v) { return (Number(v) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
+  function hora(iso) { return iso ? new Date(iso).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '—'; }
+  function hojeCuiaba() { return new Date(Date.now() - 4 * 3600e3).toISOString().slice(0, 10); }
+
+  var toastT = null;
+  function toast(msg) { var el = $('adminToast'); el.textContent = msg; el.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(function () { el.classList.remove('show'); }, 4000); }
+
+  var dia = hojeCuiaba(), periodo = new Date(Date.now() - 4 * 3600e3).getUTCHours() >= 12 ? 'tarde' : 'manha';
+  try { var salvo = JSON.parse(sessionStorage.getItem('dupuro-rota-filtro') || 'null'); if (salvo) { dia = salvo.dia; periodo = salvo.periodo; } } catch (e) {}
+  $('rtDia').value = dia;
+  function marcarPeriodo() {
+    document.querySelectorAll('#rtPeriodo [data-periodo]').forEach(function (b) {
+      var on = b.getAttribute('data-periodo') === periodo; b.classList.toggle('active', on); b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+  }
+  marcarPeriodo();
+
+  async function chamar(corpo) {
+    var r = await client.functions.invoke('rota', { body: corpo });
+    if (r.error) {
+      var msg = 'Não deu certo. Tente de novo.';
+      try { var j = await r.error.context.json(); if (j && j.error) msg = j.error; } catch (e) {}
+      throw new Error(msg);
+    }
+    return r.data;
+  }
+
+  // ---- Mapa ----
+  var mapa = L.map('rtMapa', { zoomControl: true }).setView([-15.61, -56.07], 12);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' }).addTo(mapa);
+  var camada = L.layerGroup().addTo(mapa), marcaEntregador = null;
+  function pino(txt, cls) { return L.divIcon({ className: 'rt-pino ' + (cls || ''), html: '<span>' + esc(txt) + '</span>', iconSize: [30, 30], iconAnchor: [15, 15] }); }
+
+  var estado = { rota: null, paradas: [], origem: null, extras: {} };
+
+  // Pagamento de cada parada (o que cobrar na porta).
+  async function carregarExtras() {
+    var dl = estado.paradas.filter(function (p) { return p.tipo === 'delivery'; }).map(function (p) { return p.ref; });
+    var rv = estado.paradas.filter(function (p) { return p.tipo === 'revenda'; }).map(function (p) { return p.ref; });
+    var extras = {};
+    if (dl.length) {
+      var a = await client.from('delivery_pedidos').select('codigo, total, pagar_na_entrega, forma_entrega, troco_para, itens').in('codigo', dl);
+      (a.data || []).forEach(function (d) { extras[d.codigo] = d; });
+    }
+    if (rv.length) {
+      var b = await client.from('orders').select('numero, valor, itens, entrega_info').in('numero', rv);
+      (b.data || []).forEach(function (o) {
+        var e = extras[o.numero] || (extras[o.numero] = { valor: 0, itens: [], info: o.entrega_info });
+        e.valor += Number(o.valor) || 0; e.itens.push(o.itens);
+      });
+    }
+    estado.extras = extras;
+  }
+  var FORMA = { dinheiro: 'dinheiro', debito: 'débito', credito: 'crédito', pix: 'Pix', cartao: 'cartão' };
+  function cobrar(p) {
+    var e = estado.extras[p.ref] || {};
+    if (p.tipo === 'delivery') {
+      if (!e.pagar_na_entrega) return { txt: 'Pago online', ok: true };
+      var t = Number(e.total) || 0, troco = Number(e.troco_para) || 0;
+      return { txt: 'Receber ' + brl(t) + ' · ' + (FORMA[e.forma_entrega] || '?') + (troco ? ' · troco pra ' + brl(troco) + ' (levar ' + brl(troco - t) + ')' : '') };
+    }
+    var info = e.info || {};
+    if (info.pagamento === 'a_prazo') return { txt: 'A prazo · ' + brl(e.valor), ok: true };
+    return { txt: 'Receber ' + brl(e.valor) + (info.forma ? ' · ' + (FORMA[info.forma] || info.forma) : '') };
+  }
+  function itensDe(p) {
+    var e = estado.extras[p.ref] || {};
+    if (p.tipo === 'delivery') return (e.itens || []).map(function (i) { return (i.quantidade || 1) + '× ' + i.nome + (i.sabor ? ' · ' + i.sabor : ''); }).join(', ');
+    return (e.itens || []).join(', ');
+  }
+
+  // ---- Desenho ----
+  var NOTA = ['bem pior que as outras ordens', 'pior que outra ordem', 'parecida com a melhor alternativa', 'melhor que as alternativas', 'claramente a mais econômica'];
+  function render(dados) {
+    if (dados) { estado.rota = dados.rota; estado.paradas = dados.paradas || []; estado.origem = dados.origem || estado.origem; }
+    var r = estado.rota, ps = estado.paradas;
+    var emAndamento = r && r.status === 'em_andamento', planejada = r && r.status === 'planejada';
+    var pend = ps.filter(function (p) { return p.status === 'pendente'; });
+    var semPonto = ps.filter(function (p) { return p.lat == null; });
+
+    // Resumo
+    var html = '';
+    if (!r) {
+      html = '<p class="rt-vazio">Nenhuma rota montada pra esse período ainda.</p>' +
+        '<button type="button" class="btn btn-primary" data-acao="montar">Montar rota otimizada</button>';
+    } else {
+      var av = r.avaliacao, jev = '';
+      if (av && av.km_escolhida != null) {
+        var km = function (v) { return String(v).replace('.', ',') + ' km'; };
+        var economia = Math.round((av.km_ordem_pedidos - av.km_escolhida) * 10) / 10;
+        var confiavel = av.confianca != null && av.confianca >= 0.5;
+        var ruim = av.km_escolhida > Math.min(av.km_ordem_pedidos, av.km_mais_perto) + 0.05 || (confiavel && av.nota <= 1);
+        jev = '<p class="rt-jev ' + (ruim ? 'alerta' : 'ok') + '">' +
+          (economia > 0.05 ? 'Essa ordem roda <strong>' + km(economia) + ' a menos</strong> que a ordem em que os pedidos chegaram (' + km(av.km_ordem_pedidos) + ').' : 'Essa ordem roda ' + km(av.km_escolhida) + '.') +
+          ' Indo sempre no mais perto daria ' + km(av.km_mais_perto) + '.' +
+          (confiavel ? ' <strong>Segunda opinião do Jev:</strong> ' + NOTA[av.nota] + '.' : '') +
+          (ruim ? ' Vale conferir a ordem.' : '') + '</p>';
+      }
+      html = '<div class="rt-numeros">' +
+          '<div><strong>' + ps.length + '</strong><span>' + (ps.length === 1 ? 'parada' : 'paradas') + '</span></div>' +
+          '<div><strong>' + (r.distancia_km != null ? String(r.distancia_km).replace('.', ',') + ' km' : '—') + '</strong><span>' + (emAndamento ? 'faltam' : 'ida e volta') + '</span></div>' +
+          '<div><strong>' + (r.duracao_min != null ? '~' + Math.floor(r.duracao_min / 60) + 'h' + String(r.duracao_min % 60).padStart(2, '0') : '—') + '</strong><span>com 5 min por parada</span></div>' +
+          '<div><strong>' + ({ planejada: 'Planejada', em_andamento: 'Na rua', concluida: 'Concluída' }[r.status]) + '</strong><span>' + (emAndamento ? pend.length + ' faltando' : (r.iniciada_em ? 'saiu ' + hora(r.iniciada_em) : '')) + '</span></div>' +
+        '</div>' + jev +
+        (semPonto.length ? '<p class="rt-alerta">' + semPonto.length + (semPonto.length === 1 ? ' parada sem localização: arraste' : ' paradas sem localização: arraste') + ' o pino ou confira o endereço.</p>' : '') +
+        (estado.naoConfirmados && estado.naoConfirmados.length ? '<p class="rt-alerta">Pedidos de revendedor ainda não confirmados ficaram de fora: ' + estado.naoConfirmados.map(esc).join(', ') + '. Confirme em Pedidos e monte de novo.</p>' : '') +
+        '<div class="rt-acoes">' +
+          (planejada ? '<button type="button" class="btn btn-primary" data-acao="iniciar"' + (ps.length ? '' : ' disabled') + '>Iniciar rota</button>' +
+            '<button type="button" class="btn btn-dark-outline" data-acao="montar">Montar de novo</button>' : '') +
+          (emAndamento ? '<button type="button" class="btn btn-primary" data-acao="gps">' + (gpsId != null ? 'GPS ligado' : 'Ligar o GPS deste celular') + '</button>' +
+            '<button type="button" class="btn btn-dark-outline" data-acao="otimizar-resto">Reorganizar o que falta</button>' : '') +
+          (ps.length && pend.length ? '<a class="btn btn-dark-outline" href="' + esc(linkMapsRota(pend)) + '" target="_blank" rel="noopener">Rota inteira no Google Maps</a>' : '') +
+        '</div>' +
+        (emAndamento ? '<p class="rt-dica">Deixe esta tela aberta no suporte do carro: o cliente vê o mapa quando for a vez dele. Pra navegar, toque em Maps ou Waze na parada.</p>' : '');
+    }
+    $('rtResumo').innerHTML = html;
+
+    // Lista
+    var n = 0;
+    $('rtLista').innerHTML = ps.map(function (p, i) {
+      var c = cobrar(p), feita = p.status !== 'pendente';
+      if (!feita) n++;
+      var proxima = emAndamento && p === pend[0];
+      return '<li class="rt-parada' + (feita ? ' feita' : '') + (proxima ? ' proxima' : '') + '" data-id="' + p.id + '">' +
+        '<span class="rt-num" aria-hidden="true">' + (feita ? '✓' : (p.lat == null ? '?' : n)) + '</span>' +
+        '<div class="rt-corpo">' +
+          '<div class="rt-linha1"><strong>' + esc(p.nome || '—') + '</strong>' +
+            '<span class="status-badge ' + (p.tipo === 'delivery' ? 'canal-delivery' : 'processando') + '">' + (p.tipo === 'delivery' ? 'Delivery' : 'Revenda') + ' · ' + esc(p.ref) + '</span>' +
+            (p.status === 'pulada' ? '<span class="status-badge cancelado">Pulada</span>' : '') +
+            (p.eta && !feita ? '<span class="rt-eta">chega ~' + hora(p.eta) + '</span>' : '') +
+            (p.chegou_em && feita ? '<span class="rt-eta">' + (p.status === 'feita' ? 'entregue ' : '') + hora(p.chegou_em) + '</span>' : '') +
+          '</div>' +
+          '<div class="rt-end">' + esc(p.endereco || 'Sem endereço') + '</div>' +
+          (itensDe(p) ? '<div class="rt-itens">' + esc(itensDe(p)) + '</div>' : '') +
+          '<div class="rt-cobrar' + (c.ok ? ' ok' : '') + '">' + esc(c.txt) + '</div>' +
+          (p.geo_alerta ? '<div class="rt-geo">' + esc(p.geo_alerta) + '</div>' : '') +
+          '<div class="rt-botoes">' +
+            (p.lat != null && !feita ? '<a class="btn btn-dark-outline btn-sm" href="https://www.google.com/maps/dir/?api=1&destination=' + p.lat + ',' + p.lng + '&travelmode=driving" target="_blank" rel="noopener">Maps</a>' +
+              '<a class="btn btn-dark-outline btn-sm" href="https://waze.com/ul?ll=' + p.lat + ',' + p.lng + '&navigate=yes" target="_blank" rel="noopener">Waze</a>' : '') +
+            (p.telefone && !feita ? '<a class="btn btn-dark-outline btn-sm" href="https://wa.me/' + whats(p.telefone) + '" target="_blank" rel="noopener">WhatsApp</a>' : '') +
+            (emAndamento && !feita ? '<button type="button" class="btn btn-primary btn-sm" data-parada="feita">Entregue</button>' +
+              '<button type="button" class="btn-link-acao" data-parada="pulada">Não deu, pular</button>' : '') +
+            (feita && r && r.status !== 'planejada' ? '<button type="button" class="btn-link-acao" data-parada="reabrir">Desfazer</button>' : '') +
+            (planejada && !feita ? '<button type="button" class="btn-link-acao" data-mover="-1" aria-label="Subir ' + esc(p.nome) + '"' + (i === 0 ? ' disabled' : '') + '>Subir</button>' +
+              '<button type="button" class="btn-link-acao" data-mover="1" aria-label="Descer ' + esc(p.nome) + '"' + (i === ps.length - 1 ? ' disabled' : '') + '>Descer</button>' : '') +
+          '</div>' +
+        '</div></li>';
+    }).join('') || (r ? '<li class="rt-vazio">Sem entregas nesse período. Delivery pago e pedido de revendedor confirmado com entrega aparecem aqui.</li>' : '');
+
+    desenharMapa(planejada || emAndamento);
+  }
+  function whats(t) { var d = String(t || '').replace(/\D/g, ''); return d.length <= 11 ? '55' + d : d; }
+  function linkMapsRota(pend) {
+    var com = pend.filter(function (p) { return p.lat != null; }).slice(0, 9); // o Maps aceita até 9 paradas no meio
+    var o = estado.origem ? estado.origem.lat + ',' + estado.origem.lng : '';
+    return 'https://www.google.com/maps/dir/?api=1&origin=' + o + '&destination=' + o + '&travelmode=driving&waypoints=' +
+      encodeURIComponent(com.map(function (p) { return p.lat + ',' + p.lng; }).join('|'));
+  }
+
+  function desenharMapa(arrastavel) {
+    camada.clearLayers();
+    var pts = [];
+    if (estado.origem) {
+      L.marker([estado.origem.lat, estado.origem.lng], { icon: pino('F', 'fabrica'), title: 'Fábrica' }).addTo(camada);
+      pts.push([estado.origem.lat, estado.origem.lng]);
+    }
+    if (estado.rota && Array.isArray(estado.rota.geometria) && estado.rota.geometria.length) {
+      L.polyline(estado.rota.geometria, { color: '#601050', weight: 5, opacity: 0.75 }).addTo(camada);
+    }
+    var n = 0;
+    estado.paradas.forEach(function (p) {
+      var feita = p.status !== 'pendente';
+      if (!feita) n++;
+      var lat = p.lat != null ? p.lat : (estado.origem && estado.origem.lat), lng = p.lng != null ? p.lng : (estado.origem && estado.origem.lng);
+      if (lat == null) return;
+      var m = L.marker([lat, lng], { icon: pino(feita ? '✓' : (p.lat == null ? '?' : n), feita ? 'feita' : (p.lat == null ? 'sem' : '')), draggable: !!arrastavel && !feita, title: p.nome });
+      m.bindPopup('<strong>' + esc(p.nome) + '</strong><br>' + esc(p.endereco || '') + (arrastavel && !feita ? '<br><small>Arraste o pino pra corrigir o ponto.</small>' : ''));
+      m.on('dragend', async function () {
+        var ll = m.getLatLng();
+        try { render(await chamar({ acao: 'mover_pin', parada_id: p.id, lat: ll.lat, lng: ll.lng })); await carregarExtras(); render(); toast('Ponto corrigido. A rota foi recalculada.'); }
+        catch (e) { toast(e.message); render(); }
+      });
+      m.addTo(camada);
+      if (p.lat != null) pts.push([p.lat, p.lng]);
+    });
+    if (posAtual) {
+      marcaEntregador = L.marker([posAtual.lat, posAtual.lng], { icon: pino('', 'entregador'), title: 'Entregador', zIndexOffset: 1000 }).addTo(camada);
+    }
+    if (pts.length > 1 && !ajustado) { mapa.fitBounds(pts, { padding: [30, 30] }); ajustado = true; }
+  }
+  var ajustado = false;
+
+  // ---- Carregar / montar ----
+  async function carregar() {
+    try { sessionStorage.setItem('dupuro-rota-filtro', JSON.stringify({ dia: dia, periodo: periodo })); } catch (e) {}
+    $('rtResumo').innerHTML = '<p class="rt-vazio">Carregando…</p>';
+    estado.naoConfirmados = null; ajustado = false;
+    try {
+      var d = await chamar({ acao: 'carregar', dia: dia, periodo: periodo });
+      estado.rota = d.rota; estado.paradas = d.paradas || []; estado.origem = d.origem;
+      await carregarExtras();
+      render();
+      if (estado.rota && estado.rota.status === 'em_andamento' && gpsQuerido()) ligarGps();
+    } catch (e) { $('rtResumo').innerHTML = '<p class="rt-alerta">' + esc(e.message) + '</p>'; }
+  }
+  $('rtDia').addEventListener('change', function () { if (this.value) { dia = this.value; carregar(); } });
+  $('rtPeriodo').addEventListener('click', function (e) { var b = e.target.closest('[data-periodo]'); if (!b) return; periodo = b.getAttribute('data-periodo'); marcarPeriodo(); carregar(); });
+
+  $('rtResumo').addEventListener('click', async function (e) {
+    var b = e.target.closest('[data-acao]'); if (!b) return;
+    var acao = b.getAttribute('data-acao');
+    if (acao === 'gps') { gpsId != null ? desligarGps() : ligarGps(true); render(); return; }
+    b.disabled = true; var txt = b.textContent;
+    b.textContent = acao === 'montar' ? 'Calculando a melhor ordem…' : acao === 'iniciar' ? 'Iniciando…' : 'Calculando…';
+    try {
+      if (acao === 'montar') {
+        var d = await chamar({ acao: 'montar', dia: dia, periodo: periodo });
+        estado.naoConfirmados = d.nao_confirmados; ajustado = false;
+        render(d); await carregarExtras(); render();
+        toast(d.paradas.length ? 'Rota montada' + (d.metodo === 'vroom' ? ' pelo otimizador do mapa.' : d.metodo === 'matriz' ? ' pela matriz de tempos.' : '.') : 'Sem entregas nesse período.');
+      } else if (acao === 'iniciar') {
+        render(await chamar({ acao: 'iniciar', rota_id: estado.rota.id }));
+        ligarGps(true);
+        toast('Rota iniciada. Os clientes do delivery passam a ver "saiu pra entrega".');
+      } else if (acao === 'otimizar-resto') {
+        // Reorganiza as que faltam a partir de onde o entregador está.
+        var pend = estado.paradas.filter(function (p) { return p.status === 'pendente' && p.lat != null; });
+        render(await chamar({ acao: 'recalcular', rota_id: estado.rota.id, ordem: ordemPorProximidade(pend) }));
+        toast('Ordem das paradas que faltam recalculada.');
+      }
+    } catch (err) { toast(err.message); b.disabled = false; b.textContent = txt; }
+  });
+  // Pro "reorganizar no meio da rota": a próxima é a mais perto de onde ele está,
+  // e assim por diante (o servidor recalcula traçado e chegadas).
+  function ordemPorProximidade(pend) {
+    var aqui = posAtual || estado.origem, resta = pend.slice(), ordem = [];
+    function d(a, b) { var x = a.lat - b.lat, y = (a.lng - b.lng) * Math.cos(a.lat * Math.PI / 180); return x * x + y * y; }
+    while (resta.length) { resta.sort(function (a, b) { return d(aqui, a) - d(aqui, b); }); var p = resta.shift(); ordem.push(p.id); aqui = p; }
+    return ordem;
+  }
+
+  $('rtLista').addEventListener('click', async function (e) {
+    var li = e.target.closest('[data-id]'); if (!li) return;
+    var p = estado.paradas.filter(function (x) { return String(x.id) === li.getAttribute('data-id'); })[0]; if (!p) return;
+    var mv = e.target.closest('[data-mover]'), pa = e.target.closest('[data-parada]');
+    try {
+      if (mv) {
+        var ids = estado.paradas.filter(function (x) { return x.status === 'pendente'; }).map(function (x) { return x.id; });
+        var i = ids.indexOf(p.id), j = i + Number(mv.getAttribute('data-mover'));
+        if (i < 0 || j < 0 || j >= ids.length) return;
+        ids.splice(j, 0, ids.splice(i, 1)[0]);
+        mv.disabled = true;
+        render(await chamar({ acao: 'recalcular', rota_id: estado.rota.id, ordem: ids }));
+        return;
+      }
+      if (pa) {
+        var como = pa.getAttribute('data-parada'), corpo = { acao: 'parada', parada_id: p.id, como: como };
+        if (como === 'feita') {
+          var ex = estado.extras[p.ref] || {};
+          if (p.tipo === 'delivery' && ex.pagar_na_entrega) {
+            var forma = await escolherForma(ex);
+            if (!forma) return;
+            corpo.recebido_forma = forma;
+          }
+        }
+        pa.disabled = true;
+        render(await chamar(corpo));
+        await carregarExtras(); render();
+        toast(como === 'feita' ? p.nome + ': entregue.' : como === 'pulada' ? p.nome + ': ficou pra depois.' : p.nome + ' voltou pra rota.');
+        if (estado.rota && estado.rota.status === 'concluida') { desligarGps(); toast('Rota concluída. Bom trabalho!'); }
+      }
+    } catch (err) { toast(err.message); render(); }
+  });
+
+  // Como o cliente pagou (pedido do delivery pago na entrega).
+  function escolherForma(ex) {
+    return new Promise(function (resolve) {
+      var f = document.createElement('div');
+      f.className = 'dlg-fundo';
+      f.innerHTML = '<div class="dlg" role="dialog" aria-modal="true" aria-labelledby="rtDlgMsg"><p id="rtDlgMsg">Como o cliente pagou ' + esc(brl(ex.total)) + '?</p>' +
+        '<div class="dlg-opcoes">' + ['dinheiro', 'pix', 'debito', 'credito'].map(function (v) {
+          return '<button type="button" class="btn btn-sm ' + (v === ex.forma_entrega ? 'btn-primary' : 'btn-dark-outline') + '" data-v="' + v + '">' + { dinheiro: 'Dinheiro', pix: 'Pix', debito: 'Débito', credito: 'Crédito' }[v] + '</button>';
+        }).join('') + '</div><div class="dlg-acoes"><button type="button" class="btn btn-dark-outline btn-sm" data-v="">Voltar</button></div></div>';
+      f.addEventListener('click', function (e) { var b = e.target.closest('[data-v]'); if (b || e.target === f) { f.remove(); resolve(b ? b.getAttribute('data-v') || null : null); } });
+      document.body.appendChild(f);
+      (f.querySelector('.btn-primary') || f.querySelector('[data-v]')).focus();
+    });
+  }
+
+  // ---- GPS do entregador ----
+  // A posição vai pra rota_posicao a cada ~15 s (ou quando anda 40 m). O
+  // navegador pausa o GPS com a tela apagada: o Wake Lock mantém a tela acesa.
+  var gpsId = null, posAtual = null, ultimoEnvio = 0, ultimoPonto = null, wake = null;
+  function gpsQuerido() { try { return sessionStorage.getItem('dupuro-rota-gps') === String(estado.rota && estado.rota.id); } catch (e) { return false; } }
+  function statusGps(txt, cls) { var el = $('rtGps'); el.hidden = !txt; el.textContent = txt || ''; el.className = 'rt-gps ' + (cls || ''); }
+  async function manterTela() { try { if ('wakeLock' in navigator) wake = await navigator.wakeLock.request('screen'); } catch (e) {} }
+  document.addEventListener('visibilitychange', function () { if (!document.hidden && gpsId != null) manterTela(); });
+  function ligarGps(pedido) {
+    if (!estado.rota || estado.rota.status !== 'em_andamento' || gpsId != null) return;
+    if (!navigator.geolocation) { toast('Este celular não deixa o site usar o GPS.'); return; }
+    try { sessionStorage.setItem('dupuro-rota-gps', String(estado.rota.id)); } catch (e) {}
+    statusGps('Ligando o GPS…', 'esperando');
+    manterTela();
+    gpsId = navigator.geolocation.watchPosition(async function (pos) {
+      posAtual = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+      statusGps('GPS ligado · ' + hora(new Date().toISOString()), 'ok');
+      if (marcaEntregador) marcaEntregador.setLatLng([posAtual.lat, posAtual.lng]);
+      else marcaEntregador = L.marker([posAtual.lat, posAtual.lng], { icon: pino('', 'entregador'), zIndexOffset: 1000 }).addTo(camada);
+      var andou = !ultimoPonto || Math.abs(ultimoPonto.lat - posAtual.lat) + Math.abs(ultimoPonto.lng - posAtual.lng) > 0.0004;
+      if (Date.now() - ultimoEnvio < 15000 && !andou) return;
+      if (Date.now() - ultimoEnvio < 5000) return;
+      ultimoEnvio = Date.now(); ultimoPonto = posAtual;
+      var r = await client.from('rota_posicao').upsert({ rota_id: estado.rota.id, lat: posAtual.lat, lng: posAtual.lng, precisao: pos.coords.accuracy, atualizado_em: new Date().toISOString() });
+      if (r.error) statusGps('GPS ligado, mas sem internet agora', 'esperando');
+    }, function (err) {
+      statusGps(err.code === 1 ? 'GPS bloqueado: libere a localização pro site' : 'Sem sinal de GPS', 'erro');
+      if (err.code === 1) desligarGps(true);
+    }, { enableHighAccuracy: true, maximumAge: 10000, timeout: 30000 });
+    if (pedido) toast('GPS ligado. Deixe esta tela aberta.');
+  }
+  function desligarGps(manterAviso) {
+    if (gpsId != null) navigator.geolocation.clearWatch(gpsId);
+    gpsId = null;
+    try { sessionStorage.removeItem('dupuro-rota-gps'); } catch (e) {}
+    if (wake) { try { wake.release(); } catch (e) {} wake = null; }
+    if (!manterAviso) statusGps('');
+  }
+
+  carregar();
+})();
+</script>
+</body>
+</html>

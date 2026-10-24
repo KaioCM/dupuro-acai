@@ -622,3 +622,14 @@ body.dl-pagando .dl-barra { display: none; }
 .dl-sucesso-pag { margin-top: 10px !important; padding: 10px 12px; border-radius: 12px; background: rgba(255,255,255,.14); font-weight: 700; }
 .dl-acomp-pag { margin: 10px 0 0; padding: 10px 12px; border-radius: 12px; background: #FFF1D6; color: #6b4200; font-size: 14px; font-weight: 700; }
 .dl-acomp-acoes .dl-btn-line, .dl-mp .dl-btn-line { background: #fff; color: var(--roxo-700); border-color: rgba(96,16,80,.25); }
+
+/* Acompanhar: mapa ao vivo quando é a vez do cliente (migration_050) */
+.dl-aovivo { margin-bottom: 16px; border-radius: 22px; overflow: hidden; background: #fff; border: 2px solid var(--roxo-700); }
+.dl-aovivo-txt { display: grid; gap: 4px; padding: 14px 16px; }
+.dl-aovivo-txt strong { font: 800 17px 'Inter', sans-serif; color: var(--roxo-900); }
+.dl-aovivo-txt span { font-size: 14.5px; line-height: 1.45; color: var(--text); }
+.dl-aovivo-mapa { height: 280px; }
+.dl-pino { display: flex !important; align-items: center; justify-content: center; }
+.dl-pino span { display: block; width: 26px; height: 26px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,.3); }
+.dl-pino.casa span { background: var(--roxo-700); }
+.dl-pino.moto span { width: 22px; height: 22px; background: #1565C0; box-shadow: 0 0 0 7px rgba(21,101,192,.25), 0 2px 6px rgba(0,0,0,.3); }
