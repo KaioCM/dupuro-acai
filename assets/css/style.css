@@ -3243,3 +3243,16 @@ a.stat-card.alerta .stat-sub { color: var(--warning); font-weight: 800; }
 .dlg .dlg-nota { margin: 12px 0 0; font-size: 13px; color: var(--warning); }
 .aviso-motivo { flex: 1 1 220px; display: block; }
 .aviso-motivo input { width: 100%; min-height: 40px; padding: 8px 12px; border: 1.5px solid rgba(96,16,80,0.2); border-radius: 10px; font: inherit; font-size: 16px; }
+
+/* Faixa "Seu pedido" (delivery lembrado no aparelho; home e páginas do delivery) */
+.dl-faixa { display: flex; align-items: center; gap: 12px; max-width: 1100px; margin: 12px auto; padding: 12px 16px; border-radius: 16px; background: #EAF4DC; color: #1d4a12; text-decoration: none; font-family: 'Inter', sans-serif; box-shadow: 0 1px 0 rgba(29,74,18,.12); }
+.dl-faixa-ic { flex: none; display: inline-flex; width: 40px; height: 40px; align-items: center; justify-content: center; border-radius: 12px; background: #fff; }
+.dl-faixa-ic svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.dl-faixa-txt { flex: 1; min-width: 0; display: grid; font-size: 14px; line-height: 1.35; }
+.dl-faixa-txt strong { font-size: 15px; }
+.dl-faixa-ac { flex: none; font-weight: 800; font-size: 14px; text-decoration: underline; text-underline-offset: 3px; }
+.dl-faixa:focus-visible { outline: 3px solid var(--roxo-700); outline-offset: 2px; }
+@media (max-width: 720px) { .dl-faixa { margin: 10px 16px; } }
+.dl-hero-txt > .dl-faixa { margin: 0 0 18px; }
+@media (max-width: 480px) { .dl-faixa-ac { font-size: 0; text-decoration: none; } .dl-faixa-ac::after { content: "›"; font-size: 30px; line-height: 1; } }
+.hero > .dl-faixa { position: relative; z-index: 2; margin-top: 0; }

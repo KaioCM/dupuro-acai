@@ -562,3 +562,29 @@ body.dl-travado { overflow: hidden; }
 .dl-float, .dl-float small, #barSacola em { font-size: 12px; }
 /* botão claro dentro de cartão branco (o "Calcular de novo" ficava branco no branco) */
 .dl-card .dl-btn-line { background: #fff; color: var(--roxo-700); border-color: rgba(96,16,80,.25); }
+
+/* =====================================================================
+   Pagamento no nosso site (Payment Brick do Mercado Pago, 2026-10-24)
+   ===================================================================== */
+.dl-mp { margin-top: 16px; padding: 14px; border-radius: 18px; background: #fff; color: var(--text); }
+.dl-mp .dl-msg { margin-bottom: 12px; }
+.dl-mp-voltar { display: block; margin: 12px auto 0; color: var(--roxo-700); }
+body.dl-pagando .dl-barra { display: none; }
+.dl-pix { text-align: center; }
+#mpPix h3 { margin: 4px 0 6px; font: 800 20px 'Inter', sans-serif; color: var(--roxo-900); text-transform: none; }
+.dl-pix-passo { margin: 0 0 14px; font-size: 15px; line-height: 1.45; color: var(--text); }
+.dl-pix-codigo { display: grid; gap: 8px; margin-bottom: 14px; }
+.dl-pix-codigo input { width: 100%; min-height: 44px; padding: 8px 12px; border: 1.5px solid rgba(96,16,80,0.2); border-radius: 12px; font: 13px ui-monospace, monospace; color: var(--text-light); background: var(--cream-2); }
+.dl-pix-qr { display: block; width: 220px; height: 220px; margin: 0 auto 12px; border-radius: 12px; image-rendering: pixelated; }
+.dl-pix-esperando { justify-content: center; margin: 0 0 6px; font-size: 14.5px; font-weight: 700; color: var(--roxo-900); }
+.dl-pix-expira { margin: 0 0 10px; font-size: 13px; color: var(--text-light); }
+#mpPix { text-align: center; }
+#mpPix .dl-link { color: var(--roxo-700); }
+
+/* Acompanhar: "deu tudo certo" + ações */
+.dl-sucesso { margin-bottom: 18px; padding: 24px 22px; border-radius: 26px; background: linear-gradient(165deg, #2f6b1f, #1d4a12); color: #fff; text-align: center; }
+.dl-sucesso-ic { display: inline-flex; align-items: center; justify-content: center; width: 56px; height: 56px; border-radius: 50%; background: rgba(255,255,255,.16); margin-bottom: 10px; }
+.dl-sucesso-ic .i { width: 30px; height: 30px; fill: none; stroke: #fff; stroke-width: 2.8; stroke-linecap: round; stroke-linejoin: round; }
+.dl-sucesso h1 { margin: 0 0 6px; font: 800 26px 'Inter', sans-serif; color: #fff; text-transform: none; }
+.dl-sucesso p { margin: 0; font-size: 15.5px; line-height: 1.45; color: rgba(255,255,255,.92); }
+.dl-acomp-acoes { display: grid; gap: 10px; margin-top: 6px; }

@@ -3,11 +3,14 @@
 // Público (cliente anônimo). NUNCA confia no navegador: preço e estoque vêm do
 // banco (delivery_catalogo), km/taxa só valem com a cotação assinada pela
 // delivery-cotacao, e o período/data é revalidado contra a config (dias e corte).
-// Cria o pedido 'aguardando_pagamento' e uma preferência do Checkout Pro do
-// Mercado Pago (Pix + cartão, sem boleto). O pagamento é confirmado depois pelo
-// webhook (delivery-mp-webhook) — é ele que baixa o estoque.
+// Cria o pedido 'aguardando_pagamento'. O pagamento acontece NO NOSSO SITE
+// (Payment Brick do Mercado Pago + Edge Function delivery-pagar); a preferência
+// do Checkout Pro continua sendo criada como plano B (init_point) caso o Brick
+// não carregue. Quem baixa o estoque é delivery_confirmar_pagamento (chamada
+// pela delivery-pagar e pelo webhook, idempotente).
 //
-// Secrets: MP_ACCESS_TOKEN (Mercado Pago, produção ou TEST-...).
+// Secrets: MP_ACCESS_TOKEN (Mercado Pago, produção ou TEST-...); MP_PUBLIC_KEY
+// (chave pública, vai pro navegador montar o Brick).
 // ==========================================================================
 import { createClient } from 'jsr:@supabase/supabase-js@2'
 
@@ -131,16 +134,18 @@ Deno.serve(async (req: Request) => {
     }
     const mp = await fetch('https://api.mercadopago.com/checkout/preferences', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + mpToken, 'X-Idempotency-Key': ped.codigo },
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + mpToken, 'X-Idempotency-Key': ped.token },
       body: JSON.stringify(pref),
     }).then((r) => r.json())
-    if (!mp?.id) {
+    const publicKey = Deno.env.get('MP_PUBLIC_KEY') || null
+    if (!mp?.id && !publicKey) { // sem Brick e sem preferência não há como pagar
       await sb.from('delivery_pedidos').update({ status: 'cancelado', mp_status: 'erro_preferencia' }).eq('id', ped.id)
       return json({ error: 'O Mercado Pago não respondeu. Tente de novo em instantes.' }, 502)
     }
-    await sb.from('delivery_pedidos').update({ mp_preference_id: mp.id }).eq('id', ped.id)
+    if (mp?.id) await sb.from('delivery_pedidos').update({ mp_preference_id: mp.id }).eq('id', ped.id)
     const teste = mpToken.startsWith('TEST-')
-    return json({ codigo: ped.codigo, token: ped.token, init_point: teste ? mp.sandbox_init_point : mp.init_point })
+    return json({ codigo: ped.codigo, token: ped.token, total, public_key: publicKey,
+      init_point: mp?.id ? (teste ? mp.sandbox_init_point : mp.init_point) : null })
   } catch (e) {
     return json({ error: 'Falha no checkout: ' + String((e as Error)?.message || e) }, 500)
   }
