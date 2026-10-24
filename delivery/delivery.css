@@ -588,3 +588,6 @@ body.dl-pagando .dl-barra { display: none; }
 .dl-sucesso h1 { margin: 0 0 6px; font: 800 26px 'Inter', sans-serif; color: #fff; text-transform: none; }
 .dl-sucesso p { margin: 0; font-size: 15.5px; line-height: 1.45; color: rgba(255,255,255,.92); }
 .dl-acomp-acoes { display: grid; gap: 10px; margin-top: 6px; }
+.dl-mp-selo { display: flex; align-items: flex-start; gap: 10px; margin: 14px 0 0; padding: 12px 14px; border-radius: 14px; background: #EEF4FB; color: #24456b; font-size: 13.5px; line-height: 1.45; text-align: left; }
+.dl-mp-selo .i { flex: none; width: 20px; height: 20px; margin-top: 1px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.dl-mp-selo strong { color: #0b2f5c; }
