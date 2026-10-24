@@ -82,6 +82,9 @@ Deno.serve(async (req: Request) => {
     if (!periodo || !janelasValidas(cfg).has(data + '|' + periodo)) {
       return json({ error: 'Esse horário de entrega não está mais disponível. Escolha outro.' }, 400)
     }
+    // Limite de entregas por rota (migration_052; delivery + revenda no mesmo turno).
+    const { data: lotado } = await sb.rpc('turno_lotado', { p_data: data, p_turno: periodo })
+    if (lotado === true) return json({ error: 'Esse horário de entrega lotou. Escolha outro dia ou período.' }, 409)
 
     // Itens: preço e estoque do banco
     const { data: cat } = await sb.rpc('delivery_catalogo')

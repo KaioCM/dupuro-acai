@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="preload" href="../assets/fonts/Klinko-PlayfulBold.otf" as="font" type="font/otf" crossorigin>
-<link rel="stylesheet" href="../assets/css/style.css?v=68">
+<link rel="stylesheet" href="../assets/css/style.css?v=70">
 <link rel="stylesheet" href="delivery.css?v=27">
 </head>
 <body class="dl-body">
@@ -192,18 +192,18 @@
 </div>
 
 <script src="../assets/js/supabase-config.js"></script>
-<script src="delivery.js?v=6"></script>
+<script src="delivery.js?v=7"></script>
 <script>
 (async function () {
   var D = DupuroDelivery, brl = D.brl, esc = D.esc;
-  var cfg = null, cat = [], cart = [], cot = null, janela = null;
+  var cfg = null, cat = [], cart = [], cot = null, janela = null, lotados = [];
   var sel = {}; // produto_id -> { sabor, qtd }
   var LS = 'dupuro-delivery-carrinho';
   try { cart = JSON.parse(localStorage.getItem(LS) || '[]') || []; } catch (e) { cart = []; }
   function salvar() { try { localStorage.setItem(LS, JSON.stringify(cart)); } catch (e) {} }
   function $(id) { return document.getElementById(id); }
 
-  try { var res = await Promise.all([D.getConfig(), D.getCatalogo()]); cfg = res[0]; cat = res[1] || []; }
+  try { var res = await Promise.all([D.getConfig(), D.getCatalogo(), D.getLotados()]); cfg = res[0]; cat = res[1] || []; lotados = res[2] || []; }
   catch (e) { $('prods').innerHTML = '<div class="dl-msg erro">Não conseguimos carregar os produtos. Recarregue a página.</div>'; return; }
   if (cfg && cfg.ativo === false) { $('prods').innerHTML = '<div class="dl-msg info">O delivery está pausado no momento. Fale com a gente no WhatsApp.</div>'; return; }
   cart = cart.filter(function (c) { return cat.some(function (p) { return p.id === c.produto_id; }); });
@@ -605,7 +605,7 @@
   }
 
   // ---- Janelas ----
-  var jans = D.janelasDisponiveis(cfg, 6);
+  var jans = D.janelasDisponiveis(cfg, 6, lotados);
   $('janelas').innerHTML = jans.map(function (j, i) {
     return '<button type="button" class="dl-jan" data-j="' + i + '" aria-pressed="false"><span class="ic">' + (j.periodo === 'manha' ? '<svg class="i" aria-hidden="true"><use href="#d-sol"/></svg>' : '<svg class="i" aria-hidden="true"><use href="#d-nuvemsol"/></svg>') + '</span>' +
       '<span><strong>' + esc(j.titulo) + '</strong><span>Entregaremos entre ' + esc(j.faixa.replace(' às ', ' e ')) + '</span></span></button>';

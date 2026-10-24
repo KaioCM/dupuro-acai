@@ -30,6 +30,8 @@ var DupuroDelivery = (function () {
     });
   }
   function getRastreio(token) { return rpc('delivery_rastreio', { p_token: token }); }
+  // Turnos que já bateram o limite de entregas por rota (migration_052): ['2026-10-27|tarde'].
+  function getLotados() { return rpc('delivery_turnos_lotados').then(function (l) { return l || []; }, function () { return []; }); }
 
   // Edge Function do delivery. Devolve o JSON; erro vira exceção com a mensagem.
   async function fn(nome, body) {
@@ -49,7 +51,7 @@ var DupuroDelivery = (function () {
   function hLabel(s) { var p = String(s).split(':'); return (+p[0]) + 'h' + (p[1] && p[1] !== '00' ? p[1] : ''); }
 
   // Próximos períodos disponíveis (respeita dias de entrega e horário de corte).
-  function janelasDisponiveis(cfg, quantas) {
+  function janelasDisponiveis(cfg, quantas, lotados) {
     var out = [], agora = agoraCuiaba();
     var minAgora = agora.getUTCHours() * 60 + agora.getUTCMinutes();
     var dias = (cfg && cfg.dias) || [1, 2, 3, 4, 5, 6];
@@ -60,6 +62,7 @@ var DupuroDelivery = (function () {
       ['manha', 'tarde'].forEach(function (per) {
         var j = jan[per]; if (!j || out.length >= (quantas || 6)) return;
         if (d === 0 && minAgora >= hhmmMin(j.corte)) return; // passou do corte de hoje
+        if (lotados && lotados.indexOf(isoData(dia) + '|' + per) !== -1) return; // rota cheia
         var dataTxt = String(dia.getUTCDate()).padStart(2, '0') + '/' + String(dia.getUTCMonth() + 1).padStart(2, '0');
         // "Amanhã" com a data (antes não dizia o dia)
         var quando = d === 0 ? 'Hoje, ' + NOMES_DIA[dia.getUTCDay()].slice(0, 3).toLowerCase() + ' ' + dataTxt : (d === 1 ? 'Amanhã, ' + NOMES_DIA[dia.getUTCDay()].slice(0, 3).toLowerCase() + ' ' + dataTxt : NOMES_DIA[dia.getUTCDay()] + ' ' + dataTxt);
@@ -147,7 +150,7 @@ var DupuroDelivery = (function () {
   return {
     lembrarPedido: lembrarPedido, esquecerPedido: esquecerPedido, faixaSeuPedido: faixaSeuPedido, quandoEntrega: quandoEntrega,
     brl: brl, esc: esc, getConfig: getConfig, getCatalogo: getCatalogo, getRastreio: getRastreio,
-    fn: fn, janelasDisponiveis: janelasDisponiveis,
+    fn: fn, janelasDisponiveis: janelasDisponiveis, getLotados: getLotados,
     corSabor: corSabor, nomeSabor: nomeSabor, idealPra: idealPra, litrosTxt: litrosTxt, fotoProduto: fotoProduto, miniatura: miniatura
   };
 })();

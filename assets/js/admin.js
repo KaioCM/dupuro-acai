@@ -753,7 +753,8 @@ var DupuroAdmin = (function () {
   // entregas do delivery já pagas.
   async function getContagemNovos() {
     var r = await Promise.all([
-      client.from('orders').select('numero', { count: 'exact', head: true }).eq('status', 'enviado'),
+      // Pedido do revendedor já nasce confirmado (migration_051): conta os abertos.
+      client.from('orders').select('numero', { count: 'exact', head: true }).in('status', ['enviado', 'processando']),
       client.from('delivery_pedidos').select('id', { count: 'exact', head: true }).eq('status', 'pago')
     ]);
     return { pedidos: r[0].count || 0, delivery: r[1].count || 0 };

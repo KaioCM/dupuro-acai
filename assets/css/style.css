@@ -3316,3 +3316,29 @@ a.stat-card.alerta .stat-sub { color: var(--warning); font-weight: 800; }
 .rt-geo { margin-top: 6px; font-size: 13px; font-weight: 700; color: var(--danger); }
 .rt-botoes { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 10px; }
 .rt-botoes .btn { min-height: 40px; }
+
+/* Revenda: troco e pagamento online no checkout (migration_051) */
+.pg-revenda .checkout-troco { margin-top: 10px; padding: 12px 14px; border-radius: 12px; background: rgba(96,16,80,.05); }
+.pg-revenda .checkout-troco-tot { margin: 0 0 8px; font-size: 15px; }
+.pg-revenda .checkout-troco-tit { margin: 0 0 4px; font-size: 14px; font-weight: 800; color: var(--roxo-950); }
+.pg-revenda .checkout-troco .checkbox-line { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.pg-revenda .checkout-troco input[type="text"] { width: 120px; min-height: 40px; padding: 6px 10px; border: 1.5px solid rgba(96,16,80,.2); border-radius: 10px; font: inherit; font-size: 16px; }
+.pg-revenda .checkout-troco-info { margin: 6px 0 0; font-size: 14px; font-weight: 700; color: var(--verde-dark); }
+.pg-revenda .checkout-troco-info.erro { color: var(--danger); }
+.rev-mp { margin-top: 14px; padding: 14px; border-radius: 16px; background: #fff; border: 1px solid rgba(96,16,80,.12); }
+.rev-mp .field-note.ok { color: var(--verde-dark); }
+.rev-mp-selo { margin: 12px 0 8px; padding: 10px 12px; border-radius: 12px; background: #EEF4FB; color: #24456b; font-size: 13.5px; line-height: 1.45; }
+#revMpPix { text-align: center; }
+#revMpPix h4 { margin: 4px 0 6px; font: 800 18px 'Inter', sans-serif; color: var(--roxo-950); }
+#revMpPix p { font-size: 14.5px; line-height: 1.45; }
+#revMpPix input { width: 100%; min-height: 42px; margin-bottom: 8px; padding: 8px 10px; border: 1.5px solid rgba(96,16,80,.2); border-radius: 10px; font: 13px ui-monospace, monospace; color: var(--text-light); }
+.rev-pix-qr { display: block; width: 200px; height: 200px; margin: 12px auto; image-rendering: pixelated; }
+.rev-pix-esperando { font-weight: 800; color: var(--roxo-900); }
+.rev-pix-expira { font-size: 13px !important; color: var(--text-light); }
+.rt-limite { display: grid; gap: 4px; margin-left: auto; max-width: 320px; }
+.rt-limite label { font-size: 13px; font-weight: 700; color: var(--roxo-950); }
+.rt-limite > div { display: flex; gap: 8px; }
+.rt-limite input { width: 80px; min-height: 40px; padding: 6px 10px; border: 1.5px solid rgba(96,16,80,.2); border-radius: 12px; font: inherit; font-size: 16px; background: #fff; }
+.rt-limite small { font-size: 12.5px; line-height: 1.35; color: var(--text-light); }
+.rt-numeros strong small { font-size: 14px; font-weight: 700; color: var(--text-light); }
+@media (max-width: 720px) { .rt-limite { margin-left: 0; max-width: none; } }

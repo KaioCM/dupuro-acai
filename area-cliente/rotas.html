@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
-<link rel="stylesheet" href="../assets/css/style.css?v=68">
+<link rel="stylesheet" href="../assets/css/style.css?v=70">
 </head>
 <body class="pg-admin pg-rotas">
 <a class="skip-link" href="#rtLista">Pular para a lista de paradas</a>
@@ -28,6 +28,11 @@
       <button type="button" class="seg-btn active" data-periodo="manha" aria-pressed="true">Manhã · 8h–12h</button>
       <button type="button" class="seg-btn" data-periodo="tarde" aria-pressed="false">Tarde · 13h–17h</button>
     </div>
+    <form class="rt-limite" id="rtLimiteForm">
+      <label for="rtLimite">Limite de entregas por rota</label>
+      <div><input type="number" id="rtLimite" min="1" max="50" inputmode="numeric"><button type="submit" class="btn btn-dark-outline btn-sm">Salvar</button></div>
+      <small id="rtLimiteAjuda">Quando a rota de um período chega nesse número, o site para de oferecer aquele horário (delivery e revenda). Retirada na fábrica não conta.</small>
+    </form>
   </div>
 
   <section class="rt-resumo" id="rtResumo" aria-live="polite"><p class="rt-vazio">Carregando…</p></section>
@@ -40,7 +45,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.min.js"></script>
 <script src="../assets/js/supabase-config.js"></script>
 <script src="../assets/js/supabase-client.js"></script>
-<script src="../assets/js/admin.js?v=9"></script>
+<script src="../assets/js/admin.js?v=10"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script>
 // Rotas de entrega (migration_050 + Edge Function `rota`). O admin monta a rota
@@ -116,7 +121,9 @@
     }
     var info = e.info || {};
     if (info.pagamento === 'a_prazo') return { txt: 'A prazo · ' + brl(e.valor), ok: true };
-    return { txt: 'Receber ' + brl(e.valor) + (info.forma ? ' · ' + (FORMA[info.forma] || info.forma) : '') };
+    if (info.pagamento === 'online') return { txt: 'Pago online', ok: true };
+    var tr = Number(info.troco_para) || 0;
+    return { txt: 'Receber ' + brl(e.valor) + (info.forma ? ' · ' + (FORMA[info.forma] || info.forma) : '') + (tr ? ' · troco pra ' + brl(tr) + ' (levar ' + brl(tr - e.valor) + ')' : '') };
   }
   function itensDe(p) {
     var e = estado.extras[p.ref] || {};
@@ -152,7 +159,7 @@
           (ruim ? ' Vale conferir a ordem.' : '') + '</p>';
       }
       html = '<div class="rt-numeros">' +
-          '<div><strong>' + ps.length + '</strong><span>' + (ps.length === 1 ? 'parada' : 'paradas') + '</span></div>' +
+          '<div><strong>' + ps.length + (limiteRota ? '<small> de ' + limiteRota + '</small>' : '') + '</strong><span>' + (ps.length === 1 ? 'parada' : 'paradas') + (limiteRota && ps.length >= limiteRota ? ' · rota lotada' : '') + '</span></div>' +
           '<div><strong>' + (r.distancia_km != null ? String(r.distancia_km).replace('.', ',') + ' km' : '—') + '</strong><span>' + (emAndamento ? 'faltam' : 'ida e volta') + '</span></div>' +
           '<div><strong>' + (r.duracao_min != null ? '~' + Math.floor(r.duracao_min / 60) + 'h' + String(r.duracao_min % 60).padStart(2, '0') : '—') + '</strong><span>com 5 min por parada</span></div>' +
           '<div><strong>' + ({ planejada: 'Planejada', em_andamento: 'Na rua', concluida: 'Concluída' }[r.status]) + '</strong><span>' + (emAndamento ? pend.length + ' faltando' : (r.iniciada_em ? 'saiu ' + hora(r.iniciada_em) : '')) + '</span></div>' +
@@ -381,6 +388,30 @@
     if (!manterAviso) statusGps('');
   }
 
+  // ---- Limite de entregas por rota (delivery_config.config.limite_por_rota, migration_052) ----
+  var limiteRota = null;
+  async function carregarLimite() {
+    var r = await client.from('delivery_config').select('config').eq('id', 1).single();
+    limiteRota = r.data && r.data.config ? Number(r.data.config.limite_por_rota) || 10 : 10;
+    $('rtLimite').value = limiteRota;
+    render();
+  }
+  $('rtLimiteForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    var n = Math.floor(Number($('rtLimite').value));
+    if (!(n >= 1 && n <= 50)) { toast('Use um número de 1 a 50.'); return; }
+    var btn = this.querySelector('button'); btn.disabled = true;
+    // Lê a config de novo na hora de gravar: só muda o limite, o resto fica como está.
+    var r = await client.from('delivery_config').select('config').eq('id', 1).single();
+    var cfg = Object.assign({}, (r.data && r.data.config) || {}, { limite_por_rota: n });
+    var u = r.error ? r : await client.from('delivery_config').update({ config: cfg, atualizado_em: new Date().toISOString() }).eq('id', 1);
+    btn.disabled = false;
+    if (u.error) { toast('Não deu pra salvar o limite. Tente de novo.'); return; }
+    limiteRota = n; render();
+    toast('Limite salvo: ' + n + (n === 1 ? ' entrega' : ' entregas') + ' por rota.');
+  });
+
+  carregarLimite();
   carregar();
 })();
 </script>

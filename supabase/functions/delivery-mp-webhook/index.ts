@@ -6,6 +6,7 @@
 // Aprovado → delivery_confirmar_pagamento (status 'pago' + baixa de estoque,
 // idempotente). Sempre responde 200 (senão o MP fica reenviando).
 //
+// Também confirma o pedido de revendedor pago online (REV-<checkout>).
 // Secrets: MP_ACCESS_TOKEN; MP_WEBHOOK_SECRET (opcional — se configurado,
 // valida a assinatura x-signature do MP).
 // ==========================================================================
@@ -47,9 +48,22 @@ Deno.serve(async (req: Request) => {
       headers: { Authorization: 'Bearer ' + mpToken },
     }).then((r) => r.json())
     const codigo = pg?.external_reference
+    const sb = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
+
+    // Pedido de revendedor pago online (migration_051): REV-<id do checkout>.
+    if (codigo && String(codigo).startsWith('REV-')) {
+      const { data: ck } = await sb.from('revenda_checkouts').select('id, token').eq('id', Number(String(codigo).slice(4))).single()
+      if (!ck) return ok({ ok: false, motivo: 'checkout nao encontrado' })
+      if (pg.status === 'approved') {
+        const { data: r } = await sb.rpc('revenda_confirmar_checkout', { p_token: ck.token, p_payment_id: id,
+          p_metodo: METODO[pg.payment_type_id] || pg.payment_method_id || null, p_valor: Number(pg.transaction_amount) || 0 })
+        return ok(r)
+      }
+      await sb.from('revenda_checkouts').update({ mp_payment_id: id, mp_status: pg.status }).eq('id', ck.id).neq('status', 'pago')
+      return ok({ ok: true, status_mp: pg.status })
+    }
     if (!codigo || !String(codigo).startsWith('DLV-')) return ok({ ok: true, ignorado: 'nao_e_delivery' })
 
-    const sb = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
     const { data: ped } = await sb.from('delivery_pedidos').select('id, total, status').eq('codigo', codigo).single()
     if (!ped) return ok({ ok: false, motivo: 'pedido nao encontrado' })
 
