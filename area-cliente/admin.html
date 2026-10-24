@@ -9,7 +9,7 @@
 <link rel="apple-touch-icon" href="../assets/img/brand/favicon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/css/style.css?v=62">
+<link rel="stylesheet" href="../assets/css/style.css?v=63">
 </head>
 <body class="pg-admin">
 <svg class="sprite" aria-hidden="true" focusable="false"><symbol id="m-grafico" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></symbol><symbol id="m-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol><symbol id="m-usuarios" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"/></symbol><symbol id="m-caixa" viewBox="0 0 24 24"><path d="M3 8l9-4 9 4v9l-9 4-9-4z"/><path d="M3 8l9 4 9-4M12 12v9"/></symbol><symbol id="m-painel" viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 10h6M9 14h6M9 18h3"/></symbol><symbol id="m-fabrica" viewBox="0 0 24 24"><path d="M3 21V10l5 3v-3l5 3V7l8 4v10z"/><path d="M7 17h2M12 17h2M17 17h1"/></symbol><symbol id="m-etiqueta" viewBox="0 0 24 24"><path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.4"/></symbol><symbol id="m-engrenagem" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></symbol><symbol id="m-casa" viewBox="0 0 24 24"><path d="M3 11l9-7 9 7M5 9.5V20h14V9.5M10 20v-6h4v6"/></symbol><symbol id="m-sair" viewBox="0 0 24 24"><path d="M14 4h5a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-5M10 16l-4-4 4-4M6 12h10"/></symbol><symbol id="m-carrinho" viewBox="0 0 24 24"><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2.5 3.5h3l2.4 11.2a1.5 1.5 0 0 0 1.5 1.3h8.4a1.5 1.5 0 0 0 1.5-1.2L21 7H6.3"/></symbol><symbol id="m-recibo" viewBox="0 0 24 24"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6M9 16h3"/></symbol><symbol id="m-calendario" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></symbol><symbol id="m-chat" viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></symbol><symbol id="m-usuario" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol><symbol id="m-globo" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></symbol><symbol id="m-hoje" viewBox="0 0 24 24"><path d="M4 13h4l2 3h4l2-3h4"/><path d="M4 13l2.5-8h11L20 13v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/></symbol><symbol id="m-pasta" viewBox="0 0 24 24"><path d="M3 6.5A1.5 1.5 0 0 1 4.5 5H9l2 2.5h8.5A1.5 1.5 0 0 1 21 9v9.5a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 18.5z"/></symbol><symbol id="m-mais" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol></svg>
@@ -812,6 +812,53 @@
     });
   }
   function confirmar(msg, opcoes) { return dialogo(msg, opcoes); }
+  // Recusar/rejeitar com motivo. Resolve false (desistiu) ou { motivo, janela }.
+  // "… e avisar no WhatsApp" abre a aba JÁ no clique (senão o navegador bloqueia
+  // a janela aberta depois do await); quem chama leva a aba pro wa.me.
+  function pedirMotivo(msg, opcoes) {
+    opcoes = opcoes || {};
+    return new Promise(function (resolve) {
+      var fundo = document.createElement('div');
+      fundo.className = 'dlg-fundo';
+      fundo.innerHTML = '<div class="dlg" role="dialog" aria-modal="true" aria-labelledby="dlgMsg">' +
+        '<p id="dlgMsg"></p>' +
+        '<label class="dlg-motivo"><span>Motivo (vai na mensagem pro cliente)</span>' +
+        '<textarea rows="3" maxlength="400" placeholder="Ex.: ainda não atendemos a sua cidade"></textarea></label>' +
+        '<div class="dlg-acoes">' +
+          '<button type="button" class="btn btn-dark-outline btn-sm" data-r="cancelar">Cancelar</button>' +
+          '<button type="button" class="btn btn-dark-outline btn-sm" data-r="sem">' + esc(opcoes.ok || 'Confirmar') + ' sem avisar</button>' +
+          (opcoes.podeAvisar === false ? '' : '<button type="button" class="btn btn-sm btn-perigo" data-r="avisar">' + esc(opcoes.ok || 'Confirmar') + ' e avisar no WhatsApp</button>') +
+        '</div>' +
+        (opcoes.podeAvisar === false ? '<p class="dlg-nota">Sem WhatsApp válido no cadastro: não dá pra avisar por aqui.</p>' : '') +
+        '</div>';
+      fundo.querySelector('#dlgMsg').textContent = msg;
+      var campo = fundo.querySelector('textarea'), focoAntes = document.activeElement;
+      function fechar(r) {
+        document.removeEventListener('keydown', tecla); fundo.remove();
+        if (focoAntes && focoAntes.focus) focoAntes.focus({ preventScroll: true });
+        resolve(r);
+      }
+      function tecla(e) {
+        if (e.key === 'Escape') return fechar(false);
+        if (e.key !== 'Tab') return;
+        var fs = fundo.querySelectorAll('textarea, button'), primeiro = fs[0], ultimo = fs[fs.length - 1];
+        if (e.shiftKey && document.activeElement === primeiro) { e.preventDefault(); ultimo.focus(); }
+        else if (!e.shiftKey && document.activeElement === ultimo) { e.preventDefault(); primeiro.focus(); }
+      }
+      fundo.addEventListener('click', function (e) {
+        var b = e.target.closest('[data-r]');
+        if (!b) { if (e.target === fundo) fechar(false); return; }
+        var r = b.getAttribute('data-r');
+        if (r === 'cancelar') return fechar(false);
+        var motivo = campo.value.replace(/[<>]/g, '').trim();
+        if (r === 'avisar' && !motivo) { campo.focus(); campo.classList.add('erro'); campo.placeholder = 'Escreva o motivo pra mandar junto'; return; }
+        fechar({ motivo: motivo, janela: r === 'avisar' ? window.open('', '_blank') : null });
+      });
+      document.addEventListener('keydown', tecla);
+      document.body.appendChild(fundo);
+      campo.focus();
+    });
+  }
   function aviso(msg) { return dialogo(msg, { soOk: true }); }
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
 (async function () {
@@ -1517,7 +1564,7 @@
     }).join('');
 
     // Aprovar e rejeitar mostram "Desfazer" (volta o cadastro pra pendente).
-    async function decidir(id, status) {
+    async function decidir(id, status, escolha) {
       var p = pending.filter(function (x) { return String(x.id) === String(id); })[0];
       var nome = p ? (p.empresa || p.nome || 'Cadastro') : 'Cadastro';
       var r = await DupuroAdmin.setProfileStatus(id, status);
@@ -1525,6 +1572,7 @@
       await Promise.all([renderPending(), renderResellers()]);
       await populateResellerSelect();
       var av = await avisoAgora('cadastro', String(id));
+      if (escolha && escolha.janela) { await avisarComMotivo('cadastro', String(id), escolha); av = null; }
       toast(nome + (status === 'aprovado' ? ' aprovado. Já pode pedir pelo painel.' : ' rejeitado.'), async function () {
         await DupuroAdmin.setProfileStatus(id, 'pendente');
         await Promise.all([renderPending(), renderResellers()]); await populateResellerSelect();
@@ -1568,7 +1616,13 @@
       btn.addEventListener('click', function () { btn.disabled = true; decidir(btn.getAttribute('data-approve'), 'aprovado'); });
     });
     body.querySelectorAll('[data-reject]').forEach(function (btn) {
-      btn.addEventListener('click', function () { btn.disabled = true; decidir(btn.getAttribute('data-reject'), 'rejeitado'); });
+      btn.addEventListener('click', async function () {
+        var id = btn.getAttribute('data-reject');
+        var p = pending.filter(function (x) { return String(x.id) === id; })[0] || {};
+        var escolha = await pedirMotivo('Rejeitar o cadastro de ' + (p.empresa || p.nome || 'revendedor') + '? A pessoa não consegue entrar no painel.', { ok: 'Rejeitar', podeAvisar: !!waNumero(p.telefone) });
+        if (!escolha) return;
+        btn.disabled = true; decidir(id, 'rejeitado', escolha);
+      });
     });
   }
 
@@ -2965,9 +3019,13 @@
     }
     await atualizarDepoisDePedido();
     if (opcoes.desfeito) toast(o.numero + ' voltou para ' + (STATUS_LABEL[novo] || novo).toLowerCase() + '.');
-    else toast(mensagemStatus(o, novo, anterior), function () {
-      mudarStatus(Object.assign({}, o, { status: novo }), anterior, { desfeito: true });
-    }, await avisoAgora('pedido', o.numero));
+    else {
+      var avP = await avisoAgora('pedido', o.numero);
+      if (opcoes.escolha && opcoes.escolha.janela) { await avisarComMotivo('pedido', o.numero, opcoes.escolha); avP = null; }
+      toast(mensagemStatus(o, novo, anterior), function () {
+        mudarStatus(Object.assign({}, o, { status: novo }), anterior, { desfeito: true });
+      }, avP);
+    }
     depoisDeAvisar();
     return true;
   }
@@ -3034,8 +3092,9 @@
     return (Array.isArray(d.itens) ? d.itens : []).map(function (it) { return '• ' + (it.quantidade || 1) + '× ' + (it.nome || '') + (it.sabor ? ' · ' + it.sabor : ''); }).join('\n');
   }
   // a = linha de avisos_cliente; evento 'saiu' = aviso avulso do revendedor (sem status no banco).
-  function textoAviso(a) {
+  function textoAviso(a, motivo) {
     var nome = primeiroNome(a.nome), dd = a.dados || {};
+    var mot = 'Motivo: ' + (motivo || '');
     var oi = 'Olá' + (nome ? ', ' + nome : '') + '! Aqui é da Dupuro Açaí.\n\n';
     var junta = function (partes) { return oi + partes.filter(Boolean).join('\n\n'); };
     if (a.origem_tipo === 'cadastro') {
@@ -3045,7 +3104,7 @@
         'Já pode fazer seus pedidos pelo painel:\n' + SITE + 'area-cliente/login.html' + (dd.email ? '\nEntre com o e-mail ' + dd.email + ' e a senha que você criou no cadastro.' : ''),
         'Lá você escolhe os produtos, o dia e o turno da entrega (ou a retirada na fábrica) e acompanha cada pedido. Os pedidos são a partir de 1 caixa de 10 L.',
         'Qualquer dúvida, é só responder aqui.']);
-      return junta(['Analisamos seu cadastro de revendedor' + quem + ' e, por enquanto, não conseguimos aprovar.', 'Motivo: ']);
+      return junta(['Analisamos seu cadastro de revendedor' + quem + ' e, por enquanto, não conseguimos aprovar.', mot]);
     }
     if (a.origem_tipo === 'pedido') {
       var o = avisosCtx.pedidos[a.origem_ref], num = a.origem_ref;
@@ -3057,8 +3116,8 @@
         return junta(['Seu pedido ' + num + ' saiu pra entrega' + turno + '.', resumoPedidoTexto(o), entregaTexto(o).split('\n').filter(function (l) { return !/^Entrega/.test(l); }).join('\n')]);
       }
       if (a.evento === 'entregue') return junta(['Seu pedido ' + num + (retira ? ' foi retirado' : ' foi entregue') + '. Obrigado pela parceria!', resumoPedidoTexto(o), 'Quando precisar repor, é só pedir pelo painel:\n' + SITE + 'area-cliente/login.html']);
-      if (a.evento === 'recusado') return junta(['Não conseguimos atender seu pedido ' + num + ' agora.', resumoPedidoTexto(o), 'Motivo: ']);
-      return junta(['Seu pedido ' + num + ' foi cancelado.', resumoPedidoTexto(o), 'Motivo: ']);
+      if (a.evento === 'recusado') return junta(['Não conseguimos atender seu pedido ' + num + ' agora.', resumoPedidoTexto(o), mot]);
+      return junta(['Seu pedido ' + num + ' foi cancelado.', resumoPedidoTexto(o), mot]);
     }
     var d = avisosCtx.delivery[a.origem_ref] || {}, cod = a.origem_ref;
     if (a.evento === 'em_rota') return junta([
@@ -3066,11 +3125,22 @@
       d.token ? 'Acompanhe no link:\n' + SITE + 'delivery/acompanhar.html?t=' + d.token : '',
       itensDelivery(d) ? 'Itens:\n' + itensDelivery(d) : '']);
     if (a.evento === 'entregue') return junta(['Seu pedido ' + cod + ' foi entregue. Obrigado por pedir na Dupuro, bom açaí!', 'Se puder, conta pra gente o que achou respondendo aqui.']);
-    return junta(['Seu pedido ' + cod + ' foi cancelado.', 'Motivo: ']);
+    return junta(['Seu pedido ' + cod + ' foi cancelado.', mot]);
+  }
+  var COM_MOTIVO = { rejeitado: 1, recusado: 1, cancelado: 1 };
+  // Depois de recusar com "e avisar": leva a aba aberta no clique pro wa.me e marca avisado.
+  async function avisarComMotivo(tipo, ref, escolha) {
+    var av = await avisoAgora(tipo, ref);
+    var href = av ? waHref(av.telefone, textoAviso(av, escolha.motivo)) : '';
+    if (!href) { escolha.janela.close(); aviso('Não deu pra abrir o WhatsApp: o cadastro não tem um número válido.'); return; }
+    escolha.janela.opener = null;
+    escolha.janela.location.href = href;
+    await DupuroAdmin.marcarAviso(av.id, 'avisado');
+    depoisDeAvisar();
   }
   // Botão do aviso (cartão e Início). Sem telefone válido: só dá pra dispensar.
-  function botaoAviso(a) {
-    var href = waHref(a.telefone, textoAviso(a));
+  function botaoAviso(a, motivo) {
+    var href = waHref(a.telefone, textoAviso(a, motivo));
     return href
       ? '<a class="btn btn-avisar btn-sm" href="' + esc(href) + '" target="_blank" rel="noopener" data-aviso-id="' + a.id + '"><svg aria-hidden="true"><use href="#m-chat"/></svg>Avisar cliente no WhatsApp</a>'
       : '<span class="aviso-sem-tel">Sem WhatsApp válido no cadastro</span>';
@@ -3087,6 +3157,15 @@
       depoisDeAvisar();
     });
   });
+  // Motivo digitado na lista entra no link na hora.
+  document.getElementById('avisosLista').addEventListener('input', function (e) {
+    var inp = e.target.closest('[data-motivo-para]');
+    if (!inp) return;
+    var id = inp.getAttribute('data-motivo-para');
+    var a = avisosPend.filter(function (x) { return String(x.id) === id; })[0];
+    var link = this.querySelector('a[data-aviso-id="' + id + '"]');
+    if (a && link) link.href = waHref(a.telefone, textoAviso(a, inp.value.replace(/[<>]/g, '').trim()));
+  });
   async function renderAvisosInicio() {
     var lista = await carregarAvisos();
     var box = document.getElementById('inicioAvisos');
@@ -3098,6 +3177,7 @@
       return '<li class="aviso-item">' +
         '<div class="aviso-txt"><strong>' + esc(AVISO_TITULO[a.origem_tipo + ':' + a.evento] || 'Aviso') + ref + '</strong>' +
           '<span>' + esc([a.nome, dd.empresa].filter(Boolean).join(' · ') || 'Cliente') + ' · ' + haQuanto(a.criado_em) + '</span></div>' +
+        (COM_MOTIVO[a.evento] && waNumero(a.telefone) ? '<label class="aviso-motivo"><span>Motivo</span><input type="text" maxlength="400" data-motivo-para="' + a.id + '" placeholder="Vai junto na mensagem"></label>' : '') +
         '<div class="aviso-acoes">' + botaoAviso(a) +
           '<button type="button" class="btn-link-acao" data-aviso-dispensar="' + a.id + '" title="Some da lista sem abrir o WhatsApp">' + (waNumero(a.telefone) ? 'Já avisei' : 'Dispensar') + '</button></div>' +
         '</li>';
@@ -3179,10 +3259,10 @@
       '</article>';
   }
 
-  var filaPedidos = { pedidos: [], delivery: [] };
+  var filaPedidos = { pedidos: [], delivery: [] }, revPorIdFila = {};
   async function renderPedidosFila() {
     var r = await Promise.all([DupuroAdmin.getAllOrders(), DupuroAdmin.getDeliveryPedidos(), DupuroAdmin.getResellers(), carregarAvisos()]);
-    var revPorId = {};
+    var revPorId = revPorIdFila = {};
     r[2].forEach(function (x) { revPorId[x.id] = x; });
     var naoLoja = r[0].filter(function (o) { return o.origem !== 'loja'; });
     var novos = naoLoja.filter(function (o) { return o.status === 'enviado'; });
@@ -3266,11 +3346,17 @@
     var o = filaPedidos.pedidos.filter(function (x) { return x.numero === b.getAttribute('data-num'); })[0];
     if (!o) return;
     var acao = b.getAttribute('data-ped-acao');
-    if (acao === 'recusar' && !await confirmar('Recusar o pedido ' + o.numero + (o.revendedorNome && o.revendedorNome !== '—' ? ' de ' + o.revendedorNome : '') + '? Ele fica como cancelado, e o revendedor vê isso no painel.', { ok: 'Recusar pedido', perigo: true })) return;
-    if (acao === 'cancelar' && !await confirmar('Cancelar o pedido ' + o.numero + '?' + (o.usaEstoque ? ' O estoque desses itens volta.' : ''), { ok: 'Cancelar pedido', perigo: true })) return;
+    var escolha = null, revP = revPorIdFila[o.revendedorId];
+    if (acao === 'recusar' || acao === 'cancelar') {
+      escolha = await pedirMotivo(acao === 'recusar'
+        ? 'Recusar o pedido ' + o.numero + (o.revendedorNome && o.revendedorNome !== '—' ? ' de ' + o.revendedorNome : '') + '? Ele fica como cancelado, e o revendedor vê isso no painel.'
+        : 'Cancelar o pedido ' + o.numero + '?' + (o.usaEstoque ? ' O estoque desses itens volta.' : ''),
+        { ok: acao === 'recusar' ? 'Recusar' : 'Cancelar pedido', podeAvisar: !!(revP && waNumero(revP.telefone)) });
+      if (!escolha) return;
+    }
     b.disabled = true;
     var alvo = { confirmar: 'processando', recusar: 'cancelado', entregar: 'entregue', cancelar: 'cancelado' }[acao];
-    if (!await mudarStatus(o, alvo)) b.disabled = false;
+    if (!await mudarStatus(o, alvo, { escolha: escolha })) { b.disabled = false; if (escolha && escolha.janela) escolha.janela.close(); }
   });
 
   // Erro do banco em português do dia a dia (nunca o texto técnico em inglês).
