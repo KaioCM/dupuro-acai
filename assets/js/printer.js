@@ -464,6 +464,12 @@ var DupuroPrinter = (function () {
       : '<div class="c small">(sem vendas no dia)</div>';
     var dif = Number(d.diferenca) || 0;
     var difTxt = Math.abs(dif) < 0.005 ? 'Confere' : (dif > 0 ? 'Sobra ' + brl(dif) : 'Falta ' + brl(-dif));
+    // Cada retirada/reforço numa linha pequena (o troco devolvido já sai da conta).
+    var linhasMov = (d.movimentos || []).map(function (m) {
+      var liq = Number(m.valor) - Number(m.devolvido || 0);
+      return '<div class="small">' + (m.tipo === 'reforco' ? '+ ' : '- ') + esc(m.observacao) + ': ' +
+        (m.tipo === 'reforco' ? brl(m.valor) : brl(liq) + (Number(m.devolvido) > 0 ? ' (saiu ' + brl(m.valor) + ', voltou ' + brl(m.devolvido) + ')' : '')) + '</div>';
+    }).join('');
     return '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Fechamento de caixa</title><style>' +
       '@page { size: 80mm auto; margin: 0; }' +
       'body { margin:0; padding:4mm 3mm; font-family:"Courier New",monospace; font-size:12px; line-height:1.35; color:#000; width:74mm; }' +
@@ -488,6 +494,9 @@ var DupuroPrinter = (function () {
       linhasPf +
       '<div class="hr"></div>' +
       par('Fundo de troco', brl(d.fundoTroco)) +
+      (Number(d.reforcos) > 0 ? par('Dinheiro colocado', '+' + brl(d.reforcos)) : '') +
+      (Number(d.retiradas) > 0 ? par('Retiradas', '-' + brl(d.retiradas)) : '') +
+      linhasMov +
       par('Esperado em dinheiro', brl(d.esperado), 'b') +
       par('Contado em dinheiro', brl(d.contado), 'b') +
       par('Diferença', difTxt, 'b') +
@@ -496,6 +505,39 @@ var DupuroPrinter = (function () {
       '<div class="c small">&nbsp;</div>' +
       '</body></html>';
   }
+  // Comprovante de retirada/reforço de dinheiro (vai grampeado com a nota do mercado).
+  var CAT_DINHEIRO = { compra_loja: 'Compra pra loja', fornecedor: 'Fornecedor ou entregador', dono: 'Retirada do dono', troco: 'Troco', outro: 'Outro' };
+  function htmlDoComprovanteDinheiro(d) {
+    var esc = function (t) { return String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;'); };
+    var reforco = d.tipo === 'reforco';
+    return '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Comprovante</title><style>' +
+      '@page { size: 80mm auto; margin: 0; }' +
+      'body { margin:0; padding:4mm 3mm; font-family:"Courier New",monospace; font-size:12px; line-height:1.35; color:#000; width:74mm; }' +
+      '.c{text-align:center;} .b{font-weight:700;} .hr{border-top:1px dashed #000;margin:5px 0;} .small{font-size:10px;} .big{font-size:16px;}' +
+      '</style></head><body>' +
+      '<div class="c b big">DUPURO AÇAÍ</div>' +
+      '<div class="hr"></div>' +
+      '<div class="c b" style="font-size:14px;">' + (reforco ? 'DINHEIRO COLOCADO NO CAIXA' : 'RETIRADA DE DINHEIRO') + '</div>' +
+      '<div class="hr"></div>' +
+      par('Valor', brl(d.valor), 'b big') +
+      (Number(d.devolvido) > 0 ? par('Troco devolvido', brl(d.devolvido)) + par('Gasto', brl(Number(d.valor) - Number(d.devolvido)), 'b') : '') +
+      (reforco ? '' : par('Pra quê', esc(CAT_DINHEIRO[d.categoria] || d.categoria))) +
+      '<div>' + esc(d.observacao) + '</div>' +
+      '<div class="hr"></div>' +
+      par('Atendente', esc(d.atendente || '—')) +
+      par('Data', new Date(d.criado_em || Date.now()).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })) +
+      '<div class="hr"></div>' +
+      (reforco ? '' : '<div class="small">Grampeie a nota da compra aqui.</div><div>&nbsp;</div><div>Assinatura: ____________________</div>') +
+      '<div class="c small">Controle interno - não é documento fiscal</div>' +
+      '<div class="c small">&nbsp;</div>' +
+      '</body></html>';
+  }
+  async function imprimirComprovanteDinheiro(d) {
+    var html = htmlDoComprovanteDinheiro(d);
+    if (rodandoNoApp()) return imprimirHtmlNativo(html);
+    return imprimirHtmlNavegador(html);
+  }
+
   async function imprimirResumoCaixa(d) {
     var html = htmlDoResumoCaixa(d);
     if (rodandoNoApp()) return imprimirHtmlNativo(html);
@@ -567,6 +609,7 @@ var DupuroPrinter = (function () {
     imprimirNavegador: imprimirNavegador,
     imprimirCupomFiscal: imprimirCupomFiscal,
     imprimirResumoCaixa: imprimirResumoCaixa,
+    imprimirComprovanteDinheiro: imprimirComprovanteDinheiro,
     montarLinhas: montarLinhas,
     htmlDaComanda: htmlDaComanda,
     htmlDoCupomFiscal: htmlDoCupomFiscal,

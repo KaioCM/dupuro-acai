@@ -9,7 +9,7 @@
 <link rel="apple-touch-icon" href="../assets/img/brand/favicon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/css/style.css?v=59">
+<link rel="stylesheet" href="../assets/css/style.css?v=62">
 <link rel="manifest" href="../manifest.webmanifest">
 <meta name="theme-color" content="#601050">
 </head>
@@ -62,6 +62,7 @@
         </div>
         <div class="caixa-actions">
           <button type="button" class="btn btn-primary btn-sm hidden" id="abrirCaixaBtn">Abrir caixa</button>
+          <button type="button" class="btn btn-dark-outline btn-sm hidden" id="dinheiroBtn">Retirar ou colocar dinheiro</button>
           <button type="button" class="btn btn-dark-outline btn-sm hidden" id="fecharCaixaBtn">Fechar caixa</button>
         </div>
       </div>
@@ -506,6 +507,44 @@
   </div>
 </div>
 
+<!-- Retirar ou colocar dinheiro (migration_048) -->
+<div class="modal-overlay hidden" id="dinheiroModal">
+  <div class="modal-card cx-dinheiro" role="dialog" aria-modal="true" aria-labelledby="dinTit">
+    <h2 id="dinTit">Dinheiro do caixa</h2>
+    <div class="seg" id="dinTipo" role="group" aria-label="Tipo">
+      <button type="button" class="seg-btn active" data-din="retirada" aria-pressed="true">Retirar</button>
+      <button type="button" class="seg-btn" data-din="reforco" aria-pressed="false">Colocar</button>
+    </div>
+    <p class="subtitle" id="dinAjuda">Dinheiro que sai da gaveta. Se voltar troco, registre em "Devolver troco" na lista abaixo.</p>
+    <div class="field">
+      <label for="dinValor">Valor (R$)</label>
+      <input type="text" inputmode="decimal" id="dinValor" placeholder="Ex: 50,00" autocomplete="off">
+    </div>
+    <div class="field" id="dinCatField">
+      <span class="din-label" id="dinCatTit">Pra quê?</span>
+      <div class="din-cats" id="dinCats" role="group" aria-labelledby="dinCatTit">
+        <button type="button" class="din-cat" data-cat="compra_loja" aria-pressed="false">Compra pra loja</button>
+        <button type="button" class="din-cat" data-cat="fornecedor" aria-pressed="false">Fornecedor ou entregador</button>
+        <button type="button" class="din-cat" data-cat="dono" aria-pressed="false">Retirada do dono</button>
+        <button type="button" class="din-cat" data-cat="outro" aria-pressed="false">Outro</button>
+      </div>
+    </div>
+    <div class="field">
+      <label for="dinObs" id="dinObsTit">O que foi</label>
+      <input type="text" id="dinObs" maxlength="200" placeholder="Ex.: banana no mercado" autocomplete="off">
+    </div>
+    <div class="field-note" id="dinErro" role="alert"></div>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-dark-outline" id="dinFechar">Voltar</button>
+      <button type="button" class="btn btn-primary" id="dinOk">Registrar retirada</button>
+    </div>
+    <div class="din-lista-box">
+      <h3>Neste caixa</h3>
+      <ul class="din-lista" id="dinLista"><li class="din-vazio">Nada retirado nem colocado ainda.</li></ul>
+    </div>
+  </div>
+</div>
+
 <!-- Fechar caixa -->
 <div class="modal-overlay hidden" id="fecharModal">
   <div class="modal-card">
@@ -537,9 +576,9 @@
 <script src="../assets/js/supabase-client.js"></script>
 <script src="../assets/js/app-ui.js?v=3"></script>
 <script src="../assets/js/offline-queue.js"></script>
-<script src="../assets/js/caixa.js?v=3"></script>
+<script src="../assets/js/caixa.js?v=4"></script>
 <script src="../assets/js/vendor/qrcode.js"></script>
-<script src="../assets/js/printer.js?v=2"></script>
+<script src="../assets/js/printer.js?v=3"></script>
 <script>
   // Escapa texto antes de ir pro innerHTML (dado de revendedor/cliente nunca vira HTML).
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
@@ -1442,21 +1481,160 @@
       dot.classList.add('on'); dot.classList.remove('off');
       state.textContent = 'Caixa aberto';
       hint.textContent = 'Desde ' + hora + ' · fundo de troco ' + brl(Number(caixaSessao.fundo_troco) || 0);
+      if (dinheiroRetirado > 0) hint.textContent += ' · retiradas ' + brl(dinheiroRetirado);
       abrirBtn.classList.add('hidden');
       fecharBtn.classList.remove('hidden');
+      document.getElementById('dinheiroBtn').classList.remove('hidden');
     } else {
       dot.classList.add('off'); dot.classList.remove('on');
       state.textContent = 'Caixa fechado';
       hint.textContent = 'Abra o caixa para começar a registrar vendas.';
       abrirBtn.classList.remove('hidden');
       fecharBtn.classList.add('hidden');
+      document.getElementById('dinheiroBtn').classList.add('hidden');
     }
     renderCart(); // o botão Registrar diz se o caixa está fechado
   }
   async function carregarCaixa() {
     caixaSessao = await DupuroCaixa.getCaixaAberto();
     renderCaixaBar();
+    if (caixaSessao && navigator.onLine) carregarMovimentos();
   }
+
+  // ---- Retirar ou colocar dinheiro (migration_048) ----
+  // Retirada = saiu da gaveta (mercado, fornecedor...); o troco que voltar é
+  // registrado na própria retirada. Colocar = reforço (mais troco). O
+  // fechamento já desconta/soma tudo no dinheiro esperado.
+  var CAT_DIN = { compra_loja: 'Compra pra loja', fornecedor: 'Fornecedor ou entregador', dono: 'Retirada do dono', troco: 'Troco', outro: 'Outro' };
+  var dinheiroModal = document.getElementById('dinheiroModal');
+  var dinTipo = 'retirada', dinCat = null, dinheiroRetirado = 0, movimentosCaixa = [], anularArmado = null;
+  function nomeAtendente() { return (document.getElementById('chipName') || {}).textContent || 'Atendente'; }
+  function setDinTipo(t) {
+    dinTipo = t;
+    document.querySelectorAll('#dinTipo [data-din]').forEach(function (b) {
+      var on = b.getAttribute('data-din') === t;
+      b.classList.toggle('active', on); b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+    document.getElementById('dinCatField').classList.toggle('hidden', t === 'reforco');
+    document.getElementById('dinAjuda').textContent = t === 'reforco'
+      ? 'Dinheiro que entra na gaveta fora de venda, por exemplo mais troco no meio do dia.'
+      : 'Dinheiro que sai da gaveta. Se voltar troco, registre em "Devolver troco" na lista abaixo.';
+    document.getElementById('dinObsTit').textContent = t === 'reforco' ? 'De onde veio' : 'O que foi';
+    document.getElementById('dinObs').placeholder = t === 'reforco' ? 'Ex.: troco trazido pela Dilene' : 'Ex.: banana no mercado';
+    document.getElementById('dinOk').textContent = t === 'reforco' ? 'Registrar dinheiro colocado' : 'Registrar retirada';
+  }
+  function setDinCat(c) {
+    dinCat = c;
+    document.querySelectorAll('#dinCats [data-cat]').forEach(function (b) {
+      var on = b.getAttribute('data-cat') === c;
+      b.classList.toggle('on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+  }
+  function erroDin(msg) { var e = document.getElementById('dinErro'); e.textContent = msg; e.classList.toggle('show', !!msg); }
+  async function carregarMovimentos() {
+    if (!caixaSessao) { movimentosCaixa = []; dinheiroRetirado = 0; return; }
+    movimentosCaixa = await DupuroCaixa.getMovimentos(caixaSessao.id);
+    dinheiroRetirado = movimentosCaixa.reduce(function (s, m) { return m.tipo === 'retirada' ? s + Number(m.valor) - Number(m.devolvido) : s; }, 0);
+    renderMovimentos();
+    renderCaixaBar();
+  }
+  function renderMovimentos() {
+    var ul = document.getElementById('dinLista');
+    if (!movimentosCaixa.length) { ul.innerHTML = '<li class="din-vazio">Nada retirado nem colocado ainda.</li>'; return; }
+    ul.innerHTML = movimentosCaixa.map(function (m) {
+      var ret = m.tipo === 'retirada', dev = Number(m.devolvido) || 0;
+      var hora = new Date(m.criado_em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      return '<li class="din-item" data-mov="' + m.id + '">' +
+        '<div class="din-linha"><strong>' + (ret ? 'Retirada' : 'Colocado') + ' · ' + brl(m.valor) + '</strong><span>' + hora + '</span></div>' +
+        '<div class="din-desc">' + (ret ? esc(CAT_DIN[m.categoria] || m.categoria) + ' · ' : '') + esc(m.observacao) + '</div>' +
+        (dev > 0 ? '<div class="din-desc">Voltou ' + brl(dev) + ' de troco · gasto ' + brl(Number(m.valor) - dev) + '</div>' : '') +
+        '<div class="din-acoes">' +
+          (ret ? '<button type="button" class="btn-link-acao" data-din-troco="' + m.id + '">' + (dev > 0 ? 'Corrigir troco' : 'Devolver troco') + '</button>' : '') +
+          '<button type="button" class="btn-link-acao" data-din-imprimir="' + m.id + '">Imprimir</button>' +
+          '<button type="button" class="btn-link-acao perigo" data-din-anular="' + m.id + '">' + (anularArmado === String(m.id) ? 'Toque de novo pra anular' : 'Anular') + '</button>' +
+        '</div>' +
+        '<div class="din-troco hidden" data-din-troco-box="' + m.id + '">' +
+          '<label for="dinTroco' + m.id + '">Quanto voltou de troco (R$)</label>' +
+          '<div><input type="text" inputmode="decimal" id="dinTroco' + m.id + '" value="' + (dev > 0 ? String(dev).replace('.', ',') : '') + '" placeholder="Ex: 12,00" autocomplete="off">' +
+          '<button type="button" class="btn btn-primary btn-sm" data-din-troco-ok="' + m.id + '">Salvar</button></div>' +
+        '</div>' +
+        '</li>';
+    }).join('');
+  }
+  document.getElementById('dinheiroBtn').addEventListener('click', function () {
+    setDinTipo('retirada'); setDinCat(null); anularArmado = null;
+    document.getElementById('dinValor').value = ''; document.getElementById('dinObs').value = '';
+    erroDin('');
+    dinheiroModal.classList.remove('hidden');
+    document.getElementById('dinValor').focus();
+    carregarMovimentos();
+  });
+  document.getElementById('dinTipo').addEventListener('click', function (e) { var b = e.target.closest('[data-din]'); if (b) setDinTipo(b.getAttribute('data-din')); });
+  document.getElementById('dinCats').addEventListener('click', function (e) { var b = e.target.closest('[data-cat]'); if (b) { setDinCat(b.getAttribute('data-cat')); erroDin(''); document.getElementById('dinObs').focus(); } });
+  ['dinValor', 'dinObs'].forEach(function (id) { document.getElementById(id).addEventListener('input', function () { erroDin(''); }); });
+  document.getElementById('dinFechar').addEventListener('click', function () { dinheiroModal.classList.add('hidden'); });
+  dinheiroModal.addEventListener('click', function (e) { if (e.target === dinheiroModal) dinheiroModal.classList.add('hidden'); });
+  dinheiroModal.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') dinheiroModal.classList.add('hidden');
+    if (e.key === 'Enter' && (e.target.id === 'dinValor' || e.target.id === 'dinObs')) document.getElementById('dinOk').click();
+  });
+  document.getElementById('dinOk').addEventListener('click', async function () {
+    var valor = parseValor(document.getElementById('dinValor').value), obs = document.getElementById('dinObs').value.trim();
+    if (!(valor > 0)) { erroDin('Digite o valor.'); document.getElementById('dinValor').focus(); return; }
+    if (dinTipo === 'retirada' && !dinCat) { erroDin('Escolha pra quê é a retirada.'); return; }
+    if (obs.length < 2) { erroDin(dinTipo === 'retirada' ? 'Escreva o que foi comprar ou pagar.' : 'Escreva de onde veio o dinheiro.'); document.getElementById('dinObs').focus(); return; }
+    if (/[<>]/.test(obs)) { erroDin('Tire os sinais < e > do texto.'); return; }
+    erroDin('');
+    var btn = this; btn.disabled = true;
+    var r = await DupuroCaixa.movimentarDinheiro(dinTipo, valor, dinTipo === 'retirada' ? dinCat : 'troco', obs);
+    btn.disabled = false;
+    if (r.error) { erroDin(r.error.message || 'Não deu pra registrar. Tente de novo.'); return; }
+    try { DupuroPrinter.imprimirComprovanteDinheiro(Object.assign({ atendente: nomeAtendente() }, r.mov)); } catch (e) { /* comprovante é best-effort */ }
+    document.getElementById('dinValor').value = ''; document.getElementById('dinObs').value = ''; setDinCat(null);
+    await carregarMovimentos();
+    erroDin('');
+    var nota = document.getElementById('dinErro');
+    nota.textContent = (dinTipo === 'retirada' ? 'Retirada de ' : 'Entrada de ') + brl(valor) + ' registrada. O comprovante saiu na impressora.';
+    nota.classList.add('show', 'ok');
+    setTimeout(function () { nota.classList.remove('show', 'ok'); }, 4000);
+  });
+  document.getElementById('dinLista').addEventListener('click', async function (e) {
+    var t = e.target.closest('[data-din-troco]'), ok = e.target.closest('[data-din-troco-ok]');
+    var imp = e.target.closest('[data-din-imprimir]'), an = e.target.closest('[data-din-anular]');
+    if (t) {
+      var box = this.querySelector('[data-din-troco-box="' + t.getAttribute('data-din-troco') + '"]');
+      box.classList.toggle('hidden'); if (!box.classList.contains('hidden')) box.querySelector('input').focus();
+      return;
+    }
+    if (ok) {
+      var id = ok.getAttribute('data-din-troco-ok');
+      var v = parseValor(document.getElementById('dinTroco' + id).value);
+      ok.disabled = true;
+      var r = await DupuroCaixa.devolverTroco(Number(id), v);
+      ok.disabled = false;
+      if (r.error) { erroDin(r.error.message || 'Não deu pra salvar o troco.'); return; }
+      erroDin('');
+      await carregarMovimentos();
+      return;
+    }
+    if (imp) {
+      var m = movimentosCaixa.filter(function (x) { return String(x.id) === imp.getAttribute('data-din-imprimir'); })[0];
+      if (m) try { DupuroPrinter.imprimirComprovanteDinheiro(Object.assign({ atendente: nomeAtendente() }, m)); } catch (err) { /* best-effort */ }
+      return;
+    }
+    if (an) {
+      var aid = an.getAttribute('data-din-anular');
+      if (anularArmado !== aid) { anularArmado = aid; renderMovimentos(); return; }
+      anularArmado = null;
+      var ra = await DupuroCaixa.anularMovimento(Number(aid));
+      if (ra.error) { erroDin(ra.error.message || 'Não deu pra anular.'); return; }
+      await carregarMovimentos();
+    }
+  });
+  document.getElementById('dinLista').addEventListener('keydown', function (e) {
+    var inp = e.target.closest('.din-troco input');
+    if (inp && e.key === 'Enter') { e.stopPropagation(); this.querySelector('[data-din-troco-ok="' + inp.id.replace('dinTroco', '') + '"]').click(); }
+  });
 
   // Abrir
   var abrirModal = document.getElementById('abrirModal');
@@ -1518,6 +1696,8 @@
       '<div class="fr-linha fr-top"><span>Vendas (' + (res.qtd || 0) + ')</span><span>' + brl(Number(res.total) || 0) + '</span></div>' +
       fmtPorForma(res.por_forma) +
       '<div class="fr-linha fr-sep"><span>Fundo de troco</span><span>' + brl(Number(res.fundo_troco) || 0) + '</span></div>' +
+      (Number(res.reforcos) > 0 ? '<div class="fr-linha"><span>Dinheiro colocado</span><span>+' + brl(Number(res.reforcos)) + '</span></div>' : '') +
+      (Number(res.retiradas) > 0 ? '<div class="fr-linha"><span>Retiradas (já sem o troco que voltou)</span><span>−' + brl(Number(res.retiradas)) + '</span></div>' : '') +
       '<div class="fr-linha fr-forte"><span>Esperado em dinheiro</span><span>' + brl(fecharEsperadoDinheiro) + '</span></div>';
     atualizarDiferenca();
   });
@@ -1541,11 +1721,12 @@
         abertoEm: caixaSessao && caixaSessao.aberta_em, fechadoEm: Date.now(),
         qtd: res.qtd, total: res.total, porForma: res.por_forma,
         fundoTroco: res.fundo_troco, esperado: res.dinheiro_esperado,
+        retiradas: res.retiradas, reforcos: res.reforcos, movimentos: res.movimentos,
         contado: res.dinheiro_contado, diferenca: res.diferenca
       });
     } catch (e) { /* impressão do resumo é best-effort */ }
     fecharModal.classList.add('hidden');
-    caixaSessao = null; renderCaixaBar();
+    caixaSessao = null; movimentosCaixa = []; dinheiroRetirado = 0; renderCaixaBar();
     await loadVendas();
   });
   payButtons.forEach(function (b) {

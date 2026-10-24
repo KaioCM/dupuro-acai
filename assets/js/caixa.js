@@ -313,6 +313,35 @@ var DupuroCaixa = (function () {
     return { error: null, resumo: r.data };
   }
 
+  // ---------- Dinheiro do caixa: retirada e reforço (migration_048) ----------
+  // Tudo passa por funções do banco (conferem caixa aberto e papel). Precisa de
+  // internet, como abrir/fechar: o fechamento depende desses valores.
+  function semInternet(oque) {
+    return window.DupuroOffline && !DupuroOffline.estaOnline() ? { error: new Error(oque + ' precisa de internet.') } : null;
+  }
+  async function movimentarDinheiro(tipo, valor, categoria, obs) {
+    var off = semInternet(tipo === 'reforco' ? 'Colocar dinheiro' : 'Retirar dinheiro'); if (off) return off;
+    var r = await client.rpc('caixa_movimentar', { p_tipo: tipo, p_valor: valor, p_categoria: categoria, p_obs: obs });
+    return { error: r.error, mov: r.data || null };
+  }
+  async function devolverTroco(id, valor) {
+    var off = semInternet('Devolver o troco'); if (off) return off;
+    var r = await client.rpc('caixa_devolver_troco', { p_id: id, p_devolvido: valor });
+    return { error: r.error, mov: r.data || null };
+  }
+  async function anularMovimento(id) {
+    var off = semInternet('Anular'); if (off) return off;
+    var r = await client.rpc('caixa_anular_movimento', { p_id: id });
+    return { error: r.error };
+  }
+  async function getMovimentos(sessaoId) {
+    var r = await client.from('caixa_movimentos')
+      .select('id, tipo, categoria, observacao, valor, devolvido, criado_em')
+      .eq('sessao_id', sessaoId).is('anulado_em', null)
+      .order('criado_em', { ascending: false });
+    return r.error ? [] : (r.data || []);
+  }
+
   // Sincroniza as vendas que ficaram na fila offline. Chamado ao voltar a
   // conexão e ao abrir o caixa.
   async function sincronizarOffline() {
@@ -655,6 +684,10 @@ var DupuroCaixa = (function () {
     abrirCaixa: abrirCaixa,
     resumoCaixa: resumoCaixa,
     fecharCaixa: fecharCaixa,
+    movimentarDinheiro: movimentarDinheiro,
+    devolverTroco: devolverTroco,
+    anularMovimento: anularMovimento,
+    getMovimentos: getMovimentos,
     sincronizarOffline: sincronizarOffline,
     filaPendente: filaPendente,
     cancelSale: cancelSale,

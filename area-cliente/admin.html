@@ -9,7 +9,7 @@
 <link rel="apple-touch-icon" href="../assets/img/brand/favicon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/css/style.css?v=59">
+<link rel="stylesheet" href="../assets/css/style.css?v=62">
 </head>
 <body class="pg-admin">
 <svg class="sprite" aria-hidden="true" focusable="false"><symbol id="m-grafico" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></symbol><symbol id="m-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol><symbol id="m-usuarios" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"/></symbol><symbol id="m-caixa" viewBox="0 0 24 24"><path d="M3 8l9-4 9 4v9l-9 4-9-4z"/><path d="M3 8l9 4 9-4M12 12v9"/></symbol><symbol id="m-painel" viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 10h6M9 14h6M9 18h3"/></symbol><symbol id="m-fabrica" viewBox="0 0 24 24"><path d="M3 21V10l5 3v-3l5 3V7l8 4v10z"/><path d="M7 17h2M12 17h2M17 17h1"/></symbol><symbol id="m-etiqueta" viewBox="0 0 24 24"><path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.4"/></symbol><symbol id="m-engrenagem" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></symbol><symbol id="m-casa" viewBox="0 0 24 24"><path d="M3 11l9-7 9 7M5 9.5V20h14V9.5M10 20v-6h4v6"/></symbol><symbol id="m-sair" viewBox="0 0 24 24"><path d="M14 4h5a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-5M10 16l-4-4 4-4M6 12h10"/></symbol><symbol id="m-carrinho" viewBox="0 0 24 24"><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2.5 3.5h3l2.4 11.2a1.5 1.5 0 0 0 1.5 1.3h8.4a1.5 1.5 0 0 0 1.5-1.2L21 7H6.3"/></symbol><symbol id="m-recibo" viewBox="0 0 24 24"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6M9 16h3"/></symbol><symbol id="m-calendario" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></symbol><symbol id="m-chat" viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></symbol><symbol id="m-usuario" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol><symbol id="m-globo" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></symbol><symbol id="m-hoje" viewBox="0 0 24 24"><path d="M4 13h4l2 3h4l2-3h4"/><path d="M4 13l2.5-8h11L20 13v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/></symbol><symbol id="m-pasta" viewBox="0 0 24 24"><path d="M3 6.5A1.5 1.5 0 0 1 4.5 5H9l2 2.5h8.5A1.5 1.5 0 0 1 21 9v9.5a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 18.5z"/></symbol><symbol id="m-mais" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol></svg>
@@ -49,6 +49,11 @@
         <div><h1 id="inicioTitulo">Início</h1><div class="subtitle">O que precisa de você agora</div></div>
       </div>
       <div class="fila" id="inicioFila" aria-live="polite"><div class="fila-carregando">Carregando…</div></div>
+      <section class="avisos-box hidden" id="inicioAvisos" aria-labelledby="avisosTit">
+        <div class="avisos-topo"><h2 id="avisosTit">Falta avisar o cliente</h2><span class="badge-pill" id="avisosN"></span></div>
+        <p class="avisos-ajuda">O botão abre o seu WhatsApp com a mensagem pronta. Confira, complete se precisar e envie.</p>
+        <ul class="avisos-lista" id="avisosLista"></ul>
+      </section>
       <div class="hoje-resumo" id="inicioHoje"></div>
     </section>
 
@@ -744,18 +749,23 @@
 <script src="../assets/js/supabase-config.js"></script>
 <script src="../assets/js/supabase-client.js"></script>
 <script src="../assets/js/app-ui.js"></script>
-<script src="../assets/js/admin.js?v=7"></script>
+<script src="../assets/js/admin.js?v=8"></script>
 <script>
   // Escapa texto antes de ir pro innerHTML (dado de revendedor/cliente nunca vira HTML).
   // Link de WhatsApp pro cadastro (telefone vem em formatos variados: +55..., (66) 9..., 659...).
-  function linkWhats(p, assunto) {
-    var d = String(p.telefone || '').replace(/\D/g, '');
+  function waNumero(tel) {
+    var d = String(tel || '').replace(/\D/g, '');
     if (d.length === 10 || d.length === 11) d = '55' + d;
-    if (d.length < 12 || d.length > 13) return '';
-    var nome = String(p.nome || '').trim().split(/\s+/)[0] || '';
-    nome = nome.charAt(0).toUpperCase() + nome.slice(1).toLowerCase();
-    var msg = 'Olá' + (nome ? ', ' + nome : '') + '! Aqui é da Dupuro Açaí. ' + (assunto || 'Recebemos seu cadastro pra revenda' + (p.empresa ? ' (' + p.empresa + ')' : '') + ' e queremos conversar com você.');
-    return 'https://wa.me/' + d + '?text=' + encodeURIComponent(msg);
+    return d.length < 12 || d.length > 13 ? '' : d;
+  }
+  function waHref(tel, texto) { var d = waNumero(tel); return d ? 'https://wa.me/' + d + '?text=' + encodeURIComponent(texto) : ''; }
+  function primeiroNome(n) {
+    var p = String(n || '').trim().split(/\s+/)[0] || '';
+    return p.charAt(0).toUpperCase() + p.slice(1).toLowerCase();
+  }
+  function linkWhats(p, assunto) {
+    var nome = primeiroNome(p.nome);
+    return waHref(p.telefone, 'Olá' + (nome ? ', ' + nome : '') + '! Aqui é da Dupuro Açaí. ' + (assunto || 'Recebemos seu cadastro pra revenda' + (p.empresa ? ' (' + p.empresa + ')' : '') + ' e queremos conversar com você.'));
   }
   // Diálogos na própria tela (no lugar de window.confirm/alert, que destoam e
   // nem sempre aparecem no app do caixa). confirmar() devolve uma Promise<boolean>.
@@ -1508,11 +1518,14 @@
       if (r && r.error) { aviso('Não foi possível ' + (status === 'aprovado' ? 'aprovar' : 'rejeitar') + ' ' + nome + ': ' + motivoErro(r.error) + '.'); await renderPending(); return; }
       await Promise.all([renderPending(), renderResellers()]);
       await populateResellerSelect();
+      var av = await avisoAgora('cadastro', String(id));
       toast(nome + (status === 'aprovado' ? ' aprovado. Já pode pedir pelo painel.' : ' rejeitado.'), async function () {
         await DupuroAdmin.setProfileStatus(id, 'pendente');
         await Promise.all([renderPending(), renderResellers()]); await populateResellerSelect();
+        depoisDeAvisar();
         toast(nome + ' voltou para esperando aprovação.');
-      });
+      }, av);
+      depoisDeAvisar();
     }
     // Seleção pra decidir vários de uma vez (com Desfazer pra todos).
     function selecionados() { return Array.prototype.map.call(body.querySelectorAll('[data-lote-id]:checked'), function (c) { return c.getAttribute('data-lote-id'); }); }
@@ -2749,14 +2762,19 @@
   }
 
   var toastTimer = null;
-  function toast(msg, desfazer) {
+  // aviso (opcional) = linha de avisos_cliente: o toast ganha "Avisar cliente".
+  function toast(msg, desfazer, aviso) {
     var el = document.getElementById('adminToast');
-    el.innerHTML = '<span></span>' + (desfazer ? '<button type="button">Desfazer</button>' : '');
+    var link = aviso ? waHref(aviso.telefone, textoAviso(aviso)) : '';
+    el.innerHTML = '<span></span>' +
+      (link ? '<a class="toast-avisar" href="' + esc(link) + '" target="_blank" rel="noopener" data-aviso-id="' + aviso.id + '">Avisar cliente</a>' : '') +
+      (desfazer ? '<button type="button" data-desfazer>Desfazer</button>' : '');
     el.firstChild.textContent = msg;
     el.classList.add('show');
     clearTimeout(toastTimer);
-    if (desfazer) el.querySelector('button').addEventListener('click', function () { el.classList.remove('show'); desfazer(); });
-    var tempo = desfazer ? 9000 : 4000;
+    if (desfazer) el.querySelector('[data-desfazer]').addEventListener('click', function () { el.classList.remove('show'); desfazer(); });
+    if (link) el.querySelector('.toast-avisar').addEventListener('click', function () { el.classList.remove('show'); });
+    var tempo = desfazer || link ? 9000 : 4000;
     function contar() { clearTimeout(toastTimer); toastTimer = setTimeout(function () { el.classList.remove('show'); }, tempo); }
     el.onmouseenter = el.onfocusin = function () { clearTimeout(toastTimer); };
     el.onmouseleave = el.onfocusout = contar;
@@ -2820,7 +2838,8 @@
     if (opcoes.desfeito) toast(o.numero + ' voltou para ' + (STATUS_LABEL[novo] || novo).toLowerCase() + '.');
     else toast(mensagemStatus(o, novo, anterior), function () {
       mudarStatus(Object.assign({}, o, { status: novo }), anterior, { desfeito: true });
-    });
+    }, await avisoAgora('pedido', o.numero));
+    depoisDeAvisar();
     return true;
   }
 
@@ -2834,6 +2853,126 @@
       : 'Pagar na ' + (info.tipo === 'entrega' ? 'entrega' : 'retirada') + (info.forma ? ' (' + FORMA_REV[info.forma] + ')' : '');
     var cupom = info.cupom ? 'Cupom ' + info.cupom + (info.desconto_percent ? ' (−' + info.desconto_percent + '%, já no valor)' : '') : null;
     return [info.tipo === 'entrega' ? 'Entrega' : 'Retira na fábrica', dia, TURNO_LABEL[info.turno], pag, cupom].filter(Boolean).join(' · ');
+  }
+
+  // ---- Avisar o cliente pelo WhatsApp do admin (migration_047) ----
+  // O banco cria um aviso por mudança de status; aqui vira mensagem completa.
+  // O link abre o WhatsApp de quem está no admin, com o texto pronto.
+  var SITE = 'https://www.dupuroacai.com/';
+  var AVISO_TITULO = {
+    'cadastro:aprovado': 'Cadastro aprovado', 'cadastro:rejeitado': 'Cadastro não aprovado',
+    'pedido:processando': 'Pedido confirmado', 'pedido:entregue': 'Pedido entregue',
+    'pedido:recusado': 'Pedido recusado', 'pedido:cancelado': 'Pedido cancelado',
+    'delivery:em_rota': 'Delivery saiu pra entrega', 'delivery:entregue': 'Delivery entregue', 'delivery:cancelado': 'Delivery cancelado'
+  };
+  var avisosPend = [], avisosCtx = { pedidos: {}, delivery: {} };
+  async function carregarAvisos() {
+    var r = await Promise.all([DupuroAdmin.getAvisosPendentes(), DupuroAdmin.getAllOrders(), DupuroAdmin.getDeliveryPedidos()]);
+    avisosCtx = { pedidos: {}, delivery: {} };
+    r[1].forEach(function (o) { avisosCtx.pedidos[o.numero] = o; });
+    r[2].forEach(function (d) { avisosCtx.delivery[d.codigo] = d; });
+    avisosPend = r[0];
+    return avisosPend;
+  }
+  function avisoDe(tipo, ref) {
+    return avisosPend.filter(function (a) { return a.origem_tipo === tipo && a.origem_ref === ref; })[0] || null;
+  }
+  async function avisoAgora(tipo, ref) { await carregarAvisos(); return avisoDe(tipo, ref); }
+
+  function quandoTexto(data, turno) {
+    var dia = data ? new Date(data + 'T12:00:00').toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: '2-digit' }) : '';
+    return [dia, { manha: 'de manhã (8h às 12h)', tarde: 'à tarde (13h às 17h)' }[turno]].filter(Boolean).join(', ');
+  }
+  function resumoPedidoTexto(o) {
+    if (!o) return '';
+    var info = o.entregaInfo || {};
+    var linhas = ['Itens:'].concat(o.items.map(function (i) { return '• ' + i.itens; }));
+    linhas.push('Total: ' + moeda(o.valor) + (info.cupom ? ' (com o cupom ' + info.cupom + (info.desconto_percent ? ', −' + info.desconto_percent + '%' : '') + ')' : ''));
+    return linhas.join('\n');
+  }
+  function entregaTexto(o) {
+    var info = (o && o.entregaInfo) || {};
+    if (!info.tipo) return '';
+    var quando = quandoTexto(info.data, info.turno), linhas = [];
+    if (info.tipo === 'entrega') {
+      linhas.push('Entrega' + (quando ? ': ' + quando : ''));
+      if (info.endereco) linhas.push('Endereço: ' + info.endereco);
+    } else linhas.push('Retirada na fábrica (Av. das Torres, 16 - Jardim Imperial II)' + (quando ? ': ' + quando : ''));
+    linhas.push('Pagamento: ' + (info.pagamento === 'a_prazo' ? 'a prazo' : 'na ' + (info.tipo === 'entrega' ? 'entrega' : 'retirada') + (info.forma ? ' (' + FORMA_REV[info.forma] + ')' : '')));
+    return linhas.join('\n');
+  }
+  function itensDelivery(d) {
+    return (Array.isArray(d.itens) ? d.itens : []).map(function (it) { return '• ' + (it.quantidade || 1) + '× ' + (it.nome || '') + (it.sabor ? ' · ' + it.sabor : ''); }).join('\n');
+  }
+  // a = linha de avisos_cliente; evento 'saiu' = aviso avulso do revendedor (sem status no banco).
+  function textoAviso(a) {
+    var nome = primeiroNome(a.nome), dd = a.dados || {};
+    var oi = 'Olá' + (nome ? ', ' + nome : '') + '! Aqui é da Dupuro Açaí.\n\n';
+    var junta = function (partes) { return oi + partes.filter(Boolean).join('\n\n'); };
+    if (a.origem_tipo === 'cadastro') {
+      var quem = dd.empresa ? ' (' + dd.empresa + ')' : '';
+      if (a.evento === 'aprovado') return junta([
+        'Seu cadastro de revendedor' + quem + ' foi aprovado!',
+        'Já pode fazer seus pedidos pelo painel:\n' + SITE + 'area-cliente/login.html' + (dd.email ? '\nEntre com o e-mail ' + dd.email + ' e a senha que você criou no cadastro.' : ''),
+        'Lá você escolhe os produtos, o dia e o turno da entrega (ou a retirada na fábrica) e acompanha cada pedido. Os pedidos são a partir de 1 caixa de 10 L.',
+        'Qualquer dúvida, é só responder aqui.']);
+      return junta(['Analisamos seu cadastro de revendedor' + quem + ' e, por enquanto, não conseguimos aprovar.', 'Motivo: ']);
+    }
+    if (a.origem_tipo === 'pedido') {
+      var o = avisosCtx.pedidos[a.origem_ref], num = a.origem_ref;
+      var retira = o && o.entregaInfo && o.entregaInfo.tipo === 'retirada';
+      var painel = 'Acompanhe pelo painel:\n' + SITE + 'area-cliente/dashboard.html';
+      if (a.evento === 'processando') return junta(['Seu pedido ' + num + ' foi confirmado!', resumoPedidoTexto(o), entregaTexto(o), painel]);
+      if (a.evento === 'saiu') {
+        var turno = o && o.entregaInfo ? { manha: ' e chega ainda nesta manhã (até 12h)', tarde: ' e chega ainda nesta tarde (até 17h)' }[o.entregaInfo.turno] || '' : '';
+        return junta(['Seu pedido ' + num + ' saiu pra entrega' + turno + '.', resumoPedidoTexto(o), entregaTexto(o).split('\n').filter(function (l) { return !/^Entrega/.test(l); }).join('\n')]);
+      }
+      if (a.evento === 'entregue') return junta(['Seu pedido ' + num + (retira ? ' foi retirado' : ' foi entregue') + '. Obrigado pela parceria!', resumoPedidoTexto(o), 'Quando precisar repor, é só pedir pelo painel:\n' + SITE + 'area-cliente/login.html']);
+      if (a.evento === 'recusado') return junta(['Não conseguimos atender seu pedido ' + num + ' agora.', resumoPedidoTexto(o), 'Motivo: ']);
+      return junta(['Seu pedido ' + num + ' foi cancelado.', resumoPedidoTexto(o), 'Motivo: ']);
+    }
+    var d = avisosCtx.delivery[a.origem_ref] || {}, cod = a.origem_ref;
+    if (a.evento === 'em_rota') return junta([
+      'Seu pedido ' + cod + ' saiu pra entrega e chega ' + (d.periodo === 'manha' ? 'ainda nesta manhã (até 12h)' : 'ainda nesta tarde (até 17h)') + '.',
+      d.token ? 'Acompanhe no link:\n' + SITE + 'delivery/acompanhar.html?t=' + d.token : '',
+      itensDelivery(d) ? 'Itens:\n' + itensDelivery(d) : '']);
+    if (a.evento === 'entregue') return junta(['Seu pedido ' + cod + ' foi entregue. Obrigado por pedir na Dupuro, bom açaí!', 'Se puder, conta pra gente o que achou respondendo aqui.']);
+    return junta(['Seu pedido ' + cod + ' foi cancelado.', 'Motivo: ']);
+  }
+  // Botão do aviso (cartão e Início). Sem telefone válido: só dá pra dispensar.
+  function botaoAviso(a) {
+    var href = waHref(a.telefone, textoAviso(a));
+    return href
+      ? '<a class="btn btn-avisar btn-sm" href="' + esc(href) + '" target="_blank" rel="noopener" data-aviso-id="' + a.id + '"><svg aria-hidden="true"><use href="#m-chat"/></svg>Avisar cliente no WhatsApp</a>'
+      : '<span class="aviso-sem-tel">Sem WhatsApp válido no cadastro</span>';
+  }
+  // Depois de avisar/dispensar (ou de um status mudar): a lista e os cartões se atualizam.
+  function depoisDeAvisar() { renderAvisosInicio(); if (!document.getElementById('tab-pedidos').classList.contains('hidden')) renderPedidosFila(); }
+  document.addEventListener('click', function (e) {
+    var a = e.target.closest('[data-aviso-id]'), x = e.target.closest('[data-aviso-dispensar]');
+    if (!a && !x) return;
+    var id = (a || x).getAttribute(a ? 'data-aviso-id' : 'data-aviso-dispensar');
+    // O link abre o WhatsApp (não segura o clique); marcar avisado vai junto.
+    DupuroAdmin.marcarAviso(id, a ? 'avisado' : 'dispensado').then(function (r) {
+      if (r && r.error) { aviso('Não deu pra marcar o aviso: ' + motivoErro(r.error) + '.'); return; }
+      depoisDeAvisar();
+    });
+  });
+  async function renderAvisosInicio() {
+    var lista = await carregarAvisos();
+    var box = document.getElementById('inicioAvisos');
+    box.classList.toggle('hidden', !lista.length);
+    document.getElementById('avisosN').textContent = lista.length;
+    document.getElementById('avisosLista').innerHTML = lista.map(function (a) {
+      var dd = a.dados || {};
+      var ref = a.origem_tipo === 'cadastro' ? '' : ' · ' + esc(a.origem_ref);
+      return '<li class="aviso-item">' +
+        '<div class="aviso-txt"><strong>' + esc(AVISO_TITULO[a.origem_tipo + ':' + a.evento] || 'Aviso') + ref + '</strong>' +
+          '<span>' + esc([a.nome, dd.empresa].filter(Boolean).join(' · ') || 'Cliente') + ' · ' + haQuanto(a.criado_em) + '</span></div>' +
+        '<div class="aviso-acoes">' + botaoAviso(a) +
+          '<button type="button" class="btn-link-acao" data-aviso-dispensar="' + a.id + '" title="Some da lista sem abrir o WhatsApp">' + (waNumero(a.telefone) ? 'Já avisei' : 'Dispensar') + '</button></div>' +
+        '</li>';
+    }).join('');
   }
 
   function cardPedido(o, revPorId) {
@@ -2856,6 +2995,12 @@
     }).join('');
     var rev = revPorId[o.revendedorId];
     var whats = rev ? linkWhats(rev, 'Sobre o seu pedido ' + o.numero + ':') : null;
+    var av = avisoDe('pedido', o.numero), avisar = '';
+    if (av) avisar = botaoAviso(av);
+    else if (o.status === 'processando' && rev && o.entregaInfo && o.entregaInfo.tipo === 'entrega') {
+      var saiu = waHref(rev.telefone, textoAviso({ origem_tipo: 'pedido', origem_ref: o.numero, evento: 'saiu', nome: rev.nome }));
+      if (saiu) avisar = '<a class="btn btn-dark-outline btn-sm" href="' + esc(saiu) + '" target="_blank" rel="noopener">Avisar que saiu pra entrega</a>';
+    }
     var acoes = o.status === 'enviado'
       ? '<button type="button" class="btn btn-primary btn-sm" data-ped-acao="confirmar" data-num="' + esc(o.numero) + '"' + (falta ? ' disabled' : '') + '>Confirmar pedido</button>' +
         '<button type="button" class="btn btn-dark-outline btn-sm" data-ped-acao="recusar" data-num="' + esc(o.numero) + '">Recusar</button>'
@@ -2875,7 +3020,8 @@
         (o.entregaInfo.observacao ? '<br>Obs.: ' + esc(o.entregaInfo.observacao) : '') + '</div>' : '') +
       '<ul class="ped-itens">' + itensHtml + '</ul>' +
       (falta ? '<p class="ped-aviso">Falta estoque pra confirmar. Registre a leva ou toque em Editar no item pra mudar a quantidade.</p>' : '') +
-      '<div class="ped-acoes">' + acoes + '</div>' +
+      (av ? '<p class="ped-falta-avisar">Falta avisar o cliente que o pedido foi confirmado.</p>' : '') +
+      '<div class="ped-acoes">' + avisar + acoes + '</div>' +
       '</article>';
   }
 
@@ -2883,9 +3029,10 @@
   function cardDelivery(d) {
     var itens = Array.isArray(d.itens) ? d.itens : [];
     var whats = linkWhats({ telefone: d.cliente_telefone, nome: d.cliente_nome }, 'Sobre o seu pedido de delivery ' + d.codigo + ':');
-    var acao = d.status === 'pago'
+    var avD = avisoDe('delivery', d.codigo);
+    var acao = (avD ? botaoAviso(avD) : '') + (d.status === 'pago'
       ? '<button type="button" class="btn btn-primary btn-sm" data-dlv-acao="em_rota" data-id="' + d.id + '">Saiu pra entrega</button>'
-      : '<button type="button" class="btn btn-primary btn-sm" data-dlv-acao="entregue" data-id="' + d.id + '">Marcar como entregue</button>';
+      : '<button type="button" class="btn btn-primary btn-sm" data-dlv-acao="entregue" data-id="' + d.id + '">Marcar como entregue</button>');
     return '<article class="ped-card">' +
       '<header class="ped-topo">' +
         '<strong class="ped-num">' + esc(d.codigo) + '</strong>' +
@@ -2905,7 +3052,7 @@
 
   var filaPedidos = { pedidos: [], delivery: [] };
   async function renderPedidosFila() {
-    var r = await Promise.all([DupuroAdmin.getAllOrders(), DupuroAdmin.getDeliveryPedidos(), DupuroAdmin.getResellers()]);
+    var r = await Promise.all([DupuroAdmin.getAllOrders(), DupuroAdmin.getDeliveryPedidos(), DupuroAdmin.getResellers(), carregarAvisos()]);
     var revPorId = {};
     r[2].forEach(function (x) { revPorId[x.id] = x; });
     var naoLoja = r[0].filter(function (o) { return o.origem !== 'loja'; });
@@ -2982,7 +3129,9 @@
         await DupuroAdmin.setDeliveryStatus(d.id, antes);
         ultimaContagem = null;
         await renderPedidosFila();
-      });
+        renderAvisosInicio();
+      }, avisoDe('delivery', d.codigo));
+      renderAvisosInicio();
       return;
     }
     var o = filaPedidos.pedidos.filter(function (x) { return x.numero === b.getAttribute('data-num'); })[0];
@@ -3393,6 +3542,13 @@
           return '<div class="order-item-line"><span>' + (CX_FORMA[k] || k) + '</span><span>' + moeda(Number(s.resumo.por_forma[k]) || 0) + '</span></div>';
         }).join('');
         det += '<div class="order-item-line"><span>Fundo de troco</span><span>' + moeda(s.fundoTroco) + '</span></div>';
+        // Retiradas e reforços de dinheiro (migration_048), um por linha
+        (s.resumo.movimentos || []).forEach(function (m) {
+          var dev = Number(m.devolvido) || 0, ret = m.tipo === 'retirada';
+          det += '<div class="order-item-line"><span>' + (ret ? 'Retirada: ' : 'Colocado: ') + esc(m.observacao) +
+            (dev > 0 ? ' (saiu ' + moeda(Number(m.valor)) + ', voltou ' + moeda(dev) + ')' : '') + '</span><span>' +
+            (ret ? '−' + moeda(Number(m.valor) - dev) : '+' + moeda(Number(m.valor))) + '</span></div>';
+        });
       }
       return '<tr>' +
         '<td>' + dh(s.abertaEm) + '</td>' +
@@ -3735,6 +3891,7 @@
       detalhe: estoque.esgotado && estoque.baixo ? 'e ' + estoque.baixo + ' com menos de ' + LOW_STOCK_THRESHOLD + ' unidades' : 'Contando cada sabor de cada tamanho'
     });
 
+    renderAvisosInicio();
     document.getElementById('inicioFila').innerHTML = itens.length ? itens.map(function (i) {
       return '<a class="fila-item tom-' + i.tom + '" href="#' + i.ir + '" data-ir="' + i.ir + '">' +
         '<span class="fila-n">' + i.n + '</span>' +

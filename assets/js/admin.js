@@ -104,6 +104,22 @@ var DupuroAdmin = (function () {
     var r = await client.from('whatsapp_config').update({ aviso_interno: cfg.aviso_interno, ativo: cfg.ativo, atualizado_em: new Date().toISOString() }).eq('id', 1);
     return { error: r.error };
   }
+  // Avisos ao cliente que faltam dar (migration_047): o banco cria um por mudança
+  // de status; o admin avisa pelo WhatsApp dele e marca avisado (ou dispensa).
+  async function getAvisosPendentes() {
+    var r = await client.from('avisos_cliente')
+      .select('id, origem_tipo, origem_ref, evento, nome, telefone, dados, criado_em')
+      .is('avisado_em', null).is('dispensado_em', null)
+      .order('criado_em', { ascending: true }).limit(100);
+    return r.error ? [] : (r.data || []);
+  }
+  async function marcarAviso(id, como) {
+    var campo = como === 'dispensado' ? 'dispensado_em' : 'avisado_em', patch = {};
+    patch[campo] = new Date().toISOString();
+    var r = await client.from('avisos_cliente').update(patch).eq('id', id);
+    return { error: r.error };
+  }
+
   async function getWhatsappEnvios() {
     var r = await client.from('whatsapp_envios').select('modelo, destino, status, erro, criado_em, enviado_em').order('id', { ascending: false }).limit(15);
     return r.data || [];
@@ -686,7 +702,7 @@ var DupuroAdmin = (function () {
   async function getDeliveryPedidos() {
     var r = await client
       .from('delivery_pedidos')
-      .select('id, codigo, cliente_nome, cliente_telefone, endereco, complemento, total, itens, periodo, data_entrega, status, criado_em')
+      .select('id, codigo, token, cliente_nome, cliente_telefone, endereco, complemento, total, itens, periodo, data_entrega, status, criado_em')
       .order('criado_em', { ascending: false })
       .limit(200);
     return r.error ? [] : (r.data || []);
@@ -943,6 +959,7 @@ var DupuroAdmin = (function () {
   getLitrosDispensaMinimo = comCache('getLitrosDispensaMinimo', getLitrosDispensaMinimo);
   getAcompanhamentos = comCache('getAcompanhamentos', getAcompanhamentos);
   getDeliveryPedidos = comCache('getDeliveryPedidos', getDeliveryPedidos);
+  getAvisosPendentes = comCache('getAvisosPendentes', getAvisosPendentes);
   getAjustesEstoque = comCache('getAjustesEstoque', getAjustesEstoque);
   getNumerosComNfce = comCache('getNumerosComNfce', getNumerosComNfce);
   getAllCoupons = comCache('getAllCoupons', getAllCoupons);
@@ -977,6 +994,8 @@ var DupuroAdmin = (function () {
     whatsappAcao: whatsappAcao,
     getWhatsappConfig: getWhatsappConfig,
     getWhatsappEnvios: getWhatsappEnvios,
+    getAvisosPendentes: getAvisosPendentes,
+    marcarAviso: marcarAviso,
     setWhatsappConfig: setWhatsappConfig,
     deleteReseller: deleteReseller,
     getAdmins: getAdmins,
