@@ -9,7 +9,7 @@
 <link rel="apple-touch-icon" href="../assets/img/brand/favicon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/css/style.css?v=66">
+<link rel="stylesheet" href="../assets/css/style.css?v=67">
 </head>
 <body class="pg-admin">
 <svg class="sprite" aria-hidden="true" focusable="false"><symbol id="m-grafico" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></symbol><symbol id="m-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol><symbol id="m-usuarios" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"/></symbol><symbol id="m-caixa" viewBox="0 0 24 24"><path d="M3 8l9-4 9 4v9l-9 4-9-4z"/><path d="M3 8l9 4 9-4M12 12v9"/></symbol><symbol id="m-painel" viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 10h6M9 14h6M9 18h3"/></symbol><symbol id="m-fabrica" viewBox="0 0 24 24"><path d="M3 21V10l5 3v-3l5 3V7l8 4v10z"/><path d="M7 17h2M12 17h2M17 17h1"/></symbol><symbol id="m-etiqueta" viewBox="0 0 24 24"><path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.4"/></symbol><symbol id="m-engrenagem" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></symbol><symbol id="m-casa" viewBox="0 0 24 24"><path d="M3 11l9-7 9 7M5 9.5V20h14V9.5M10 20v-6h4v6"/></symbol><symbol id="m-sair" viewBox="0 0 24 24"><path d="M14 4h5a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-5M10 16l-4-4 4-4M6 12h10"/></symbol><symbol id="m-carrinho" viewBox="0 0 24 24"><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2.5 3.5h3l2.4 11.2a1.5 1.5 0 0 0 1.5 1.3h8.4a1.5 1.5 0 0 0 1.5-1.2L21 7H6.3"/></symbol><symbol id="m-recibo" viewBox="0 0 24 24"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6M9 16h3"/></symbol><symbol id="m-calendario" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></symbol><symbol id="m-chat" viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></symbol><symbol id="m-usuario" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol><symbol id="m-globo" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></symbol><symbol id="m-hoje" viewBox="0 0 24 24"><path d="M4 13h4l2 3h4l2-3h4"/><path d="M4 13l2.5-8h11L20 13v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/></symbol><symbol id="m-pasta" viewBox="0 0 24 24"><path d="M3 6.5A1.5 1.5 0 0 1 4.5 5H9l2 2.5h8.5A1.5 1.5 0 0 1 21 9v9.5a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 18.5z"/></symbol><symbol id="m-mais" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol></svg>
@@ -755,7 +755,7 @@
 <script src="../assets/js/supabase-config.js"></script>
 <script src="../assets/js/supabase-client.js"></script>
 <script src="../assets/js/app-ui.js"></script>
-<script src="../assets/js/admin.js?v=8"></script>
+<script src="../assets/js/admin.js?v=9"></script>
 <script>
   // Escapa texto antes de ir pro innerHTML (dado de revendedor/cliente nunca vira HTML).
   // Link de WhatsApp pro cadastro (telefone vem em formatos variados: +55..., (66) 9..., 659...).
@@ -3122,6 +3122,8 @@
     var d = avisosCtx.delivery[a.origem_ref] || {}, cod = a.origem_ref;
     if (a.evento === 'em_rota') return junta([
       'Seu pedido ' + cod + ' saiu pra entrega e chega ' + (d.periodo === 'manha' ? 'ainda nesta manhã (até 12h)' : 'ainda nesta tarde (até 17h)') + '.',
+      d.pagar_na_entrega ? 'Pagamento na entrega: ' + moeda(Number(d.total) || 0) + ' em ' + ({ dinheiro: 'dinheiro', debito: 'cartão de débito', credito: 'cartão de crédito', pix: 'Pix' }[d.forma_entrega] || 'dinheiro') +
+        (d.troco_para ? ' (levamos troco pra ' + moeda(Number(d.troco_para)) + ')' : '') + '.' : '',
       d.token ? 'Acompanhe no link:\n' + SITE + 'delivery/acompanhar.html?t=' + d.token : '',
       itensDelivery(d) ? 'Itens:\n' + itensDelivery(d) : '']);
     if (a.evento === 'entregue') return junta(['Seu pedido ' + cod + ' foi entregue. Obrigado por pedir na Dupuro, bom açaí!', 'Se puder, conta pra gente o que achou respondendo aqui.']);
@@ -3239,24 +3241,58 @@
     var itens = Array.isArray(d.itens) ? d.itens : [];
     var whats = linkWhats({ telefone: d.cliente_telefone, nome: d.cliente_nome }, 'Sobre o seu pedido de delivery ' + d.codigo + ':');
     var avD = avisoDe('delivery', d.codigo);
+    var receber = d.pagar_na_entrega && !d.recebido_em;
     var acao = (avD ? botaoAviso(avD) : '') + (d.status === 'pago'
       ? '<button type="button" class="btn btn-primary btn-sm" data-dlv-acao="em_rota" data-id="' + d.id + '">Saiu pra entrega</button>'
-      : '<button type="button" class="btn btn-primary btn-sm" data-dlv-acao="entregue" data-id="' + d.id + '">Marcar como entregue</button>');
+      : '<button type="button" class="btn btn-primary btn-sm" data-dlv-acao="' + (receber ? 'receber' : 'entregue') + '" data-id="' + d.id + '">' + (receber ? 'Entregue e recebido' : 'Marcar como entregue') + '</button>') +
+      '<button type="button" class="btn btn-link-perigo btn-sm" data-dlv-acao="cancelar" data-id="' + d.id + '">Cancelar</button>';
     return '<article class="ped-card">' +
       '<header class="ped-topo">' +
         '<strong class="ped-num">' + esc(d.codigo) + '</strong>' +
-        '<span class="status-badge canal-delivery">Delivery · ' + (DELIVERY_LABEL[d.status] || esc(d.status)) + '</span>' +
+        '<span class="status-badge canal-delivery">Delivery · ' + (d.pagar_na_entrega && d.status === 'pago' ? 'Confirmado' : (DELIVERY_LABEL[d.status] || esc(d.status))) + '</span>' +
         '<span class="ped-quando">' + (d.data_entrega ? 'Entrega ' + formatDate(d.data_entrega) : '') + (d.periodo ? ' · ' + esc(d.periodo) : '') + '</span>' +
         '<span class="ped-total">' + moeda(Number(d.total) || 0) + '</span>' +
       '</header>' +
       '<div class="ped-cliente">' + esc(d.cliente_nome) +
         (whats ? ' <a class="ped-whats" href="' + whats + '" target="_blank" rel="noopener">WhatsApp</a>' : '') + '</div>' +
       '<div class="ped-endereco">' + esc(d.endereco) + (d.complemento ? ' · ' + esc(d.complemento) : '') + '</div>' +
+      (d.pagar_na_entrega ? '<div class="ped-receber">' + esc(textoReceber(d)) + '</div>' : '<div class="ped-pago-online">Pago online pelo Mercado Pago</div>') +
       '<ul class="ped-itens">' + itens.map(function (it) {
         return '<li><span>' + esc((it.quantidade || 1) + '× ' + (it.nome || '') + (it.sabor ? ' · ' + it.sabor : '')) + '</span></li>';
       }).join('') + '</ul>' +
       '<div class="ped-acoes">' + acao + '</div>' +
       '</article>';
+  }
+
+  // "Receber na entrega: R$ 42,00 · dinheiro · troco pra R$ 50,00 (levar R$ 8,00)"
+  var FORMA_DLV = { dinheiro: 'dinheiro', debito: 'débito', credito: 'crédito', pix: 'Pix' };
+  function textoReceber(d) {
+    var tot = Number(d.total) || 0, troco = Number(d.troco_para) || 0;
+    if (d.recebido_em) return 'Recebido na entrega: ' + moeda(tot) + ' · ' + (FORMA_DLV[d.recebido_forma] || d.recebido_forma);
+    return 'Receber na entrega: ' + moeda(tot) + ' · ' + (FORMA_DLV[d.forma_entrega] || 'a combinar') +
+      (troco ? ' · troco pra ' + moeda(troco) + ' (levar ' + moeda(troco - tot) + ')' : (d.forma_entrega === 'dinheiro' ? ' · sem troco' : ''));
+  }
+  // Escolha de uma opção num diálogo (como o entregador recebeu). Resolve o valor ou null.
+  function escolherOpcao(msg, opcoes, pre) {
+    return new Promise(function (resolve) {
+      var fundo = document.createElement('div');
+      fundo.className = 'dlg-fundo';
+      fundo.innerHTML = '<div class="dlg" role="dialog" aria-modal="true" aria-labelledby="dlgOpMsg"><p id="dlgOpMsg"></p>' +
+        '<div class="dlg-opcoes">' + opcoes.map(function (o) {
+          return '<button type="button" class="btn btn-sm ' + (o.v === pre ? 'btn-primary' : 'btn-dark-outline') + '" data-op="' + o.v + '">' + esc(o.txt) + '</button>';
+        }).join('') + '</div>' +
+        '<div class="dlg-acoes"><button type="button" class="btn btn-dark-outline btn-sm" data-op="">Voltar</button></div></div>';
+      fundo.querySelector('#dlgOpMsg').textContent = msg;
+      function fechar(v) { document.removeEventListener('keydown', tecla); fundo.remove(); resolve(v || null); }
+      function tecla(e) { if (e.key === 'Escape') fechar(null); }
+      fundo.addEventListener('click', function (e) {
+        var b = e.target.closest('[data-op]');
+        if (b) fechar(b.getAttribute('data-op')); else if (e.target === fundo) fechar(null);
+      });
+      document.addEventListener('keydown', tecla);
+      document.body.appendChild(fundo);
+      (fundo.querySelector('.btn-primary') || fundo.querySelector('[data-op]')).focus();
+    });
   }
 
   var filaPedidos = { pedidos: [], delivery: [] }, revPorIdFila = {};
@@ -3328,9 +3364,28 @@
     if (b.hasAttribute('data-dlv-acao')) {
       var d = filaPedidos.delivery.filter(function (x) { return String(x.id) === b.getAttribute('data-id'); })[0];
       if (!d) return;
-      var antes = d.status, depois = b.getAttribute('data-dlv-acao');
+      var antes = d.status, depois = b.getAttribute('data-dlv-acao'), recebido = null;
+      if (depois === 'cancelar') {
+        var online = !d.pagar_na_entrega;
+        if (!await confirmar('Cancelar a entrega ' + d.codigo + ' de ' + d.cliente_nome + '? O estoque volta.' +
+          (online ? '\n\nEla foi paga online: devolva o dinheiro no Mercado Pago (Atividade → o pagamento → Devolver).' : ''), { ok: 'Cancelar entrega', perigo: true })) return;
+        b.disabled = true;
+        var rc = await DupuroAdmin.cancelarDelivery(d.id);
+        if (rc.error) { b.disabled = false; aviso('Não foi possível cancelar ' + d.codigo + ': ' + motivoErro(rc.error) + '.'); return; }
+        ultimaContagem = null;
+        await renderPedidosFila();
+        toast(d.codigo + ' cancelado. O estoque voltou.', null, avisoDe('delivery', d.codigo));
+        renderAvisosInicio();
+        return;
+      }
+      if (depois === 'receber') {
+        recebido = await escolherOpcao('Como o cliente pagou ' + moeda(Number(d.total) || 0) + '?',
+          [{ v: 'dinheiro', txt: 'Dinheiro' }, { v: 'pix', txt: 'Pix' }, { v: 'debito', txt: 'Débito' }, { v: 'credito', txt: 'Crédito' }], d.forma_entrega);
+        if (!recebido) return;
+        depois = 'entregue';
+      }
       b.disabled = true;
-      var rd = await DupuroAdmin.setDeliveryStatus(d.id, depois);
+      var rd = await DupuroAdmin.setDeliveryStatus(d.id, depois, recebido);
       if (rd.error) { b.disabled = false; aviso('Não foi possível atualizar a entrega ' + d.codigo + ': ' + motivoErro(rd.error) + '.'); return; }
       ultimaContagem = null;
       await renderPedidosFila();

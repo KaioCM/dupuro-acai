@@ -104,6 +104,13 @@ Deno.serve(async (req: Request) => {
     const subtotal = Math.round(itens.reduce((s, i) => s + i.preco * i.quantidade, 0) * 100) / 100
     const total = Math.round((subtotal + taxa) * 100) / 100
 
+    // Pagamento na entrega (migration_049): dinheiro/débito/crédito/Pix na maquininha.
+    const naEntrega = b.pagamento === 'entrega'
+    const formaEntrega = naEntrega ? String(b.forma_entrega || '') : null
+    if (naEntrega && !['dinheiro', 'debito', 'credito', 'pix'].includes(formaEntrega!)) return json({ error: 'Escolha como vai pagar na entrega.' }, 400)
+    const trocoPara = naEntrega && formaEntrega === 'dinheiro' && b.troco_para ? Math.round(Number(b.troco_para) * 100) / 100 : null
+    if (trocoPara !== null && !(trocoPara >= total)) return json({ error: 'O troco precisa ser pra um valor maior que o total.' }, 400)
+
     // Expira pedidos abandonados (não pagos há mais de 3h) — limpeza preguiçosa.
     await sb.from('delivery_pedidos').update({ status: 'expirado', atualizado_em: new Date().toISOString() })
       .eq('status', 'aguardando_pagamento').lt('criado_em', new Date(Date.now() - 3 * 3600e3).toISOString())
@@ -112,8 +119,15 @@ Deno.serve(async (req: Request) => {
       cliente_nome: nome, cliente_telefone: tel, endereco, complemento: b.complemento ? String(b.complemento).slice(0, 200) : null,
       lat, lng, distancia_km: km, taxa, subtotal, total, itens, periodo, data_entrega: data,
       aceita_whatsapp: b.aceita_whatsapp !== false, // avisos do pedido no WhatsApp (migration_046)
+      pagar_na_entrega: naEntrega, forma_entrega: formaEntrega, troco_para: trocoPara,
     }).select('id, codigo, token').single()
     if (e1 || !ped) return json({ error: 'Não foi possível registrar o pedido.' }, 500)
+
+    // Na entrega: vale na hora (decisão do Kayo) — entra na rota e baixa o estoque.
+    if (naEntrega) {
+      await sb.rpc('delivery_confirmar_pagamento', { p_codigo: ped.codigo, p_payment_id: null, p_metodo: 'na_entrega_' + formaEntrega, p_mp_status: 'na_entrega' })
+      return json({ codigo: ped.codigo, token: ped.token, total, na_entrega: true })
+    }
 
     // Preferência do Checkout Pro (Pix + cartão; sem boleto — entrega é no mesmo dia).
     const agora = new Date(), expira = new Date(Date.now() + 2 * 3600e3)
@@ -127,7 +141,7 @@ Deno.serve(async (req: Request) => {
       notification_url: Deno.env.get('SUPABASE_URL') + '/functions/v1/delivery-mp-webhook',
       back_urls: { success: `${SITE}/acompanhar.html?t=${ped.token}`, pending: `${SITE}/acompanhar.html?t=${ped.token}`, failure: `${SITE}/acompanhar.html?t=${ped.token}` },
       auto_return: 'approved',
-      payment_methods: { excluded_payment_types: [{ id: 'ticket' }, { id: 'atm' }], installments: 3 },
+      payment_methods: { excluded_payment_types: [{ id: 'ticket' }, { id: 'atm' }, { id: 'debit_card' }], installments: 3 },
       statement_descriptor: 'DUPURO ACAI',
       expires: true, expiration_date_from: agora.toISOString(), expiration_date_to: expira.toISOString(),
       date_of_expiration: expira.toISOString(),

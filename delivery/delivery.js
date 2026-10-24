@@ -137,7 +137,7 @@ var DupuroDelivery = (function () {
       a.href = (base || '') + 'acompanhar.html?t=' + encodeURIComponent(lista[i].t);
       a.innerHTML = '<span class="dl-faixa-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="5.5" cy="17" r="2.5"/><circle cx="18.5" cy="17" r="2.5"/><path d="M8 17h7.5l-2.5-7h-3M13 10l1.5-4H18M3.5 13.5H9l2 3.5"/></svg></span>' +
         '<span class="dl-faixa-txt"><strong>Seu pedido ' + esc(p.codigo) + '</strong><span>' +
-        (p.status === 'em_rota' ? 'Saiu pra entrega · chega ainda ' + (p.periodo === 'manha' ? 'nesta manhã' : 'nesta tarde') : 'Pago · chega ' + esc(quandoEntrega(p))) +
+        (p.status === 'em_rota' ? 'Saiu pra entrega · chega ainda ' + (p.periodo === 'manha' ? 'nesta manhã' : 'nesta tarde') : (p.na_entrega ? 'Confirmado' : 'Pago') + ' · chega ' + esc(quandoEntrega(p))) +
         '</span></span><span class="dl-faixa-ac">Acompanhar</span>';
       alvo.parentNode.insertBefore(a, alvo);
       return;

@@ -3256,3 +3256,9 @@ a.stat-card.alerta .stat-sub { color: var(--warning); font-weight: 800; }
 .dl-hero-txt > .dl-faixa { margin: 0 0 18px; }
 @media (max-width: 480px) { .dl-faixa-ac { font-size: 0; text-decoration: none; } .dl-faixa-ac::after { content: "›"; font-size: 30px; line-height: 1; } }
 .hero > .dl-faixa { position: relative; z-index: 2; margin-top: 0; }
+
+/* Admin: delivery pago na entrega (migration_049) */
+.ped-receber { margin-top: 8px; padding: 8px 12px; border-radius: 10px; background: #FFF1D6; color: #6b4200; font-size: 14px; font-weight: 700; }
+.ped-pago-online { margin-top: 6px; font-size: 13px; font-weight: 600; color: var(--verde-dark); }
+.dlg-opcoes { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+.dlg-opcoes .btn { min-height: 44px; }

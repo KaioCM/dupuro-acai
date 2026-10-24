@@ -591,3 +591,34 @@ body.dl-pagando .dl-barra { display: none; }
 .dl-mp-selo { display: flex; align-items: flex-start; gap: 10px; margin: 14px 0 0; padding: 12px 14px; border-radius: 14px; background: #EEF4FB; color: #24456b; font-size: 13.5px; line-height: 1.45; text-align: left; }
 .dl-mp-selo .i { flex: none; width: 20px; height: 20px; margin-top: 1px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
 .dl-mp-selo strong { color: #0b2f5c; }
+
+/* Como pagar: online x na entrega (migration_049) */
+.dl-formas { border: 0; margin: 16px 0 0; padding: 0; display: grid; gap: 8px; }
+.dl-formas legend { margin-bottom: 8px; font-size: 14px; font-weight: 800; color: #fff; }
+.dl-forma { display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px; border-radius: 16px; background: rgba(255,255,255,.08); border: 1.5px solid rgba(255,255,255,.18); cursor: pointer; }
+.dl-forma:has(input:checked) { background: #fff; border-color: var(--gold); }
+.dl-forma input { flex: none; width: 20px; height: 20px; margin: 2px 0 0; accent-color: var(--roxo-700); }
+.dl-forma span { display: grid; gap: 2px; }
+.dl-forma strong { font-size: 15.5px; color: #fff; }
+.dl-forma small { font-size: 13px; line-height: 1.35; color: rgba(255,255,255,.78); }
+.dl-forma:has(input:checked) strong { color: var(--roxo-900); }
+.dl-forma:has(input:checked) small { color: var(--text-light); }
+.dl-forma:focus-within { outline: 3px solid var(--gold); outline-offset: 2px; }
+.dl-na-entrega { margin-top: 12px; padding: 14px; border-radius: 16px; background: #fff; color: var(--text); }
+.dl-ne-tit { margin: 0 0 8px; font-size: 14px; font-weight: 800; color: var(--roxo-900); }
+.dl-ne-formas { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.dl-ne-formas button { min-height: 44px; padding: 6px 4px; border: 1.5px solid rgba(96,16,80,.2); border-radius: 12px; background: #fff; font: inherit; font-size: 14px; font-weight: 800; color: var(--roxo-900); cursor: pointer; }
+.dl-ne-formas button.on { background: var(--roxo-700); border-color: var(--roxo-700); color: #fff; }
+.dl-ne-formas button:focus-visible { outline: 3px solid var(--roxo-700); outline-offset: 2px; }
+@media (max-width: 380px) { .dl-ne-formas { grid-template-columns: repeat(2, 1fr); } }
+.dl-troco { margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(96,16,80,.1); }
+.dl-troco-tot { margin: 0 0 10px; font-size: 15px; }
+.dl-troco-tot strong { font-size: 18px; color: var(--roxo-900); }
+.dl-troco-op { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; min-height: 40px; font-size: 15px; cursor: pointer; }
+.dl-troco-op input[type="radio"] { width: 18px; height: 18px; accent-color: var(--roxo-700); }
+.dl-troco-op input[type="text"] { width: 110px; min-height: 40px; padding: 6px 10px; border: 1.5px solid rgba(96,16,80,.2); border-radius: 10px; font: inherit; font-size: 16px; }
+.dl-troco-info { margin: 6px 0 0; font-size: 14px; font-weight: 700; color: var(--verde-dark); }
+.dl-troco-info.erro { color: var(--danger); }
+.dl-sucesso-pag { margin-top: 10px !important; padding: 10px 12px; border-radius: 12px; background: rgba(255,255,255,.14); font-weight: 700; }
+.dl-acomp-pag { margin: 10px 0 0; padding: 10px 12px; border-radius: 12px; background: #FFF1D6; color: #6b4200; font-size: 14px; font-weight: 700; }
+.dl-acomp-acoes .dl-btn-line, .dl-mp .dl-btn-line { background: #fff; color: var(--roxo-700); border-color: rgba(96,16,80,.25); }

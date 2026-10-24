@@ -725,19 +725,27 @@ var DupuroAdmin = (function () {
   async function getDeliveryPedidos() {
     var r = await client
       .from('delivery_pedidos')
-      .select('id, codigo, token, cliente_nome, cliente_telefone, endereco, complemento, total, itens, periodo, data_entrega, status, criado_em')
+      .select('id, codigo, token, cliente_nome, cliente_telefone, endereco, complemento, total, itens, periodo, data_entrega, status, criado_em, pagar_na_entrega, forma_entrega, troco_para, recebido_forma, recebido_em')
       .order('criado_em', { ascending: false })
       .limit(200);
     return r.error ? [] : (r.data || []);
   }
 
   // Pago → saiu pra entrega → entregue (o horário de cada passo fica gravado).
-  async function setDeliveryStatus(id, status) {
+  // recebidoForma: pedido pago na entrega (migration_049) — como o entregador recebeu.
+  async function setDeliveryStatus(id, status, recebidoForma) {
     var campos = { status: status, atualizado_em: new Date().toISOString() };
     if (status === 'em_rota') campos.saiu_em = campos.atualizado_em;
     if (status === 'entregue') campos.entregue_em = campos.atualizado_em;
+    if (status === 'entregue' && recebidoForma) { campos.recebido_forma = recebidoForma; campos.recebido_em = campos.atualizado_em; }
+    if (status !== 'entregue') { campos.recebido_forma = null; campos.recebido_em = null; } // "Desfazer" do entregue
     var r = await client.from('delivery_pedidos').update(campos).eq('id', id);
     return { error: r.error };
+  }
+  // Cancela uma entrega confirmada e devolve o estoque (pago online: estornar no MP).
+  async function cancelarDelivery(id) {
+    var r = await client.rpc('delivery_cancelar', { p_id: id });
+    return { error: r.error, data: r.data };
   }
 
   // Contagem leve pro aviso de pedido novo (o admin confere a cada minuto, sem
@@ -1030,6 +1038,7 @@ var DupuroAdmin = (function () {
     changePassword: changePassword,
     getAllOrders: getAllOrders,
     getDeliveryPedidos: getDeliveryPedidos,
+    cancelarDelivery: cancelarDelivery,
     ajustarEstoque: ajustarEstoque,
     getAjustesEstoque: getAjustesEstoque,
     getNumerosComNfce: getNumerosComNfce,
