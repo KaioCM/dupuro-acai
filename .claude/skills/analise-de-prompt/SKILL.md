@@ -35,25 +35,21 @@ trabalhar, pra melhorar a qualidade das instruções com o tempo.
    - o resto → seguir normalmente; o alerta é só aprendizado.
 4. Não transformar a análise em sermão: uma linha, no máximo duas.
 
-## Respostas rápidas (pedido do Kayo, 2026-10-25)
+## Respostas rápidas = botões (pedido do Kayo, 2026-10-25)
 
-- Quando a resposta termina pedindo uma decisão do Kayo, feche com um bloco **no fim da
-  mensagem** (o hook só lê os últimos ~2 mil caracteres):
-
-  ```
-  Respostas rápidas:
-  1. <opção curta>
-  2. <opção curta>
-  3. <opção curta>
-  ```
-  2 a 4 opções, cada uma uma frase que o Kayo poderia mandar tal qual; a última pode ser
-  "outra coisa". Não use o bloco quando não há decisão a tomar.
-- Na mensagem seguinte, o Jev diz qual opção ela escolhe (`Resposta rápida escolhida: opção N`,
-  ou "todas"/"nenhuma"). Com confiança ≥ 0,7 a escolha apaga os alertas de ambiguidade.
-  "nenhuma" com "pode ser"/"ok" = ainda ambíguo → confirme qual opção, em uma linha.
-- **Linha visível:** o hook também manda um `systemMessage` ("Jev: pedido claro · opção 2")
-  que o app mostra (quando a interface exibe mensagens de hook). Continue abrindo a resposta
-  com `Jev (prompt): …` — ela é a garantia de que o Kayo vê.
+- Quando a resposta precisa de uma decisão do Kayo, **termine chamando a ferramenta
+  `AskUserQuestion`** (opções clicáveis no app), não um bloco de texto. Regras:
+  2 a 4 opções curtas, cada uma com descrição de uma linha; a recomendada primeiro, com
+  "(Recomendado)" no rótulo; o app já oferece "Outro" pra resposta livre. Até 4 perguntas
+  por chamada; `multiSelect: true` quando dá pra escolher mais de uma.
+- Escreva a resposta completa **antes** da chamada (o resumo do que foi feito fica visível
+  acima dos botões). Não use botões quando não há decisão a tomar.
+- O clique volta exato pra mim, então o Jev não precisa interpretar. Se o Kayo responder
+  digitando, o `tools/jev-prompt` ainda entende um bloco "Respostas rápidas:" numerado
+  (Choice com todas/nenhuma) — use o bloco só se a ferramenta não estiver disponível.
+- **Linha visível:** o hook também manda um `systemMessage` ("Jev: pedido claro") que o
+  app mostra quando exibe mensagens de hook. Continue abrindo a resposta com
+  `Jev (prompt): …` — é a garantia de que o Kayo vê.
 
 ## Limiares (em `tools/jev-prompt`)
 
