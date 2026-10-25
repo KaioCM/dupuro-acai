@@ -74,3 +74,27 @@ body::before {
 .story .titulo { margin-top: 22px; }
 .story .chips { flex-wrap: nowrap; gap: 10px; }
 .story .chip { font-size: 25px; padding: 12px 18px; }
+
+/* Versão B (apetite): foto real ocupando a peça, véu roxo em cima e embaixo pro texto. */
+body.b { background: var(--roxo-900) url('../../../assets/img/delivery/caixa-maracuja.jpg') center 100% / cover no-repeat; }
+body.story.b { background-size: auto 122%; }
+body.b::before {
+  opacity: 1; background-image:
+    linear-gradient(180deg, rgba(36,8,32,.92) 0%, rgba(56,12,47,.70) 26%, rgba(56,12,47,0) 44%,
+                    rgba(56,12,47,0) 66%, rgba(56,12,47,.80) 80%, rgba(36,8,32,.96) 100%);
+  background-size: auto;
+}
+.b .palco { visibility: hidden; }
+.b .titulo { text-shadow: 0 4px 18px rgba(20,4,18,.7); }
+.b .sub { text-shadow: 0 2px 10px rgba(20,4,18,.8); }
+.b .chip { background: rgba(36,8,32,.55); }
+.b .selo-b {
+  position: absolute; z-index: 3; right: 56px; top: var(--selo-b-y);
+  width: 170px; height: 170px; border-radius: 50%; background: var(--cream); color: var(--roxo-900);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; transform: rotate(10deg);
+  box-shadow: 0 14px 28px rgba(20,4,18,.45);
+}
+.b .selo-b b { font-family: 'Klinko', sans-serif; font-size: 64px; line-height: 1; }
+.b .selo-b span { font-size: 20px; font-weight: 700; }
+.feed.b { --selo-b-y: 620px; }
+.story.b { --selo-b-y: 980px; }
