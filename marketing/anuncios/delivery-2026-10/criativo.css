@@ -1,0 +1,76 @@
+/* Criativo de anúncio do Dupuro Delivery — fonte dos PNGs (render.sh).
+   Cores = variáveis de assets/css/style.css; texto = o que a página /delivery/ promete. */
+@font-face { font-family: 'Klinko'; src: url('../../../assets/fonts/Klinko-PlayfulBold.otf') format('opentype'); }
+:root {
+  --roxo-950: #240820; --roxo-900: #380C2F; --roxo-800: #4A1140; --roxo-700: #601050; --roxo-500: #7E2065;
+  --gold: #F5B301; --gold-strong: #E28F00; --gold-soft: #FFD34D;
+  --verde: #8BB831; --cream: #FFF7EC;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: var(--w); height: var(--h); overflow: hidden; }
+body {
+  font-family: 'Inter', sans-serif; color: var(--cream);
+  background:
+    radial-gradient(120% 70% at 50% 108%, rgba(245,179,1,.30) 0%, rgba(245,179,1,0) 55%),
+    radial-gradient(90% 60% at 85% 10%, var(--roxo-500) 0%, rgba(126,32,101,0) 60%),
+    linear-gradient(180deg, var(--roxo-900) 0%, var(--roxo-700) 100%);
+  position: relative;
+}
+/* textura sutil de bolinhas (açaí) */
+body::before {
+  content: ''; position: absolute; inset: 0; opacity: .10;
+  background-image: radial-gradient(circle at 2px 2px, var(--cream) 2px, transparent 2.5px);
+  background-size: 42px 42px;
+}
+.peca { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; padding: var(--pad-top) 72px var(--pad-bottom); }
+.logo { width: var(--logo); height: auto; position: relative; z-index: 2; }
+.titulo {
+  font-family: 'Klinko', sans-serif; text-transform: uppercase; text-align: center;
+  font-size: var(--titulo); line-height: .98; letter-spacing: .5px; margin-top: 30px;
+  color: var(--cream); text-shadow: 0 6px 0 rgba(36,8,32,.45);
+}
+.titulo em { font-style: normal; color: var(--gold-soft); }
+.sub { margin-top: 18px; font-size: 34px; font-weight: 600; text-align: center; color: #F3DDEB; max-width: 860px; line-height: 1.3; }
+.palco { position: relative; flex: 1 1 0; min-height: 0; width: 100%; display: flex; align-items: center; justify-content: center; margin: 18px 0 22px; }
+.caixa { max-width: var(--caixa); max-height: 100%; width: auto; height: auto; position: relative; z-index: 2; filter: drop-shadow(0 30px 40px rgba(20,4,18,.55)); transform: rotate(-4deg); }
+.creme {
+  position: absolute; z-index: 3; width: var(--creme); height: var(--creme); border-radius: 50%;
+  right: var(--creme-x); top: var(--creme-y); object-fit: cover; object-position: 50% 35%;
+  border: 10px solid var(--gold); box-shadow: 0 18px 34px rgba(20,4,18,.5);
+}
+.selo-nota {
+  position: absolute; z-index: 3; left: var(--nota-x);
+  width: 190px; height: 190px; border-radius: 50%; background: var(--cream); color: var(--roxo-900);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; transform: rotate(-10deg);
+  box-shadow: 0 14px 28px rgba(20,4,18,.45);
+}
+.selo-nota b { font-family: 'Klinko', sans-serif; font-size: 72px; line-height: 1; }
+.selo-nota span { font-size: 22px; font-weight: 700; text-align: center; line-height: 1.15; }
+.chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; position: relative; z-index: 2; }
+.chip {
+  font-size: 28px; font-weight: 700; padding: 14px 24px; border-radius: 999px;
+  background: rgba(255,247,236,.12); border: 2px solid rgba(255,247,236,.35); color: var(--cream);
+  display: inline-flex; align-items: center; gap: 10px;
+}
+.chip i { width: 14px; height: 14px; border-radius: 50%; background: var(--verde); display: inline-block; }
+.cta {
+  margin-top: 30px; font-family: 'Klinko', sans-serif; text-transform: uppercase; font-size: 58px; letter-spacing: 1px;
+  color: var(--roxo-950); padding: 26px 70px 22px; border-radius: 28px;
+  background: linear-gradient(180deg, var(--gold-soft) 0%, var(--gold) 55%, var(--gold-strong) 100%);
+  box-shadow: 0 10px 0 #9A5E00, 0 22px 30px rgba(20,4,18,.5); position: relative; z-index: 2;
+}
+.url { margin-top: 26px; font-size: 30px; font-weight: 700; letter-spacing: .5px; color: var(--gold-soft); position: relative; z-index: 2; }
+
+/* Formatos */
+.feed  { --w: 1080px; --h: 1350px; --pad-top: 52px; --pad-bottom: 52px; --logo: 200px; --titulo: 72px; --caixa: 600px; --creme: 210px; --creme-x: 40px; --creme-y: 0px; --nota-x: 40px; --nota-y: auto; }
+.feed .selo-nota { bottom: 0; }
+.feed .sub { font-size: 30px; margin-top: 14px; }
+.feed .cta { font-size: 50px; margin-top: 26px; padding: 22px 64px 18px; }
+.feed .url { margin-top: 18px; }
+.feed .chip { font-size: 26px; padding: 12px 22px; }
+.story { --w: 1080px; --h: 1920px; --pad-top: 250px; --pad-bottom: 330px; --logo: 190px; --titulo: 90px; --caixa: 760px; --creme: 250px; --creme-x: 30px; --creme-y: 0px; --nota-x: 30px; --nota-y: auto; }
+.story .selo-nota { bottom: 10px; }
+.story .sub { font-size: 34px; }
+.story .titulo { margin-top: 22px; }
+.story .chips { flex-wrap: nowrap; gap: 10px; }
+.story .chip { font-size: 25px; padding: 12px 18px; }
