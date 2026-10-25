@@ -20,20 +20,24 @@ trabalhar, pra melhorar a qualidade das instruções com o tempo.
 - Nunca bloqueia: sem `TYPESAFE_API_KEY`, sem rede ou com erro, não injeta nada.
 - Mensagens que começam com `/` (comandos) não são analisadas.
 
-## O que o Claude faz com o resumo
+## O que o Claude faz com o resumo (revisado 2026-10-25, depois do criativo reprovado)
 
-1. **Abre a resposta com uma linha** `Jev (prompt): …`:
-   - sem alerta → `Jev (prompt): ok`;
-   - com alerta → os alertas com que concorda + **uma sugestão concreta** de como o pedido
-     ficaria mais claro (ex.: "dizer qual tela do caixa", "dizer o que conta como pronto").
-2. **Filtra o ruído.** O Jev vê só a mensagem e o fim da última resposta. Se a conversa
-   mostra que ele errou, diga isso em poucas palavras em vez de repetir o alerta.
-   "Várias tarefas" num "faz tudo" que aprova uma lista é esperado, não defeito.
-3. **Age conforme o peso:**
-   - falta informação ou ambiguidade que **muda o trabalho** → perguntar antes de fazer;
-   - ação irreversível → seguir as regras de publicação/confirmação de sempre;
-   - o resto → seguir normalmente; o alerta é só aprendizado.
-4. Não transformar a análise em sermão: uma linha, no máximo duas.
+O Kayo quer **decidir junto**, não receber trabalho pronto feito em cima de suposições.
+Ele prefere gastar tokens montando contexto a gastar refazendo.
+
+1. **Mostre a análise inteira**: cada pergunta do Jev com o número e o que significa
+   (o Jev não dá raciocínio, só números — a leitura é sua, deixe claro o que é dele e o que é seu).
+2. **Nunca descarte um alerta sozinho.** Se achar que o Jev errou, diga por quê e pergunte.
+   Erro de 2026-10-25: o pedido "quero um criativo pra anúncio" veio com objetivo 0,9/2, falta
+   info 0,85 — o Claude fez 4 perguntas de múltipla escolha e decidiu o resto (estilo, mensagem,
+   fotos, Canva) sozinho. Resultado reprovado.
+3. **Pedido vago (objetivo < 1,2, falta info > 0,6, ambíguo > 0,6 ou sem critério de pronto)
+   = não executar ainda.** Montar o contexto junto: perguntas abertas sobre intenção, público,
+   o que a pessoa deve sentir/fazer, estilo e referências, o que não pode ter, critério de pronto.
+   Botões servem pra escolhas fechadas; intenção e estilo pedem conversa.
+4. Ao propor algo (briefing, plano, opções), **passe pelo Jev de novo** (ex.: Score de
+   completude do briefing, Choice entre direções) e mostre os números antes de executar.
+5. Só execute depois que o Kayo confirmar o contexto.
 
 ## Respostas rápidas = botões (pedido do Kayo, 2026-10-25)
 
