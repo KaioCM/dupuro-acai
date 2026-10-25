@@ -1,6 +1,24 @@
 {
   "version": 1,
   "skills": {
+    "ad-creative": {
+      "source": "coreyhaines31/marketingskills",
+      "sourceType": "github",
+      "skillPath": "skills/ad-creative/SKILL.md",
+      "computedHash": "0676c0e6adbf1a4d40e4ff01e343fea4d10394257a8eef7366fd532ab6eaa38c"
+    },
+    "ad-creative-brief": {
+      "source": "mbfinotti/advertising-skills",
+      "sourceType": "github",
+      "skillPath": "skills/ad-creative-brief/SKILL.md",
+      "computedHash": "88b0c26d625643e0076ba04f418e9ffe1962f4b5619092825918f2595983a3b1"
+    },
+    "canvas-design": {
+      "source": "anthropics/skills",
+      "sourceType": "github",
+      "skillPath": "skills/canvas-design/SKILL.md",
+      "computedHash": "3fa7ea60170023ad8268bf9fd734ea75dd404279a2ef8ddf5abaa1102ad8e5f4"
+    },
     "find-skills": {
       "source": "vercel-labs/skills",
       "sourceType": "github",
