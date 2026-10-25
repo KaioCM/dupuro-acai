@@ -6,8 +6,12 @@ instrução e devolve um resumo como additionalContext pro Claude. Só bibliotec
 Nunca bloqueia: sem TYPESAFE_API_KEY, sem rede ou com erro, sai calado (exit 0).
 Teste manual:  echo '{"prompt":"arruma o caixa"}' | tools/jev-prompt
 A mensagem (até 6 mil caracteres) e o fim da última resposta do Claude vão pra TypeSafe.
+
+Respostas rápidas: se a última resposta do Claude termina com um bloco "Respostas rápidas:"
+e linhas "1. …", "2. …", o Jev também diz qual opção a mensagem escolhe (Choice), pra que
+"2", "pode ser" ou "os dois" sejam entendidos sem adivinhação.
 """
-import json, os, sys, urllib.request
+import json, os, re, sys, urllib.request
 
 URL = "https://api.typesafe.ai/v1/systemone"
 PROJETO = ("Dupuro Açaí: static website + Supabase back end (admin panel, cashier/POS PWA, "
@@ -68,6 +72,17 @@ def ultima_resposta(caminho, limite=2000):
     return ""
 
 
+def opcoes_rapidas(texto):
+    """Lê o bloco "Respostas rápidas:" do fim da resposta: {"1": "texto", ...} (até 6)."""
+    i = texto.rfind("Respostas rápidas")
+    if i < 0:
+        return {}
+    ops = {}
+    for m in re.finditer(r"^\s*(\d)[.)]\s+(.+)$", texto[i:], re.M):
+        ops[m.group(1)] = m.group(2).strip().strip("*")[:200]
+    return dict(list(ops.items())[:6])
+
+
 def main():
     key = os.environ.get("TYPESAFE_API_KEY")
     try:
@@ -77,9 +92,18 @@ def main():
     msg = (entrada.get("prompt") or "").strip()
     if not key or not msg or msg.startswith("/"):
         return
-    state = {"project": PROJETO, "message": msg[:6000],
-             "previous_agent_message": ultima_resposta(entrada.get("transcript_path") or "")}
-    req = urllib.request.Request(URL, data=json.dumps({"model": "jev-latest", "state": state, "questions": Q}).encode(),
+    anterior = ultima_resposta(entrada.get("transcript_path") or "")
+    state = {"project": PROJETO, "message": msg[:6000], "previous_agent_message": anterior}
+    perguntas = dict(Q)
+    ops = opcoes_rapidas(anterior)
+    if ops:
+        crit = {"op" + k: v for k, v in ops.items()}
+        crit["todas"] = "All of the offered options."
+        crit["nenhuma"] = "None of the offered options: the message asks for something else or doesn't choose."
+        perguntas["escolha"] = {"type": "choice", "criteria": crit,
+                                "instructions": "`previous_agent_message` ends with numbered quick replies. "
+                                                "Which of them does `message` choose?"}
+    req = urllib.request.Request(URL, data=json.dumps({"model": "jev-latest", "state": state, "questions": perguntas}).encode(),
                                  headers={"Authorization": "Bearer " + key, "Content-Type": "application/json"})
     try:
         with urllib.request.urlopen(req, timeout=8) as r:
@@ -103,14 +127,25 @@ def main():
     numeros = (f"tipo {ROTULO_TIPO.get(tipo, tipo)} ({a['tipo']['confidence']:.2f}) · objetivo {obj:.1f}/2 · "
                f"pronto {p['pronto']:.2f} · ambíguo {p['ambiguo']:.2f} · falta info {p['falta_info']:.2f} · "
                f"várias {p['varias']:.2f} · irreversível {p['irreversivel']:.2f} · conflito {p['contradicao']:.2f}")
+    escolha = ""
+    if "escolha" in a:
+        e = a["escolha"]
+        rot = {"todas": "todas as opções", "nenhuma": "nenhuma das opções"}.get(e["choice"], "opção " + e["choice"][2:])
+        escolha = f" Resposta rápida escolhida: {rot} (conf. {e['confidence']:.2f})."
+        if e["choice"] != "nenhuma" and e["confidence"] >= 0.7:
+            # a escolha resolve a ambiguidade de uma resposta curta
+            alertas = [x for x in alertas if x not in ("dá pra ler de mais de um jeito", "falta informação que só o usuário tem",
+                                                      "objetivo pouco claro", "sem critério de pronto/entregável")]
     contexto = (
-        "[Analista de prompt — Jev] " + numeros + ". Alertas: " + ("; ".join(alertas) if alertas else "nenhum") + ".\n"
+        "[Analista de prompt — Jev] " + numeros + "." + escolha + " Alertas: " + ("; ".join(alertas) if alertas else "nenhum") + ".\n"
         "Regra do projeto (skill analise-de-prompt): abra a resposta com UMA linha 'Jev (prompt): ...' — "
         "'ok' se não houver alerta; senão, os alertas que você concorda e uma sugestão concreta de como o pedido "
         "ficaria mais claro. Discorde do Jev quando a conversa mostrar que ele errou (ele não vê o histórico todo). "
         "Falta informação/ambiguidade que muda o trabalho → pergunte antes; o resto, siga normalmente."
     )
-    print(json.dumps({"hookSpecificOutput": {"hookEventName": "UserPromptSubmit", "additionalContext": contexto}},
+    visivel = "Jev: " + ("; ".join(alertas) if alertas else "pedido claro") + (escolha.replace(" Resposta rápida escolhida:", " ·") if escolha else "")
+    print(json.dumps({"systemMessage": visivel,
+                      "hookSpecificOutput": {"hookEventName": "UserPromptSubmit", "additionalContext": contexto}},
                      ensure_ascii=False))
 
 

@@ -35,6 +35,26 @@ trabalhar, pra melhorar a qualidade das instruções com o tempo.
    - o resto → seguir normalmente; o alerta é só aprendizado.
 4. Não transformar a análise em sermão: uma linha, no máximo duas.
 
+## Respostas rápidas (pedido do Kayo, 2026-10-25)
+
+- Quando a resposta termina pedindo uma decisão do Kayo, feche com um bloco **no fim da
+  mensagem** (o hook só lê os últimos ~2 mil caracteres):
+
+  ```
+  Respostas rápidas:
+  1. <opção curta>
+  2. <opção curta>
+  3. <opção curta>
+  ```
+  2 a 4 opções, cada uma uma frase que o Kayo poderia mandar tal qual; a última pode ser
+  "outra coisa". Não use o bloco quando não há decisão a tomar.
+- Na mensagem seguinte, o Jev diz qual opção ela escolhe (`Resposta rápida escolhida: opção N`,
+  ou "todas"/"nenhuma"). Com confiança ≥ 0,7 a escolha apaga os alertas de ambiguidade.
+  "nenhuma" com "pode ser"/"ok" = ainda ambíguo → confirme qual opção, em uma linha.
+- **Linha visível:** o hook também manda um `systemMessage` ("Jev: pedido claro · opção 2")
+  que o app mostra (quando a interface exibe mensagens de hook). Continue abrindo a resposta
+  com `Jev (prompt): …` — ela é a garantia de que o Kayo vê.
+
 ## Limiares (em `tools/jev-prompt`)
 
 objetivo < 1,2 · pronto < 0,4 (os dois ignorados quando o tipo é "confirmação") ·
