@@ -44,6 +44,7 @@ supabase/functions/admin-delete-reseller/index.ts
 supabase/functions/sugerir-fiscal/index.ts   sugestão de perfil fiscal pelo nome (Jev/TypeSafe)
 experimentos/typesafe/    scripts + resultados dos testes com o Jev (README com os números)
 tools/jev                 CLI do Jev pro desenvolvimento (yes/pick/score/trechos) — ver skill dupuro-jev
+tools/jev-prompt          analista de prompt (hook UserPromptSubmit em .claude/settings.json)
 docs/                     contexto detalhado por área (ver índice abaixo)
 ```
 
@@ -79,6 +80,7 @@ Projeto real em `supabase-config.js` (URL `zqadfktfplrbrjmepllh.supabase.co`). D
 | `docs/whatsapp.md` | fila de avisos, modelos da Meta, aceite |
 | `docs/design-system.md` | design system v2/v3, assets, SEO |
 | `.claude/skills/dupuro-jev/` | quando usar o Jev (produto e desenvolvimento) e o `tools/jev` |
+| `.claude/skills/analise-de-prompt/` | toda mensagem do Kayo passa pelo Jev (hook `UserPromptSubmit` → `tools/jev-prompt`); abrir a resposta com `Jev (prompt): …` |
 
 Pra achar um assunto sem ler tudo: `grep -n` em `docs/`; se a pergunta for de comportamento e sem palavra-chave, `tools/jev trechos "pergunta" docs/*.md`.
 
