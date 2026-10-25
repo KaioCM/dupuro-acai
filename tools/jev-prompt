@@ -1,0 +1,118 @@
+#!/usr/bin/env python3
+"""jev-prompt — analista de prompt. Roda no hook UserPromptSubmit (.claude/settings.json):
+lê a mensagem do usuário (JSON do hook no stdin), pergunta ao Jev sobre a qualidade da
+instrução e devolve um resumo como additionalContext pro Claude. Só biblioteca padrão.
+
+Nunca bloqueia: sem TYPESAFE_API_KEY, sem rede ou com erro, sai calado (exit 0).
+Teste manual:  echo '{"prompt":"arruma o caixa"}' | tools/jev-prompt
+A mensagem (até 6 mil caracteres) e o fim da última resposta do Claude vão pra TypeSafe.
+"""
+import json, os, sys, urllib.request
+
+URL = "https://api.typesafe.ai/v1/systemone"
+PROJETO = ("Dupuro Açaí: static website + Supabase back end (admin panel, cashier/POS PWA, "
+           "reseller area, delivery, NFC-e tax receipts). The user is the business owner talking "
+           "to an AI coding agent that edits, tests and publishes the code.")
+TIPOS = {
+    "pergunta": "A question or request for information/analysis; no change to the project is expected.",
+    "mudanca_pequena": "A small, well-bounded change (one fix, one tweak, one file or feature detail).",
+    "mudanca_grande": "A large change: a new feature, several parts of the system, or a redesign.",
+    "pesquisa": "Research, comparison or recommendation work before any change is decided.",
+    "confirmacao": "A short reply to the agent: approval, choice between offered options, or go-ahead.",
+    "outro": "None of the above.",
+}
+Q = {
+    "tipo": {"type": "choice", "instructions": "What kind of request is `message`?", "criteria": TIPOS},
+    "objetivo": {"type": "score",
+                 "instructions": "How clear is the result the user wants from `message`? Read it as a reply "
+                                 "in an ongoing conversation: `previous_agent_message` is what it answers.",
+                 "criteria": ["Unclear: hard to tell what result the user wants.",
+                              "Partly clear: the main intent is visible but important parts are open.",
+                              "Clear: it is evident what result the user wants."]},
+    "pronto": {"type": "noul", "instructions": "Together with `previous_agent_message`, does `message` make it "
+                                              "clear what the deliverable is or how to tell the task is done?"},
+    "ambiguo": {"type": "noul", "instructions": "Could `message` reasonably be read in two or more materially "
+                                               "different ways that would lead to different work?"},
+    "falta_info": {"type": "noul", "instructions": "Is essential information that only the user can give missing "
+                                                  "from `message` (which file or screen, which option, a value, "
+                                                  "an account, a decision), even considering `previous_agent_message`?"},
+    "varias": {"type": "noul", "instructions": "Does `message` ask for several independent tasks or deliverables at once?"},
+    "irreversivel": {"type": "noul", "instructions": "Does `message` ask for an action that is hard to undo or "
+                                                    "visible to other people (publishing, deleting, paying, sending "
+                                                    "messages, changing production data or settings)?"},
+    "contradicao": {"type": "noul", "instructions": "Does `message` contain instructions that contradict each "
+                                                   "other or contradict constraints stated in `previous_agent_message`?"},
+}
+ROTULO_TIPO = {"pergunta": "pergunta", "mudanca_pequena": "mudança pequena", "mudanca_grande": "mudança grande",
+               "pesquisa": "pesquisa", "confirmacao": "confirmação", "outro": "outro"}
+
+
+def ultima_resposta(caminho, limite=2000):
+    """Texto final da última resposta do Claude no transcript (JSONL), pra dar contexto."""
+    try:
+        with open(caminho, encoding="utf-8") as f:
+            linhas = f.readlines()[-400:]
+    except Exception:
+        return ""
+    for linha in reversed(linhas):
+        try:
+            e = json.loads(linha)
+        except Exception:
+            continue
+        if e.get("type") != "assistant":
+            continue
+        partes = (e.get("message") or {}).get("content") or []
+        texto = " ".join(p.get("text", "") for p in partes if isinstance(p, dict) and p.get("type") == "text").strip()
+        if texto:
+            return texto[-limite:]
+    return ""
+
+
+def main():
+    key = os.environ.get("TYPESAFE_API_KEY")
+    try:
+        entrada = json.load(sys.stdin)
+    except Exception:
+        return
+    msg = (entrada.get("prompt") or "").strip()
+    if not key or not msg or msg.startswith("/"):
+        return
+    state = {"project": PROJETO, "message": msg[:6000],
+             "previous_agent_message": ultima_resposta(entrada.get("transcript_path") or "")}
+    req = urllib.request.Request(URL, data=json.dumps({"model": "jev-latest", "state": state, "questions": Q}).encode(),
+                                 headers={"Authorization": "Bearer " + key, "Content-Type": "application/json"})
+    try:
+        with urllib.request.urlopen(req, timeout=8) as r:
+            a = json.load(r)["answers"]
+    except Exception:
+        return
+
+    tipo = a["tipo"]["choice"]
+    obj = a["objetivo"]["score"]
+    p = {k: a[k]["noul"] for k in ("pronto", "ambiguo", "falta_info", "varias", "irreversivel", "contradicao")}
+    alertas = []
+    if tipo != "confirmacao":
+        if obj < 1.2: alertas.append("objetivo pouco claro")
+        if p["pronto"] < 0.4: alertas.append("sem critério de pronto/entregável")
+    if p["ambiguo"] > 0.6: alertas.append("dá pra ler de mais de um jeito")
+    if p["falta_info"] > 0.6: alertas.append("falta informação que só o usuário tem")
+    if p["varias"] > 0.6: alertas.append("várias tarefas num pedido")
+    if p["irreversivel"] > 0.6: alertas.append("ação difícil de desfazer/visível a outros")
+    if p["contradicao"] > 0.5: alertas.append("instruções em conflito")
+
+    numeros = (f"tipo {ROTULO_TIPO.get(tipo, tipo)} ({a['tipo']['confidence']:.2f}) · objetivo {obj:.1f}/2 · "
+               f"pronto {p['pronto']:.2f} · ambíguo {p['ambiguo']:.2f} · falta info {p['falta_info']:.2f} · "
+               f"várias {p['varias']:.2f} · irreversível {p['irreversivel']:.2f} · conflito {p['contradicao']:.2f}")
+    contexto = (
+        "[Analista de prompt — Jev] " + numeros + ". Alertas: " + ("; ".join(alertas) if alertas else "nenhum") + ".\n"
+        "Regra do projeto (skill analise-de-prompt): abra a resposta com UMA linha 'Jev (prompt): ...' — "
+        "'ok' se não houver alerta; senão, os alertas que você concorda e uma sugestão concreta de como o pedido "
+        "ficaria mais claro. Discorde do Jev quando a conversa mostrar que ele errou (ele não vê o histórico todo). "
+        "Falta informação/ambiguidade que muda o trabalho → pergunte antes; o resto, siga normalmente."
+    )
+    print(json.dumps({"hookSpecificOutput": {"hookEventName": "UserPromptSubmit", "additionalContext": contexto}},
+                     ensure_ascii=False))
+
+
+if __name__ == "__main__":
+    main()
