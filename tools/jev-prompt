@@ -138,10 +138,11 @@ def main():
                                                       "objetivo pouco claro", "sem critério de pronto/entregável")]
     contexto = (
         "[Analista de prompt — Jev] " + numeros + "." + escolha + " Alertas: " + ("; ".join(alertas) if alertas else "nenhum") + ".\n"
-        "Regra do projeto (skill analise-de-prompt): abra a resposta com UMA linha 'Jev (prompt): ...' — "
-        "'ok' se não houver alerta; senão, os alertas que você concorda e uma sugestão concreta de como o pedido "
-        "ficaria mais claro. Discorde do Jev quando a conversa mostrar que ele errou (ele não vê o histórico todo). "
-        "Falta informação/ambiguidade que muda o trabalho → pergunte antes; o resto, siga normalmente."
+        "Regra do projeto (skill analise-de-prompt): abra a resposta mostrando ao Kayo a análise COMPLETA "
+        "do Jev (cada pergunta com o número e o que ele significa), não só os alertas. Nunca descarte um alerta "
+        "sozinho: se discordar, diga por quê e pergunte. Falta informação, ambiguidade, objetivo pouco claro ou "
+        "sem critério de pronto → NÃO comece o trabalho: monte junto com o Kayo o contexto que falta (perguntas "
+        "abertas sobre intenção, público, estilo, referências, restrições), e só execute depois que ele confirmar."
     )
     visivel = "Jev: " + ("; ".join(alertas) if alertas else "pedido claro") + (escolha.replace(" Resposta rápida escolhida:", " ·") if escolha else "")
     print(json.dumps({"systemMessage": visivel,
