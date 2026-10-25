@@ -16,3 +16,19 @@ recortada, a foto do creme e o logo branco na biblioteca de uploads.
 
 Antes de pagar mídia: fazer uma compra real de teste no /delivery/ (até 2026-10-25 nenhum
 pedido tinha sido pago — o checkout cria a preferência no Mercado Pago, falta ver o fim).
+
+## Avaliação pelo Jev (2026-10-25, `avaliar_jev.py`)
+
+| | Feed | Stories |
+|---|---|---|
+| Título legível no celular (0–2) | 1,92 | 1,91 |
+| Claro que vende açaí em casa (P sim) | 0,97 | 0,96 |
+| Claro o próximo passo (P sim) | 0,96 | 0,96 |
+| Poluição visual (0 limpo – 2 poluído) | 0,76 | 0,57 |
+| Atrai o olhar primeiro | título 0,90 | título 0,93 |
+| Parece anúncio profissional (P sim) | 0,68 | 0,69 |
+| **Apetite (0–2)** | **1,09** | **1,07** |
+
+Ponto fraco: apetite — a comida aparece pouco (embalagem em destaque, creme num círculo
+pequeno). Próximo teste: versão B com a foto do creme como fundo. Imagem no Jev é
+experimental: triagem, não veredito.
