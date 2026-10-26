@@ -69,11 +69,11 @@ def pagina(fmt):
         cls='num tres' if p>=100 else 'num'
         itens+=(f'<div class="item i{n}"><div class="caixa"><img src="../briefing-delivery/material/caixa-{n}l-estudio-recorte.webp" alt="Caixa {n} {"litro" if n==1 else "litros"}"><div class="sombra"></div></div>'
                 f'{BARB}<div class="etiqueta"><div class="corpo"></div>{FIBRA("fibra2",n)}<div class="furo"></div>'
-                f'<div class="preco"><span class="rs">R$</span><span class="{cls}">{p}</span></div></div></div>')
+                f'<div class="preco"><span class="lit">{n}L</span><span class="rs">R$</span><span class="{cls}">{p}</span></div></div></div>')
     if fmt=='feed':
-        decor=folha(-30,600,320,-8)+folha(800,560,320,-8,True)+''.join(fruto(x,y,r) for x,y,r in [(20,935,22),(58,952,18),(36,962,15),(1005,930,22),(1040,950,17),(985,958,14)])
+        decor=folha(-30,585,320,-8)+folha(800,545,320,-8,True)+''.join(fruto(x,y,r) for x,y,r in [(20,920,22),(58,937,18),(36,947,15),(1005,915,22),(1040,935,17),(985,943,14)])
     else:
-        decor=folha(-30,880,340,-8)+folha(780,840,340,-8,True)+''.join(fruto(x,y,r) for x,y,r in [(20,1215,22),(58,1232,18),(36,1242,15),(1005,1210,22),(1040,1230,17),(985,1238,14)])
+        decor=folha(-30,850,340,-8)+folha(780,810,340,-8,True)+''.join(fruto(x,y,r) for x,y,r in [(20,1185,22),(58,1202,18),(36,1212,15),(1005,1180,22),(1040,1200,17),(985,1208,14)])
     return f'''<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="robots" content="noindex">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@600;700;800&family=Caveat+Brush&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="peca.css"><title>Dupuro Delivery v2 — {fmt}</title></head>

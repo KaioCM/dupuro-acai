@@ -42,10 +42,10 @@ body { font-family:'Inter',sans-serif; color:var(--cream); position:relative;
 
 .feed { --w:1080px; --h:1350px; --logo-y:40px; --logo-w:170px; --faixa-y:200px; --faixa-h:322px; --titulo-y:228px;
   --t-a:62px; --t-mao:128px; --t-b:50px; --carimbo:150px; --carimbo-x:62px; --carimbo-y:222px;
-  --fila-y:600px; --fila-h:370px; --escala:135px; --ad:124px; --rodape-y:1150px; --cta:46px; --info:28px; }
+  --fila-y:585px; --fila-h:370px; --escala:135px; --ad:124px; --rodape-y:1170px; --cta:46px; --info:28px; }
 .story { --w:1080px; --h:1920px; --logo-y:250px; --logo-w:180px; --faixa-y:450px; --faixa-h:352px; --titulo-y:478px;
   --t-a:68px; --t-mao:140px; --t-b:54px; --carimbo:160px; --carimbo-x:58px; --carimbo-y:462px;
-  --fila-y:880px; --fila-h:390px; --escala:135px; --ad:128px; --rodape-y:1425px; --cta:50px; --info:29px; }
+  --fila-y:850px; --fila-h:390px; --escala:135px; --ad:128px; --rodape-y:1428px; --cta:50px; --info:29px; }
 
 /* ---- ajustes 2026-10-26: etiquetas de papel amarradas, folhas, frutos, rabiscos, caminhãozinho ---- */
 .barbante { position:absolute; top:calc(100% - 6px); left:50%; width:30px; margin-left:-15px; height:var(--fio); overflow:visible; }
@@ -58,7 +58,8 @@ body { font-family:'Inter',sans-serif; color:var(--cream); position:relative;
   clip-path:polygon(22% 0,78% 0,100% 18%,100% 100%,0 100%,0 18%); }
 .etiqueta .furo { position:absolute; top:9%; left:50%; width:16px; height:16px; margin-left:-8px; border-radius:50%;
   background:var(--roxo-900); box-shadow:inset 0 2px 2px rgba(0,0,0,.5); }
-.etiqueta .preco { position:absolute; left:0; right:0; top:30%; text-align:center; color:var(--roxo-900); line-height:1; }
+.etiqueta .preco { position:absolute; left:0; right:0; top:25%; text-align:center; color:var(--roxo-900); line-height:1; }
+.etiqueta .lit { display:block; font-family:'Klinko'; font-size:calc(var(--tag-w) * .22); color:var(--roxo-700); margin-bottom:6px; padding-bottom:5px; border-bottom:2px dashed rgba(96,16,80,.35); margin-left:22%; margin-right:22%; }
 .etiqueta .rs { display:block; font-weight:800; font-size:calc(var(--tag-w) * .19); letter-spacing:1px; color:var(--roxo-700); margin-bottom:2px; }
 .etiqueta .num { display:block; font-family:'Klinko'; font-size:calc(var(--tag-w) * .40); }
 .etiqueta .num.tres { font-size:calc(var(--tag-w) * .33); }
@@ -68,6 +69,6 @@ body { font-family:'Inter',sans-serif; color:var(--cream); position:relative;
 .rodape { display:flex; flex-direction:column; align-items:center; }
 .linha-cta { display:flex; align-items:center; justify-content:center; gap:22px; }
 .caminhao { width:var(--truck); height:auto; overflow:visible; }
-.feed  { --fio:34px; --tag-w:118px; --tag-h:122px; --truck:150px; }
+.feed  { --fio:30px; --tag-w:118px; --tag-h:156px; --truck:150px; }
 .story .info { margin-top:16px; }
-.story { --fio:36px; --tag-w:128px; --tag-h:132px; --truck:160px; }
+.story { --fio:30px; --tag-w:128px; --tag-h:166px; --truck:160px; }

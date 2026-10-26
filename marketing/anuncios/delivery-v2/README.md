@@ -14,7 +14,7 @@ carimbo, adesivo recortado) fica abaixo do que o Jev percebe. Nos stories, os ad
 proporcionalmente menores (preço de relance 1,60).
 
 ## Ajustes do Kayo (2026-10-26): etiquetas, "simplório", caminhãozinho
-Etiquetas de papel amarradas com barbante, "R$" + número inteiros, todas na mesma linha (caixas
+Etiquetas de papel amarradas com barbante, litragem no topo (1L, 2L, 5L, 10L) + "R$" + número inteiros, todas na mesma linha (caixas
 tortas, etiquetas alinhadas); folhas de palmeira de açaí atrás das pontas da fileira; frutos de açaí;
 sublinhado de pincel em "favorito" + estrelinhas; caminhãozinho em traço à mão à DIREITA do "Peça agora", virado pra direita ("pediu, o caminhão sai" — pedido do Kayo).
 Agora gerado por `gerar.py` (HTML) → `render.sh` (PNG).
