@@ -3387,6 +3387,14 @@
         if (!recebido) return;
         depois = 'entregue';
       }
+      // Fora de uma rota iniciada o cliente não vê o entregador no mapa (só o status).
+      if (depois === 'em_rota' && await DupuroAdmin.deliveryEmRotaIniciada(d.codigo) === false) {
+        var fora = await escolherOpcao(d.codigo + ' não está numa rota iniciada: o cliente não vai ver o entregador no mapa. ' +
+          'Pro mapa funcionar, monte a rota do turno em Rotas e o entregador toca em "Iniciar rota" no celular dele (GPS ligado, tela acesa).',
+          [{ v: 'rotas', txt: 'Abrir Rotas' }, { v: 'mesmo', txt: 'Marcar mesmo assim' }]);
+        if (fora === 'rotas') { location.href = 'rotas.html'; return; }
+        if (fora !== 'mesmo') return;
+      }
       b.disabled = true;
       var rd = await DupuroAdmin.setDeliveryStatus(d.id, depois, recebido);
       if (rd.error) { b.disabled = false; aviso('Não foi possível atualizar a entrega ' + d.codigo + ': ' + motivoErro(rd.error) + '.'); return; }
