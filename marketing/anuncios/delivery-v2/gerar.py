@@ -71,9 +71,9 @@ def pagina(fmt):
                 f'{BARB}<div class="etiqueta"><div class="corpo"></div>{FIBRA("fibra2",n)}<div class="furo"></div>'
                 f'<div class="preco"><span class="lit">{n}L</span><span class="rs">R$</span><span class="{cls}">{p}</span></div></div></div>')
     if fmt=='feed':
-        decor=folha(-30,585,320,-8)+folha(800,545,320,-8,True)+''.join(fruto(x,y,r) for x,y,r in [(20,920,22),(58,937,18),(36,947,15),(1005,915,22),(1040,935,17),(985,943,14)])
+        decor=folha(-30,568,320,-8)+folha(800,528,320,-8,True)+''.join(fruto(x,y,r) for x,y,r in [(20,903,22),(58,920,18),(36,930,15),(1005,898,22),(1040,918,17),(985,926,14)])
     else:
-        decor=folha(-30,800,340,-8)+folha(780,760,340,-8,True)+''.join(fruto(x,y,r) for x,y,r in [(20,1135,22),(58,1152,18),(36,1162,15),(1005,1130,22),(1040,1150,17),(985,1158,14)])
+        decor=folha(-30,770,340,-8)+folha(780,730,340,-8,True)+''.join(fruto(x,y,r) for x,y,r in [(20,1105,22),(58,1122,18),(36,1132,15),(1005,1100,22),(1040,1120,17),(985,1128,14)])
     return f'''<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="robots" content="noindex">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@600;700;800&family=Caveat+Brush&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="peca.css"><title>Dupuro Delivery v2 — {fmt}</title></head>
@@ -85,6 +85,6 @@ def pagina(fmt):
 {CARIMBO}
 {decor}
 <div class="fila">{itens}</div>
-<div class="rodape"><div class="linha-cta"><span class="cta">Peça agora</span>{CAMINHAO}</div><div class="info">Entrega a partir de <i>R$ 5</i> · dupuroacai.com/delivery</div></div>
+<div class="rodape"><div class="linha-cta"><span class="cta">Peça agora</span>{CAMINHAO}</div><div class="area">Entregamos em Cuiabá e Várzea Grande<svg class="seta" style="right:-58px;top:-44px" viewBox="0 0 70 56"><path d="M60,4 C 66,26 52,44 22,46" stroke="#FFD34D" stroke-width="4" fill="none" stroke-linecap="round" filter="url(#mao3)"/><path d="M30,36 L18,46 L31,53" stroke="#FFD34D" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round" filter="url(#mao3)"/><defs><filter id="mao3"><feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="2" seed="11" result="d"/><feDisplacementMap in="SourceGraphic" in2="d" scale="2.5"/></filter></defs></svg></div><div class="info">Entrega a partir de <i>R$ 5</i> · dupuroacai.com/delivery</div></div>
 </body></html>'''
 for fmt in ['feed','story']: open(fmt+'.html','w').write(pagina(fmt))
