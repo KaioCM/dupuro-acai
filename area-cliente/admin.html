@@ -3245,7 +3245,10 @@
     var whats = linkWhats({ telefone: d.cliente_telefone, nome: d.cliente_nome }, 'Sobre o seu pedido de delivery ' + d.codigo + ':');
     var avD = avisoDe('delivery', d.codigo);
     var receber = d.pagar_na_entrega && !d.recebido_em;
-    var acao = (avD ? botaoAviso(avD) : '') + (d.status === 'pago'
+    var confirmado = d.status === 'pago' && !avD ? waHref(d.cliente_telefone, textoConfirmadoDelivery(d)) : '';
+    var acao = (avD ? botaoAviso(avD) : '') +
+      (confirmado ? '<a class="btn btn-avisar btn-sm" href="' + esc(confirmado) + '" target="_blank" rel="noopener"><svg aria-hidden="true"><use href="#m-chat"/></svg>Avisar: pedido confirmado</a>' : '') +
+      (d.status === 'pago'
       ? '<button type="button" class="btn btn-primary btn-sm" data-dlv-acao="em_rota" data-id="' + d.id + '">Saiu pra entrega</button>'
       : '<button type="button" class="btn btn-primary btn-sm" data-dlv-acao="' + (receber ? 'receber' : 'entregue') + '" data-id="' + d.id + '">' + (receber ? 'Entregue e recebido' : 'Marcar como entregue') + '</button>') +
       '<button type="button" class="btn btn-link-perigo btn-sm" data-dlv-acao="cancelar" data-id="' + d.id + '">Cancelar</button>';
@@ -3267,6 +3270,19 @@
       '</article>';
   }
 
+  // Mensagem de "pedido confirmado" (ainda sem aviso automático no WhatsApp): o admin só envia.
+  function textoConfirmadoDelivery(d) {
+    var nome = primeiroNome(d.cliente_nome), tot = Number(d.total) || 0;
+    var pag = d.pagar_na_entrega
+      ? 'Pagamento na entrega: ' + moeda(tot) + ' em ' + ({ dinheiro: 'dinheiro', debito: 'cartão de débito', credito: 'cartão de crédito', pix: 'Pix' }[d.forma_entrega] || 'dinheiro') +
+        (d.troco_para ? ' (levamos troco pra ' + moeda(Number(d.troco_para)) + ')' : '') + '.'
+      : 'Pagamento confirmado: ' + moeda(tot) + '.';
+    return ['Olá' + (nome ? ', ' + nome : '') + '! Aqui é da Dupuro Açaí.',
+      'Recebemos seu pedido ' + d.codigo + '! A entrega é ' + quandoTexto(d.data_entrega, d.periodo) + '.',
+      pag,
+      itensDelivery(d) ? 'Itens:\n' + itensDelivery(d) : '',
+      d.token ? 'Acompanhe no link:\n' + SITE + 'delivery/acompanhar.html?t=' + d.token : ''].filter(Boolean).join('\n\n');
+  }
   // "Receber na entrega: R$ 42,00 · dinheiro · troco pra R$ 50,00 (levar R$ 8,00)"
   var FORMA_DLV = { dinheiro: 'dinheiro', debito: 'débito', credito: 'crédito', pix: 'Pix' };
   function textoReceber(d) {

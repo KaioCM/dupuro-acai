@@ -99,7 +99,7 @@
     var rv = estado.paradas.filter(function (p) { return p.tipo === 'revenda'; }).map(function (p) { return p.ref; });
     var extras = {};
     if (dl.length) {
-      var a = await client.from('delivery_pedidos').select('codigo, total, pagar_na_entrega, forma_entrega, troco_para, itens').in('codigo', dl);
+      var a = await client.from('delivery_pedidos').select('codigo, token, cliente_nome, total, pagar_na_entrega, forma_entrega, troco_para, itens').in('codigo', dl);
       (a.data || []).forEach(function (d) { extras[d.codigo] = d; });
     }
     if (rv.length) {
@@ -199,7 +199,7 @@
           '<div class="rt-botoes">' +
             (p.lat != null && !feita ? '<a class="btn btn-dark-outline btn-sm" href="https://www.google.com/maps/dir/?api=1&destination=' + p.lat + ',' + p.lng + '&travelmode=driving" target="_blank" rel="noopener">Maps</a>' +
               '<a class="btn btn-dark-outline btn-sm" href="https://waze.com/ul?ll=' + p.lat + ',' + p.lng + '&navigate=yes" target="_blank" rel="noopener">Waze</a>' : '') +
-            (p.telefone && !feita ? '<a class="btn btn-dark-outline btn-sm" href="https://wa.me/' + whats(p.telefone) + '" target="_blank" rel="noopener">WhatsApp</a>' : '') +
+            (p.telefone ? botaoWhats(p) : '') +
             (emAndamento && !feita ? '<button type="button" class="btn btn-primary btn-sm" data-parada="feita">Entregue</button>' +
               '<button type="button" class="btn-link-acao" data-parada="pulada">Não deu, pular</button>' : '') +
             (feita && r && r.status !== 'planejada' ? '<button type="button" class="btn-link-acao" data-parada="reabrir">Desfazer</button>' : '') +
@@ -212,6 +212,75 @@
     desenharMapa(planejada || emAndamento);
   }
   function whats(t) { var d = String(t || '').replace(/\D/g, ''); return d.length <= 11 ? '55' + d : d; }
+
+  // ---- Avisar o cliente no WhatsApp (ainda sem envio automático) ----
+  // Um botão por parada com a mensagem da fase que o cliente vê no acompanhar.html
+  // (migration_054): saiu → está próximo (≤ raio, em outra entrega) → a caminho → entregue.
+  var SITE = 'https://www.dupuroacai.com/', raioMapa = 5;
+  var ROTULO_AVISO = { saiu: 'saiu pra entrega', perto: 'está próximo', a_caminho: 'está a caminho', entregue: 'entregue' };
+  function distKm(a, b) {
+    var r = Math.PI / 180, dLat = (b.lat - a.lat) * r, dLng = (b.lng - a.lng) * r;
+    var h = Math.pow(Math.sin(dLat / 2), 2) + Math.cos(a.lat * r) * Math.cos(b.lat * r) * Math.pow(Math.sin(dLng / 2), 2);
+    return 2 * 6371 * Math.asin(Math.sqrt(h));
+  }
+  function faseAviso(p) {
+    if (p.status === 'feita') return 'entregue';
+    if (p.status !== 'pendente' || !estado.rota || estado.rota.status !== 'em_andamento') return null;
+    var pend = estado.paradas.filter(function (x) { return x.status === 'pendente'; });
+    if (pend[0] === p) return 'a_caminho';
+    if (posAtual && p.lat != null && distKm(posAtual, p) <= raioMapa) return 'perto';
+    return 'saiu';
+  }
+  function primeiroNome(n) { var x = String(n || '').trim().split(/\s+/)[0] || ''; return x.charAt(0).toUpperCase() + x.slice(1).toLowerCase(); }
+  function pagamentoAviso(p) {
+    var e = estado.extras[p.ref] || {};
+    if (p.tipo === 'delivery') {
+      if (!e.pagar_na_entrega) return '';
+      return 'Pagamento na entrega: ' + brl(e.total) + ' em ' + ({ dinheiro: 'dinheiro', debito: 'cartão de débito', credito: 'cartão de crédito', pix: 'Pix' }[e.forma_entrega] || 'dinheiro') +
+        (Number(e.troco_para) ? ' (levamos troco pra ' + brl(e.troco_para) + ')' : '') + '.';
+    }
+    var info = e.info || {};
+    if (info.pagamento === 'online' || info.pagamento === 'a_prazo') return '';
+    return 'Pagamento na entrega: ' + brl(e.valor) + (info.forma ? ' em ' + (FORMA[info.forma] || info.forma) : '') + '.';
+  }
+  function textoAviso(p, fase) {
+    var e = estado.extras[p.ref] || {}, dl = p.tipo === 'delivery';
+    var nome = primeiroNome(dl ? (e.cliente_nome || p.nome) : p.nome);
+    var chega = p.eta && new Date(p.eta) > new Date() ? ' por volta das ' + hora(p.eta) : ''; // ETA vencida não vai
+    var link = dl && e.token ? SITE + 'delivery/acompanhar.html?t=' + e.token : '';
+    var partes;
+    if (fase === 'saiu') partes = ['Seu pedido ' + p.ref + ' saiu pra entrega' + (chega ? ' e chega' + chega : '') + '.',
+      pagamentoAviso(p), itensDe(p) ? 'Itens: ' + itensDe(p) : '', link ? 'Acompanhe no link:\n' + link : ''];
+    else if (fase === 'perto') partes = ['Seu pedido ' + p.ref + ' está próximo! Estamos finalizando outras entregas na sua região e já chegaremos aí' + (chega ? ',' + chega : '') + '.',
+      link ? 'Acompanhe o entregador no mapa:\n' + link : ''];
+    else if (fase === 'a_caminho') partes = ['Seu pedido ' + p.ref + ' está a caminho! Você é a próxima entrega' + (chega ? ', chegamos' + chega : '') + '.',
+      pagamentoAviso(p), link ? 'Acompanhe o entregador no mapa:\n' + link : ''];
+    else partes = ['Seu pedido ' + p.ref + ' foi entregue. ' + (dl ? 'Obrigado por pedir na Dupuro, bom açaí!' : 'Obrigado pela parceria!'),
+      dl ? 'Se puder, conta pra gente o que achou respondendo aqui.' : ''];
+    return ['Olá' + (nome ? ', ' + nome : '') + '! Aqui é da Dupuro Açaí.'].concat(partes).filter(Boolean).join('\n\n');
+  }
+  var IC_CHAT = '<svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></svg>';
+  function botaoWhats(p) {
+    var fase = faseAviso(p);
+    if (!fase) return '<a class="btn btn-dark-outline btn-sm" href="https://wa.me/' + whats(p.telefone) + '" target="_blank" rel="noopener">WhatsApp</a>';
+    return '<button type="button" class="btn btn-avisar btn-sm" data-whats>' + IC_CHAT + '<span>Avisar: ' + ROTULO_AVISO[fase] + '</span></button>';
+  }
+  // O GPS muda a fase (saiu ↔ está próximo) sem redesenhar a lista: só troca o rótulo.
+  function atualizarAvisos() {
+    document.querySelectorAll('#rtLista [data-whats]').forEach(function (b) {
+      var li = b.closest('[data-id]'), p = estado.paradas.filter(function (x) { return String(x.id) === li.getAttribute('data-id'); })[0];
+      var f = p && faseAviso(p);
+      if (f) b.querySelector('span').textContent = 'Avisar: ' + ROTULO_AVISO[f];
+    });
+  }
+  // O aviso dessa etapa que o banco deixou na lista do admin (migration_047) sai de lá.
+  var EVENTO_AVISO = { saiu: 'em_rota', entregue: 'entregue' };
+  function marcarAvisado(p, fase) {
+    var ev = EVENTO_AVISO[fase];
+    if (!ev || (p.tipo !== 'delivery' && ev !== 'entregue')) return;
+    client.from('avisos_cliente').update({ avisado_em: new Date().toISOString() })
+      .eq('ref', (p.tipo === 'delivery' ? 'delivery:' : 'pedido:') + p.ref + ':' + ev).is('avisado_em', null).then(function () {});
+  }
   function linkMapsRota(pend) {
     var com = pend.filter(function (p) { return p.lat != null; }).slice(0, 9); // o Maps aceita até 9 paradas no meio
     var o = estado.origem ? estado.origem.lat + ',' + estado.origem.lng : '';
@@ -304,6 +373,13 @@
   $('rtLista').addEventListener('click', async function (e) {
     var li = e.target.closest('[data-id]'); if (!li) return;
     var p = estado.paradas.filter(function (x) { return String(x.id) === li.getAttribute('data-id'); })[0]; if (!p) return;
+    var wb = e.target.closest('[data-whats]');
+    if (wb) {
+      var fase = faseAviso(p); if (!fase) return;
+      window.open('https://wa.me/' + whats(p.telefone) + '?text=' + encodeURIComponent(textoAviso(p, fase)), '_blank', 'noopener');
+      marcarAvisado(p, fase);
+      return;
+    }
     var mv = e.target.closest('[data-mover]'), pa = e.target.closest('[data-parada]');
     try {
       if (mv) {
@@ -368,6 +444,7 @@
       statusGps('GPS ligado · ' + hora(new Date().toISOString()), 'ok');
       if (marcaEntregador) marcaEntregador.setLatLng([posAtual.lat, posAtual.lng]);
       else marcaEntregador = L.marker([posAtual.lat, posAtual.lng], { icon: pino('', 'entregador'), zIndexOffset: 1000 }).addTo(camada);
+      atualizarAvisos();
       var andou = !ultimoPonto || Math.abs(ultimoPonto.lat - posAtual.lat) + Math.abs(ultimoPonto.lng - posAtual.lng) > 0.0004;
       if (Date.now() - ultimoEnvio < 15000 && !andou) return;
       if (Date.now() - ultimoEnvio < 5000) return;
@@ -393,6 +470,7 @@
   async function carregarLimite() {
     var r = await client.from('delivery_config').select('config').eq('id', 1).single();
     limiteRota = r.data && r.data.config ? Number(r.data.config.limite_por_rota) || 10 : 10;
+    raioMapa = r.data && r.data.config ? Number(r.data.config.raio_mapa_km) || 5 : 5;
     $('rtLimite').value = limiteRota;
     render();
   }
