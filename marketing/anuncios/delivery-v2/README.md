@@ -30,6 +30,6 @@ Duelo antes × agora: inconclusivo (vence sempre a 2ª imagem — viés de posi�
 ## APROVADO pelo Kayo — 2026-10-26
 Arquivos finais: `dupuro-delivery-v2-feed-4x5.png` (feed 1080×1350) e `dupuro-delivery-v2-stories-9x16.png`
 (stories 1080×1920). Últimos ajustes: litragem nas etiquetas, botão separado das etiquetas na vertical,
-caminhãozinho à direita com a frase à mão "Entregamos em Cuiabá e Várzea Grande" (não "toda": o site limita a 20 km), "Peça agora" no roxo quase preto (#240820 — testado o roxo médio e voltou).
+caminhãozinho à direita com a frase à mão "Entregamos em Cuiabá e Várzea Grande" ACIMA do botão (seta até o caminhão) (não "toda": o site limita a 20 km), "Peça agora" no roxo quase preto (#240820 — testado o roxo médio e voltou).
 Antes de veicular: conferir se os preços (R$25/45/85/175, entrega a partir de R$5) ainda batem com o
 site e fazer uma compra de teste completa no /delivery/.
