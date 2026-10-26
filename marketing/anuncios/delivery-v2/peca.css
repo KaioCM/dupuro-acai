@@ -34,7 +34,7 @@ body { font-family:'Inter',sans-serif; color:var(--cream); position:relative;
 .i1 .caixa { transform:rotate(-5deg); } .i2 .caixa { transform:rotate(3.5deg); } .i5 .caixa { transform:rotate(-2.5deg); } .i10 .caixa { transform:rotate(2deg); }
 .sombra { position:absolute; bottom:-10px; left:8%; right:8%; height:22px; border-radius:50%; background:rgba(10,2,8,.45); filter:blur(8px); z-index:-1; }
 .rodape { position:absolute; left:0; right:0; top:var(--rodape-y); text-align:center; }
-.cta { display:inline-block; font-family:'Klinko'; text-transform:uppercase; font-size:var(--cta); color:var(--roxo-500);
+.cta { display:inline-block; font-family:'Klinko'; text-transform:uppercase; font-size:var(--cta); color:var(--roxo-950);
   padding:.36em 1.25em .28em; border-radius:22px; background:linear-gradient(180deg,var(--gold-soft),var(--gold) 55%,var(--gold-strong));
   box-shadow:0 8px 0 #9A5E00, 0 18px 24px rgba(18,3,15,.45); }
 .info { margin-top:24px; font-size:var(--info); font-weight:700; color:var(--cream); }
