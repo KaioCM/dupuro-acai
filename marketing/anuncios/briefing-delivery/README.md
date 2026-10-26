@@ -44,3 +44,8 @@ Formato = "Grid Static (multi-SKU)", tier A na skill `ad-creative`. Caixas em es
 | papel | 1,33 | 1,90 | 1,65 | 0,64 | 0,51 | 0,69 |
 Duelo a três (3 ordens): letreiro 0,55 · prateleira 0,23 · papel 0,22 (sinal fraco, sensível à ordem).
 Ponto fraco comum: artesanal só "no meio" — texturas imitadas. Ideia: elementos reais fotografados.
+
+## Aprovado e produzido (2026-10-26)
+Detalhes finais: título "Seu açaí favorito agora chega na sua casa"; direção papel com carimbo
+"Direto da fábrica"; sem nota do Google; feed + stories; escala por volume. Jev: 1,93/2.
+Peça em `../delivery-v2/`.

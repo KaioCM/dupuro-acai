@@ -1,0 +1,55 @@
+/* Anúncio do delivery v2 — direção "papel com carimbo" (briefing em ../briefing-delivery/, aprovado 2026-10-26).
+   Artesanal conduz; caixas tortas em escala de volume; preço em adesivo embaixo de cada caixa. */
+@font-face { font-family:'Klinko'; src:url('../../../assets/fonts/Klinko-PlayfulBold.otf'); }
+:root { --roxo-950:#240820; --roxo-900:#380C2F; --roxo-800:#4A1140; --roxo-700:#601050; --roxo-500:#7E2065;
+  --gold:#F5B301; --gold-strong:#E28F00; --gold-soft:#FFD34D; --cream:#FFF7EC; --papel:#F4E7CF; }
+* { box-sizing:border-box; margin:0; padding:0; }
+html,body { width:var(--w); height:var(--h); overflow:hidden; }
+body { font-family:'Inter',sans-serif; color:var(--cream); position:relative;
+  background:radial-gradient(110% 75% at 50% 28%, var(--roxo-700) 0%, var(--roxo-900) 62%, var(--roxo-950) 100%); }
+.grao { position:absolute; inset:0; width:100%; height:100%; opacity:.18; mix-blend-mode:overlay; pointer-events:none; }
+.logo { position:absolute; left:50%; transform:translateX(-50%); top:var(--logo-y); width:var(--logo-w); }
+
+/* faixa de papel rasgado */
+.faixa { position:absolute; left:-30px; right:-30px; top:var(--faixa-y); height:var(--faixa-h); transform:rotate(-2deg);
+  filter:drop-shadow(0 16px 22px rgba(18,3,15,.55)); }
+.faixa .papel { position:absolute; inset:0; background:var(--papel);
+  clip-path:polygon(0 7%,3% 1%,8% 5%,13% 0,19% 6%,26% 2%,33% 7%,40% 1%,47% 5%,54% 0,61% 6%,68% 1%,75% 6%,82% 2%,89% 7%,95% 1%,100% 5%,100% 94%,96% 99%,90% 94%,83% 100%,76% 95%,69% 99%,61% 94%,53% 100%,46% 95%,38% 99%,31% 94%,24% 100%,16% 95%,9% 99%,4% 94%,0 99%); }
+.faixa .fibra { position:absolute; inset:0; width:100%; height:100%; opacity:.35; mix-blend-mode:multiply;
+  clip-path:inherit; }
+.titulo { position:absolute; left:0; right:0; top:var(--titulo-y); text-align:center; transform:rotate(-2deg); color:var(--roxo-900); }
+.titulo .a { font-family:'Klinko'; text-transform:uppercase; font-size:var(--t-a); line-height:1; letter-spacing:.5px; }
+.titulo .mao { font-family:'Caveat Brush'; color:var(--roxo-700); font-size:var(--t-mao); line-height:.82; margin:2px 0 6px; }
+.titulo .b { font-family:'Klinko'; text-transform:uppercase; font-size:var(--t-b); line-height:1.05; }
+
+/* carimbo */
+.carimbo { position:absolute; right:var(--carimbo-x); top:var(--carimbo-y); width:var(--carimbo); height:var(--carimbo); transform:rotate(13deg); opacity:.82; }
+
+/* fileira de caixas */
+.fila { position:absolute; left:44px; right:44px; top:var(--fila-y); height:var(--fila-h); display:flex; align-items:flex-end; justify-content:space-between; }
+.item { position:relative; display:flex; flex-direction:column; align-items:center; }
+.item img { display:block; height:calc(var(--escala) * var(--v)); filter:drop-shadow(0 16px 14px rgba(18,3,15,.55)); }
+.i1 { --v:1; transform:rotate(-5deg); } .i2 { --v:1.26; transform:rotate(3.5deg); } .i5 { --v:1.71; transform:rotate(-2.5deg); } .i10 { --v:2.15; transform:rotate(2deg); }
+.sombra { position:absolute; bottom:-10px; left:8%; right:8%; height:22px; border-radius:50%; background:rgba(10,2,8,.45); filter:blur(8px); z-index:-1; }
+.adesivo { position:absolute; bottom:calc(-1 * var(--ad) * .82); left:50%; margin-left:calc(var(--ad) / -2); width:var(--ad); height:var(--ad); border-radius:50%;
+  background:#fff; padding:7px; box-shadow:0 8px 14px rgba(18,3,15,.45); }
+.i1 .adesivo { transform:rotate(9deg); } .i2 .adesivo { transform:rotate(-7deg); } .i5 .adesivo { transform:rotate(6deg); } .i10 .adesivo { transform:rotate(-8deg); }
+.adesivo .disco { width:100%; height:100%; border-radius:50%; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  background:radial-gradient(circle at 32% 28%, var(--gold-soft) 0%, var(--gold) 52%, var(--gold-strong) 100%); color:var(--roxo-950); }
+.adesivo small { font-size:calc(var(--ad) * .15); font-weight:800; letter-spacing:.3px; }
+.adesivo b { font-family:'Klinko'; font-size:calc(var(--ad) * .33); line-height:.95; }
+.adesivo b span { font-size:calc(var(--ad) * .17); }
+
+.rodape { position:absolute; left:0; right:0; top:var(--rodape-y); text-align:center; }
+.cta { display:inline-block; font-family:'Klinko'; text-transform:uppercase; font-size:var(--cta); color:var(--roxo-950);
+  padding:.36em 1.25em .28em; border-radius:22px; background:linear-gradient(180deg,var(--gold-soft),var(--gold) 55%,var(--gold-strong));
+  box-shadow:0 8px 0 #9A5E00, 0 18px 24px rgba(18,3,15,.45); }
+.info { margin-top:24px; font-size:var(--info); font-weight:700; color:var(--cream); }
+.info i { font-style:normal; color:var(--gold-soft); }
+
+.feed { --w:1080px; --h:1350px; --logo-y:40px; --logo-w:170px; --faixa-y:205px; --faixa-h:300px; --titulo-y:228px;
+  --t-a:62px; --t-mao:128px; --t-b:50px; --carimbo:150px; --carimbo-x:62px; --carimbo-y:222px;
+  --fila-y:585px; --fila-h:370px; --escala:135px; --ad:124px; --rodape-y:1125px; --cta:46px; --info:28px; }
+.story { --w:1080px; --h:1920px; --logo-y:260px; --logo-w:180px; --faixa-y:450px; --faixa-h:330px; --titulo-y:478px;
+  --t-a:68px; --t-mao:140px; --t-b:54px; --carimbo:160px; --carimbo-x:58px; --carimbo-y:462px;
+  --fila-y:860px; --fila-h:390px; --escala:135px; --ad:128px; --rodape-y:1430px; --cta:50px; --info:29px; }
