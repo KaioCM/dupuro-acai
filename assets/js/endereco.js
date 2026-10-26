@@ -122,7 +122,8 @@ var DupuroEndereco = (function () {
       '<div class="field"><label for="' + px + 'Comp">Complemento <span class="opcional">(opcional)</span></label><input type="text" id="' + px + 'Comp" data-e="comp" maxlength="60" placeholder="Sala, bloco, ponto de referência"></div>' +
       '<div data-e="msg" role="alert"></div>';
     function $e(n) { return raiz.querySelector('[data-e="' + n + '"]'); }
-    var pino = null, cepBuscado = '', cepPonto = null, mexeu = false;
+    // doMapa: rua/número/bairro vieram do mapa e ninguém digitou depois — marcar outro ponto troca tudo.
+    var pino = null, cepBuscado = '', cepPonto = null, mexeu = false, doMapa = false;
 
     function msg(txt, tipo, html) { $e('msg').innerHTML = txt ? '<p class="end-msg ' + (tipo || 'info') + '">' + (html ? txt : esc(txt)) + '</p>' : ''; }
     function travar(n, sim) { var el = $e(n); if (el.tagName === 'SELECT') el.disabled = sim; else el.readOnly = sim; el.classList.toggle('travado', sim); }
@@ -133,7 +134,7 @@ var DupuroEndereco = (function () {
       $e('mapaTit').textContent = p ? 'Ponto marcado no mapa' : 'Marque o ponto no mapa';
       $e('mapaSub').textContent = p ? 'Toque pra ajustar' : 'Mais fácil e a entrega chega certinho';
     }
-    raiz.addEventListener('input', function (e) { mexeu = true; if (e.target.getAttribute('aria-invalid')) e.target.removeAttribute('aria-invalid'); });
+    raiz.addEventListener('input', function (e) { mexeu = true; if (/^(rua|numero|bairro)$/.test(e.target.getAttribute('data-e'))) doMapa = false; if (e.target.getAttribute('aria-invalid')) e.target.removeAttribute('aria-invalid'); });
 
     $e('cep').addEventListener('input', function () {
       var el = this, d = el.value.replace(/\D/g, '').slice(0, 8);
@@ -151,7 +152,7 @@ var DupuroEndereco = (function () {
         var cid = CIDADES[String(r.localidade || '').toLowerCase()];
         if (!cid) { msg('Esse CEP é de ' + r.localidade + ' - ' + r.uf + '. A entrega é só em Cuiabá e Várzea Grande; pra outras cidades, escolha Retirada.', 'erro'); return; }
         if (pino) marcarPino(null); // o ponto era de outro endereço: o CEP novo manda
-        $e('cidade').value = cid; travar('cidade', true);
+        $e('cidade').value = cid; travar('cidade', true); doMapa = false; // CEP digitado conta como digitado
         if (r.logradouro) { $e('rua').value = r.logradouro; travar('rua', true); }
         if (r.bairro) { $e('bairro').value = r.bairro; travar('bairro', true); }
         msg('');
@@ -169,10 +170,13 @@ var DupuroEndereco = (function () {
         mexeu = true;
         msg('');
         if (a) {
-          var difere = ['rua', 'bairro'].some(function (n) { return a[n] && $e(n).value.trim() && norm($e(n).value) !== norm(a[n]); });
+          var difere = !doMapa && ['rua', 'bairro'].some(function (n) { return a[n] && $e(n).value.trim() && norm($e(n).value) !== norm(a[n]); });
           var aplicar = function () {
             cepBuscado = ''; cepPonto = null; destravar();
-            $e('cidade').value = a.cidade; $e('rua').value = a.rua; $e('numero').value = a.numero || $e('numero').value; $e('bairro').value = a.bairro;
+            // Número antigo só fica se o ponto novo é na mesma rua e o mapa não achou o número.
+            var mesmaRua = norm($e('rua').value) === norm(a.rua);
+            $e('cidade').value = a.cidade; $e('rua').value = a.rua; $e('numero').value = a.numero || (mesmaRua ? $e('numero').value : ''); $e('bairro').value = a.bairro;
+            doMapa = true;
             $e('cep').value = a.cep.length === 8 ? a.cep.slice(0, 5) + '-' + a.cep.slice(5) : '';
           };
           if (difere) {
@@ -217,7 +221,7 @@ var DupuroEndereco = (function () {
       },
       // Preenche com o que está salvo. Endereço antigo (só texto) aparece como lembrete.
       preencher: function (d, textoAntigo) {
-        mexeu = false; destravar(); msg('');
+        mexeu = false; doMapa = false; destravar(); msg('');
         d = d || {};
         $e('cep').value = d.cep && d.cep.length === 8 ? d.cep.slice(0, 5) + '-' + d.cep.slice(5) : '';
         cepBuscado = d.cep || '';
