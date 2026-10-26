@@ -9,7 +9,7 @@
 <link rel="apple-touch-icon" href="../assets/img/brand/favicon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/css/style.css?v=71">
+<link rel="stylesheet" href="../assets/css/style.css?v=72">
 </head>
 <body class="pg-revenda">
 <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
@@ -153,8 +153,8 @@
                 </div>
               </fieldset>
               <div class="field" id="checkoutEnderecoField">
-                <label for="checkoutEndereco">Endereço de entrega</label>
-                <textarea id="checkoutEndereco" rows="2" maxlength="200" autocomplete="street-address" placeholder="Rua, número, bairro e ponto de referência"></textarea>
+                <span class="end-titulo">Endereço de entrega</span>
+                <div id="checkoutEnderecoForm"></div>
                 <label class="checkbox-line"><input type="checkbox" id="checkoutSalvarEndereco" checked><span>Usar este endereço nos próximos pedidos</span></label>
               </div>
               <fieldset class="checkout-grupo">
@@ -326,8 +326,8 @@
             <input type="text" id="pCidade" autocomplete="address-level2">
           </div>
           <div class="field">
-            <label for="pEndereco">Endereço de entrega</label>
-            <textarea id="pEndereco" rows="2" maxlength="200" autocomplete="street-address" placeholder="Rua, número, bairro e ponto de referência"></textarea>
+            <span class="end-titulo">Endereço de entrega</span>
+            <div id="perfilEnderecoForm"></div>
           </div>
           <label class="checkbox-line campo-whats"><input type="checkbox" id="pAceitaWhatsapp"> <span>Receber no WhatsApp o andamento dos meus pedidos (recebido, confirmado, entregue)</span></label>
           <button type="submit" class="btn btn-primary">Salvar alterações</button>
@@ -379,7 +379,8 @@
 <script src="../assets/js/supabase-config.js"></script>
 <script src="../assets/js/supabase-client.js"></script>
 <script src="../assets/js/app-ui.js?v=3"></script>
-<script src="../assets/js/cliente.js?v=5"></script>
+<script src="../assets/js/cliente.js?v=6"></script>
+<script src="../assets/js/endereco.js?v=1"></script>
 <script>
   // Escapa texto antes de ir pro innerHTML (dado de revendedor/cliente nunca vira HTML).
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
@@ -1185,6 +1186,9 @@
     return iso === hoje ? 'Hoje, ' + base : iso === amanha ? 'Amanhã, ' + base : base.charAt(0).toUpperCase() + base.slice(1);
   }
   var checkout = document.getElementById('checkoutSection');
+  // Endereço com mapa, CEP e campos separados (assets/js/endereco.js), no pedido e no perfil.
+  var endCheckout = DupuroEndereco.criar(document.getElementById('checkoutEnderecoForm'), 'ck');
+  var endPerfil = DupuroEndereco.criar(document.getElementById('perfilEnderecoForm'), 'pf');
   var checkoutError = document.getElementById('checkoutError');
   function tipoEscolhido() { return checkout.querySelector('[name="tipoEntrega"]:checked').value; }
   function atualizarCheckout() {
@@ -1250,7 +1254,7 @@
     if (!cart.length) return;
     var dias = diasDisponiveis();
     document.getElementById('checkoutDia').innerHTML = dias.map(function (iso) { return '<option value="' + iso + '">' + rotuloDia(iso) + '</option>'; }).join('');
-    document.getElementById('checkoutEndereco').value = document.getElementById('checkoutEndereco').value || profile.endereco || '';
+    if (!endCheckout.mexeu()) endCheckout.preencher(profile.endereco_detalhe, profile.endereco);
     document.getElementById('checkoutPrazoOpcao').classList.toggle('hidden', !profile.pode_prazo);
     montarCupons();
     atualizarTotalRevisao();
@@ -1281,19 +1285,20 @@
     var tipo = tipoEscolhido();
     var turnoEl = checkout.querySelector('[name="turno"]:checked');
     var pagamento = checkout.querySelector('[name="pagamento"]:checked').value;
-    var endereco = document.getElementById('checkoutEndereco').value.trim();
+    var endereco = endCheckout.texto(), endDetalhe = endCheckout.valor();
     var entrega = {
       tipo: tipo, data: document.getElementById('checkoutDia').value, turno: turnoEl ? turnoEl.value : null,
       pagamento: pagamento, forma: pagamento === 'na_entrega' ? document.getElementById('checkoutForma').value : null,
       troco_para: null,
       endereco: tipo === 'entrega' ? endereco : null,
+      lat: tipo === 'entrega' ? endDetalhe.lat : null, lng: tipo === 'entrega' ? endDetalhe.lng : null, // ponto do mapa: a rota usa direto (migration_055)
       observacao: document.getElementById('checkoutObs').value.trim() || null,
       cupom: cupomEscolhido() ? cupomEscolhido().code : null
     };
     var cupomUsado = cupomEscolhido();
     function falha(msg) { checkoutError.textContent = msg; checkoutError.classList.add('show'); }
     if (!entrega.data || !entrega.turno) return falha('Escolha o dia e o turno.');
-    if (tipo === 'entrega' && endereco.length < 6) { document.getElementById('checkoutEndereco').focus(); return falha('Informe o endereço de entrega.'); }
+    if (tipo === 'entrega') { var faltaEnd = endCheckout.validar(); if (faltaEnd) return falha(faltaEnd); }
     if (/[<>]/.test(endereco + (entrega.observacao || ''))) return falha('Tire os sinais < e > do endereço e da observação.');
     var subtotalAgora = cupomUsado ? totalComDesconto(cupomUsado.pct) : cart.reduce(function (s, it) { return s + it.preco * it.quantidade; }, 0);
     if (entrega.forma === 'dinheiro' && document.getElementById('checkoutTroco').value.trim()) {
@@ -1306,7 +1311,7 @@
         itens: it.nome + (it.sabor ? ' - ' + it.sabor : '') + ' x' + it.quantidade, valor: it.preco * it.quantidade };
     });
     var botao = document.getElementById('checkoutEnviar');
-    var ctx = { tipo: tipo, entrega: entrega, endereco: endereco, cupomUsado: cupomUsado, n: cart.length, total: subtotalAgora,
+    var ctx = { tipo: tipo, entrega: entrega, endereco: endereco, endDetalhe: endDetalhe, cupomUsado: cupomUsado, n: cart.length, total: subtotalAgora,
       pagamentoTxt: pagamento === 'a_prazo' ? 'Pagamento a prazo, como combinado.'
         : pagamento === 'online' ? 'Pago pelo site.'
         : 'Pagamento ' + (tipo === 'entrega' ? 'na entrega' : 'na retirada') + ' (' + checkout.querySelector('#checkoutForma').selectedOptions[0].textContent +
@@ -1336,9 +1341,10 @@
   function concluirPedido(numero, ctx) {
     var tipo = ctx.tipo, entrega = ctx.entrega, endereco = ctx.endereco, cupomUsado = ctx.cupomUsado;
     // Endereço novo vira o padrão do perfil (se marcado).
-    if (tipo === 'entrega' && document.getElementById('checkoutSalvarEndereco').checked && endereco !== (profile.endereco || '')) {
-      DupuroCliente.saveProfile({ nome: profile.nome, empresa: profile.empresa, telefone: profile.telefone, cidade: profile.cidade, endereco: endereco })
-        .then(function (r) { if (!r.error) { profile.endereco = endereco; document.getElementById('pEndereco').value = endereco; } });
+    if (tipo === 'entrega' && document.getElementById('checkoutSalvarEndereco').checked &&
+        (endereco !== (profile.endereco || '') || JSON.stringify(ctx.endDetalhe) !== JSON.stringify(profile.endereco_detalhe || null))) {
+      DupuroCliente.saveProfile({ nome: profile.nome, empresa: profile.empresa, telefone: profile.telefone, cidade: profile.cidade, endereco: endereco, enderecoDetalhe: ctx.endDetalhe })
+        .then(function (r) { if (!r.error) { profile.endereco = endereco; profile.endereco_detalhe = ctx.endDetalhe; endPerfil.preencher(ctx.endDetalhe, endereco); } });
     }
     var total = ctx.total, n = ctx.n;
     cart = [];
@@ -1619,7 +1625,7 @@
   document.getElementById('pEmail').value = profile.email || '';
   document.getElementById('pTelefone').value = profile.telefone || '';
   document.getElementById('pCidade').value = profile.cidade || '';
-  document.getElementById('pEndereco').value = profile.endereco || '';
+  endPerfil.preencher(profile.endereco_detalhe, profile.endereco);
   document.getElementById('pAceitaWhatsapp').checked = profile.aceita_whatsapp !== false;
 
   document.getElementById('profileForm').addEventListener('submit', async function (e) {
@@ -1629,11 +1635,16 @@
       empresa: document.getElementById('pEmpresa').value.trim(),
       telefone: document.getElementById('pTelefone').value.trim(),
       cidade: document.getElementById('pCidade').value.trim(),
-      endereco: document.getElementById('pEndereco').value.trim(),
       aceitaWhatsapp: document.getElementById('pAceitaWhatsapp').checked
     };
     var erroPerfil = document.getElementById('profileError');
     erroPerfil.classList.remove('show');
+    // Endereço: vazio = não mexe no salvo; começou a preencher = precisa estar completo.
+    if (!endPerfil.vazio()) {
+      var faltaEnd = endPerfil.validar();
+      if (faltaEnd) { erroPerfil.textContent = faltaEnd; erroPerfil.classList.add('show'); return; }
+      updated.endereco = endPerfil.texto(); updated.enderecoDetalhe = endPerfil.valor();
+    }
     var result = await DupuroCliente.saveProfile(updated);
     if (result.error) {
       // Antes falhava em silêncio; agora diz o que houve.
@@ -1643,7 +1654,10 @@
       erroPerfil.classList.add('show');
       return;
     }
-    profile.endereco = updated.endereco;
+    if (updated.endereco !== undefined) {
+      profile.endereco = updated.endereco; profile.endereco_detalhe = updated.enderecoDetalhe;
+      if (!endCheckout.mexeu()) endCheckout.preencher(profile.endereco_detalhe, profile.endereco);
+    }
     profile.nome = updated.nome; profile.empresa = updated.empresa; profile.telefone = updated.telefone; profile.cidade = updated.cidade;
     var pn = (updated.nome || '').trim().split(/\s+/)[0] || 'revendedor(a)';
     document.getElementById('greetName').textContent = pn.charAt(0).toUpperCase() + pn.slice(1).toLowerCase();
