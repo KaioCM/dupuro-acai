@@ -26,3 +26,10 @@ Agora gerado por `gerar.py` (HTML) → `render.sh` (PNG).
 | stories antes | 1,30 | 1,78 | 1,47 | 1,01 | 1,59 | 0,53 | 0,58 |
 | stories agora | 1,36 | 1,82 | 1,54 | 1,12 | 1,64 | 0,82 | 0,57 |
 Duelo antes × agora: inconclusivo (vence sempre a 2ª imagem — viés de posição).
+
+## APROVADO pelo Kayo — 2026-10-26
+Arquivos finais: `dupuro-delivery-v2-feed-4x5.png` (feed 1080×1350) e `dupuro-delivery-v2-stories-9x16.png`
+(stories 1080×1920). Últimos ajustes: litragem nas etiquetas, botão separado das etiquetas na vertical,
+caminhãozinho à direita, "Peça agora" no roxo quase preto (#240820 — testado o roxo médio e voltou).
+Antes de veicular: conferir se os preços (R$25/45/85/175, entrega a partir de R$5) ainda batem com o
+site e fazer uma compra de teste completa no /delivery/.
