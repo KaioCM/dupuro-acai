@@ -1,0 +1,68 @@
+/* Esboços de direção (não é a peça final). Artesanal conduz; toques: caixas tortas,
+   letreiro à mão, preço em adesivo redondo. Caixas em escala por volume (raiz cúbica). */
+@font-face { font-family: 'Klinko'; src: url('../../../../assets/fonts/Klinko-PlayfulBold.otf'); }
+:root { --roxo-950:#240820; --roxo-900:#380C2F; --roxo-800:#4A1140; --roxo-700:#601050; --roxo-500:#7E2065;
+  --gold:#F5B301; --gold-strong:#E28F00; --gold-soft:#FFD34D; --verde:#8BB831; --cream:#FFF7EC; --kraft:#F3E6CC; }
+* { box-sizing:border-box; margin:0; padding:0; }
+html,body { width:1080px; height:1350px; overflow:hidden; }
+body { font-family:'Inter',sans-serif; color:var(--cream); background:var(--roxo-800); position:relative; }
+.logo { position:absolute; top:44px; left:50%; transform:translateX(-50%); width:170px; }
+.titulo { position:absolute; left:0; right:0; text-align:center; }
+.t1 { font-family:'Klinko'; text-transform:uppercase; font-size:68px; line-height:1; }
+.mao { font-weight:400; color:var(--gold-soft); line-height:.9; }
+.t3 { font-family:'Klinko'; text-transform:uppercase; font-size:54px; line-height:1.05; }
+.fila { position:absolute; left:70px; right:70px; display:flex; align-items:flex-end; justify-content:space-between; }
+.item { position:relative; display:flex; flex-direction:column; align-items:center; }
+.item img { display:block; filter:drop-shadow(0 18px 18px rgba(20,4,18,.5)); }
+.i1 img { height:128px; } .i2 img { height:161px; } .i5 img { height:219px; } .i10 img { height:275px; }
+.i1 { transform:rotate(-5deg); } .i2 { transform:rotate(3deg); } .i5 { transform:rotate(-2.5deg); } .i10 { transform:rotate(2deg); }
+.adesivo { position:absolute; bottom:-96px; left:50%; margin-left:-59px; width:118px; height:118px; border-radius:50%;
+  background:radial-gradient(circle at 35% 30%, var(--gold-soft), var(--gold) 55%, var(--gold-strong));
+  color:var(--roxo-950); display:flex; flex-direction:column; align-items:center; justify-content:center;
+  box-shadow:0 6px 0 rgba(120,70,0,.55), 0 12px 18px rgba(20,4,18,.4); transform:rotate(12deg); }
+.adesivo small { font-size:20px; font-weight:800; letter-spacing:.5px; }
+.adesivo b { font-family:'Klinko'; font-size:40px; line-height:.95; }
+.adesivo b span { font-size:22px; }
+.rodape { position:absolute; left:0; right:0; bottom:52px; text-align:center; }
+.cta { display:inline-block; font-family:'Klinko'; text-transform:uppercase; font-size:44px; color:var(--roxo-950);
+  padding:18px 56px 14px; border-radius:22px; background:linear-gradient(180deg,var(--gold-soft),var(--gold) 55%,var(--gold-strong));
+  box-shadow:0 8px 0 #9A5E00; }
+.info { margin-top:22px; font-size:28px; font-weight:700; color:var(--cream); }
+.info i { font-style:normal; color:var(--gold-soft); }
+
+/* 1 — Prateleira de empório */
+.prateleira body, body.prateleira { background:
+  radial-gradient(90% 60% at 50% 30%, var(--roxo-700), var(--roxo-900) 75%); }
+body.prateleira::before { content:''; position:absolute; inset:0; opacity:.07;
+  background-image:repeating-linear-gradient(90deg, #fff 0 2px, transparent 2px 120px); }
+.prateleira .titulo { top:250px; } .prateleira .mao { font-family:'Caveat Brush'; font-size:124px; }
+.prateleira .fila { top:560px; height:388px; }
+.prateleira .tabua { position:absolute; left:30px; right:30px; top:948px; height:70px; border-radius:6px;
+  background:url('madeira-tampa.jpg') center/100% 100%; box-shadow:0 22px 26px rgba(20,4,18,.55), inset 0 -8px 0 rgba(0,0,0,.25); }
+.prateleira .mao-francesa { position:absolute; top:1010px; width:26px; height:70px; background:#3a2414; border-radius:0 0 8px 8px; }
+
+/* 2 — Letreiro pintado */
+body.letreiro { background:var(--roxo-900); }
+body.letreiro::before { content:''; position:absolute; inset:-40px; opacity:.55;
+  background:
+    radial-gradient(60% 18% at 30% 22%, var(--roxo-500), transparent 70%),
+    radial-gradient(55% 16% at 72% 30%, var(--roxo-700), transparent 70%),
+    radial-gradient(70% 20% at 50% 78%, var(--roxo-700), transparent 70%);
+  filter:url(#tinta); }
+.letreiro .titulo { top:230px; }
+.letreiro .pinc { font-family:'Permanent Marker'; color:var(--cream); font-size:76px; line-height:1.05; transform:rotate(-3deg); }
+.letreiro .pinc em { font-style:normal; color:var(--gold-soft); font-size:112px; }
+.letreiro .fila { top:600px; height:360px; }
+.letreiro .chao { position:absolute; left:40px; right:40px; top:960px; height:46px; background:var(--gold); border-radius:40px 10px 50px 12px / 20px 30px 14px 26px; opacity:.9; transform:rotate(-1deg); }
+
+/* 3 — Faixa de papel com carimbo */
+body.papel { background:radial-gradient(100% 70% at 50% 20%, var(--roxo-700), var(--roxo-950) 80%); }
+.papel .faixa { position:absolute; left:-20px; right:-20px; top:210px; height:290px; background:var(--kraft); transform:rotate(-2deg);
+  clip-path:polygon(0 6%,4% 0,9% 5%,15% 1%,22% 6%,30% 2%,38% 6%,46% 1%,55% 5%,63% 0,71% 6%,80% 2%,88% 6%,95% 1%,100% 5%,100% 95%,94% 100%,86% 95%,78% 99%,70% 94%,61% 100%,52% 95%,43% 99%,35% 94%,26% 100%,18% 95%,10% 99%,3% 94%,0 100%);
+  box-shadow:0 18px 30px rgba(0,0,0,.4); }
+.papel .titulo { top:240px; color:var(--roxo-900); transform:rotate(-2deg); }
+.papel .mao { font-family:'Caveat Brush'; color:var(--roxo-700); font-size:118px; }
+.papel .carimbo { position:absolute; top:430px; right:110px; font-family:'Klinko'; font-size:26px; color:var(--roxo-700);
+  border:4px solid var(--roxo-700); border-radius:50%; width:150px; height:150px; display:flex; align-items:center; justify-content:center;
+  text-align:center; transform:rotate(14deg); opacity:.75; line-height:1.05; }
+.papel .fila { top:620px; height:340px; }
