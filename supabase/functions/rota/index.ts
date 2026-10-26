@@ -7,7 +7,8 @@
 //   2. se ele falhar: matriz de tempos do ORS + busca exata (até 8 paradas) ou
 //      vizinho mais próximo + 2-opt;
 //   3. traçado (Directions) pra desenhar no mapa e estimar a chegada em cada parada.
-// Endereço de revendedor é texto: vira ponto pelo Pelias, e o Jev (TypeSafe,
+// Revendedor que marcou o ponto no mapa (migration_055) já vem com lat/lng no
+// pedido. Sem ponto, o endereço é texto: vira ponto pelo Pelias, e o Jev (TypeSafe,
 // Choice) escolhe entre os candidatos o que é o mesmo lugar — só o endereço vai
 // pro Jev, nunca nome/telefone. Ponto duvidoso volta com `geo_alerta` pro admin
 // conferir/arrastar no mapa. O delivery já tem o ponto da cotação do cliente.
@@ -358,7 +359,11 @@ Deno.serve(async (req: Request) => {
       for (const o of confirmados) {
         const p: any = pPorId.get(o.revendedor_id) || {}
         const end = String(o.entrega_info?.endereco || p.endereco || '').trim()
-        const g = end ? await geocodificar(sb, key, end, p.cidade || '') : null
+        // Ponto que o revendedor marcou no mapa (migration_055): vale direto, como o do delivery.
+        const pin = Number(o.entrega_info?.lat), pinLng = Number(o.entrega_info?.lng)
+        const g = Number.isFinite(pin) && Number.isFinite(pinLng) && naArea(pin, pinLng)
+          ? { lat: pin, lng: pinLng, fonte: 'pedido', alerta: null }
+          : end ? await geocodificar(sb, key, end, p.cidade || '') : null
         paradas.push({ tipo: 'revenda', ref: o.numero, nome: p.empresa || p.nome || 'Revendedor', telefone: p.telefone || null,
           endereco: end || null, lat: g?.lat ?? null, lng: g?.lng ?? null, geo_fonte: g?.fonte || null,
           geo_alerta: !end ? 'Revendedor sem endereço cadastrado' : !g ? 'Endereço não achado no mapa: marque o ponto' : g.alerta })

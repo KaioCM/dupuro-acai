@@ -3360,3 +3360,42 @@ a.stat-card.alerta .stat-sub { color: var(--warning); font-weight: 800; }
 .pag-pix-qr { display: block; width: 220px; height: 220px; margin: 0 auto 12px; border-radius: 12px; image-rendering: pixelated; }
 .pag-pix .pag-pix-esperando { font-weight: 700; color: var(--roxo-900); }
 .pag-pix .pag-pix-expira { font-size: 13px; color: var(--text-light); }
+
+/* Endereço com mapa no painel do revendedor (assets/js/endereco.js, igual ao do delivery) */
+.end-titulo { display: block; margin-bottom: 8px; font-size: 14px; font-weight: 800; color: var(--roxo-950); }
+.end-form { display: grid; gap: 10px; }
+.end-form .field { margin: 0; }
+.end-form input[type="text"], .end-form select { width: 100%; padding: 10px 12px; border: 1.5px solid rgba(96,16,80,0.2); border-radius: 12px; background: #fff; font: inherit; font-size: 16px; color: var(--roxo-950); }
+.end-form input.travado, .end-form select.travado { background: rgba(96,16,80,0.04); color: var(--text-light); }
+.end-form [aria-invalid="true"] { border-color: var(--danger); box-shadow: 0 0 0 1px var(--danger); }
+.end-linha { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.end-linha.num { grid-template-columns: 0.7fr 1.3fr; }
+.end-mapa-btn { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 14px; border-radius: 14px; border: 1.5px solid rgba(245,179,1,0.75); background: var(--cream); color: var(--roxo-900); text-align: left; cursor: pointer; font: inherit; }
+.end-mapa-btn:hover { border-color: var(--gold-strong); }
+.end-mapa-btn.ok { border-color: var(--verde); background: rgba(139,184,49,0.08); }
+.end-mapa-ic { flex: none; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 12px; background: var(--cream-2); }
+.end-mapa-btn.ok .end-mapa-ic { background: rgba(139,184,49,0.18); }
+.end-mapa-ic svg { width: 22px; height: 22px; fill: none; stroke: var(--roxo-700); stroke-width: 2; stroke-linejoin: round; }
+.end-mapa-tx strong { display: block; font-size: 14.5px; }
+.end-mapa-tx small { display: block; margin-top: 2px; font-size: 12.5px; font-weight: 600; color: var(--text-light); }
+.end-ou { display: flex; align-items: center; gap: 10px; color: var(--text-light); font-size: 11.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; }
+.end-ou::before, .end-ou::after { content: ""; flex: 1; height: 1px; background: rgba(96,16,80,0.14); }
+.end-msg { margin: 0; padding: 10px 12px; border-radius: 12px; font-size: 13.5px; line-height: 1.4; }
+.end-msg.info { background: rgba(96,16,80,0.06); color: var(--roxo-900); }
+.end-msg.erro { background: rgba(192,57,43,0.08); color: var(--danger); }
+.end-msg .btn-link-acao { padding: 0; }
+body.end-travado { overflow: hidden; }
+.end-mapa { position: fixed; inset: 0; z-index: 2000; display: flex; align-items: flex-end; justify-content: center; }
+.end-mapa.hidden { display: none; }
+.end-mapa-fundo { position: absolute; inset: 0; background: rgba(36,8,32,0.55); }
+.end-mapa-in { position: relative; display: grid; gap: 10px; width: 100%; max-width: 640px; max-height: 92vh; overflow: auto; padding: 16px 16px calc(16px + env(safe-area-inset-bottom)); border-radius: 22px 22px 0 0; background: #fff; }
+@media (min-width: 700px) { .end-mapa { align-items: center; } .end-mapa-in { border-radius: 22px; } }
+.end-mapa-topo { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.end-mapa-topo h2 { margin: 0; font: 800 18px var(--font-body); color: var(--roxo-950); }
+.end-mapa-x { width: 44px; height: 44px; border: 0; border-radius: 50%; background: var(--cream-2); color: var(--roxo-900); font-size: 24px; line-height: 1; cursor: pointer; }
+.end-mapa-dica { margin: 0; font-size: 14px; color: var(--text-light); }
+.end-mapa-box { position: relative; height: min(45vh, 440px); border-radius: 16px; overflow: hidden; border: 2px solid var(--cream-2); background: var(--cream-2); }
+.end-mapa-el { position: absolute; inset: 0; }
+.end-mapa-pino { position: absolute; left: 50%; top: 50%; z-index: 500; transform: translate(-50%, -100%); pointer-events: none; }
+.end-mapa-pino svg { display: block; filter: drop-shadow(0 4px 4px rgba(0,0,0,0.35)); }
+@media (max-width: 420px) { .end-linha:not(.num) { grid-template-columns: 1fr; } }
