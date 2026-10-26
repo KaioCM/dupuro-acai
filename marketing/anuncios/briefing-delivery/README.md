@@ -30,3 +30,17 @@ Estilo e referências (0,04) · restrições (0,37) · provas (0,14) · produç�
 removido (rembg, modelo isnet-general-use, máscara binarizada e com buracos preenchidos — a 1ª
 tentativa deixou o rótulo da 10 L semitransparente). Cada recorte está no próprio tamanho; a
 **proporção real** entre as caixas ainda precisa ser definida (medidas reais ou escala por volume).
+
+## Estilo (decidido 2026-10-26)
+Mantém roxo e dourado. **Artesanal conduz** (o Jev indicava "limpa" 0,97 — decisão do Kayo foi artesanal);
+toques: caixas levemente tortas, letreiro à mão, preço em adesivo redondo **embaixo** de cada caixa.
+Formato = "Grid Static (multi-SKU)", tier A na skill `ad-creative`. Caixas em escala pela raiz cúbica do volume.
+
+## Esboços de direção (`esbocos/`, não são a peça final) — notas do Jev
+| | artesanal | preço de relance | vontade | poluição | parece IA | segue brief |
+|---|---|---|---|---|---|---|
+| prateleira | 1,15 | 1,88 | 1,63 | 0,53 | 0,58 | 0,51 |
+| letreiro | 1,34 | 1,87 | 1,60 | 0,54 | 0,54 | 0,65 |
+| papel | 1,33 | 1,90 | 1,65 | 0,64 | 0,51 | 0,69 |
+Duelo a três (3 ordens): letreiro 0,55 · prateleira 0,23 · papel 0,22 (sinal fraco, sensível à ordem).
+Ponto fraco comum: artesanal só "no meio" — texturas imitadas. Ideia: elementos reais fotografados.
