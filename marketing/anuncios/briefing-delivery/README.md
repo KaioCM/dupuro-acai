@@ -24,3 +24,9 @@ briefing aprovado. As versões A/B de `../delivery-2026-10/` foram **reprovadas*
 
 ## Falta
 Estilo e referências (0,04) · restrições (0,37) · provas (0,14) · produção/canal/orçamento (0,04).
+
+## Material pronto
+`material/caixa-{1l,2l,5l,10l}-estudio-recorte.webp` — as 4 fotos de estúdio do site com o fundo
+removido (rembg, modelo isnet-general-use, máscara binarizada e com buracos preenchidos — a 1ª
+tentativa deixou o rótulo da 10 L semitransparente). Cada recorte está no próprio tamanho; a
+**proporção real** entre as caixas ainda precisa ser definida (medidas reais ou escala por volume).
