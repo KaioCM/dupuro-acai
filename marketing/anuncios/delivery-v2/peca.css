@@ -42,10 +42,10 @@ body { font-family:'Inter',sans-serif; color:var(--cream); position:relative;
 
 .feed { --w:1080px; --h:1350px; --logo-y:40px; --logo-w:170px; --faixa-y:200px; --faixa-h:322px; --titulo-y:228px;
   --t-a:62px; --t-mao:128px; --t-b:50px; --carimbo:150px; --carimbo-x:62px; --carimbo-y:222px;
-  --fila-y:585px; --fila-h:370px; --escala:135px; --ad:124px; --rodape-y:1170px; --cta:46px; --info:28px; }
+  --fila-y:568px; --fila-h:370px; --escala:135px; --ad:124px; --rodape-y:1140px; --cta:46px; --info:28px; }
 .story { --w:1080px; --h:1920px; --logo-y:250px; --logo-w:180px; --faixa-y:450px; --faixa-h:352px; --titulo-y:478px;
   --t-a:68px; --t-mao:140px; --t-b:54px; --carimbo:160px; --carimbo-x:58px; --carimbo-y:462px;
-  --fila-y:800px; --fila-h:390px; --escala:135px; --ad:128px; --rodape-y:1428px; --cta:50px; --info:29px; }
+  --fila-y:770px; --fila-h:390px; --escala:135px; --ad:128px; --rodape-y:1372px; --cta:50px; --info:29px; }
 
 /* ---- ajustes 2026-10-26: etiquetas de papel amarradas, folhas, frutos, rabiscos, caminhãozinho ---- */
 .barbante { position:absolute; top:calc(100% - 6px); left:50%; width:30px; margin-left:-15px; height:var(--fio); overflow:visible; }
@@ -72,3 +72,10 @@ body { font-family:'Inter',sans-serif; color:var(--cream); position:relative;
 .feed  { --fio:30px; --tag-w:118px; --tag-h:156px; --truck:150px; }
 .story .info { margin-top:16px; }
 .story { --fio:30px; --tag-w:128px; --tag-h:166px; --truck:160px; }
+
+/* frase à mão perto do caminhão (pedido do Kayo, 2026-10-26) */
+.area { position:relative; font-family:'Caveat Brush'; color:var(--gold-soft); font-size:var(--area); line-height:1;
+  margin-top:10px; transform:rotate(-2deg); text-shadow:0 2px 8px rgba(18,3,15,.6); }
+.seta { position:absolute; width:70px; height:56px; overflow:visible; }
+.rodape .info { margin-top:12px; }
+.feed  { --area:42px; } .story { --area:46px; }
