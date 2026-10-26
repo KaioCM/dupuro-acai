@@ -3342,3 +3342,21 @@ a.stat-card.alerta .stat-sub { color: var(--warning); font-weight: 800; }
 .rt-limite small { font-size: 12.5px; line-height: 1.35; color: var(--text-light); }
 .rt-numeros strong small { font-size: 14px; font-weight: 700; color: var(--text-light); }
 @media (max-width: 720px) { .rt-limite { margin-left: 0; max-width: none; } }
+
+/* Pagamento do revendedor: opções em lista + "Pagar agora" (Payment Brick, migration_051) */
+.opcoes-pag { display: grid; gap: 8px; }
+.checkout input[type="text"] { width: 100%; padding: 10px 12px; border: 1.5px solid rgba(96,16,80,0.2); border-radius: 12px; background: #fff; font: inherit; font-size: 16px; color: var(--roxo-950); }
+.pag-online { display: grid; gap: 14px; }
+.pag-msg { margin: 0; padding: 10px 12px; border-radius: 12px; font-size: 14px; line-height: 1.4; }
+.pag-msg.erro { background: rgba(192,57,43,0.08); color: var(--danger); }
+.pag-msg.info { background: rgba(96,16,80,0.06); color: var(--roxo-900); }
+.pag-selo { display: flex; gap: 8px; align-items: flex-start; margin: 0; font-size: 12.5px; line-height: 1.4; color: var(--text-light); }
+.pag-selo .ic { width: 16px; height: 16px; flex: none; margin-top: 1px; fill: none; stroke: currentColor; stroke-width: 2; }
+.pag-pix { text-align: center; }
+.pag-pix h3 { margin: 0 0 6px; font-size: 17px; color: var(--roxo-950); }
+.pag-pix p { margin: 0 0 12px; font-size: 14.5px; line-height: 1.45; color: var(--text); }
+.pag-pix-codigo { display: grid; gap: 8px; margin-bottom: 12px; }
+.pag-pix-codigo input { width: 100%; min-height: 44px; padding: 8px 12px; border: 1.5px solid rgba(96,16,80,0.2); border-radius: 12px; font: 13px ui-monospace, monospace; color: var(--text-light); background: var(--cream-2); }
+.pag-pix-qr { display: block; width: 220px; height: 220px; margin: 0 auto 12px; border-radius: 12px; image-rendering: pixelated; }
+.pag-pix .pag-pix-esperando { font-weight: 700; color: var(--roxo-900); }
+.pag-pix .pag-pix-expira { font-size: 13px; color: var(--text-light); }

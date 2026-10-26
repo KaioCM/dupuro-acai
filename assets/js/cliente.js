@@ -210,7 +210,11 @@ var DupuroCliente = (function () {
     var session = await getSession();
     if (!session) return { error: new Error('Sem sessão ativa') };
     if (!items || !items.length) return { error: new Error('Carrinho vazio') };
-    var rows = items.map(function (it) {
+    var result = await client.rpc('criar_pedido_revendedor', { p_rows: linhasPedido(items), p_entrega: entrega || null });
+    return { error: result.error, numero: result.data || null };
+  }
+  function linhasPedido(items) {
+    return items.map(function (it) {
       return {
         produto_id: it.productId,
         quantidade: it.quantidade,
@@ -219,8 +223,18 @@ var DupuroCliente = (function () {
         valor: it.valor
       };
     });
-    var result = await client.rpc('criar_pedido_revendedor', { p_rows: rows, p_entrega: entrega || null });
-    return { error: result.error, numero: result.data || null };
+  }
+
+  // Pagar agora pelo site (Edge Function revenda-pagar, migration_051): iniciar /
+  // pagar / status. Erro volta como { error: { message, code, online: true } }.
+  async function pagarOnline(corpo) {
+    var r = await client.functions.invoke('revenda-pagar', { body: corpo });
+    if (r.error) {
+      var msg = 'Não foi possível falar com o pagamento agora. Confira a internet e tente de novo.', code = null;
+      try { var j = await r.error.context.json(); if (j && j.error) { msg = j.error; code = j.code || null; } } catch (e) {}
+      return { error: { message: msg, code: code, online: true } };
+    }
+    return r.data || {};
   }
 
   // Agrupa linhas de orders por numero. Retorna 1 objeto por pedido, com a lista
@@ -289,6 +303,8 @@ var DupuroCliente = (function () {
     requestPasswordReset: requestPasswordReset,
     createOrder: createOrder,
     createOrderCart: createOrderCart,
+    linhasPedido: linhasPedido,
+    pagarOnline: pagarOnline,
     getLitrosDispensaMinimo: getLitrosDispensaMinimo,
     getOrders: getOrders,
     getCoupons: getCoupons
