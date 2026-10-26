@@ -65,7 +65,7 @@
     <h2><b><svg class="i" aria-hidden="true"><use href="#d-pin"/></svg></b> Endereço</h2>
     <div class="dl-card">
       <button type="button" class="dl-mapa-btn" id="btnMapa">
-        <span class="ic"><svg class="i" aria-hidden="true"><use href="#d-mapa"/></svg></span><span class="tx"><strong id="btnMapaTit">Não sabe o endereço certinho? Marque no mapa</strong><small id="btnMapaSub" hidden></small></span><b><svg class="i" aria-hidden="true"><use href="#d-seta"/></svg></b>
+        <span class="ic"><svg class="i" aria-hidden="true"><use href="#d-mapa"/></svg></span><span class="tx"><strong id="btnMapaTit">Marque o ponto no mapa</strong><small id="btnMapaSub">Mais fácil e a entrega chega certinho</small></span><b><svg class="i" aria-hidden="true"><use href="#d-seta"/></svg></b>
       </button>
       <div class="dl-ou"><span>ou preencha</span></div>
       <div class="dl-linha">
@@ -402,6 +402,8 @@
   // (CEP de Cuiabá não vira VG). Sem CEP, tudo fica livre pra digitar.
   var cotMsg = $('cotMsg'), cepEl = $('cep'), cepMsg = $('cepMsg');
   var CIDADES = { 'cuiabá': 'Cuiabá', 'cuiaba': 'Cuiabá', 'várzea grande': 'Várzea Grande', 'varzea grande': 'Várzea Grande' };
+  // enderecoDoMapa: rua/número/bairro vieram do mapa e ninguém digitou depois — marcar outro ponto troca tudo.
+  var enderecoDoMapa = false;
   var pino = null, mapa = null, cepPonto = null, cepBuscado = '', LOJA = { lat: -15.6149619, lng: -56.0244949 };
   function invalidarCotacao() { if (cot) { cot = null; cotMsg.innerHTML = ''; render(); } }
   // O frete calcula sozinho quando o endereço fica completo (antes era um botão
@@ -413,7 +415,7 @@
     cotTimer = setTimeout(function () { cotar(true); }, 900);
   }
   ['cidade', 'rua', 'numero', 'bairro'].forEach(function (id) {
-    $(id).addEventListener(id === 'cidade' ? 'change' : 'input', function () { invalidarCotacao(); limparErro(id); agendarCotacao(); });
+    $(id).addEventListener(id === 'cidade' ? 'change' : 'input', function () { if (id !== 'cidade') enderecoDoMapa = false; invalidarCotacao(); limparErro(id); agendarCotacao(); });
   });
   ['rua', 'numero', 'bairro', 'comp'].forEach(function (id) {
     $(id).addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); clearTimeout(cotTimer); cotar(); } });
@@ -439,8 +441,8 @@
   function marcarPino(p) {
     pino = p;
     $('btnMapa').classList.toggle('ok', !!p);
-    $('btnMapaTit').textContent = p ? 'Local marcado no mapa' : 'Não sabe o endereço certinho? Marque no mapa';
-    $('btnMapaSub').textContent = p ? 'Toque pra ajustar o ponto' : ''; $('btnMapaSub').hidden = !p;
+    $('btnMapaTit').textContent = p ? 'Ponto marcado no mapa' : 'Marque o ponto no mapa';
+    $('btnMapaSub').textContent = p ? 'Toque pra ajustar' : 'Mais fácil e a entrega chega certinho';
   }
 
   // CEP (opcional)
@@ -462,7 +464,7 @@
       if (!cid) { cepMsg.innerHTML = '<div class="dl-msg erro">Esse CEP é de ' + esc(r.localidade) + ' - ' + esc(r.uf) + '. Por enquanto entregamos só em Cuiabá e Várzea Grande.</div>'; return; }
       // O ponto do mapa era de outro endereço: o CEP novo manda.
       if (pino) marcarPino(null);
-      $('cidade').value = cid; travar('cidade', true);
+      $('cidade').value = cid; travar('cidade', true); enderecoDoMapa = false; // CEP digitado conta como digitado
       if (r.logradouro) { $('rua').value = r.logradouro; travar('rua', true); }
       if (r.bairro) { $('bairro').value = r.bairro; travar('bairro', true); }
       cepMsg.innerHTML = '';
@@ -541,10 +543,13 @@
       var pc = String(a.postcode || '').replace(/\D/g, '');
       var norm = function (x) { return String(x || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim(); };
       var digitado = $('rua').value.trim() || $('bairro').value.trim();
-      var difere = digitado && ['rua', 'bairro'].some(function (id) { return doMapa[id] && $(id).value.trim() && norm($(id).value) !== norm(doMapa[id]); });
+      var difere = !enderecoDoMapa && digitado && ['rua', 'bairro'].some(function (id) { return doMapa[id] && $(id).value.trim() && norm($(id).value) !== norm(doMapa[id]); });
       var aplicar = function () {
         cepBuscado = ''; cepPonto = null; cepMsg.innerHTML = ''; destravarTudo();
-        $('cidade').value = cid; $('rua').value = doMapa.rua; $('numero').value = doMapa.numero || $('numero').value; $('bairro').value = doMapa.bairro;
+        // Número antigo só fica se o ponto novo é na mesma rua e o mapa não achou o número.
+        var mesmaRua = norm($('rua').value) === norm(doMapa.rua);
+        $('cidade').value = cid; $('rua').value = doMapa.rua; $('numero').value = doMapa.numero || (mesmaRua ? $('numero').value : ''); $('bairro').value = doMapa.bairro;
+        enderecoDoMapa = true;
         cepEl.value = pc.length === 8 ? pc.slice(0, 5) + '-' + pc.slice(5) : '';
       };
       if (difere) {
