@@ -112,7 +112,7 @@
     return p.status !== 'entregue';
   }
 
-  // ---- Mapa ao vivo (migration_050): só quando a próxima entrega é a sua ----
+  // ---- Mapa ao vivo (migration_050/054): entregador a até 5 km ou vindo direto pra você ----
   var mapa = null, mDest = null, mEnt = null, carregandoMapa = null;
   function carregarLeaflet() {
     if (window.L) return Promise.resolve();
@@ -131,14 +131,17 @@
     if (p.status !== 'em_rota' || !r) { box.hidden = true; return; }
     box.hidden = false;
     var chega = r.eta ? new Date(r.eta).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : null;
-    if (!r.proxima) {
-      $('aoVivoTxt').innerHTML = '<strong>' + (r.faltam === 1 ? 'Falta 1 entrega antes da sua' : 'Faltam ' + r.faltam + ' entregas antes da sua') + '</strong>' +
-        '<span>' + (chega ? 'Chegada prevista por volta das ' + chega + '. ' : '') + 'Quando for a sua vez, o mapa aparece aqui com o entregador vindo.</span>';
+    // Fases (migration_054): longe → só horário; perto (≤ 5 km, em outra entrega) e a_caminho → mapa.
+    var fase = r.fase || (r.proxima ? 'a_caminho' : 'longe');
+    if (fase === 'longe') {
+      $('aoVivoTxt').innerHTML = '<strong>Seu pedido saiu para entrega</strong>' +
+        '<span>' + (chega ? 'Chegada prevista por volta das ' + chega + '. ' : '') + 'Quando o entregador estiver perto, o mapa aparece aqui.</span>';
       $('aoVivoMapa').hidden = true;
       return;
     }
-    $('aoVivoTxt').innerHTML = '<strong>Você é a próxima entrega!</strong><span>' +
-      (r.entregador ? 'O entregador está a caminho' + (chega ? ' e chega por volta das ' + chega : '') + '.' : 'O entregador já está vindo' + (chega ? ', chegada prevista por volta das ' + chega : '') + '.') + '</span>';
+    $('aoVivoTxt').innerHTML = fase === 'perto'
+      ? '<strong>Seu pedido está próximo!</strong><span>Estamos finalizando outras entregas na sua região e já chegaremos aí' + (chega ? ', por volta das ' + chega : '') + '.</span>'
+      : '<strong>Seu pedido está a caminho!</strong><span>O entregador está vindo até você' + (chega ? ' e chega por volta das ' + chega : '') + '.</span>';
     if (!r.destino || r.destino.lat == null) return;
     $('aoVivoMapa').hidden = false;
     try { await carregarLeaflet(); } catch (e) { $('aoVivoMapa').hidden = true; return; }
@@ -147,7 +150,7 @@
       mapa = L.map('aoVivoMapa', { zoomControl: false, attributionControl: true }).setView([r.destino.lat, r.destino.lng], 14);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' }).addTo(mapa);
       mDest = L.marker([r.destino.lat, r.destino.lng], { icon: icone('casa'), title: 'Seu endereço' }).addTo(mapa);
-    }
+    } else mapa.invalidateSize(); // o mapa pode ter ficado escondido (voltou pra fase longe)
     if (r.entregador) {
       if (!mEnt) mEnt = L.marker([r.entregador.lat, r.entregador.lng], { icon: icone('moto'), title: 'Entregador', zIndexOffset: 1000 }).addTo(mapa);
       else mEnt.setLatLng([r.entregador.lat, r.entregador.lng]);
