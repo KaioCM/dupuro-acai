@@ -73,7 +73,7 @@ def pagina(fmt):
     if fmt=='feed':
         decor=folha(-30,585,320,-8)+folha(800,545,320,-8,True)+''.join(fruto(x,y,r) for x,y,r in [(20,920,22),(58,937,18),(36,947,15),(1005,915,22),(1040,935,17),(985,943,14)])
     else:
-        decor=folha(-30,850,340,-8)+folha(780,810,340,-8,True)+''.join(fruto(x,y,r) for x,y,r in [(20,1185,22),(58,1202,18),(36,1212,15),(1005,1180,22),(1040,1200,17),(985,1208,14)])
+        decor=folha(-30,800,340,-8)+folha(780,760,340,-8,True)+''.join(fruto(x,y,r) for x,y,r in [(20,1135,22),(58,1152,18),(36,1162,15),(1005,1130,22),(1040,1150,17),(985,1158,14)])
     return f'''<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="robots" content="noindex">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@600;700;800&family=Caveat+Brush&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="peca.css"><title>Dupuro Delivery v2 — {fmt}</title></head>
