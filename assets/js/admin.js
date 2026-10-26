@@ -742,6 +742,13 @@ var DupuroAdmin = (function () {
     var r = await client.from('delivery_pedidos').update(campos).eq('id', id);
     return { error: r.error };
   }
+  // O cliente só vê o entregador no mapa se o pedido for parada de uma rota já
+  // iniciada (Rotas → Iniciar rota, migration_050). true/false; null se não deu pra conferir.
+  async function deliveryEmRotaIniciada(codigo) {
+    var r = await client.from('rota_paradas').select('id, rotas!inner(status)')
+      .eq('ref', codigo).eq('rotas.status', 'em_andamento').limit(1);
+    return r.error ? null : (r.data || []).length > 0;
+  }
   // Cancela uma entrega confirmada e devolve o estoque (pago online: estornar no MP).
   async function cancelarDelivery(id) {
     var r = await client.rpc('delivery_cancelar', { p_id: id });
@@ -1044,6 +1051,7 @@ var DupuroAdmin = (function () {
     getAjustesEstoque: getAjustesEstoque,
     getNumerosComNfce: getNumerosComNfce,
     setDeliveryStatus: setDeliveryStatus,
+    deliveryEmRotaIniciada: deliveryEmRotaIniciada,
     getContagemNovos: getContagemNovos,
     getNextOrderNumber: getNextOrderNumber,
     createOrderCart: createOrderCart,
