@@ -69,7 +69,7 @@
 .dl-float .ic { width: 34px; height: 34px; border-radius: 11px; display: flex; align-items: center; justify-content: center; font-size: 17px; flex: none; }
 .dl-float small { display: block; font-weight: 600; color: var(--text-light); font-size: 11.5px; }
 .dl-float.f1 { top: 16%; left: -6%; transform: rotate(2deg); } .dl-float.f1 .ic { background: rgba(139,184,49,.2); }
-.dl-float.f2 { top: 54%; left: -10%; transform: rotate(-2deg); } .dl-float.f2 .ic { background: rgba(245,179,1,.22); }
+.dl-float.f2 { top: auto; bottom: 4%; left: -8%; transform: rotate(-2deg); } /* embaixo: não cobre o centro da foto */ .dl-float.f2 .ic { background: rgba(245,179,1,.22); }
 @media (min-width: 900px) {
   .dl-hero { padding: 130px 0 100px; }
   .dl-hero-grid { grid-template-columns: 1.05fr .95fr; gap: 40px; }
@@ -85,7 +85,7 @@
   .dl-hero-txt > h1 { order: 2; font-size: clamp(36px, 10.4vw, 56px); margin: 16px 0 22px; }
   .dl-colagem { order: 3; width: min(330px, 78vw); margin: 4px auto 34px; }
   .dl-float { padding: 8px 11px; font-size: 11.5px; } .dl-float .ic { width: 28px; height: 28px; font-size: 14px; }
-  .dl-float.f1 { top: -3%; left: -6%; } .dl-float.f2 { top: auto; bottom: 22%; left: -8%; }
+  .dl-float.f1 { top: -3%; left: -6%; } .dl-float.f2 { top: auto; bottom: 5%; left: -5%; }
   .dl-hero-txt > .dl-lead { order: 4; font-size: 16.5px; }
   .dl-hero-txt > .dl-preco-gancho { order: 5; justify-self: start; }
   .dl-hero-txt > .dl-acoes { order: 6; flex-direction: column; gap: 12px; }
