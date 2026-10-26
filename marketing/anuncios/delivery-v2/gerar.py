@@ -85,6 +85,6 @@ def pagina(fmt):
 {CARIMBO}
 {decor}
 <div class="fila">{itens}</div>
-<div class="rodape"><div class="linha-cta">{CAMINHAO}<span class="cta">Peça agora</span></div><div class="info">Entrega a partir de <i>R$ 5</i> · dupuroacai.com/delivery</div></div>
+<div class="rodape"><div class="linha-cta"><span class="cta">Peça agora</span>{CAMINHAO}</div><div class="info">Entrega a partir de <i>R$ 5</i> · dupuroacai.com/delivery</div></div>
 </body></html>'''
 for fmt in ['feed','story']: open(fmt+'.html','w').write(pagina(fmt))

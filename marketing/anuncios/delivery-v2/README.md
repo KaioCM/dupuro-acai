@@ -16,7 +16,7 @@ proporcionalmente menores (preço de relance 1,60).
 ## Ajustes do Kayo (2026-10-26): etiquetas, "simplório", caminhãozinho
 Etiquetas de papel amarradas com barbante, "R$" + número inteiros, todas na mesma linha (caixas
 tortas, etiquetas alinhadas); folhas de palmeira de açaí atrás das pontas da fileira; frutos de açaí;
-sublinhado de pincel em "favorito" + estrelinhas; caminhãozinho em traço à mão ao lado do "Peça agora".
+sublinhado de pincel em "favorito" + estrelinhas; caminhãozinho em traço à mão à DIREITA do "Peça agora", virado pra direita ("pediu, o caminhão sai" — pedido do Kayo).
 Agora gerado por `gerar.py` (HTML) → `render.sh` (PNG).
 
 | | artesanal | preço | etiquetas | riqueza (1=equilíbrio) | vontade | poluição | profissional |
