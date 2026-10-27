@@ -1549,6 +1549,29 @@
     pagAtual = null;
     concluirPedido(numero, ctx);
   }
+  // ---- Painel sempre na versão nova ----
+  // Revendedor deixa a aba aberta por dias e manda pedido com o código antigo (PED-1035:
+  // sem a taxa de entrega). Ao voltar pra aba, se saiu versão nova, recarrega — o carrinho
+  // fica salvo no aparelho. No meio do pagamento, não. Recarrega uma vez por versão (o
+  // HTML pode vir do cache por até 10 min e não queremos laço).
+  var VERSAO_PAINEL = '2026-10-27b'; // subir junto com area-cliente/versao-painel.json
+  var versaoConferida = 0;
+  async function conferirVersao() {
+    if (Date.now() - versaoConferida < 60e3 || !pagOnline.classList.contains('hidden')) return;
+    versaoConferida = Date.now();
+    try {
+      var j = await fetch('versao-painel.json?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; });
+      if (!j || !j.versao || j.versao === VERSAO_PAINEL) return;
+      var ja = null; try { ja = sessionStorage.getItem('dupuro-painel-recarregou'); } catch (e) {}
+      if (ja === j.versao) return;
+      try { sessionStorage.setItem('dupuro-painel-recarregou', j.versao); } catch (e) {}
+      location.reload();
+    } catch (e) { /* sem internet agora: confere na próxima volta */ }
+  }
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) conferirVersao(); });
+  window.addEventListener('pageshow', function (e) { if (e.persisted) { versaoConferida = 0; conferirVersao(); } });
+  setTimeout(conferirVersao, 5000);
+
   document.getElementById('pagVoltar').addEventListener('click', function () {
     clearInterval(pagTimer); pagTimer = null;
     desmontarBrick();

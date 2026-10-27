@@ -63,6 +63,7 @@ Projeto real em `supabase-config.js` (URL `zqadfktfplrbrjmepllh.supabase.co`). D
 - Diálogos do admin: `confirmar(msg)`/`aviso(msg)`, nunca `window.confirm/alert/prompt` (o Electron da loja não suporta `prompt`). Erro do banco na tela via `motivoErro(e)`.
 - Sem emoji em botão nem selo em cima de título; ícones = sprite SVG. Cores só pelas variáveis de `:root` em `style.css`.
 - Mudou CSS/JS/HTML do caixa → subir o `CACHE_VER` do `sw.js` (o SW usa `ignoreSearch`; mudança chega na 2ª abertura).
+- Mudou o painel do revendedor (`dashboard.html`, `cliente.js`, `endereco.js`) → subir `VERSAO_PAINEL` no `dashboard.html` **e** `area-cliente/versao-painel.json` (aba aberta há dias recarrega sozinha ao voltar).
 - Bibliotecas do CDN com versão fixa (supabase-js `2.118.0`, chart.js `4.5.1`) — atualizar de propósito.
 - Chaves (Focus, Mercado Pago, WhatsApp, ORS, TypeSafe) só em secrets das Edge Functions, nunca no git/navegador.
 - Migrações 005+ e Edge Functions são aplicadas via **MCP do Supabase**; os `.sql`/`.ts` do repo são o espelho — conferir que o deploy bate com o arquivo antes de publicar por cima.
