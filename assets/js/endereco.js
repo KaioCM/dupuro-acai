@@ -125,6 +125,8 @@ var DupuroEndereco = (function () {
     // doMapa: rua/número/bairro vieram do mapa e ninguém digitou depois — marcar outro ponto troca tudo.
     var pino = null, cepBuscado = '', cepPonto = null, mexeu = false, doMapa = false;
 
+    // Mudança que não vem de digitação (mapa, CEP, preencher): quem usa o componente escuta 'endereco-mudou'.
+    function avisar() { raiz.dispatchEvent(new CustomEvent('endereco-mudou')); }
     function msg(txt, tipo, html) { $e('msg').innerHTML = txt ? '<p class="end-msg ' + (tipo || 'info') + '">' + (html ? txt : esc(txt)) + '</p>' : ''; }
     function travar(n, sim) { var el = $e(n); if (el.tagName === 'SELECT') el.disabled = sim; else el.readOnly = sim; el.classList.toggle('travado', sim); }
     function destravar() { travar('rua', false); travar('bairro', false); travar('cidade', false); }
@@ -155,7 +157,7 @@ var DupuroEndereco = (function () {
         $e('cidade').value = cid; travar('cidade', true); doMapa = false; // CEP digitado conta como digitado
         if (r.logradouro) { $e('rua').value = r.logradouro; travar('rua', true); }
         if (r.bairro) { $e('bairro').value = r.bairro; travar('bairro', true); }
-        msg('');
+        msg(''); avisar();
         fetch('https://cep.awesomeapi.com.br/json/' + d).then(function (x) { return x.ok ? x.json() : null; }).then(function (g) {
           if (g && cepBuscado === d && g.lat && g.lng) cepPonto = { lat: Number(g.lat), lng: Number(g.lng) };
         }).catch(function () {});
@@ -182,10 +184,11 @@ var DupuroEndereco = (function () {
           if (difere) {
             msg('O ponto marcado fica em <strong>' + esc([a.rua, a.bairro].filter(Boolean).join(', ')) + '</strong>. Mantivemos o endereço que você digitou; a entrega vai no ponto do mapa. ' +
               '<button type="button" class="btn-link-acao" data-e="usarMapa">Usar o endereço do mapa</button>', 'info', true);
-            $e('usarMapa').addEventListener('click', function () { aplicar(); msg(''); });
+            $e('usarMapa').addEventListener('click', function () { aplicar(); msg(''); avisar(); });
           } else aplicar();
         }
         marcarPino(p);
+        avisar();
         var vazio = ['rua', 'numero', 'bairro'].filter(function (n) { return !$e(n).value.trim(); });
         if (vazio.length && !$e('msg').innerHTML) {
           msg('Ponto marcado! Agora só confira e complete: ' + vazio.map(function (n) { return n === 'numero' ? 'número (ou s/n)' : n; }).join(', ') + '.');
@@ -231,6 +234,7 @@ var DupuroEndereco = (function () {
         var antigo = !d.rua && textoAntigo ? textoAntigo : '';
         $e('antigo').classList.toggle('hidden', !antigo);
         $e('antigo').textContent = antigo ? 'Endereço que estava salvo: ' + antigo + '. Marque no mapa ou preencha nos campos.' : '';
+        avisar();
       },
       mexeu: function () { return mexeu; }
     };

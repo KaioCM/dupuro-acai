@@ -20,6 +20,11 @@
 // Jev (nunca nome/telefone). Sem TYPESAFE_API_KEY, erro ou dúvida: segue a
 // ordem do Pelias, como antes.
 //
+// Cada cotação que atende fica em entrega_cotacoes (migration_056) e volta com
+// cotacao.id: o pedido do revendedor referencia esse id e o banco tira dele a taxa
+// e o ponto (mesma regra e limite do delivery). {uso: 'revenda'} calcula mesmo com
+// o delivery pausado.
+//
 // Secrets: ORS_API_KEY (openrouteservice.org → Dashboard → Tokens).
 // ==========================================================================
 import { createClient } from 'jsr:@supabase/supabase-js@2'
@@ -139,7 +144,7 @@ Deno.serve(async (req: Request) => {
     const sb = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
     const { data: row } = await sb.from('delivery_config').select('config').eq('id', 1).single()
     const cfg: any = row?.config
-    if (!cfg || cfg.ativo === false) return json({ error: 'Delivery pausado no momento.' }, 503)
+    if (!cfg || (cfg.ativo === false && body.uso !== 'revenda')) return json({ error: 'Delivery pausado no momento.' }, 503)
     const oLat = Number(cfg.origem?.lat), oLng = Number(cfg.origem?.lng)
     if (!Number.isFinite(oLat) || !Number.isFinite(oLng)) return json({ error: 'Localização da loja não configurada.' }, 500)
 
@@ -194,10 +199,13 @@ Deno.serve(async (req: Request) => {
 
     const exp = Date.now() + 2 * 3600e3 // cotação vale 2h
     const base = [dest.lat.toFixed(6), dest.lng.toFixed(6), km, taxa, exp].join('|')
+    const { data: gravada } = await sb.from('entrega_cotacoes')
+      .insert({ lat: dest.lat, lng: dest.lng, km, taxa, impreciso, expira_em: new Date(exp).toISOString() }).select('id').single()
+    if (Math.random() < 0.02) await sb.from('entrega_cotacoes').delete().lt('criado_em', new Date(Date.now() - 2 * 864e5).toISOString())
     return json({
       atende: true, km, taxa, lat: dest.lat, lng: dest.lng, place_id: null,
       endereco_formatado: endereco, impreciso, fonte: dest.layer || 'cep',
-      cotacao: { exp, assinatura: await hmac(base) },
+      cotacao: { exp, assinatura: await hmac(base), id: gravada?.id || null },
     })
   } catch (e) {
     return json({ error: 'Falha ao calcular a entrega: ' + String((e as Error)?.message || e) }, 500)
