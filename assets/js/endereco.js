@@ -3,7 +3,7 @@
 // -------------------------------------------------------------------------
 // DupuroEndereco.criar(raiz, prefixo) monta dentro de `raiz`:
 //   "Marque no mapa" (Leaflet + OpenStreetMap, carregado só ao abrir; o ponto
-//   vira rua/número/bairro pelo Nominatim) · CEP opcional (ViaCEP preenche e
+//   vira rua/número/bairro pelo Nominatim) · CEP obrigatório (ViaCEP preenche e
 //   trava o que trouxe) · cidade (Cuiabá/Várzea Grande) · rua · número ·
 //   bairro · complemento.
 // Devolve { valor, texto, validar, preencher, mudou }.
@@ -111,7 +111,8 @@ var DupuroEndereco = (function () {
       '<div class="end-ou"><span>ou preencha</span></div>' +
       '<p class="end-msg info hidden" data-e="antigo"></p>' +
       '<div class="end-linha">' +
-        '<div class="field"><label for="' + px + 'Cep">CEP <span class="opcional">(opcional)</span></label><input type="text" id="' + px + 'Cep" data-e="cep" inputmode="numeric" autocomplete="postal-code" placeholder="78000-000" maxlength="9"></div>' +
+        '<div class="field"><label for="' + px + 'Cep">CEP</label><input type="text" id="' + px + 'Cep" data-e="cep" inputmode="numeric" autocomplete="postal-code" placeholder="78000-000" maxlength="9">' +
+          '<a class="end-cep-ajuda" href="https://buscacepinter.correios.com.br/app/endereco/index.php" target="_blank" rel="noopener">Não sei meu CEP</a></div>' +
         '<div class="field"><label for="' + px + 'Cidade">Cidade</label><select id="' + px + 'Cidade" data-e="cidade" autocomplete="address-level2"><option value="Cuiabá">Cuiabá</option><option value="Várzea Grande">Várzea Grande</option></select></div>' +
       '</div>' +
       '<div class="field"><label for="' + px + 'Rua">Rua / avenida</label><input type="text" id="' + px + 'Rua" data-e="rua" maxlength="80" autocomplete="address-line1" placeholder="Ex.: Rua das Flores"></div>' +
@@ -150,10 +151,11 @@ var DupuroEndereco = (function () {
       try {
         var r = await fetch('https://viacep.com.br/ws/' + d + '/json/').then(function (x) { return x.json(); });
         if (cepBuscado !== d) return;
-        if (r.erro) { msg('CEP não encontrado. Confira os números ou preencha sem ele.', 'erro'); return; }
+        if (r.erro) { msg('CEP não encontrado. Confira os números; se estiver certo, preencha o resto do endereço.', 'erro'); return; }
         var cid = CIDADES[String(r.localidade || '').toLowerCase()];
         if (!cid) { msg('Esse CEP é de ' + r.localidade + ' - ' + r.uf + '. A entrega é só em Cuiabá e Várzea Grande; pra outras cidades, escolha Retirada.', 'erro'); return; }
-        if (pino) marcarPino(null); // o ponto era de outro endereço: o CEP novo manda
+        // CEP de outra rua: o ponto era de outro endereço e sai; mesma rua (só completou o CEP): fica.
+        if (pino && r.logradouro && $e('rua').value.trim() && norm(r.logradouro) !== norm($e('rua').value)) marcarPino(null);
         $e('cidade').value = cid; travar('cidade', true); doMapa = false; // CEP digitado conta como digitado
         if (r.logradouro) { $e('rua').value = r.logradouro; travar('rua', true); }
         if (r.bairro) { $e('bairro').value = r.bairro; travar('bairro', true); }
@@ -189,9 +191,9 @@ var DupuroEndereco = (function () {
         }
         marcarPino(p);
         avisar();
-        var vazio = ['rua', 'numero', 'bairro'].filter(function (n) { return !$e(n).value.trim(); });
+        var vazio = ['cep', 'rua', 'numero', 'bairro'].filter(function (n) { return n === 'cep' ? $e('cep').value.replace(/\D/g, '').length !== 8 : !$e(n).value.trim(); });
         if (vazio.length && !$e('msg').innerHTML) {
-          msg('Ponto marcado! Agora só confira e complete: ' + vazio.map(function (n) { return n === 'numero' ? 'número (ou s/n)' : n; }).join(', ') + '.');
+          msg('Ponto marcado! Agora só confira e complete: ' + vazio.map(function (n) { return n === 'numero' ? 'número (ou s/n)' : n === 'cep' ? 'CEP' : n; }).join(', ') + '.');
           $e(vazio[0]).focus();
         }
       });
@@ -213,11 +215,12 @@ var DupuroEndereco = (function () {
       // Mensagem do que falta (e marca os campos) ou null.
       validar: function () {
         var falta = [];
+        if ($e('cep').value.replace(/\D/g, '').length !== 8) falta.push('cep'); // obrigatório (pedido do Kayo, 2026-10-27)
         if ($e('rua').value.trim().length < 3) falta.push('rua');
         if (!$e('numero').value.trim()) falta.push('numero');
         if ($e('bairro').value.trim().length < 2) falta.push('bairro');
         falta.forEach(function (n) { $e(n).setAttribute('aria-invalid', 'true'); });
-        if (falta.length) { $e(falta[0]).focus(); return 'Preencha ' + falta.map(function (n) { return n === 'numero' ? 'o número (ou "s/n")' : n === 'rua' ? 'a rua' : 'o bairro'; }).join(', ') + ' do endereço.'; }
+        if (falta.length) { $e(falta[0]).focus(); return 'Preencha ' + falta.map(function (n) { return n === 'numero' ? 'o número (ou "s/n")' : n === 'cep' ? 'o CEP' : n === 'rua' ? 'a rua' : 'o bairro'; }).join(', ') + ' do endereço.'; }
         if (/[<>]/.test(this.texto())) return 'Tire os sinais < e > do endereço.';
         if (this.texto().length > 200) return 'O endereço ficou muito longo. Encurte o complemento.';
         return null;
