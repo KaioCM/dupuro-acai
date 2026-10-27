@@ -69,7 +69,7 @@
       </button>
       <div class="dl-ou"><span>ou preencha</span></div>
       <div class="dl-linha">
-        <div class="dl-campo"><label for="cep">CEP <span style="font-weight:600;color:var(--text-light);">(opcional)</span></label><div class="dl-input"><span><svg class="i" aria-hidden="true"><use href="#d-envelope"/></svg></span><input id="cep" inputmode="numeric" autocomplete="postal-code" placeholder="78000-000" maxlength="9"></div>
+        <div class="dl-campo"><label for="cep">CEP</label><div class="dl-input"><span><svg class="i" aria-hidden="true"><use href="#d-envelope"/></svg></span><input id="cep" inputmode="numeric" autocomplete="postal-code" placeholder="78000-000" maxlength="9"></div>
           <a class="dl-cep-ajuda" href="https://buscacepinter.correios.com.br/app/endereco/index.php" target="_blank" rel="noopener">Não sei meu CEP</a></div>
         <div class="dl-campo"><label for="cidade">Cidade</label><div class="dl-input"><span><svg class="i" aria-hidden="true"><use href="#d-predio"/></svg></span><select id="cidade" autocomplete="address-level2">
           <option value="Cuiabá">Cuiabá</option><option value="Várzea Grande">Várzea Grande</option></select></div></div>
@@ -445,7 +445,7 @@
     $('btnMapaSub').textContent = p ? 'Toque pra ajustar' : 'Mais fácil e a entrega chega certinho';
   }
 
-  // CEP (opcional)
+  // CEP (obrigatório, pedido do Kayo 2026-10-27; ViaCEP preenche rua/bairro/cidade)
   cepEl.addEventListener('input', function () {
     var d = cepEl.value.replace(/\D/g, '').slice(0, 8);
     cepEl.value = d.length > 5 ? d.slice(0, 5) + '-' + d.slice(5) : d;
@@ -459,11 +459,13 @@
     try {
       var r = await fetch('https://viacep.com.br/ws/' + d + '/json/').then(function (x) { return x.json(); });
       if (cepBuscado !== d) return; // digitou outro CEP enquanto buscava
-      if (r.erro) { cepMsg.innerHTML = '<div class="dl-msg erro">CEP não encontrado. Confira os números ou preencha o endereço sem ele.</div>'; return; }
+      if (r.erro) { cepMsg.innerHTML = '<div class="dl-msg erro">CEP não encontrado. Confira os números; se estiver certo, preencha o resto do endereço.</div>'; return; }
       var cid = CIDADES[String(r.localidade || '').toLowerCase()];
       if (!cid) { cepMsg.innerHTML = '<div class="dl-msg erro">Esse CEP é de ' + esc(r.localidade) + ' - ' + esc(r.uf) + '. Por enquanto entregamos só em Cuiabá e Várzea Grande.</div>'; return; }
-      // O ponto do mapa era de outro endereço: o CEP novo manda.
-      if (pino) marcarPino(null);
+      // CEP de outra rua: o ponto do mapa era de outro endereço e sai. Mesma rua (ex.: marcou
+      // no mapa e só completou o CEP que faltava): o ponto fica.
+      var normCep = function (x) { return String(x || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim(); };
+      if (pino && r.logradouro && $('rua').value.trim() && normCep(r.logradouro) !== normCep($('rua').value)) marcarPino(null);
       $('cidade').value = cid; travar('cidade', true); enderecoDoMapa = false; // CEP digitado conta como digitado
       if (r.logradouro) { $('rua').value = r.logradouro; travar('rua', true); }
       if (r.bairro) { $('bairro').value = r.bairro; travar('bairro', true); }
@@ -561,10 +563,10 @@
     marcarPino({ lat: c.lat, lng: c.lng });
     fecharMapa(); invalidarCotacao();
     // Falta algo que o mapa não sabe (número, às vezes a rua)? Pede só isso.
-    var vazio = ['rua', 'numero', 'bairro'].filter(function (id) { return !$(id).value.trim(); });
+    var vazio = ['cep', 'rua', 'numero', 'bairro'].filter(function (id) { return id === 'cep' ? cepEl.value.replace(/\D/g, '').length !== 8 : !$(id).value.trim(); });
     if (vazio.length) {
       cotMsg.innerHTML = '<div class="dl-msg info">Local marcado no mapa! Agora só confira e complete: ' +
-        esc(vazio.map(function (id) { return id === 'numero' ? 'número (ou s/n)' : id; }).join(', ')) + '.</div>';
+        esc(vazio.map(function (id) { return id === 'numero' ? 'número (ou s/n)' : id === 'cep' ? 'CEP' : id; }).join(', ')) + '.</div>';
       $(vazio[0]).focus();
     } else cotar(true);
   });
@@ -574,15 +576,16 @@
     return $('rua').value.trim() + ', ' + $('numero').value.trim() + ' - ' + $('bairro').value.trim() + ', ' +
       $('cidade').value + ' - MT' + (cep.length === 8 ? ', ' + cep.slice(0, 5) + '-' + cep.slice(5) : '');
   }
-  function enderecoOk() { return $('rua').value.trim().length >= 3 && !!$('numero').value.trim() && $('bairro').value.trim().length >= 2 && !!$('cidade').value; }
+  function enderecoOk() { return cepEl.value.replace(/\D/g, '').length === 8 && $('rua').value.trim().length >= 3 && !!$('numero').value.trim() && $('bairro').value.trim().length >= 2 && !!$('cidade').value; }
   $('btnCotar').addEventListener('click', function () { cotar(); });
   async function cotar(auto) {
     var falta = [];
+    if (cepEl.value.replace(/\D/g, '').length !== 8) falta.push('cep');
     if ($('rua').value.trim().length < 3) falta.push('rua');
     if (!$('numero').value.trim()) falta.push('numero');
     if ($('bairro').value.trim().length < 2) falta.push('bairro');
     if (falta.length) {
-      if (!auto) erroNaSecao('secEndereco', 'Preencha ' + falta.map(function (id) { return id === 'numero' ? 'o número (ou "s/n")' : id === 'rua' ? 'a rua' : 'o bairro'; }).join(', ') + '.', falta);
+      if (!auto) erroNaSecao('secEndereco', 'Preencha ' + falta.map(function (id) { return id === 'numero' ? 'o número (ou "s/n")' : id === 'cep' ? 'o CEP' : id === 'rua' ? 'a rua' : 'o bairro'; }).join(', ') + '.', falta);
       return;
     }
     var txt = enderecoTexto(), seq = ++cotSeq;
