@@ -226,6 +226,20 @@ var DupuroCliente = (function () {
     });
   }
 
+  // Taxa de entrega (migration_056): a mesma cotação do delivery (Edge Function
+  // delivery-cotacao, regra e limite da delivery_config). Devolve { atende, km, taxa,
+  // impreciso, mensagem, cotacao: { id, exp } } — o pedido manda só cotacao.id e o
+  // banco tira a taxa de lá.
+  async function cotarEntrega(corpo) {
+    var r = await client.functions.invoke('delivery-cotacao', { body: Object.assign({ uso: 'revenda' }, corpo) });
+    if (r.error) {
+      var msg = 'Não deu pra calcular a entrega agora. Confira a internet e tente de novo.';
+      try { var j = await r.error.context.json(); if (j && j.error) msg = j.error; } catch (e) {}
+      return { error: { message: msg } };
+    }
+    return r.data || {};
+  }
+
   // Pagar agora pelo site (Edge Function revenda-pagar, migration_051): iniciar /
   // pagar / status. Erro volta como { error: { message, code, online: true } }.
   async function pagarOnline(corpo) {
@@ -306,6 +320,7 @@ var DupuroCliente = (function () {
     createOrderCart: createOrderCart,
     linhasPedido: linhasPedido,
     pagarOnline: pagarOnline,
+    cotarEntrega: cotarEntrega,
     getLitrosDispensaMinimo: getLitrosDispensaMinimo,
     getOrders: getOrders,
     getCoupons: getCoupons

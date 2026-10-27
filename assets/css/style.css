@@ -3383,6 +3383,8 @@ a.stat-card.alerta .stat-sub { color: var(--warning); font-weight: 800; }
 .end-msg { margin: 0; padding: 10px 12px; border-radius: 12px; font-size: 13.5px; line-height: 1.4; }
 .end-msg.info { background: rgba(96,16,80,0.06); color: var(--roxo-900); }
 .end-msg.erro { background: rgba(192,57,43,0.08); color: var(--danger); }
+.end-msg.ok { background: rgba(139,184,49,0.14); color: var(--verde-dark); }
+#checkoutFrete:not(:empty) { margin-top: 10px; }
 .end-msg .btn-link-acao { padding: 0; }
 body.end-travado { overflow: hidden; }
 .end-mapa { position: fixed; inset: 0; z-index: 2000; display: flex; align-items: flex-end; justify-content: center; }

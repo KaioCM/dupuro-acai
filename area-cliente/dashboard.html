@@ -9,7 +9,7 @@
 <link rel="apple-touch-icon" href="../assets/img/brand/favicon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/css/style.css?v=72">
+<link rel="stylesheet" href="../assets/css/style.css?v=73">
 </head>
 <body class="pg-revenda">
 <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
@@ -155,6 +155,7 @@
               <div class="field" id="checkoutEnderecoField">
                 <span class="end-titulo">Endereço de entrega</span>
                 <div id="checkoutEnderecoForm"></div>
+                <div id="checkoutFrete" aria-live="polite"></div>
                 <label class="checkbox-line"><input type="checkbox" id="checkoutSalvarEndereco" checked><span>Usar este endereço nos próximos pedidos</span></label>
               </div>
               <fieldset class="checkout-grupo">
@@ -198,8 +199,9 @@
                 <div class="cupom-opcoes" id="checkoutCupons"></div>
               </fieldset>
               <div class="checkout-desconto hidden" id="checkoutDesconto">
-                <span>Subtotal <strong id="checkoutSubtotal"></strong></span>
+                <span>Produtos <strong id="checkoutSubtotal"></strong></span>
                 <span id="checkoutDescontoTxt"></span>
+                <span id="checkoutEntregaTxt"></span>
               </div>
               <div class="order-total-row"><span class="lbl">Total</span><span class="val" id="checkoutTotal">—</span></div>
               <div class="field-note" id="checkoutError" role="alert"></div>
@@ -379,8 +381,8 @@
 <script src="../assets/js/supabase-config.js"></script>
 <script src="../assets/js/supabase-client.js"></script>
 <script src="../assets/js/app-ui.js?v=3"></script>
-<script src="../assets/js/cliente.js?v=6"></script>
-<script src="../assets/js/endereco.js?v=2"></script>
+<script src="../assets/js/cliente.js?v=7"></script>
+<script src="../assets/js/endereco.js?v=3"></script>
 <script>
   // Escapa texto antes de ir pro innerHTML (dado de revendedor/cliente nunca vira HTML).
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
@@ -610,6 +612,7 @@
     var qtdPorDataProduto = {}, totalPorProduto = {};
     sel.forEach(function (o) {
       (o.items || []).forEach(function (it) {
+        if (!it.produtoId && /^Taxa de entrega/.test(it.itens || '')) return; // taxa não é produto (migration_056)
         var nome = nomePorId[it.produtoId] || 'Produto removido';
         var q = Number(it.quantidade) || 0;
         if (!qtdPorDataProduto[o.data]) qtdPorDataProduto[o.data] = {};
@@ -1233,12 +1236,48 @@
   function atualizarTotalRevisao() {
     var sub = cart.reduce(function (s, it) { return s + it.preco * it.quantidade; }, 0);
     var c = cupomEscolhido();
-    var total = c ? totalComDesconto(c.pct) : sub;
-    document.getElementById('checkoutDesconto').classList.toggle('hidden', !c);
+    var produtos = c ? totalComDesconto(c.pct) : sub;
+    var taxa = taxaAtual();
+    document.getElementById('checkoutDesconto').classList.toggle('hidden', !c && taxa == null);
     document.getElementById('checkoutSubtotal').textContent = brl(sub);
-    document.getElementById('checkoutDescontoTxt').textContent = c ? 'Cupom ' + c.code + ' (−' + c.pct + '%): −' + brl(sub - total) : '';
-    document.getElementById('checkoutTotal').textContent = brl(total);
+    document.getElementById('checkoutDescontoTxt').textContent = c ? 'Cupom ' + c.code + ' (−' + c.pct + '%): −' + brl(sub - produtos) : '';
+    document.getElementById('checkoutEntregaTxt').textContent = taxa != null ? 'Entrega: ' + brl(taxa) : '';
+    var aCalcular = tipoEscolhido() === 'entrega' && taxa == null;
+    document.getElementById('checkoutTotal').textContent = brl(produtos + (taxa || 0)) + (aCalcular ? ' + entrega' : '');
   }
+
+  // ---- Taxa de entrega (migration_056): mesma regra e limite do delivery, calculada no servidor ----
+  var frete = null, freteSeq = 0, freteTimer = null;
+  function chaveFrete() { var v = endCheckout.valor(); return JSON.stringify([v.rua, v.numero, v.bairro, v.cidade, v.cep, v.lat, v.lng]); }
+  function freteOk() { return !!(frete && frete.atende && frete.cotacao && frete.cotacao.id && frete.chave === chaveFrete() && frete.cotacao.exp > Date.now() + 60e3); }
+  function taxaAtual() { return tipoEscolhido() === 'entrega' && freteOk() ? Number(frete.taxa) : null; }
+  function msgFrete(txt, tipo) {
+    document.getElementById('checkoutFrete').innerHTML = txt ? '<p class="end-msg ' + (tipo || 'info') + '">' + txt + '</p>' : '';
+  }
+  // Cota o endereço da revisão (reaproveita a cotação se nada mudou). Devolve o frete ou null.
+  async function cotarFrete() {
+    if (tipoEscolhido() !== 'entrega') { msgFrete(''); return null; }
+    var v = endCheckout.valor();
+    if (v.rua.length < 3 || !v.numero || v.bairro.length < 2) { frete = null; msgFrete(''); atualizarTotalRevisao(); return null; }
+    if (freteOk()) return frete;
+    var chave = chaveFrete(), seq = ++freteSeq;
+    msgFrete('Calculando a taxa de entrega…');
+    var r = await DupuroCliente.cotarEntrega({ rua: v.rua, numero: v.numero, bairro: v.bairro, cidade: v.cidade, cep: v.cep, pin_lat: v.lat, pin_lng: v.lng });
+    if (seq !== freteSeq) return freteOk() ? frete : null; // o endereço mudou enquanto calculava
+    if (r.error) { frete = null; msgFrete(esc(r.error.message), 'erro'); atualizarTotalRevisao(); return null; }
+    frete = Object.assign({ chave: chave }, r);
+    if (!r.atende) msgFrete(esc(r.mensagem || 'Não entregamos nesse endereço.') + ' Pra esse endereço, escolha <strong>Retirada</strong> na fábrica.', 'erro');
+    else msgFrete('Entrega: <strong>' + brl(r.taxa) + '</strong> · ' + String(r.km).replace('.', ',') + ' km da fábrica' +
+      (r.impreciso ? '. Não achamos o número exato: marque o ponto no mapa pra taxa ficar certinha.' : '.'), r.impreciso ? 'info' : 'ok');
+    atualizarTotalRevisao();
+    return frete;
+  }
+  function agendarFrete() {
+    clearTimeout(freteTimer);
+    if (frete && frete.chave !== chaveFrete()) { frete = null; msgFrete(''); atualizarTotalRevisao(); }
+    freteTimer = setTimeout(cotarFrete, 900);
+  }
+  ['input', 'change', 'endereco-mudou'].forEach(function (ev) { document.getElementById('checkoutEnderecoForm').addEventListener(ev, agendarFrete); });
   function montarCupons() {
     var validos = cuponsValidos();
     document.getElementById('checkoutCupomGrupo').classList.toggle('hidden', !validos.length);
@@ -1277,7 +1316,10 @@
   }
   sendBtn.addEventListener('click', abrirRevisao);
   document.getElementById('checkoutVoltar').addEventListener('click', fecharRevisao);
-  checkout.addEventListener('change', function () { atualizarCheckout(); atualizarTotalRevisao(); });
+  checkout.addEventListener('change', function (e) {
+    atualizarCheckout(); atualizarTotalRevisao();
+    if (e.target.name === 'tipoEntrega') { if (tipoEscolhido() === 'entrega') cotarFrete(); else msgFrete(''); }
+  });
 
   checkout.addEventListener('submit', async function (e) {
     e.preventDefault();
@@ -1300,7 +1342,18 @@
     if (!entrega.data || !entrega.turno) return falha('Escolha o dia e o turno.');
     if (tipo === 'entrega') { var faltaEnd = endCheckout.validar(); if (faltaEnd) return falha(faltaEnd); }
     if (/[<>]/.test(endereco + (entrega.observacao || ''))) return falha('Tire os sinais < e > do endereço e da observação.');
-    var subtotalAgora = cupomUsado ? totalComDesconto(cupomUsado.pct) : cart.reduce(function (s, it) { return s + it.preco * it.quantidade; }, 0);
+    // Entrega: a taxa vem da cotação (o banco confere pelo id e grava a linha 'Taxa de entrega').
+    var freteUsado = null;
+    if (tipo === 'entrega') {
+      var botaoF = document.getElementById('checkoutEnviar');
+      botaoF.disabled = true; botaoF.textContent = 'Calculando a entrega…';
+      freteUsado = await cotarFrete();
+      botaoF.disabled = false; botaoF.textContent = rotuloEnviar();
+      if (!freteUsado || !freteUsado.atende) return falha(freteUsado ? 'Esse endereço está fora da área de entrega. Escolha Retirada na fábrica.' : 'Não deu pra calcular a taxa de entrega. Confira o endereço e tente de novo.');
+      entrega.cotacao_id = freteUsado.cotacao.id;
+    }
+    var subtotalAgora = (cupomUsado ? totalComDesconto(cupomUsado.pct) : cart.reduce(function (s, it) { return s + it.preco * it.quantidade; }, 0)) +
+      (freteUsado ? Number(freteUsado.taxa) : 0);
     if (entrega.forma === 'dinheiro' && document.getElementById('checkoutTroco').value.trim()) {
       entrega.troco_para = valorDigitado(document.getElementById('checkoutTroco').value);
       if (!entrega.troco_para || entrega.troco_para < subtotalAgora) { document.getElementById('checkoutTroco').focus(); return falha('O troco precisa ser pra um valor maior que o total (' + brl(subtotalAgora) + ').'); }
@@ -1325,8 +1378,9 @@
         falha('Algum item ficou sem estoque. Volte aos itens e ajuste.');
         productsCache = await DupuroCliente.getProducts();
         renderShop();
-      } else if (/Pedido m[íi]nimo|dia\/turno|endereço|prazo|entrega ou retirada|Data|Cupom|troco|Forma de pagamento|Pagamento online|Cadastro/i.test(msg)) {
-        falha(msg.replace(/^.*?(Pedido m|Esse dia|Informe|Pagamento|Escolha|Data|Cupom|O troco|Valor do troco|Forma|Cadastro)/i, '$1')); // mensagens do banco, já em português
+      } else if (/Pedido m[íi]nimo|dia\/turno|endereço|prazo|entrega ou retirada|Data|Cupom|troco|Forma de pagamento|Pagamento online|Cadastro|lotou/i.test(msg)) {
+        if (/taxa de entrega/i.test(msg)) frete = null; // cotação vencida: a próxima tentativa calcula de novo
+        falha(msg.replace(/^.*?(Pedido m|Esse dia|Esse turno|Informe|Pagamento|Escolha|Data|Cupom|O troco|Valor do troco|Forma|Cadastro|Calcule)/i, '$1')); // mensagens do banco, já em português
         if (/Cupom/i.test(msg)) DupuroCliente.getCoupons().then(function (l) { currentCoupons = l; montarCupons(); atualizarTotalRevisao(); });
       } else {
         falha(result.error.online ? msg : 'Não foi possível enviar agora. Confira a internet e tente de novo.');
