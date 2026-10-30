@@ -125,6 +125,9 @@ var DupuroEndereco = (function () {
     function $e(n) { return raiz.querySelector('[data-e="' + n + '"]'); }
     // doMapa: rua/número/bairro vieram do mapa e ninguém digitou depois — marcar outro ponto troca tudo.
     var pino = null, cepBuscado = '', cepPonto = null, mexeu = false, doMapa = false;
+    // Número que a pessoa digitou (ou que veio salvo) nunca é apagado pelo mapa: o mapa
+    // quase nunca acha o número da casa e apagava o que ela tinha escrito.
+    var numeroDigitado = false;
 
     // Mudança que não vem de digitação (mapa, CEP, preencher): quem usa o componente escuta 'endereco-mudou'.
     function avisar() { raiz.dispatchEvent(new CustomEvent('endereco-mudou')); }
@@ -137,7 +140,7 @@ var DupuroEndereco = (function () {
       $e('mapaTit').textContent = p ? 'Ponto marcado no mapa' : 'Marque o ponto no mapa';
       $e('mapaSub').textContent = p ? 'Toque pra ajustar' : 'Mais fácil e a entrega chega certinho';
     }
-    raiz.addEventListener('input', function (e) { mexeu = true; if (/^(rua|numero|bairro)$/.test(e.target.getAttribute('data-e'))) doMapa = false; if (e.target.getAttribute('aria-invalid')) e.target.removeAttribute('aria-invalid'); });
+    raiz.addEventListener('input', function (e) { mexeu = true; if (e.target.getAttribute('data-e') === 'numero') numeroDigitado = !!e.target.value.trim(); if (/^(rua|numero|bairro)$/.test(e.target.getAttribute('data-e'))) doMapa = false; if (e.target.getAttribute('aria-invalid')) e.target.removeAttribute('aria-invalid'); });
 
     $e('cep').addEventListener('input', function () {
       var el = this, d = el.value.replace(/\D/g, '').slice(0, 8);
@@ -179,7 +182,8 @@ var DupuroEndereco = (function () {
             cepBuscado = ''; cepPonto = null; destravar();
             // Número antigo só fica se o ponto novo é na mesma rua e o mapa não achou o número.
             var mesmaRua = norm($e('rua').value) === norm(a.rua);
-            $e('cidade').value = a.cidade; $e('rua').value = a.rua; $e('numero').value = a.numero || (mesmaRua ? $e('numero').value : ''); $e('bairro').value = a.bairro;
+            if (!numeroDigitado) $e('numero').value = a.numero || (mesmaRua ? $e('numero').value : '');
+            $e('cidade').value = a.cidade; $e('rua').value = a.rua; $e('bairro').value = a.bairro;
             doMapa = true;
             $e('cep').value = a.cep.length === 8 ? a.cep.slice(0, 5) + '-' + a.cep.slice(5) : '';
           };
@@ -233,6 +237,7 @@ var DupuroEndereco = (function () {
         cepBuscado = d.cep || '';
         $e('cidade').value = d.cidade === 'Várzea Grande' ? 'Várzea Grande' : 'Cuiabá';
         $e('rua').value = d.rua || ''; $e('numero').value = d.numero || ''; $e('bairro').value = d.bairro || ''; $e('comp').value = d.complemento || '';
+        numeroDigitado = !!d.numero;
         marcarPino(d.lat != null && d.lng != null && naArea(d) ? { lat: Number(d.lat), lng: Number(d.lng) } : null);
         var antigo = !d.rua && textoAntigo ? textoAntigo : '';
         $e('antigo').classList.toggle('hidden', !antigo);

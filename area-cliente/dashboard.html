@@ -382,7 +382,7 @@
 <script src="../assets/js/supabase-client.js"></script>
 <script src="../assets/js/app-ui.js?v=3"></script>
 <script src="../assets/js/cliente.js?v=7"></script>
-<script src="../assets/js/endereco.js?v=4"></script>
+<script src="../assets/js/endereco.js?v=5"></script>
 <script>
   // Escapa texto antes de ir pro innerHTML (dado de revendedor/cliente nunca vira HTML).
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
@@ -1554,7 +1554,7 @@
   // sem a taxa de entrega). Ao voltar pra aba, se saiu versão nova, recarrega — o carrinho
   // fica salvo no aparelho. No meio do pagamento, não. Recarrega uma vez por versão (o
   // HTML pode vir do cache por até 10 min e não queremos laço).
-  var VERSAO_PAINEL = '2026-10-27b'; // subir junto com area-cliente/versao-painel.json
+  var VERSAO_PAINEL = '2026-10-30a'; // subir junto com area-cliente/versao-painel.json
   var versaoConferida = 0;
   async function conferirVersao() {
     if (Date.now() - versaoConferida < 60e3 || !pagOnline.classList.contains('hidden')) return;

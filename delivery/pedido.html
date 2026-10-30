@@ -404,6 +404,8 @@
   var CIDADES = { 'cuiabá': 'Cuiabá', 'cuiaba': 'Cuiabá', 'várzea grande': 'Várzea Grande', 'varzea grande': 'Várzea Grande' };
   // enderecoDoMapa: rua/número/bairro vieram do mapa e ninguém digitou depois — marcar outro ponto troca tudo.
   var enderecoDoMapa = false;
+  // Número que a pessoa digitou nunca é apagado pelo mapa (o mapa quase nunca acha o número da casa).
+  var numeroDigitado = false;
   var pino = null, mapa = null, cepPonto = null, cepBuscado = '', LOJA = { lat: -15.6149619, lng: -56.0244949 };
   function invalidarCotacao() { if (cot) { cot = null; cotMsg.innerHTML = ''; render(); } }
   // O frete calcula sozinho quando o endereço fica completo (antes era um botão
@@ -415,7 +417,7 @@
     cotTimer = setTimeout(function () { cotar(true); }, 900);
   }
   ['cidade', 'rua', 'numero', 'bairro'].forEach(function (id) {
-    $(id).addEventListener(id === 'cidade' ? 'change' : 'input', function () { if (id !== 'cidade') enderecoDoMapa = false; invalidarCotacao(); limparErro(id); agendarCotacao(); });
+    $(id).addEventListener(id === 'cidade' ? 'change' : 'input', function () { if (id !== 'cidade') enderecoDoMapa = false; if (id === 'numero') numeroDigitado = !!$('numero').value.trim(); invalidarCotacao(); limparErro(id); agendarCotacao(); });
   });
   ['rua', 'numero', 'bairro', 'comp'].forEach(function (id) {
     $(id).addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); clearTimeout(cotTimer); cotar(); } });
@@ -550,7 +552,8 @@
         cepBuscado = ''; cepPonto = null; cepMsg.innerHTML = ''; destravarTudo();
         // Número antigo só fica se o ponto novo é na mesma rua e o mapa não achou o número.
         var mesmaRua = norm($('rua').value) === norm(doMapa.rua);
-        $('cidade').value = cid; $('rua').value = doMapa.rua; $('numero').value = doMapa.numero || (mesmaRua ? $('numero').value : ''); $('bairro').value = doMapa.bairro;
+        if (!numeroDigitado) $('numero').value = doMapa.numero || (mesmaRua ? $('numero').value : '');
+        $('cidade').value = cid; $('rua').value = doMapa.rua; $('bairro').value = doMapa.bairro;
         enderecoDoMapa = true;
         cepEl.value = pc.length === 8 ? pc.slice(0, 5) + '-' + pc.slice(5) : '';
       };
