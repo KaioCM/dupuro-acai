@@ -9,7 +9,7 @@
 <link rel="apple-touch-icon" href="../assets/img/brand/favicon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/css/style.css?v=71">
+<link rel="stylesheet" href="../assets/css/style.css?v=72">
 </head>
 <body class="pg-admin">
 <svg class="sprite" aria-hidden="true" focusable="false"><symbol id="m-grafico" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></symbol><symbol id="m-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol><symbol id="m-usuarios" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"/></symbol><symbol id="m-caixa" viewBox="0 0 24 24"><path d="M3 8l9-4 9 4v9l-9 4-9-4z"/><path d="M3 8l9 4 9-4M12 12v9"/></symbol><symbol id="m-painel" viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 10h6M9 14h6M9 18h3"/></symbol><symbol id="m-fabrica" viewBox="0 0 24 24"><path d="M3 21V10l5 3v-3l5 3V7l8 4v10z"/><path d="M7 17h2M12 17h2M17 17h1"/></symbol><symbol id="m-etiqueta" viewBox="0 0 24 24"><path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.4"/></symbol><symbol id="m-engrenagem" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></symbol><symbol id="m-casa" viewBox="0 0 24 24"><path d="M3 11l9-7 9 7M5 9.5V20h14V9.5M10 20v-6h4v6"/></symbol><symbol id="m-sair" viewBox="0 0 24 24"><path d="M14 4h5a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-5M10 16l-4-4 4-4M6 12h10"/></symbol><symbol id="m-carrinho" viewBox="0 0 24 24"><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2.5 3.5h3l2.4 11.2a1.5 1.5 0 0 0 1.5 1.3h8.4a1.5 1.5 0 0 0 1.5-1.2L21 7H6.3"/></symbol><symbol id="m-recibo" viewBox="0 0 24 24"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6M9 16h3"/></symbol><symbol id="m-calendario" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></symbol><symbol id="m-chat" viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></symbol><symbol id="m-usuario" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol><symbol id="m-globo" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></symbol><symbol id="m-hoje" viewBox="0 0 24 24"><path d="M4 13h4l2 3h4l2-3h4"/><path d="M4 13l2.5-8h11L20 13v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/></symbol><symbol id="m-pasta" viewBox="0 0 24 24"><path d="M3 6.5A1.5 1.5 0 0 1 4.5 5H9l2 2.5h8.5A1.5 1.5 0 0 1 21 9v9.5a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 18.5z"/></symbol><symbol id="m-mais" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol></svg>
@@ -321,6 +321,43 @@
         <table class="data-table">
           <thead><tr><th>Quando</th><th>Venda</th><th>Ação</th><th>Atendente</th><th>Motivo</th><th>Antes</th></tr></thead>
           <tbody id="auditsBody"></tbody>
+        </table>
+      </div>
+
+      <h2 class="secao-titulo" id="secEntregador">Taxas do entregador</h2>
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <h2>Taxa de entrega por mês</h2>
+            <div class="subtitle">O que repassar ao entregador: só entregas feitas (delivery, revenda e vendas da loja com taxa). Cancelado não conta. O mês é o do dia da entrega.</div>
+          </div>
+          <button type="button" class="btn btn-dark-outline btn-sm" id="refreshTaxasBtn">Atualizar</button>
+        </div>
+        <p class="taxas-resumo" id="taxasResumo"></p>
+        <table class="data-table">
+          <thead><tr><th>Mês</th><th class="num">Entregas</th><th class="num">Delivery</th><th class="num">Revenda</th><th class="num">Loja</th><th class="num">A repassar</th><th></th></tr></thead>
+          <tbody id="taxasBody"></tbody>
+        </table>
+      </div>
+
+      <h2 class="secao-titulo" id="secNotas">Notas fiscais (NFC-e)</h2>
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <h2>Notas emitidas</h2>
+            <div class="subtitle">Ache a nota pela venda, data, valor ou chave. Reimprima o cupom, baixe o XML ou mande o link pro cliente no WhatsApp.</div>
+          </div>
+          <button type="button" class="btn btn-dark-outline btn-sm" id="refreshNotasBtn">Atualizar</button>
+        </div>
+        <div class="notas-filtro">
+          <input type="search" id="notasBusca" class="ped-busca" placeholder="Venda, valor, chave ou CPF" aria-label="Buscar nota por venda, valor, chave ou CPF" autocomplete="off">
+          <input type="date" id="notasData" aria-label="Filtrar pelo dia da nota">
+          <button type="button" class="btn btn-dark-outline btn-sm hidden" id="notasLimpar">Limpar</button>
+        </div>
+        <p class="notas-copia" id="notasCopia"></p>
+        <table class="data-table">
+          <thead><tr><th>Data</th><th>Venda</th><th>Nota</th><th class="num">Valor</th><th>Situação</th><th></th></tr></thead>
+          <tbody id="notasBody"></tbody>
         </table>
       </div>
     </section>
@@ -756,7 +793,9 @@
 <script src="../assets/js/supabase-config.js"></script>
 <script src="../assets/js/supabase-client.js"></script>
 <script src="../assets/js/app-ui.js"></script>
-<script src="../assets/js/admin.js?v=10"></script>
+<script src="../assets/js/admin.js?v=11"></script>
+<script src="../assets/js/vendor/qrcode.js"></script>
+<script src="../assets/js/printer.js?v=4"></script>
 <script>
   // Escapa texto antes de ir pro innerHTML (dado de revendedor/cliente nunca vira HTML).
   // Link de WhatsApp pro cadastro (telefone vem em formatos variados: +55..., (66) 9..., 659...).
@@ -3900,6 +3939,239 @@
   }
   document.getElementById('refreshCaixaBtn').addEventListener('click', renderCaixaFechamentos);
 
+  // ---- Taxas do entregador (migration_058) ----
+  // O banco devolve uma linha por entrega feita (decisão do Kayo: só entregue,
+  // tudo é do mesmo entregador, mês do dia da entrega); aqui só soma por mês.
+  var TAXA_FONTE = { delivery: 'Delivery', revenda: 'Revenda', loja: 'Loja' };
+  function nomeMes(chave) {
+    var p = chave.split('-');
+    var t = new Date(Number(p[0]), Number(p[1]) - 1, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+    return t.charAt(0).toUpperCase() + t.slice(1);
+  }
+  async function renderTaxasEntregador() {
+    var body = document.getElementById('taxasBody');
+    var resumo = document.getElementById('taxasResumo');
+    var lista;
+    try { lista = await DupuroAdmin.getTaxasEntrega(); }
+    catch (e) {
+      body.innerHTML = '<tr><td colspan="7"><div class="empty-state">' + esc(motivoErro(e)) + '</div></td></tr>';
+      resumo.textContent = '';
+      return;
+    }
+    var meses = {};
+    lista.forEach(function (t) {
+      var k = String(t.dia).slice(0, 7);
+      var m = meses[k] || (meses[k] = { n: 0, total: 0, por: {}, itens: [] });
+      var v = Number(t.taxa) || 0;
+      m.n++; m.total += v;
+      var f = m.por[t.fonte] || (m.por[t.fonte] = { n: 0, total: 0 });
+      f.n++; f.total += v;
+      m.itens.push(t);
+    });
+    var chaves = Object.keys(meses).sort().reverse();
+    var mesAtual = todayIso().slice(0, 7);
+    var atual = meses[mesAtual];
+    resumo.innerHTML = atual
+      ? 'Este mês até hoje: <strong>' + moeda(atual.total) + '</strong> em ' + atual.n + (atual.n === 1 ? ' entrega' : ' entregas') + '.'
+      : 'Nenhuma entrega com taxa neste mês ainda.';
+    if (!chaves.length) {
+      body.innerHTML = '<tr><td colspan="7"><div class="empty-state">Nenhuma entrega com taxa registrada.</div></td></tr>';
+      return;
+    }
+    function celula(m, fonte) {
+      var f = m.por[fonte];
+      return '<td class="num">' + (f ? f.n + ' · ' + moeda(f.total) : '—') + '</td>';
+    }
+    function dia(d) { var p = String(d).split('-'); return p[2] + '/' + p[1]; }
+    body.innerHTML = chaves.map(function (k) {
+      var m = meses[k];
+      var det = m.itens.slice().sort(function (a, b) { return String(a.dia).localeCompare(String(b.dia)) || String(a.ref).localeCompare(String(b.ref)); })
+        .map(function (t) {
+          return '<div class="order-item-line"><span>' + dia(t.dia) + ' · ' + esc(TAXA_FONTE[t.fonte] || t.fonte) + ' ' + esc(t.ref) +
+            (t.cliente ? ' · ' + esc(t.cliente) : '') + '</span><span>' + moeda(Number(t.taxa) || 0) + '</span></div>';
+        }).join('');
+      return '<tr>' +
+        '<td>' + esc(nomeMes(k)) + (k === mesAtual ? ' <span class="status-badge neutro">até hoje</span>' : '') + '</td>' +
+        '<td class="num">' + m.n + '</td>' +
+        celula(m, 'delivery') + celula(m, 'revenda') + celula(m, 'loja') +
+        '<td class="num"><strong>' + moeda(m.total) + '</strong></td>' +
+        '<td><button type="button" class="btn btn-dark-outline btn-sm" data-taxa-det="' + k + '">Ver entregas</button></td>' +
+        '</tr>' +
+        '<tr class="order-details hidden" data-taxa-det-row="' + k + '"><td colspan="7">' + det + '</td></tr>';
+    }).join('');
+    body.querySelectorAll('[data-taxa-det]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var row = body.querySelector('[data-taxa-det-row="' + btn.getAttribute('data-taxa-det') + '"]');
+        if (row) row.classList.toggle('hidden');
+      });
+    });
+    paginarTabela(body, 12);
+  }
+  document.getElementById('refreshTaxasBtn').addEventListener('click', function () {
+    DupuroAdmin.limparCache(); renderTaxasEntregador();
+  });
+
+  // ---- Notas fiscais (NFC-e) ----
+  // Lista o que está em nfce_emissoes; busca e filtro de dia são na tela. A cópia
+  // do XML no Storage é feita pela Edge Function nfce-arquivo, chamada sozinha
+  // quando há nota sem cópia (uma vez por abertura da tela).
+  var notasCache = [];
+  var notasCopiaPedida = false;
+  function diaCuiaba(iso) { return new Date(iso).toLocaleDateString('sv-SE', { timeZone: 'America/Cuiaba' }); }
+  function semCopia(n) { return !n.xml_path || (n.status === 'cancelado' && !n.xml_canc_path); }
+  function grupos4(ch) { return String(ch || '').replace(/\D/g, '').replace(/(\d{4})(?=\d)/g, '$1 '); }
+  function notaBate(n, q) {
+    if (!q) return true;
+    var dig = q.replace(/\D/g, '');
+    var pay = n.payload || {};
+    if (String(n.venda_numero || '').toLowerCase().indexOf(q) >= 0) return true;
+    if (dig && String(n.numero_nfce || '') === dig) return true;
+    if (dig.length >= 4 && String(n.chave || '').indexOf(dig) >= 0) return true;
+    if (dig.length >= 4 && String(pay.cpf_destinatario || pay.cnpj_destinatario || '').indexOf(dig) >= 0) return true;
+    var v = Number(q.replace(/[^\d,.]/g, '').replace(/\.(?=\d{3}(\D|$))/g, '').replace(',', '.'));
+    return /\d/.test(q) && !isNaN(v) && Math.abs((Number(n.valor) || 0) - v) < 0.005;
+  }
+  // Link da consulta SEFAZ pro cliente. O "|" vira %7C pra o WhatsApp não
+  // cortar o link no meio (o site da SEFAZ aceita igual).
+  function linkConsultaSefaz(n) {
+    return n.qrcode ? String(n.qrcode).replace(/\|/g, '%7C') : 'http://www.sefaz.mt.gov.br/nfce/consultanfce';
+  }
+  function textoWhatsNota(n) {
+    var quando = new Date(n.criado_em).toLocaleDateString('pt-BR', { timeZone: 'America/Cuiaba' });
+    return 'Olá! Aqui é da Dupuro Açaí. Segue a sua nota fiscal (NFC-e nº ' + (n.numero_nfce || '') + ', de ' + quando +
+      ', ' + moeda(Number(n.valor) || 0) + ').\n\nConsulte no site da SEFAZ-MT: ' + linkConsultaSefaz(n) +
+      '\n\nChave de acesso: ' + grupos4(n.chave);
+  }
+  function desenharNotas() {
+    var body = document.getElementById('notasBody');
+    var q = document.getElementById('notasBusca').value.trim().toLowerCase();
+    var d = document.getElementById('notasData').value;
+    document.getElementById('notasLimpar').classList.toggle('hidden', !q && !d);
+    var lista = notasCache.filter(function (n) { return (!d || diaCuiaba(n.criado_em) === d) && notaBate(n, q); });
+    if (!notasCache.length) {
+      body.innerHTML = '<tr><td colspan="6"><div class="empty-state">Nenhuma nota fiscal emitida ainda.</div></td></tr>';
+      return;
+    }
+    if (!lista.length) {
+      body.innerHTML = '<tr><td colspan="6"><div class="empty-state">Nenhuma nota com essa busca. Confira o número da venda (ex.: VND-0196), o valor (ex.: 12,50) ou o dia.</div></td></tr>';
+      return;
+    }
+    body.innerHTML = lista.map(function (n) {
+      var pay = n.payload || {};
+      var valida = n.status === 'autorizado';
+      var doc = pay.cpf_destinatario ? 'CPF ' + pay.cpf_destinatario : (pay.cnpj_destinatario ? 'CNPJ ' + pay.cnpj_destinatario : 'Consumidor não identificado');
+      var itens = (pay.items || []).map(function (it) {
+        return '<div class="order-item-line"><span>' + esc(it.descricao) + ' × ' + esc(Number(it.quantidade_comercial).toLocaleString('pt-BR')) + '</span><span>' + moeda(Number(it.valor_bruto) || 0) + '</span></div>';
+      }).join('');
+      var quando = new Date(n.criado_em).toLocaleString('pt-BR', { timeZone: 'America/Cuiaba', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+      var det = '<div class="nota-det">' +
+        '<div class="nota-chave">Chave: <span>' + esc(grupos4(n.chave)) + '</span></div>' +
+        '<div class="subtitle">' + esc(doc) + (n.protocolo ? ' · Protocolo ' + esc(n.protocolo) : '') +
+        (n.cancelado_em ? ' · Cancelada em ' + esc(new Date(n.cancelado_em).toLocaleString('pt-BR', { timeZone: 'America/Cuiaba' })) : '') + '</div>' +
+        itens +
+        '<div class="nota-acoes">' +
+          (valida ? '<button type="button" class="btn btn-primary btn-sm" data-nota-imprimir="' + n.id + '">Reimprimir cupom</button>' : '') +
+          (n.url_danfe ? '<a class="btn btn-dark-outline btn-sm" href="' + esc(n.url_danfe) + '" target="_blank" rel="noopener">Ver cupom no Focus</a>' : '') +
+          '<button type="button" class="btn btn-dark-outline btn-sm" data-nota-xml="' + n.id + '">Baixar XML</button>' +
+          (n.xml_canc_path ? '<button type="button" class="btn btn-dark-outline btn-sm" data-nota-xml-canc="' + n.id + '">XML do cancelamento</button>' : '') +
+        '</div>' +
+        (valida ? '<div class="nota-whats">' +
+          '<input type="tel" inputmode="tel" placeholder="WhatsApp do cliente (DDD + número)" aria-label="WhatsApp do cliente" data-nota-tel="' + n.id + '">' +
+          '<button type="button" class="btn btn-dark-outline btn-sm" data-nota-whats="' + n.id + '">Enviar no WhatsApp</button>' +
+          '<span class="nota-erro" data-nota-erro="' + n.id + '"></span>' +
+        '</div>' : '<div class="subtitle">Nota cancelada: não vale como cupom, então não reimprime nem vai pro cliente.</div>') +
+        '</div>';
+      return '<tr>' +
+        '<td>' + esc(quando) + '</td>' +
+        '<td>' + esc(n.venda_numero) + '</td>' +
+        '<td>' + (n.numero_nfce ? 'nº ' + esc(n.numero_nfce) + (n.serie ? ' · série ' + esc(n.serie) : '') : '—') + '</td>' +
+        '<td class="num">' + moeda(Number(n.valor) || 0) + '</td>' +
+        '<td>' + (valida ? '<span class="status-badge entregue">Válida</span>' : '<span class="status-badge cancelado">Cancelada</span>') +
+          (semCopia(n) ? ' <span class="status-badge neutro" title="O XML ainda não foi copiado pro Supabase; abre pelo Focus">só no Focus</span>' : '') + '</td>' +
+        '<td><button type="button" class="btn btn-dark-outline btn-sm" data-nota-det="' + n.id + '">Abrir</button></td>' +
+        '</tr>' +
+        '<tr class="order-details hidden" data-nota-det-row="' + n.id + '"><td colspan="6">' + det + '</td></tr>';
+    }).join('');
+    paginarTabela(body, 15);
+  }
+  function notaPorId(id) { return notasCache.filter(function (n) { return String(n.id) === String(id); })[0]; }
+  function mostrarCopia() {
+    var total = notasCache.length;
+    var guardadas = notasCache.filter(function (n) { return !semCopia(n); }).length;
+    document.getElementById('notasCopia').textContent = total
+      ? 'Cópia do XML guardada no Supabase: ' + guardadas + ' de ' + total + (guardadas < total ? ' (as que faltam abrem pelo Focus).' : '.')
+      : '';
+  }
+  async function renderNotas() {
+    var body = document.getElementById('notasBody');
+    try { notasCache = await DupuroAdmin.getNfceEmissoes(); }
+    catch (e) {
+      body.innerHTML = '<tr><td colspan="6"><div class="empty-state">' + esc(motivoErro(e)) + '</div></td></tr>';
+      return;
+    }
+    desenharNotas();
+    mostrarCopia();
+    // Guarda a cópia do que falta (em segundo plano; erro não atrapalha a tela).
+    if (!notasCopiaPedida && notasCache.some(semCopia)) {
+      notasCopiaPedida = true;
+      try {
+        var r = await DupuroAdmin.guardarCopiasNfce();
+        if (r && r.copiadas) { notasCache = await DupuroAdmin.getNfceEmissoes(); desenharNotas(); mostrarCopia(); }
+      } catch (e) { console.warn('cópia das NFC-e', e); }
+    }
+  }
+  async function baixarXml(n, cancelamento) {
+    var caminho = cancelamento ? n.xml_canc_path : n.xml_path;
+    if (!caminho && !cancelamento && n.url_xml) { window.open(n.url_xml, '_blank', 'noopener'); return; }
+    try {
+      var url = await DupuroAdmin.getLinkXmlGuardado(caminho);
+      var a = document.createElement('a');
+      // Outra aba: o admin nunca sai da tela, mesmo se o navegador abrir em vez de baixar.
+      a.href = url; a.target = '_blank'; a.rel = 'noopener';
+      a.download = (n.chave || n.venda_numero) + (cancelamento ? '-can' : '-nfe') + '.xml';
+      document.body.appendChild(a); a.click(); a.remove();
+    } catch (e) {
+      if (!cancelamento && n.url_xml) window.open(n.url_xml, '_blank', 'noopener');
+      else aviso('Não deu pra abrir o XML: ' + motivoErro(e));
+    }
+  }
+  document.getElementById('notasBody').addEventListener('click', function (e) {
+    var b = e.target.closest('button');
+    if (!b) return;
+    var id;
+    if ((id = b.getAttribute('data-nota-det'))) {
+      var row = this.querySelector('[data-nota-det-row="' + id + '"]');
+      if (row) row.classList.toggle('hidden');
+    } else if ((id = b.getAttribute('data-nota-imprimir'))) {
+      var n = notaPorId(id);
+      if (!n || !window.DupuroPrinter) return;
+      DupuroPrinter.imprimirCupomFiscal(DupuroPrinter.cupomDaEmissao(n)).then(function (r) {
+        if (r && r.error) aviso('Não deu pra imprimir: ' + (r.error.message || r.error));
+      });
+    } else if ((id = b.getAttribute('data-nota-xml'))) {
+      baixarXml(notaPorId(id), false);
+    } else if ((id = b.getAttribute('data-nota-xml-canc'))) {
+      baixarXml(notaPorId(id), true);
+    } else if ((id = b.getAttribute('data-nota-whats'))) {
+      var nota = notaPorId(id);
+      var tel = this.querySelector('[data-nota-tel="' + id + '"]').value;
+      var erro = this.querySelector('[data-nota-erro="' + id + '"]');
+      var href = nota ? waHref(tel, textoWhatsNota(nota)) : '';
+      erro.textContent = href ? '' : 'Digite o WhatsApp com DDD (ex.: 65 99999-9999).';
+      if (href) window.open(href, '_blank', 'noopener');
+    }
+  });
+  document.getElementById('notasBusca').addEventListener('input', desenharNotas);
+  document.getElementById('notasData').addEventListener('change', desenharNotas);
+  document.getElementById('notasLimpar').addEventListener('click', function () {
+    document.getElementById('notasBusca').value = '';
+    document.getElementById('notasData').value = '';
+    desenharNotas();
+  });
+  document.getElementById('refreshNotasBtn').addEventListener('click', function () {
+    DupuroAdmin.limparCache(); renderNotas();
+  });
+
   document.getElementById('orderEditCancel').addEventListener('click', resetOrderForm);
 
   document.getElementById('orderForm').addEventListener('submit', async function (e) {
@@ -4689,7 +4961,7 @@
     inicio: [renderInicio],
     pedidos: [renderProducts, renderPedidosFila, renderOrders, populateResellerSelect, updateOrderNumberPreview, loadLimiteLitros],
     estoque: [renderProducts, resetProdForm, renderProducoes, renderAjustes],
-    numeros: [renderOverview, renderAudits, renderCaixaFechamentos],
+    numeros: [renderOverview, renderAudits, renderCaixaFechamentos, renderTaxasEntregador, renderNotas],
     cadastros: [renderPending, renderResellers, renderProducts, renderAcompanhamentos, renderPromocoesAdmin, renderCoupons, loadLimiteLitros, populateResellerSelect],
     equipe: [renderAdmins, renderAtendentes, preencherAcesso],
     conta: [renderWhatsapp]

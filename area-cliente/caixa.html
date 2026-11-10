@@ -578,7 +578,7 @@
 <script src="../assets/js/offline-queue.js"></script>
 <script src="../assets/js/caixa.js?v=4"></script>
 <script src="../assets/js/vendor/qrcode.js"></script>
-<script src="../assets/js/printer.js?v=3"></script>
+<script src="../assets/js/printer.js?v=4"></script>
 <script>
   // Escapa texto antes de ir pro innerHTML (dado de revendedor/cliente nunca vira HTML).
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
@@ -2485,28 +2485,7 @@
   function imprimirCupomFiscalDaEmissao(em) {
     try {
       if (!em || !window.DupuroPrinter) return;
-      var pay = em.payload || {};
-      var consulta = em.qrcode ? String(em.qrcode).split('?')[0] : 'http://www.sefaz.mt.gov.br/nfce/consultanfce';
-      // Forma de pagamento vem do PRÓPRIO cupom (payload), pra reimpressão de
-      // venda antiga sair certa (não depende da ultimaVenda em memória).
-      var TPAG_REV = { '01': 'dinheiro', '03': 'credito', '04': 'debito', '17': 'pix' };
-      var formasPg = pay.formas_pagamento || [];
-      var formaPag = formasPg.length === 1 ? (TPAG_REV[formasPg[0].forma_pagamento] || null) : null;
-      DupuroPrinter.imprimirCupomFiscal({
-        numero: em.numero_nfce, serie: em.serie, chave: em.chave, protocolo: em.protocolo,
-        ambiente: em.ambiente, dataEmissao: em.criado_em || pay.data_emissao || Date.now(),
-        total: em.valor, valorPago: em.valor, troco: 0,
-        formaPagamento: formaPag,
-        docConsumidor: pay.cpf_destinatario ? { tipo: 'cpf', numero: pay.cpf_destinatario } : (pay.cnpj_destinatario ? { tipo: 'cnpj', numero: pay.cnpj_destinatario } : null),
-        qrcodeUrl: em.qrcode, consultaUrl: consulta,
-        items: (pay.items || []).map(function (it) {
-          return {
-            codigo: it.codigo_produto, descricao: it.descricao,
-            quantidade: it.quantidade_comercial, unidade: it.unidade_comercial,
-            valorUnit: it.valor_unitario_comercial, valorTotal: it.valor_bruto
-          };
-        })
-      });
+      DupuroPrinter.imprimirCupomFiscal(DupuroPrinter.cupomDaEmissao(em));
     } catch (e) { /* impressão do cupom é best-effort */ }
   }
 

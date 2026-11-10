@@ -720,6 +720,39 @@ var DupuroAdmin = (function () {
     return set;
   }
 
+  // ---------- Notas fiscais (NFC-e) e taxa do entregador (migration_058) ----------
+  // Todas as notas autorizadas/canceladas, mais novas primeiro (busca é na tela).
+  async function getNfceEmissoes() {
+    var r = await client
+      .from('nfce_emissoes')
+      .select('id, venda_numero, ambiente, status, chave, numero_nfce, serie, protocolo, url_danfe, url_xml, qrcode, valor, payload, criado_em, cancelado_em, xml_path, xml_canc_path')
+      .in('status', ['autorizado', 'cancelado'])
+      .order('criado_em', { ascending: false })
+      .limit(1000);
+    if (r.error) throw r.error;
+    return r.data || [];
+  }
+  // Copia pro Storage (bucket privado 'nfce') o XML das notas que ainda não têm
+  // cópia. Roda na Edge Function nfce-arquivo; só o que falta, em lote.
+  async function guardarCopiasNfce() {
+    var r = await client.functions.invoke('nfce-arquivo', { body: {} });
+    if (r.error) throw r.error;
+    return r.data || {};
+  }
+  // Link temporário (2 min) pra abrir a cópia guardada do XML.
+  async function getLinkXmlGuardado(caminho) {
+    var r = await client.storage.from('nfce').createSignedUrl(caminho, 120, { download: true });
+    if (r.error) throw r.error;
+    return r.data.signedUrl;
+  }
+  // Uma linha por entrega ENTREGUE com taxa (delivery, revenda, loja) e o dia da
+  // entrega; a soma por mês é feita na tela.
+  async function getTaxasEntrega() {
+    var r = await client.rpc('admin_taxas_entrega');
+    if (r.error) throw r.error;
+    return r.data || [];
+  }
+
   // ---------- Delivery ----------
   // Pedidos do Dupuro Delivery (clientes de casa). Só admin lê (RLS is_admin()).
   async function getDeliveryPedidos() {
@@ -1001,6 +1034,8 @@ var DupuroAdmin = (function () {
   getAvisosPendentes = comCache('getAvisosPendentes', getAvisosPendentes);
   getAjustesEstoque = comCache('getAjustesEstoque', getAjustesEstoque);
   getNumerosComNfce = comCache('getNumerosComNfce', getNumerosComNfce);
+  getNfceEmissoes = comCache('getNfceEmissoes', getNfceEmissoes);
+  getTaxasEntrega = comCache('getTaxasEntrega', getTaxasEntrega);
   getAllCoupons = comCache('getAllCoupons', getAllCoupons);
   getProducoes = comCache('getProducoes', getProducoes);
   getCaixaFechamentos = comCache('getCaixaFechamentos', getCaixaFechamentos);
@@ -1050,6 +1085,10 @@ var DupuroAdmin = (function () {
     ajustarEstoque: ajustarEstoque,
     getAjustesEstoque: getAjustesEstoque,
     getNumerosComNfce: getNumerosComNfce,
+    getNfceEmissoes: getNfceEmissoes,
+    guardarCopiasNfce: guardarCopiasNfce,
+    getLinkXmlGuardado: getLinkXmlGuardado,
+    getTaxasEntrega: getTaxasEntrega,
     setDeliveryStatus: setDeliveryStatus,
     deliveryEmRotaIniciada: deliveryEmRotaIniciada,
     getContagemNovos: getContagemNovos,

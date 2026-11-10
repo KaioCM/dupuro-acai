@@ -442,6 +442,32 @@ var DupuroPrinter = (function () {
     setTimeout(function () { frame.remove(); }, 3000);
     return { error: null };
   }
+  // Linha de nfce_emissoes → dados do cupom (caixa e admin reimprimem igual).
+  // A forma de pagamento vem do PRÓPRIO cupom (payload), pra reimpressão de
+  // venda antiga sair certa (não depende da venda em memória).
+  function cupomDaEmissao(em) {
+    var pay = em.payload || {};
+    var consulta = em.qrcode ? String(em.qrcode).split('?')[0] : 'http://www.sefaz.mt.gov.br/nfce/consultanfce';
+    var TPAG_REV = { '01': 'dinheiro', '03': 'credito', '04': 'debito', '17': 'pix' };
+    var formasPg = pay.formas_pagamento || [];
+    var formaPag = formasPg.length === 1 ? (TPAG_REV[formasPg[0].forma_pagamento] || null) : null;
+    return {
+      numero: em.numero_nfce, serie: em.serie, chave: em.chave, protocolo: em.protocolo,
+      ambiente: em.ambiente, dataEmissao: em.criado_em || pay.data_emissao || Date.now(),
+      total: em.valor, valorPago: em.valor, troco: 0,
+      formaPagamento: formaPag,
+      docConsumidor: pay.cpf_destinatario ? { tipo: 'cpf', numero: pay.cpf_destinatario } : (pay.cnpj_destinatario ? { tipo: 'cnpj', numero: pay.cnpj_destinatario } : null),
+      qrcodeUrl: em.qrcode, consultaUrl: consulta,
+      items: (pay.items || []).map(function (it) {
+        return {
+          codigo: it.codigo_produto, descricao: it.descricao,
+          quantidade: it.quantidade_comercial, unidade: it.unidade_comercial,
+          valorUnit: it.valor_unitario_comercial, valorTotal: it.valor_bruto
+        };
+      })
+    };
+  }
+
   async function imprimirCupomFiscal(d) {
     var html = htmlDoCupomFiscal(d);
     if (rodandoNoApp()) return imprimirHtmlNativo(html);
@@ -608,6 +634,7 @@ var DupuroPrinter = (function () {
     imprimir: imprimir,
     imprimirNavegador: imprimirNavegador,
     imprimirCupomFiscal: imprimirCupomFiscal,
+    cupomDaEmissao: cupomDaEmissao,
     imprimirResumoCaixa: imprimirResumoCaixa,
     imprimirComprovanteDinheiro: imprimirComprovanteDinheiro,
     montarLinhas: montarLinhas,

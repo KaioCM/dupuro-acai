@@ -2453,6 +2453,19 @@ a.stat-card.alerta .stat-sub { color: var(--warning); font-weight: 800; }
 .ped-barra .subnav { margin: 0; flex: 1 1 auto; }
 .ped-busca { flex: 0 1 260px; min-width: 0; padding: 10px 14px; border: 1px solid rgba(96,16,80,0.18); border-radius: var(--radius-full); background: #fff; font: inherit; font-size: 15px; color: var(--roxo-950); }
 .ped-busca:focus-visible { outline: 3px solid var(--gold); outline-offset: 1px; }
+/* Números → Taxas do entregador e Notas fiscais (migration_058) */
+.taxas-resumo, .notas-copia { margin: 0 0 12px; color: var(--text-light); font-size: 14px; }
+.taxas-resumo:empty, .notas-copia:empty { display: none; }
+.notas-filtro { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 12px; }
+.notas-filtro input[type="date"] { padding: 9px 12px; border: 1px solid rgba(96,16,80,0.18); border-radius: var(--radius-full); background: #fff; font: inherit; font-size: 15px; color: var(--roxo-950); }
+.nota-det { display: grid; gap: 8px; padding: 4px 0; }
+.nota-chave { font-size: 13px; color: var(--text-light); }
+.nota-chave span { font-family: 'Courier New', monospace; color: var(--roxo-950); word-break: break-all; }
+.nota-acoes, .nota-whats { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.nota-whats input { flex: 0 1 260px; min-width: 0; padding: 9px 12px; border: 1px solid rgba(96,16,80,0.18); border-radius: var(--radius-full); background: #fff; font: inherit; font-size: 15px; }
+.nota-erro { color: var(--danger); font-size: 13px; }
+.nota-erro:empty { display: none; }
+@media (max-width: 700px) { .ped-busca, .nota-whats input { flex: 1 1 100%; } }
 .subnav-btn .badge-pill.neutro { background: rgba(96,16,80,0.12); color: var(--roxo-700); }
 .subnav-btn.active .badge-pill.neutro { background: rgba(255,255,255,0.22); color: #fff; }
 .ped-fila { display: grid; gap: 12px; margin-bottom: 24px; }
