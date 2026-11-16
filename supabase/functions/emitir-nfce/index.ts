@@ -10,6 +10,12 @@
 // função no painel do Supabase):
 //   FOCUS_TOKEN      → token da API do Focus (o de HOMOLOGAÇÃO por enquanto)
 //   FOCUS_AMBIENTE   → 'homologacao' (padrão) ou 'producao'
+//   FOCUS_EMAIL_CONTADOR → e-mail(is) do contador, separados por vírgula.
+//     Autorizou a NFC-e, a Focus agenda a cópia dela (DANFCe/XML) para esses
+//     destinatários (pedido do contador, migration_060). Sem o secret, nada é
+//     enviado e a emissão segue normal. Máximo 10 e-mails (limite do Focus).
+//     `{ reenviar_email: '<ref>' }` no corpo reagenda a cópia de uma nota já
+//     autorizada sem emitir nada (uso do admin / teste).
 //
 // Só atendente (caixa) e admin podem chamar. A emissão da NFC-e é síncrona:
 // o SEFAZ responde autorizado/rejeitado no mesmo request.
@@ -35,6 +41,37 @@ function focusBase(ambiente: string) {
   return ambiente === 'producao'
     ? 'https://api.focusnfe.com.br'
     : 'https://homologacao.focusnfe.com.br'
+}
+
+// E-mail(is) do contador no secret FOCUS_EMAIL_CONTADOR (vírgula/;espaço).
+// Lista vazia = cópia por e-mail desligada.
+function emailsContador(): string[] {
+  return (Deno.env.get('FOCUS_EMAIL_CONTADOR') || '')
+    .split(/[,;\s]+/)
+    .filter((e) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e))
+    .slice(0, 10) // limite do endpoint de e-mail do Focus
+}
+
+// POST /v2/nfce/{ref}/email — agenda no Focus o envio da cópia da nota em
+// segundo plano. Nunca pode derrubar a emissão: erro é só registrado no retorno.
+async function copiarParaContador(base: string, token: string, ref: string) {
+  const emails = emailsContador()
+  const agendado_em = new Date().toISOString()
+  if (!emails.length) return { ok: false, skipped: 'sem_email', emails: [], agendado_em }
+  try {
+    const r = await fetch(base + '/v2/nfce/' + encodeURIComponent(ref) + '/email', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Basic ' + btoa(token + ':'),
+      },
+      body: JSON.stringify({ emails }),
+    })
+    const corpo = await r.json().catch(() => ({}))
+    return { ok: r.ok, emails, http: r.status, resposta: corpo, agendado_em }
+  } catch (e) {
+    return { ok: false, emails, erro: String(e), agendado_em }
+  }
 }
 
 // Horário local de Cuiabá (UTC-4), no formato exigido pela NFC-e.
@@ -89,7 +126,31 @@ Deno.serve(async (req: Request) => {
       return json({ error: 'Apenas caixa/admin podem emitir NFC-e' }, 403)
     }
 
-    const { numero, documento } = await req.json()
+    const corpoReq = await req.json().catch(() => ({}))
+
+    // Reagenda a cópia ao contador de uma nota JÁ autorizada, sem emitir nada
+    // (admin reprocessando uma nota, ou teste do secret FOCUS_EMAIL_CONTADOR).
+    if (corpoReq.reenviar_email) {
+      const refAlvo = String(corpoReq.reenviar_email)
+      const { data: em } = await admin
+        .from('nfce_emissoes')
+        .select('id, ref, ambiente, status')
+        .eq('ref', refAlvo)
+        .maybeSingle()
+      if (!em) return json({ error: 'Emissão não encontrada: ' + refAlvo }, 404)
+      if (em.status !== 'autorizado') {
+        return json({ error: 'Só NFC-e autorizada pode ser enviada ao contador (status: ' + em.status + ')' }, 400)
+      }
+      const res = await copiarParaContador(focusBase(em.ambiente), focusToken, em.ref)
+      if (res.emails.length) {
+        await admin.from('nfce_emissoes')
+          .update({ email_contador: res, atualizado_em: res.agendado_em })
+          .eq('id', em.id)
+      }
+      return json({ reenvio: res })
+    }
+
+    const { numero, documento } = corpoReq
     if (!numero) return json({ error: 'numero (VND-XXXX) é obrigatório' }, 400)
 
     // CPF/CNPJ opcional do consumidor (só dígitos). 11 = CPF, 14 = CNPJ.
@@ -264,6 +325,12 @@ Deno.serve(async (req: Request) => {
       } catch (_e) { /* segue com o que veio no POST */ }
     }
 
+    // Cópia da NFC-e autorizada para o contador (secret FOCUS_EMAIL_CONTADOR):
+    // só agenda o envio no Focus. Falha aqui NÃO afeta a emissão nem o cupom.
+    const emailContador = status === 'autorizado'
+      ? await copiarParaContador(base, focusToken, ref)
+      : null
+
     const registro = {
       venda_numero: numero,
       ref,
@@ -282,6 +349,7 @@ Deno.serve(async (req: Request) => {
       valor: Number(total.toFixed(2)),
       payload,
       retorno,
+      email_contador: emailContador,
       criado_por: userData.user.id,
     }
 
