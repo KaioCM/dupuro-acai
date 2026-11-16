@@ -73,7 +73,7 @@ var DupuroEndereco = (function () {
         a = j && j.address;
       } catch (e) { a = null; }
       b.disabled = false; b.textContent = 'Usar este local';
-      var cid = a && CIDADES[String(a.city || a.town || a.municipality || '').toLowerCase()];
+      var cid = a && CIDADES[String(a.city || a.town || a.municipality || '').trim().toLowerCase()];
       if (a && !cid) { msgMapa('Esse ponto fica fora de Cuiabá e Várzea Grande. Pra outras cidades, escolha Retirada.'); return; }
       aoUsar({ lat: c.lat, lng: c.lng }, a ? {
         cidade: cid, rua: a.road || a.pedestrian || a.residential || '', numero: a.house_number || '',
@@ -155,7 +155,7 @@ var DupuroEndereco = (function () {
         var r = await fetch('https://viacep.com.br/ws/' + d + '/json/').then(function (x) { return x.json(); });
         if (cepBuscado !== d) return;
         if (r.erro) { msg('CEP não encontrado. Confira os números; se estiver certo, preencha o resto do endereço.', 'erro'); return; }
-        var cid = CIDADES[String(r.localidade || '').toLowerCase()];
+        var cid = CIDADES[String(r.localidade || '').trim().toLowerCase()];
         if (!cid) { msg('Esse CEP é de ' + r.localidade + ' - ' + r.uf + '. A entrega é só em Cuiabá e Várzea Grande; pra outras cidades, escolha Retirada.', 'erro'); return; }
         // CEP de outra rua: o ponto era de outro endereço e sai; mesma rua (só completou o CEP): fica.
         if (pino && r.logradouro && $e('rua').value.trim() && norm(r.logradouro) !== norm($e('rua').value)) marcarPino(null);
@@ -207,7 +207,8 @@ var DupuroEndereco = (function () {
       valor: function () {
         var cep = $e('cep').value.replace(/\D/g, '');
         return { cep: cep.length === 8 ? cep : '', rua: $e('rua').value.trim(), numero: $e('numero').value.trim(), bairro: $e('bairro').value.trim(),
-          cidade: $e('cidade').value, complemento: $e('comp').value.trim(), lat: pino ? Math.round(pino.lat * 1e6) / 1e6 : null, lng: pino ? Math.round(pino.lng * 1e6) / 1e6 : null };
+          cidade: $e('cidade').value, complemento: $e('comp').value.trim(), lat: pino ? Math.round(pino.lat * 1e6) / 1e6 : null, lng: pino ? Math.round(pino.lng * 1e6) / 1e6 : null,
+          cepLat: cepPonto ? Math.round(cepPonto.lat * 1e6) / 1e6 : null, cepLng: cepPonto ? Math.round(cepPonto.lng * 1e6) / 1e6 : null }; // âncora do CEP pra cotação (igual ao delivery)
       },
       vazio: function () { var v = this.valor(); return !v.rua && !v.numero && !v.bairro && !v.cep && !v.complemento && !pino; },
       texto: function () {

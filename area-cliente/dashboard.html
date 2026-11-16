@@ -1248,7 +1248,7 @@
 
   // ---- Taxa de entrega (migration_056): mesma regra e limite do delivery, calculada no servidor ----
   var frete = null, freteSeq = 0, freteTimer = null;
-  function chaveFrete() { var v = endCheckout.valor(); return JSON.stringify([v.rua, v.numero, v.bairro, v.cidade, v.cep, v.lat, v.lng]); }
+  function chaveFrete() { var v = endCheckout.valor(); return JSON.stringify([v.rua, v.numero, v.bairro, v.cidade, v.cep, v.lat, v.lng, v.cepLat, v.cepLng]); }
   function freteOk() { return !!(frete && frete.atende && frete.cotacao && frete.cotacao.id && frete.chave === chaveFrete() && frete.cotacao.exp > Date.now() + 60e3); }
   function taxaAtual() { return tipoEscolhido() === 'entrega' && freteOk() ? Number(frete.taxa) : null; }
   function msgFrete(txt, tipo) {
@@ -1262,7 +1262,8 @@
     if (freteOk()) return frete;
     var chave = chaveFrete(), seq = ++freteSeq;
     msgFrete('Calculando a taxa de entrega…');
-    var r = await DupuroCliente.cotarEntrega({ rua: v.rua, numero: v.numero, bairro: v.bairro, cidade: v.cidade, cep: v.cep, pin_lat: v.lat, pin_lng: v.lng });
+    var r = await DupuroCliente.cotarEntrega({ rua: v.rua, numero: v.numero, bairro: v.bairro, cidade: v.cidade, cep: v.cep, pin_lat: v.lat, pin_lng: v.lng,
+      cep_lat: v.cepLat, cep_lng: v.cepLng }); // âncora do CEP: mesma que o checkout do delivery manda
     if (seq !== freteSeq) return freteOk() ? frete : null; // o endereço mudou enquanto calculava
     if (r.error) { frete = null; msgFrete(esc(r.error.message), 'erro'); atualizarTotalRevisao(); return null; }
     frete = Object.assign({ chave: chave }, r);
@@ -1554,7 +1555,7 @@
   // sem a taxa de entrega). Ao voltar pra aba, se saiu versão nova, recarrega — o carrinho
   // fica salvo no aparelho. No meio do pagamento, não. Recarrega uma vez por versão (o
   // HTML pode vir do cache por até 10 min e não queremos laço).
-  var VERSAO_PAINEL = '2026-10-30a'; // subir junto com area-cliente/versao-painel.json
+  var VERSAO_PAINEL = '2026-11-16a'; // subir junto com area-cliente/versao-painel.json
   var versaoConferida = 0;
   async function conferirVersao() {
     if (Date.now() - versaoConferida < 60e3 || !pagOnline.classList.contains('hidden')) return;

@@ -11,14 +11,24 @@
 // Localização (melhor primeiro):
 //   0. ponto que o cliente marcou no mapa (opcional) — vale direto;
 //   1. Pelias (geocodificador do ORS) acertando o NÚMERO da casa;
-//   2. coordenada do CEP (AwesomeAPI, grátis, sem chave) — no Brasil o CEP
-//      costuma ser da rua/trecho, bem preciso pra taxa;
+//   2. coordenada do CEP — no Brasil o CEP costuma ser da rua/trecho. O ponto
+//      vem da AwesomeAPI (grátis, sem chave) no servidor; se ela limitar o IP,
+//      vale o mesmo ponto que o navegador do cliente buscou. A âncora aqui é o
+//      CEP, que o ViaCEP confirmou pro endereço digitado — não um candidato do
+//      mapa que pode ser rua homônima de outro bairro (v16 e antes cortavam o
+//      ponto do CEP se ele diferisse > 4 km do 1º candidato: foi assim que um
+//      entregador foi mandado a 20 km do lugar certo);
 //   3. Pelias no nível da rua/bairro (marca impreciso).
+// Corda de segurança: se o ponto vindo do mapa divergir do ponto do CEP em mais
+// de 6 km em linha reta, o CEP ganha e a cotação volta `impreciso` — as telas
+// pedem então pro cliente marcar o ponto no mapa.
 // Entre os candidatos do Pelias, o Jev (TypeSafe, pergunta Choice) escolhe o
 // que é o mesmo lugar do endereço digitado — o Pelias às vezes põe primeiro
-// outra rua parecida ou o mesmo número em outro bairro. Só o endereço vai pro
-// Jev (nunca nome/telefone). Sem TYPESAFE_API_KEY, erro ou dúvida: segue a
-// ordem do Pelias, como antes.
+// outra rua parecida ou o mesmo número em outro bairro. O candidato confirmado
+// pelo Jev vale, seja qual for o layer dele (antes um `address` mais adiante na
+// lista passava por cima da escolha). Só o endereço vai pro Jev (nunca
+// nome/telefone). Sem TYPESAFE_API_KEY, erro ou dúvida: prefere o candidato cujo
+// label contém o bairro digitado, depois a ordem do Pelias, como antes.
 //
 // Cada cotação que atende fica em entrega_cotacoes (migration_056) e volta com
 // cotacao.id: o pedido do revendedor referencia esse id e o banco tira dele a taxa
@@ -164,35 +174,35 @@ Deno.serve(async (req: Request) => {
       const escolha = await escolherCandidato(endereco, achados)
       if (escolha === -1) achados = []
       else if (escolha != null) achados = [achados[escolha], ...achados.filter((_: any, i: number) => i !== escolha)]
-      dest = achados.find((f: any) => f.layer === 'address')
-      if (!dest) {
-        let c = await pontoDoCep(cep)
-        // A AwesomeAPI costuma limitar (429) os IPs do servidor; aí vale o ponto do
-        // CEP que o navegador do cliente buscou na mesma API — desde que esteja na
-        // área e perto da rua/bairro que o mapa achou (evita coordenada errada).
-        const cl = ponto(body.cep_lat, body.cep_lng)
-        if (!c && cl) {
-          const ref = achados[0] || (await pelias(`${bairro}, ${cidade}, MT`, key))[0]
-          if (!ref || distKm(ref, cl) <= 4) c = cl
-        }
-        if (c) dest = { ...c, label: null }
-      }
+      // Ponto do CEP (âncora): AwesomeAPI no servidor; se limitar o IP (429), o mesmo
+      // ponto que o navegador do cliente buscou pro CEP que o ViaCEP confirmou.
+      const cepPt = (cep ? await pontoDoCep(cep) : null) || ponto(body.cep_lat, body.cep_lng)
+      const sel = escolha != null ? achados[0] : null // confirmado pelo Jev: vale qualquer layer
+      const noBairro = (f: any) => !bairro || semAcento(String(f.label || '')).includes(semAcento(bairro))
+      dest = sel || achados.find((f: any) => f.layer === 'address' && noBairro(f)) || achados.find((f: any) => f.layer === 'address') || null
+      if (!dest && cepPt) dest = { ...cepPt, label: null, layer: 'cep' }
       if (!dest && achados.length) { dest = achados[0]; impreciso = true }
       if (!dest) {
         const bb = await pelias(`${bairro}, ${cidade}, MT`, key)
         if (bb.length) { dest = bb[0]; impreciso = true }
       }
+      // Rua homônima em outro bairro/cidade é o erro clássico (20 km): se o ponto do
+      // mapa diverge do CEP em mais de 6 km em linha reta, o CEP ganha e avisa a tela.
+      if (cepPt && dest && dest.layer !== 'cep' && distKm(dest, cepPt) > 6) {
+        dest = { ...cepPt, label: null, layer: 'cep' }
+        impreciso = true
+      }
     }
-    if (!dest) return json({ atende: false, mensagem: 'Não encontramos esse endereço no mapa. Confira o CEP e o número ou fale com a gente no WhatsApp.' })
+    if (!dest) return json({ atende: false, mensagem: 'Não encontramos esse endereço no mapa. Confira o CEP e o número, marque sua casa no mapa, ou fale com a gente no WhatsApp.' })
 
     // Distância de carro (ORS Directions).
     const rr = await fetch(`${ORS}/openrouteservice/v2/directions/driving-car`, {
       method: 'POST',
       headers: { Authorization: key, 'Content-Type': 'application/json', Accept: 'application/json' },
-      body: JSON.stringify({ coordinates: [[oLng, oLat], [dest.lng, dest.lat]], radiuses: [500, 500], units: 'm' }),
+      body: JSON.stringify({ coordinates: [[oLng, oLat], [dest.lng, dest.lat]], radiuses: [1000, 1000], units: 'm' }), // 1 km: ponto longe do asfalto (CEP de área grande) ainda acha rota
     }).then((r) => r.json()).catch(() => null)
     const metros = rr?.routes?.[0]?.summary?.distance
-    if (metros == null) return json({ atende: false, mensagem: 'Não conseguimos traçar a rota até esse endereço. Fale com a gente no WhatsApp.' })
+    if (metros == null) return json({ atende: false, mensagem: 'Não conseguimos traçar a rota até esse endereço. Marque sua casa no mapa ou fale com a gente no WhatsApp.' })
     const km = Math.round(metros / 100) / 10
     const taxa = calcTaxa(km, cfg.taxa)
     if (taxa == null) return json({ atende: false, km, mensagem: `Esse endereço fica a ${String(km).replace('.', ',')} km — por enquanto entregamos até ${cfg.taxa.max_km} km da loja.` })
