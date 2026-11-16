@@ -758,7 +758,7 @@
           <div class="field">
             <label for="waAvisoInterno">Seu WhatsApp pros avisos internos</label>
             <input type="tel" id="waAvisoInterno" inputmode="tel" autocomplete="off" placeholder="(65) 99999-9999">
-            <div class="field-note-inline">Cadastro novo, pedido novo de revenda e delivery pago chegam aqui.</div>
+            <div class="field-note-inline">Cadastro novo, pedido novo de revenda e delivery confirmado chegam aqui.</div>
           </div>
           <label class="checkbox-line"><input type="checkbox" id="waAtivo"> <span>Avisos ligados</span></label>
           <button type="submit" class="btn btn-dark-outline btn-sm">Salvar</button>
@@ -4459,7 +4459,7 @@
     var naoLoja = pedidos.filter(function (o) { return o.origem !== 'loja'; }); // mesma regra da fila de Pedidos
     var novos = naoLoja.filter(function (o) { return o.status === 'enviado'; });
     var confirmados = naoLoja.filter(function (o) { return o.status === 'processando'; });
-    var entregas = delivery.filter(function (d) { return d.status === 'pago'; });
+    var entregas = delivery.filter(function (d) { return d.status === 'pago'; }); // 'pago' = confirmado: quem paga na entrega (migration_049) entra na rota com esse status e o dinheiro só entra na porta
     marcarBadge('pedidos', novos.length + entregas.length);
     marcarBadge('cadastros', pendentes.length);
 
@@ -4470,11 +4470,15 @@
       titulo: plural(novos.length, 'pedido novo esperando confirmação', 'pedidos novos esperando confirmação'),
       detalhe: novos.slice(0, 3).map(function (o) { return resumoPedido(o) + ' · ' + haQuanto(o.data); }).join('<br>')
     });
-    if (entregas.length) itens.push({
-      tom: 'urgente', n: entregas.length, ir: 'pedidos', acao: 'Ver entregas',
-      titulo: plural(entregas.length, 'entrega do delivery paga', 'entregas do delivery pagas'),
-      detalhe: entregas.slice(0, 3).map(function (d) { return esc(d.codigo) + ' · ' + esc(d.cliente_nome) + ' · ' + moeda(Number(d.total)); }).join('<br>')
-    });
+    if (entregas.length) {
+      var entReceber = entregas.filter(function (d) { return d.pagar_na_entrega; }).length;
+      itens.push({
+        tom: 'urgente', n: entregas.length, ir: 'pedidos', acao: 'Ver entregas',
+        titulo: plural(entregas.length, 'entrega do delivery confirmada', 'entregas do delivery confirmadas') +
+          (entReceber ? ' — ' + entReceber + ' paga' + (entReceber > 1 ? 's' : '') + ' na entrega' : ''),
+        detalhe: entregas.slice(0, 3).map(function (d) { return esc(d.codigo) + ' · ' + esc(d.cliente_nome) + ' · ' + moeda(Number(d.total)) + (d.pagar_na_entrega ? ' · receber na entrega' : ' · pagamento recebido'); }).join('<br>')
+      });
+    }
     if (confirmados.length) itens.push({
       tom: 'atencao', n: confirmados.length, ir: 'pedidos', acao: 'Ver pedidos',
       titulo: plural(confirmados.length, 'pedido confirmado ainda não entregue', 'pedidos confirmados ainda não entregues'),
