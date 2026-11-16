@@ -9,7 +9,7 @@
 <link rel="apple-touch-icon" href="../assets/img/brand/favicon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/css/style.css?v=72">
+<link rel="stylesheet" href="../assets/css/style.css?v=73">
 </head>
 <body class="pg-admin">
 <svg class="sprite" aria-hidden="true" focusable="false"><symbol id="m-grafico" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></symbol><symbol id="m-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol><symbol id="m-usuarios" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"/></symbol><symbol id="m-caixa" viewBox="0 0 24 24"><path d="M3 8l9-4 9 4v9l-9 4-9-4z"/><path d="M3 8l9 4 9-4M12 12v9"/></symbol><symbol id="m-painel" viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 10h6M9 14h6M9 18h3"/></symbol><symbol id="m-fabrica" viewBox="0 0 24 24"><path d="M3 21V10l5 3v-3l5 3V7l8 4v10z"/><path d="M7 17h2M12 17h2M17 17h1"/></symbol><symbol id="m-etiqueta" viewBox="0 0 24 24"><path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.4"/></symbol><symbol id="m-engrenagem" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></symbol><symbol id="m-casa" viewBox="0 0 24 24"><path d="M3 11l9-7 9 7M5 9.5V20h14V9.5M10 20v-6h4v6"/></symbol><symbol id="m-sair" viewBox="0 0 24 24"><path d="M14 4h5a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-5M10 16l-4-4 4-4M6 12h10"/></symbol><symbol id="m-carrinho" viewBox="0 0 24 24"><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2.5 3.5h3l2.4 11.2a1.5 1.5 0 0 0 1.5 1.3h8.4a1.5 1.5 0 0 0 1.5-1.2L21 7H6.3"/></symbol><symbol id="m-recibo" viewBox="0 0 24 24"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6M9 16h3"/></symbol><symbol id="m-calendario" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></symbol><symbol id="m-chat" viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></symbol><symbol id="m-usuario" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol><symbol id="m-globo" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></symbol><symbol id="m-hoje" viewBox="0 0 24 24"><path d="M4 13h4l2 3h4l2-3h4"/><path d="M4 13l2.5-8h11L20 13v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/></symbol><symbol id="m-pasta" viewBox="0 0 24 24"><path d="M3 6.5A1.5 1.5 0 0 1 4.5 5H9l2 2.5h8.5A1.5 1.5 0 0 1 21 9v9.5a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 18.5z"/></symbol><symbol id="m-mais" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol></svg>
@@ -353,6 +353,10 @@
           <input type="search" id="notasBusca" class="ped-busca" placeholder="Venda, valor, chave ou CPF" aria-label="Buscar nota por venda, valor, chave ou CPF" autocomplete="off">
           <input type="date" id="notasData" aria-label="Filtrar pelo dia da nota">
           <button type="button" class="btn btn-dark-outline btn-sm hidden" id="notasLimpar">Limpar</button>
+          <span class="notas-zip" title="Baixa um .zip com os XMLs do mês + resumo.csv pra encaminhar ao contador">
+            <input type="month" id="notasMes" aria-label="Mês do ZIP de XMLs">
+            <button type="button" class="btn btn-dark-outline btn-sm" id="notasZipMes">ZIP do mês</button>
+          </span>
         </div>
         <p class="notas-copia" id="notasCopia"></p>
         <table class="data-table">
@@ -795,6 +799,7 @@
 <script src="../assets/js/app-ui.js"></script>
 <script src="../assets/js/admin.js?v=11"></script>
 <script src="../assets/js/vendor/qrcode.js"></script>
+<script src="../assets/js/vendor/jszip.min.js"></script>
 <script src="../assets/js/printer.js?v=4"></script>
 <script>
   // Escapa texto antes de ir pro innerHTML (dado de revendedor/cliente nunca vira HTML).
@@ -4104,6 +4109,8 @@
   }
   async function renderNotas() {
     var body = document.getElementById('notasBody');
+    var mi = document.getElementById('notasMes');
+    if (!mi.value) mi.value = diaCuiaba(new Date().toISOString()).slice(0, 7);
     try { notasCache = await DupuroAdmin.getNfceEmissoes(); }
     catch (e) {
       body.innerHTML = '<tr><td colspan="6"><div class="empty-state">' + esc(motivoErro(e)) + '</div></td></tr>';
@@ -4135,6 +4142,71 @@
       else aviso('Não deu pra abrir o XML: ' + motivoErro(e));
     }
   }
+  // ZIP mensal pro contador (pedido dele, 11/2026): o envio por nota da Focus
+  // agendava mas não entregava, então o Kayo exporta o mês e encaminha do
+  // próprio e-mail. Montado no navegador (JSZip vendorizado): os XMLs que têm
+  // cópia no Storage (+ o XML do cancelamento das canceladas) e um resumo.csv;
+  // as "só no Focus" entram no CSV com o link, sem XML no zip.
+  function mesCuiaba(iso) { return diaCuiaba(iso).slice(0, 7); }
+  async function zipDoMes(mes) {
+    // Garante primeiro as cópias que faltam no mês (nfce-arquivo copia 20 por
+    // chamada; se sobrar "só no Focus", é só clicar de novo).
+    if (notasCache.some(function (n) { return mesCuiaba(n.criado_em) === mes && semCopia(n); })) {
+      try {
+        await DupuroAdmin.guardarCopiasNfce();
+        notasCache = await DupuroAdmin.getNfceEmissoes();
+        desenharNotas();
+      } catch (e) { console.warn('cópia das NFC-e', e); }
+    }
+    var lista = notasCache.filter(function (n) { return mesCuiaba(n.criado_em) === mes; });
+    if (!lista.length) { aviso('Nenhuma nota fiscal em ' + mes + '.'); return; }
+    var zip = new JSZip();
+    var csv = ['Data;Venda;Nota;Série;Chave;Situação;Valor;Documento;XML'];
+    var xmls = 0, semXml = 0;
+    for (var i = 0; i < lista.length; i++) {
+      var n = lista[i];
+      var chave = String(n.chave || '').replace(/^NFe/, '');
+      var pay = n.payload || {};
+      var doc = pay.cpf_destinatario || pay.cnpj_destinatario || '';
+      var quando = new Date(n.criado_em).toLocaleString('pt-BR', { timeZone: 'America/Cuiaba' });
+      var temXml = false;
+      var alvos = [[n.xml_path, chave + '-nfe.xml'], [n.xml_canc_path, chave + '-can.xml']];
+      for (var j = 0; j < alvos.length; j++) {
+        if (!alvos[j][0]) continue;
+        try {
+          var url = await DupuroAdmin.getLinkXmlGuardado(alvos[j][0]);
+          var resp = await fetch(url);
+          if (!resp.ok) throw new Error('HTTP ' + resp.status);
+          zip.file(alvos[j][1], await resp.text());
+          temXml = true; xmls++;
+        } catch (e) { console.warn('XML ' + chave, e); }
+      }
+      if (!temXml) semXml++;
+      csv.push([quando, n.venda_numero, n.numero_nfce || '', n.serie || '', chave,
+        n.status === 'cancelado' ? 'Cancelada' : 'Válida',
+        Number(n.valor || 0).toFixed(2).replace('.', ','), doc,
+        temXml ? 'no zip' : (n.url_xml ? 'só no Focus: ' + n.url_xml : '—')].join(';'));
+    }
+    zip.file('resumo.csv', '\uFEFF' + csv.join('\r\n') + '\r\n');
+    var blob = await zip.generateAsync({ type: 'blob' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'dupuro-nfce-' + mes + '.zip';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 60000);
+    mostrarCopia();
+    aviso('ZIP do mês ' + mes + ': ' + lista.length + ' nota(s), ' + xmls + ' XML(s).' +
+      (semXml ? ' ' + semXml + ' sem cópia do XML — ficaram no resumo.csv com o link do Focus (clique em "ZIP do mês" de novo para buscá-las).' : ''));
+  }
+  document.getElementById('notasZipMes').addEventListener('click', function () {
+    var mes = document.getElementById('notasMes').value;
+    if (!mes) { aviso('Escolha o mês primeiro.'); return; }
+    var btn = this, txt = btn.textContent;
+    btn.disabled = true; btn.textContent = 'Gerando…';
+    zipDoMes(mes)
+      .catch(function (e) { aviso('Falha ao montar o ZIP: ' + motivoErro(e)); })
+      .then(function () { btn.disabled = false; btn.textContent = txt; });
+  });
   document.getElementById('notasBody').addEventListener('click', function (e) {
     var b = e.target.closest('button');
     if (!b) return;

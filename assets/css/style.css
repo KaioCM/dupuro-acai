@@ -2458,6 +2458,9 @@ a.stat-card.alerta .stat-sub { color: var(--warning); font-weight: 800; }
 .taxas-resumo:empty, .notas-copia:empty { display: none; }
 .notas-filtro { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 12px; }
 .notas-filtro input[type="date"] { padding: 9px 12px; border: 1px solid rgba(96,16,80,0.18); border-radius: var(--radius-full); background: #fff; font: inherit; font-size: 15px; color: var(--roxo-950); }
+.notas-filtro input[type="month"] { padding: 9px 12px; border: 1px solid rgba(96,16,80,0.18); border-radius: var(--radius-full); background: #fff; font: inherit; font-size: 15px; color: var(--roxo-950); }
+/* ZIP mensal pro contador: mês + botão à direita do filtro de dia */
+.notas-zip { display: flex; align-items: center; gap: 8px; margin-left: auto; }
 .nota-det { display: grid; gap: 8px; padding: 4px 0; }
 .nota-chave { font-size: 13px; color: var(--text-light); }
 .nota-chave span { font-family: 'Courier New', monospace; color: var(--roxo-950); word-break: break-all; }
