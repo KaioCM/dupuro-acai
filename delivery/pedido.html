@@ -462,7 +462,7 @@
       var r = await fetch('https://viacep.com.br/ws/' + d + '/json/').then(function (x) { return x.json(); });
       if (cepBuscado !== d) return; // digitou outro CEP enquanto buscava
       if (r.erro) { cepMsg.innerHTML = '<div class="dl-msg erro">CEP não encontrado. Confira os números; se estiver certo, preencha o resto do endereço.</div>'; return; }
-      var cid = CIDADES[String(r.localidade || '').toLowerCase()];
+      var cid = CIDADES[String(r.localidade || '').trim().toLowerCase()];
       if (!cid) { cepMsg.innerHTML = '<div class="dl-msg erro">Esse CEP é de ' + esc(r.localidade) + ' - ' + esc(r.uf) + '. Por enquanto entregamos só em Cuiabá e Várzea Grande.</div>'; return; }
       // CEP de outra rua: o ponto do mapa era de outro endereço e sai. Mesma rua (ex.: marcou
       // no mapa e só completou o CEP que faltava): o ponto fica.
@@ -536,7 +536,7 @@
       a = j && j.address;
     } catch (e) { a = null; }
     b.disabled = false; b.textContent = 'Usar este local';
-    var cid = a && CIDADES[String(a.city || a.town || a.municipality || '').toLowerCase()];
+    var cid = a && CIDADES[String(a.city || a.town || a.municipality || '').trim().toLowerCase()];
     if (a && !cid) { $('mapaMsg').innerHTML = '<div class="dl-msg erro">Esse ponto fica fora de Cuiabá e Várzea Grande. Por enquanto entregamos só nessas cidades.</div>'; return; }
     // Endereço vindo do mapa. Se a pessoa já digitou outro, NÃO apaga: o ponto vale
     // pra entrega e oferecemos trocar o texto (antes trocava sem avisar).

@@ -96,7 +96,8 @@ async function geocodificar(sb: any, key: string, endereco: string, cidade: stri
   const escolha = await escolherCandidato(texto, achados)
   if (escolha === -1) return null
   if (escolha != null) achados = [achados[escolha], ...achados.filter((_: any, i: number) => i !== escolha)]
-  const exato = achados.find((f: any) => f.layer === 'address' || f.layer === 'venue')
+  const sel = escolha != null ? achados[0] : null // confirmado pelo Jev: vale, seja qual for o layer
+  const exato = sel || achados.find((f: any) => f.layer === 'address' || f.layer === 'venue')
   const ponto = exato || achados[0]
   if (!ponto) return null
   const alerta = exato ? (escolha == null ? 'Ponto achado sem confirmação: confira no mapa' : null) : 'Achamos só a rua ou o bairro: confira o ponto no mapa'
