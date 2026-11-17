@@ -63,8 +63,8 @@ Deno.serve(async (req: Request) => {
     const ipCheckout = (req.headers.get('x-forwarded-for')?.split(',')[0].trim() || '')
       || req.headers.get('cf-connecting-ip') || ''
     if (ipCheckout) {
-      const ipOk = await sb.rpc('rate_check', { p_key: 'dlv-ip:' + ipCheckout, p_max: 30, p_janela_seg: 60 })
-      if (!ipOk) return json({ error: 'Muitas tentativas de pedido seguidas. Aguarde alguns minutos e tente de novo.' }, 429)
+      const { data: ipOk } = await sb.rpc('rate_check', { p_key: 'dlv-ip:' + ipCheckout, p_max: 30, p_janela_seg: 60 })
+      if (ipOk === false) return json({ error: 'Muitas tentativas de pedido seguidas. Aguarde alguns minutos e tente de novo.' }, 429)
     }
 
     const { data: row } = await sb.from('delivery_config').select('config').eq('id', 1).single()
@@ -76,8 +76,8 @@ Deno.serve(async (req: Request) => {
     const tel = String(b.telefone || '').replace(/\D/g, '').slice(0, 13)
     // Rate limit por telefone (max 20 pedidos/hora por número — anti-spam do mesmo WhatsApp).
     if (tel.length >= 10) {
-      const telOk = await sb.rpc('rate_check', { p_key: 'dlv-tel:' + tel, p_max: 20, p_janela_seg: 3600 })
-      if (!telOk) return json({ error: 'Muitas tentativas de pedido seguidas. Aguarde alguns minutos e tente de novo.' }, 429)
+      const { data: telOk } = await sb.rpc('rate_check', { p_key: 'dlv-tel:' + tel, p_max: 20, p_janela_seg: 3600 })
+      if (telOk === false) return json({ error: 'Muitas tentativas de pedido seguidas. Aguarde alguns minutos e tente de novo.' }, 429)
     }
     const endereco = String(b.endereco || '').trim().slice(0, 300)
     if (nome.length < 3) return json({ error: 'Informe seu nome.' }, 400)

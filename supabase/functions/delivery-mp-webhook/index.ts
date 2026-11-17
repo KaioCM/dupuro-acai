@@ -52,8 +52,9 @@ Deno.serve(async (req: Request) => {
     // Rate limit por IP (max 60 requisições em 60s): evita flood de notificações falsas.
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0].trim()
       || req.headers.get('cf-connecting-ip') || ''
-    if (ip && !await sb.rpc('rate_check', { p_key: 'mpwh:' + ip, p_max: 60, p_janela_seg: 60 })) {
-      return new Response(JSON.stringify({ erro: 'muitas notificacoes' }), { status: 429, headers: { 'Content-Type': 'application/json' } })
+    if (ip) {
+      const { data: whOk } = await sb.rpc('rate_check', { p_key: 'mpwh:' + ip, p_max: 60, p_janela_seg: 60 })
+      if (whOk === false) return new Response(JSON.stringify({ erro: 'muitas notificacoes' }), { status: 429, headers: { 'Content-Type': 'application/json' } })
     }
 
     const pg: any = await fetch('https://api.mercadopago.com/v1/payments/' + encodeURIComponent(id), {

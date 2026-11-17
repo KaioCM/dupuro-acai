@@ -86,8 +86,8 @@ Deno.serve(async (req: Request) => {
     if (Date.parse(ck.criado_em) < Date.now() - 3 * 3600e3) return json({ error: 'O pagamento expirou. Volte e faça o pedido de novo.' }, 409)
 
     // Rate limit (migration_062): max 40 tentativas de pagamento por checkout/hora.
-    const payOkCk = await sb.rpc('rate_check', { p_key: 'rvpay:' + token, p_max: 40, p_janela_seg: 3600 })
-    if (!payOkCk) return json({ error: 'Muitas tentativas de pagamento nesse pedido. Tente novamente em instantes.' }, 429)
+    const { data: payOkCk } = await sb.rpc('rate_check', { p_key: 'rvpay:' + token, p_max: 40, p_janela_seg: 3600 })
+    if (payOkCk === false) return json({ error: 'Muitas tentativas de pagamento nesse pedido. Tente novamente em instantes.' }, 429)
 
     const fd = b.formData || {}
     const metodo = String(fd.payment_method_id || '')
