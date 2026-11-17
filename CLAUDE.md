@@ -1,1 +1,108 @@
-IyBEdXB1cm8gQcOnYcDtIOKAlCBTaXRlIGluc3RpdHVjaW9uYWwgKyDDgXJlYSBkbyBSZXZlbmRlZG9yDQoNCiMjIEVmaWNpw6puY2lhIChsZWlhIHByaW1laXJvKQ0KDQotICoqU2l0ZSAxMDAlIGVzdMOhdGljbyoqIChIVE1ML0NTUy9KUyBwdXJvKTogc2VtIGJ1aWxkLCBzZW0gZnJhbWV3b3JrLCBzZW0gbnBtLiBFZGl0b3Ug4oaSIHJlY2FycmVnYSBvIHByZXZpZXcuDQotICoqUHJldmlldCoqOiBzZXJ2aWRvciBgZHVwdXJvLWFjYWlgIG5hIHBvcnRhIDg4NTUsIHJhaXogc2VydmUgYGR1cHVyby1hY2FpL2AgKGV4LjogYC9hcmVhLWNsaWVudGUvbG9naW4uaHRtbGApLiBEYXNoYm9hcmQvYWRtaW4gZXhpZ2VtIHNlc3PDo28gU3VwYWJhc2Ug4oCUIG7Do28gZMOhIHByYSBjbGljYXIgYXRyYXTDqXMgZGVsZXMgc2VtIGxvZ2luLg0KLSAqKk9yaWVudGHDp8OjbyBkZSBpbWFnZW0qKjogYXMgZm90b3MgZW0gYGFzc2V0cy9pbWcvZm90b3MvYCAqKm7Do28gdMOqbSB0YWcgRVhJRioqIGRlIG9yaWVudGHDp8Ojby4gQ2hlcXVlIG9yaWVudGHDp8OjbyBwZWxhcyBkaW1lbnPDtWVzIHZpYSBQb3dlclNoZWxsIChgU3lzdGVtLkRyYXdpbmdgKSDigJQgbsOjbyBhYnJhIG8gYXJxdWl2byBlbSB0YW1hbmhvIGNoZWlvIChjYXJvIGVtIHRva2VucykuIERlaXRhZGEgPSBjb250ZcO6ZG8gcmV0cmF0byBzYWx2byBlbSBsYW5kc2NhcGU7IGNvcnJpamEgY29tIGBSb3RhdGVGbGlwKFJvdGF0ZTI3MEZsaXBOb25lKWAgKDkwwrAgYW50aS1ob3LDrW8pIGUgYXR1YWxpemUgYHdpZHRoYC9gaGVpZ2h0YCBubyBIVE1MLE0KLSBTaXRlIGVtIDMgcGFydGVzOiAqKkhvbWUqKiAoYGluZGV4Lmh0bWAsIDIgcG9ydGFzKSArICoqUGXDpWEgYWdvcmEqKiAoZGRlbGl2ZXJ5L2AsIGNvbXByYSBvbmxpbmUpICsgKipSZXZlbmRhKiogKHxyZXZlbmRhL2ApLiBEZW1haXMgY29udGF0b3MgbGV2YW0gYXAPV2hhdHNBcHAgYDU1NjU5OTI4ODgyMjhhDCouDQoNCiMjIE5lZ8OzY2lvDQoNCMrDaWJyaWNhL2Rpc3RyaWJ1aWRvcmEgZGUgY8OpY8OtIGUgY3JlbWVzIGVtIEN1aWFiw6EtTVQgKGF0ZW5kaW1lbnRvIHByZXNlbmNpYWwsIEF2LiBkYXMgVG9ycmVzIMOidiAxNiwgSmFyZGltIEltcGVyaWFsIElJLCA3ODA3Ni0wMDEpLiBOw4NPIHRlbSBkcml2ZS10aHJ1LiBXaGF0c0FwcCAoNjUpIDk5Mjg4LTgyMjguIDQsOOKYhSBubyBHb29nbGUgKDMzIGF2YWwuKS4gVmVuZGUgdGFtYsOpbSBwZWxvIGlGb29kLiBUYWdsaW5lOiAqKiJQdXJvIGNvbW8gdGVtIHF1ZSBzZXIiKiouICoqUmV2ZW5kYSBhIHBhcnRpciBkZSAxIGNhaXhhIGRlIDEwIEwqKiAobcOtbmltbyBwb3IgcHJvZHV0bzsgNTAgTCBubyBwZWRpZG8gZGlzcGVuc2FtKS4gRG9pcyBww7pibGljb3M6ICgxKSBxdWVtIHF1ZXIgdmlyYXIgcmV2ZW5kZWRvciwgKDIpIHJldmVuZGVkb3JlcyBhdGl2b3MgcXVlIHByZWNpc2FtIGRlIHBhaW5lbC4gKkRhZG9zIGV4dHJhw61kb3MgZGUgSW5zdGFncmFtL01hcHMg4oCUIHJlY29uZmlybWFyIGFudGVzIGRlIHB1YmxpY2FyLioNCg0KIyMgRXN0cnVjdHVyYQ0KCmBgYA0KaW5kZXguaHRtbCAgICAgICAgICAgICAgICBob21lICh2aXRyaW5lOiAyIHBvcnRhcyDihpIgZGVsaXZlcnkvIGUgcmV2ZW5kYS8pDQpyZXZlbmRhL2luZGV4Lmh0bWwgICAgICAgIHDDoWdpbmEgZGUgcmV2ZW5kYSAoZGlmZXJlbmNpYWlzLCBjb21vIGZ1bmNpb25hLCBjYWRhc3RybyAjcmV2ZW5kYSkNCmFyZWEtY2xpZW50ZS8NCiAgbG9naW4uaHRtbCAgICAgICAgICAgICAgbG9naW4gKHJldmVuZGVkb3Igb3UgYWRtaW4sIHJlZGlyZWNpb25hIGNvbmZvcm1lIHJvbGUpDQogIGRhc2hib2FyZC5odG1sICAgICAgICAgIHBhaW5lbCByZXZlbmRlZG9yIChmYXplciBwZWRpZG8sIHBlZGlkb3MsIGN1cG9ucywgcGVyZmlsKQ0KICBhZG1pbi5odG1sICAgICAgICAgICAgICBwYWluZWwgYWRtaW4gKGFwcm92YcOnw7VlcywgcmV2ZW5kZWRvcmVzLCBwcm9kdXRvcywgcGVkaWRvcywgY3Vwb25zKQ0KICBjYWl4YS5odG1sICAgICAgICAgICAgICBQRFYgZGEgbG9qYSAocGFwZWwgJ2F0ZW5kZW50ZScpOiByZWdpc3RyYSB2ZW5kYSBwcmVzZW5jaWFsLCB2ZW5kYXMgZG8gZGlhLCBlc3RvcXVlDQphc3NldHMvY3NzL3N0eWxlLmNzcyAgICAgIGRlc2lnbiBzeXN0ZW0gw7puaWNvICh2YXJpw6F2ZWlzIGVtIDpyb290KQ0KYXNzZXRzL2pzLw0KICBtYWluLmpzICAgICAgICAgICAgICAgICBpbnRlcmHDp8O1ZXMgZGEgbGFuZGluZw0KICBzdXBhYmFzZS1jb25maWcuanMgICAgICBVUkwgKyBhbm9uIGtleSAocHJvamV0byByZWFsKQ0KICBzdXBhYmFzZS1jbGllbnQuanMgICAgICBpbnN0w6JuY2lhIMO6bmljYSBkbyBjbGllbnRlIFN1cGFiYXNlIChjb21wYXJ0aWxoYWRhKQ0KICBjbGllbnRlLmpzICAgICAgICAgICAgICBhY2Vzc28gcmV2ZW5kZWRvciAoYXV0aCwgcGVyZmlsLCBwZWRpZG9zL2N1cG9ucyBsZWl0dXJhLCBjcmlhciBwZWRpZG8pDQogIGFkbWluLmpzICAgICAgICAgICAgICAgIGFjZXNzbyBhZG1pbiAoYXByb3ZhciwgcmV2ZW5kZWRvcmVzLCBwcm9kdXRvcywgcGVkaWRvcywgY3Vwb25zKQ0KICBjYWl4YS5qcyAgICAgICAgICAgICAgICBhY2Vzc28gYXRlbmRlbnRlIChjYXTDbG9nbyBjLyBlc3RvcXVlLCByZWdpc3RyYXIgdmVuZGEgZGUgbG9qYSwgdmVuZGFzIGRvIGRpYSkNCiAgcHJpbnRlci5qcyAgICAgICAgICAgICAgY29tYW5kYSBkYSB2ZW5kYTogYXBwIG5hdGl2byAoc2lsZW5jaW9zb3MpID4gV2ViIFNlcmlhbCAoU3dlZGEpID4gaW1wcmVzc8OjbyBwZWxvIFdpbmRvd3MNCiAgb2ZmbGluZS1xdWV1ZS5qcyAgICAgICAgZmlsYSBvZmZsaW5lIGRvIGNhaXhhIChJbmRleGVkREIpICsgbW90b3IgZGUgc3luYyAoRHVwdXJvT2ZmbGluZSkNCnN3LmpzICAgICAgICAgICAgICAgICAgICAic2VydmljZSB3b3JrZXIgKG9mZmxpbmUgZG8gY2FpeGEpDQptYW5pZmVzdC53ZWJtYW5pZmVzdCAgICAgIG1hbmlmZXN0byBQV0EgZG8gY2FpeGENCmRlc2t0b3AvICAgICAgICAgICAgICAgICAgYXBwIEVsZWN0cm9uIGRvIFBDIGRhIGxvamEgKGNhc2NhICsgaW1wcmVzc8OjbyBuYXRpdmEpIOKAlCBidWlsZCBzZXBhcmFkbw0KICBhcHAtdWkuanMgICAgICAgICAgICAgICBoZWxwZXJzIGRlIFVJIChEdXB1cm9VSS5jb3VudFVwKQ0KYXNzZXRzL2ltZy9icmFuZC8gICAgICAgICBsb2dvcyBQTkcgb2ZpY2lhaXMgKyBmYXZpY29ucw0KYXNzZXRzL2ltZy9mb3Rvcy8gICAgICAgICAyMSBmb3RvcyBwcm9maXNzaW9uYWlzIG90aW1pemFkYXMNCmFzc2V0cy9mb250cy9LbGlua28tUGxheWZ1bEJvbGQub3RmDQpzdXBhYmFzZS9zY2hlbWEuc3FsICAgICAgIMOkw6BpYSBkbyBlc3F1ZW1hIGRvIGJhbmNvIHZpdm8gKHJlZ2VuZXJhZG8gcG9yIGR1bXAg4oCGIGhvamUgMjAyNi0xMS0xNzsgaW5jbHVpIHRhYmVscyBub3J0ZV8qIHF1ZSAnbm8gdCdybSBNaWdyYcOpw7Jhw7UgbidvIHJlcG8pOyBtdWRvdSBzY2hlbWag4oaSCIByAgcmVnZW5lcmFyDQpzdXBhYmFzZS9taWdyYXRpb25fKi5zcWwgIHJlZ2lzdHJvIGRhcyBtaWdyYcOpw7Jlw7VlcyBpbmNyZW1lbnRhaXMgKDAwNSsgYXBsaWNhZGFzIHZpYSBNQ1ApDQpzdXBhYmFzZS9mdW5jdGlvbnMvYWRtaW4tZGVsZXRlLXJlc2VsbGVyL2luZGV4LnRzDQpzdXBhYmFzZS9mdW5jdGlvbnMvc3VnZXJpci1maXNjYWwvaW5kZXgudHMgICBzdWdlc8Opw6zvIGRlIHBlcmZpbCBmaXNjYWwgcGVsb2Bub21lIChKZXYvVHlwZVNhZmUpDQpleHBlcmltZW50b3MvdHlwZXNhZmUvICAgIHNjcmlwdHMgKyByZXN1bHRhZG9zIGRvcyB0ZXN0ZXMgY29tIG8gSmV2IChSRUFETUUgY29tIG9zIMOObWVyb3MpDQp0b29scy9qZXYgICAgICAgICAgICAgICAgIENMSSBkbyBKZXYgcHJvIGRlc2Vudm9sdW1lbnRvICh5ZXMvcGljay9zY29yZS90cmVjaG9zKSAt4oCUIHZlciBza2lsbCBkdXB1cm8tamV2DQp0b29scy9qZXYtcHJvbXB0ICAgICAgICAgIGFuYWxpc3RhIGRlIHByb21wdCAoaG9vayBVc2VyUHJvbXB0U3VibWl0IGVtIC5jbGF1ZGUvc2V0dGluZ3MuanNvbikNCmRvY3MvICAgICAgICAgICAgICAgICAgICAgY29udGV4dG8gZGV0YWxoYWRvIHBvciDig7JlYSAodmVyIMOtbmRpY2UgYWJhaXhvKQ0KYGBgDQoNCiMjIEJhY2tlbmQgU3VwYWJhc2UgKHJlYWwgZSB2YWxpZGFkbykNCg0KUHJvamV0byByZWFsIGVtIGBzdXBhYmFzZS1jb25maWcuanNgIChVUkwgYHpxYWRma3RmcGxyYnJqbWVwbGxoLnN1cGFiYXNlLmNvYCkuIER1YXMgY2FtYWRhcyBzb2JyZSBvIG1lc21vIGNsaWVudGUgY29tcGFydGlsaGFkbzogYGNsaWVudGUuanNgICh1c2FkbyBwb3IgcmV2ZW5kYStkYXNoYm9hcmQ7IGEgaG9tZSBnw6DjbyBjYXJyZWdhIHN1cGFiYXNlLWpzIC0gc8OpIGBkZWxpdmVyeS5qc2AgcHJvcyBbcHLcdW9zKSkgZSBgYWRtaW4uanNgIChhZG1pbikuIENvbnRhIGFkbWluOiAqKmtheW9jYW1hcmdvQG91dGxvb2suY29tKiogKGBwcm9maWxlcy5yb2xlID0gJ2FkbWluJ2ApLg0KDQotIENhZGFzdHJvIGRpc3BhcmEgbm90aWZpY2HDp8OjbyBiZXN0LWVmZm9ydCB2aWEgRm9ybXNwcmVlIChgZGF0YS1mb3Jtc3ByZWUtYWN0aW9uYCksIG1hcyBvIGBTRVVfRk9STV9JRGAgYWluZGEnIMOgcGxhY2Vob2xkZXIg4oCGIGNhZGFzdHJvIGZ1bmNpb25hIHNlbSBpc3NvLg0KLSBUYWJlbGFzIPTmc+6178Ogbm8gYmFuY28gKG3Dp8OpIGVzcGVsaGFkYXMgbm8gcmVwbyBuZW0gdXNhZGFzIHBlbG8gc2l0ZSk6IGBub3J0ZV9sZWFkc2AgZSBgbm9ydGVfYWRtaW5zYCAobWlncmHDp8O1ZXMgZGUgb3V0LzIwMjYpLiBEZWNpc8OpbyBwZW5kZW50ZTogZXNwZWxoYXIgb3UgZGVycnViYXJzLg0KCiMjIFJlZ3JhcyBxdWUgdmFsZW0gc2VtcHJlDQoNCi0gKipUZXh0byBkZSBmb3JhIG51bmNhIHZpcmEgSFRNTCoiOiB0b2RvIGRhZG8gZG8gYmFuY28gbW9udGFkbyBlbWBpbm5lckhUTUxgIHBhc3NhIHBvciBgZXNjKC4uLilgICh0ZWxhIG5vdmEgdGFtw6FtZSkuIERldGFpbGUgZW0gYGRvY3Mvc2VndXJhbmNhLm1kYC4NCi0gKipQcmXDp28sIGVzdG9xdWUgZSBwYXBlbCDihpMgZGVjaWRpZG9zIG5vIGJhbmNvKio6IFJQQyBudW5jYSBncmF2YSBvIHF1ZSB2ZW0gZG8gbmF2ZWdhZG9yIHNlbSByZWNhbGN1bGFyIChleGMdw6fDu28gY29uc2NpZW50ZTogdmFsb3IgZGEgdmVuZGEgZGUgbG9qYSkuIENvbHVuYSBub3ZhIHNlbnNpw612ZWwgZW0gYHByb2ZpbGVzYCDihpIgaW5jbHVpciBubyB0cmlnZ2VyIGBwcm9maWxlc19wcm90ZWdlX2NvbnRyb2xlYC4NCi0gKipGdW7Dp8OjbyBub3ZhIMOgbsNhc2NlIGV4ZWN1dMOhdmlsIHBvciBhbm9uKio7IFJQQyBbcHLcdWJsaWNhIHByZWNpc2EgZGUgYGdyYW50IGV4ZWN1dGUgLi4uIHRvIGFub25gIGV4cGOcbGLjLm8uIEZ1bsOnw7VlcyBpbnRlcm5hcyBmaWNhbSBmb3JhIGRlIGFub24vYXV0aGVudGljYXRlZC4NCi0gKipOdW5jYSBjYWxjdWxhciBuw6xtZXJvIGRlIHBlZGlkby92ZW5kYSBubyBjbGllbnRlKiogKGBeZXRfcGVkaWRvX251bWVybygpYC9gbnh0X3ZlbmRhX251bWVybygpYCkuDQotIERpw6xvZ29zIGRvIGFkbWluOiBgY29uZmlybWFyKG1zZylgL2Bhdmlzbyhtc2cpYCwgbnVuY2EgYHdpbmRvdy5jb25maXJtL2FsZXJ0L3Byb21wdGAgKG8gRWxlY3Ryb24gZGEgbG9qYSBnw6NvIHN1cG9ydGEgYHByb21wdGApLiBFcnJvIGRvIGJhbmNvIG5hIHRlbGEgdmlhIGBtb3Rpdm9FcnJvKGUpYC4NCi0gU2VtIGVtb2ppIGVtIGJvdMOjbyBuZW0gc2VsbyBlbSBjaW1hIGRlIHTDrXJ1bG87IMO6Y29uZXMgPSBzcHJpdGUgU1ZHLiBDb3JlcyBzw7MgcGVsYXMgdmFycOlpYXZlcyBkZSBgOnJvb3RgIGVtIGBzdHlsZS5jc3NgLg0KLSBNdWRvdSBDU1MvSlMvSFRNTCBkbyBjYWl4YSDigpIgc3ViaXIgbyBgQ0FDSEVfVkVSYCBkbyBgc3cuanNgIChvIFNXIHVzYSBgaWdub3JlU2VhcmNoYDsgbXVkYcOpw6EgY2hlZ2EgbmEgMsKqIGFiZXJ0dXJhKS4NCi0gTXVkb3UgbyBwYWluZWwgZG8gcmV2ZW5kZWRvciAoYGRhc2hib2FyZC5odG1sYCwgYGNsaWVudGUuanNgLCBgZW5kZXJlY28uanNgKSDigpIgc3ViaXIgYFZFUlNBT19QQUlORUxgIG5vIGBkYXNoYm9hcmQuaHRtbGAgKmEqKiBgYXJlYS1jbGllbnRlL3ZlcnNhby1wYWluZWwuanNvbmAgKGFiYSBhYmVydGEgw6ggZGlhcyByZWNhcnJlZ2Egc296aW5oYSBhbyB2b2x0YWcpLg0KLSBCaWJsaW90ZWNhcyBkbyBDRE4gY29tIHZlcnNzw7NvIGZpeGEgKHN1cGFiYXNlLWpzIGAyLjExOC4wYCwgY2hhcnQuanMgYDQuNS4xYCkg4oCUIGF0dWFsaXphciBkZSBwcm9ww7NzaXRvLg0KLSBDaGF2ZXMgKEZvY3VzLCBNZXJjYWRvIFBhZ28sIFdoYXRzQXBwLCBPUlMsIFR5cGVTYWZlKSBzw68gZW0gc2VjcmV0cyBkYXMgRWRnZSBGdW5jdGlvbnMsIG51bmNhIG5vIGdpdC9uYXZlZ2Fkb3IuDQotIE1pZ3Jhw6fDo2VzIDAwNSsgZSBFZGdlIEZ1bmN0aW9ucyDCs8OhIGFwbGljYWRhcyB2aWEgKipNQ1AgZG8gU3VwYWJhc2UqKjsgb3MgYC5zcWwgYC9gLnRzYCBkbyByZXBvINCzx3MgbyBlc3BlbGhvICCAlCBjb25mZXJpeiIgcXVlIG8gZGVwbG95IGJhdGUgY29tIG8gYXJxdWl2byBhbnRlcyBkZSBwdWJsaWNhciBwb3IgY2ltYS4NCg0KIyMgT25kZSBlc3TDqyBvIHJlc3RvIChsZXIgw6NzIG8gcXVlIGEgdGFyZWZhIHBlZGUpDQoNCnwgQXJxdWl2byB8IENvbnRlw6lkbyB8DQp8LS0tfC0tLXwNCnwgYGRvY3MvYWRtaW4ubWRgIHwgYWluywlnbyBhZG1pbiAoYWJhcywgSW7DbSwgUGVkaWRvcywgbsOtbWVyb3MsIENhZGFzdHJvcyksIG1vZG9zIGRlIHByb2R1dG8sIHByb2TDo8Ojby9jdXN0b3MsIGFqdXN0ZSBkZSBlc3RvcXVlLCBmaWx0cm8gVmFyZWpvL0F0YWNhZG8sIGfDrPGoZWNvcyB8DQp8IGBkb2NzL3JldmVuZGEubWRgIHwgY2FkYXN0cm8vYXB0b7Zhw6ZvLCBwZWRpZG8gZG8gcmV2ZW5kZWRvciAoUlBDLCBtw6ttbm9wb3Igdm9sdW1lLCBlbnRyZWdhLCBhIHByYXpvKSwgbnVtZXLDp8OjbywgcGFpbmVsIGRvIHJldmVuZGVkb3IsIGV4Y2x1aXIgcmV2ZW5kZWRvciB8DQp8IGBkb2NzL2NhaXhhLm1kYCB8IGNhaXhhL1BERjogaWVudGVudGUsIGNvcG8vc2VsZi1zZXJ2aWNlLCBhcHAgRWxlY3Ryb24sIG9mZmxpbmUgKyBzb3luYywgIHNlc3PDq8OvIGRlIGNhaXhhLCBURUYsIHBhZ2FtZW50byBkaXZpZGlkbywgdGF4YSBkZSBlbnRyZWdhLCBwZWRpZG9zIGUgYWJlcnRvLCBwcm9tw7Nvw7VlcywgY29tYW5kYSwgbGF5b3V0IHwNCnwgYGRvY3MvZmlzY2FsLW5mY2UubWRgIHwgTkZDLWUgKEZvY3VzIE5GZSksIGNhbmNlbGFtZW50bywgY3Vwb20gZmlzY2FsIGltcHJlc3NvLCBjbGFzc2lmaWHDr8OjbyBmaXNjYWwgcG9yIHBlcmZpbCB8DQp8IGBkb2NzL2RlbGl2ZXJ5Lm1kYCB8IER1cHVybyBEZWxpdmVyeTogcMOhZ2luYXMsIGNvdGHDp8OjbyAoT1JTICsgSmV2KSwgY2hlY2tvdXQgTWVyY2FkbyBQYWdvLCBiYW5jbyB8DQp8IGBkb2NzL3NlZ3VyYW5jYS5tZGAgfCBhdWRpd/GTw6VlczogcGVybWlzc8O1ZXMgZGUgZnVuY8Opw7N0ZXMsIHRyaWdnZXIgZGUgYHByb2ZpbGVzYCwgcHLDpnuvZXN0b3F1ZSBubyBiYW5jbywgWFNTIHwNCnwgYGRvY3Mvd2hhdHNhcHAubWRgIHwgZmlsYSBkZSBhdmlzb3MsIG1vZGVsb3MgZGEgTWV0YSwgYWNlaXRlIHwNCnwgYGRvY3MvZGVzaWduLXN5c3RlbS5tZGAgfCBkZXNpZ24gc3lzdGVtIHYyL3YzLCBhc3NldHMsIFNFTyB8DQp8IGAuY2xhdWRlL3NraWxscy9kdXB1cm8tamV2L2AgfCBxdWFuZG8gdXNhciBvIEpldiAocHJvZHV0byBlIGRlc2Vudm9sdW1lbnRvKSBlIG8gYHRvb2xzL2pldmAgfQ0KfCBgLmNsYXVkZS9za2lsbHMvYW5hbGlzZS1kZS1wcm9tcHQvYCB8IHRvZGRhIG1lbnNhZ2VtIGRvIEthaW8gcGFzZGEgcGVscyBKZXYgKGhvb2sgYFVzZXJQcm9tcHRTdWJtaXRgINCJIHRvb2xzL2pldi1wcm9tcHRgKTsgYWJyaXIgYSByZXNwb3N0YSBjb21gSmV2IChwcm9tcHQpOiDDnyB8DQoNClByYSBhY2hhciB1bSBhc3N1bnRvIHNlbSBsZXIgdHVkbjogYGdyZXAgLW5gIGVtIGBkb2NzL2g7IHNlIGEgcGVyZ3VudGEgZm9yIGRlIGNvbXBvcnRhbWVudG8gZSBzZW0gcGFsYXZyYS1jaGF2ZSwgYHRvb2xzL2pldiB0cmVjaG9zICJwZXJndW50YSIgZG9jcy8qLm1kYC4NCgojIyBMYWN1bmFzIGNvbmVoZWNpZGFzDQoKU2VtIGFuYWx5dGljcy9waXhlbDsgc2VtIHRlc3RlcyBhdXRvbWF0aXphZG9zICh2YWxpZGHDr8OjbyBtYW51YWwpOyBnw6NvIHRlc3RhZG8gZW0gZGlzcG9zaXRpdm8gcmVhbC4gRmVjaG8gZGVzZGUgZW5cw6VvOiBkb21pbmrvg3cHdzLmR1cHVyb2FjYWkuY29tIG5vIEdpdEh1YiBQYWdlczsgY2hlY2tvdXQgZGVsaXZlcnkgY29tIHBhZ2FtZW50byBvbmxpbmUgKE1QICsgcGFnYXIgbmEgZW50cmVnYSksIHByaW1laXJvIFBpeCBwYWdvIGUgZW50cmVndWUgKERMVy0wMDIwLCAyMDI2LTExLTEwKS4NCg==
+# Dupuro A├ºa├¡ ÔÇö Site institucional + ├ürea do Revendedor
+
+## Efici├¬ncia (leia primeiro)
+
+- **Site 100% est├ítico** (HTML/CSS/JS puro): sem build, sem framework, sem npm. Editou ÔåÆ recarrega o preview.
+- **Preview**: servidor `dupuro-acai` na porta 8855, raiz serve `dupuro-acai/` (ex.: `/area-cliente/login.html`). Dashboard/admin exigem sess├úo Supabase ÔÇö n├úo d├í pra clicar atrav├®s deles sem login.
+- **Orienta├º├úo de imagem**: as fotos em `assets/img/fotos/` **n├úo t├¬m tag EXIF** de orienta├º├úo. Cheque orienta├º├úo pelas dimens├Áes via PowerShell (`System.Drawing`) ÔÇö n├úo abra o arquivo em tamanho cheio (caro em tokens). Deitada = conte├║do retrato salvo em landscape; corrija com `RotateFlip(Rotate270FlipNone)` (90┬░ anti-hor├írio) e atualize `width`/`height` no HTML.
+- Site em 3 partes: **Home** (`index.html`, 2 portas) ┬À **Pe├ºa agora** (`delivery/`, compra online) ┬À **Revenda** (`revenda/`). Demais contatos levam ao WhatsApp `5565992888228`.
+
+## Neg├│cio
+
+F├íbrica/distribuidora de a├ºa├¡ e cremes em Cuiab├í-MT (atendimento presencial, Av. das Torres n┬║ 16, Jardim Imperial II, 78076-001). N├âO tem drive-thru. WhatsApp (65) 99288-8228. 4,8Ôÿà no Google (33 aval.). Vende tamb├®m pelo iFood. Tagline: **"Puro como tem que ser"**. **Revenda a partir de 1 caixa de 10 L** (m├¡nimo por produto; 50 L no pedido dispensam). Dois p├║blicos: (1) quem quer virar revendedor, (2) revendedores ativos que precisam de painel. *Dados extra├¡dos de Instagram/Maps ÔÇö reconfirmar antes de publicar.*
+
+## Estrutura
+
+```
+index.html                home (vitrine: 2 portas ÔåÆ delivery/ e revenda/)
+revenda/index.html        p├ígina de revenda (diferenciais, como funciona, cadastro #revenda)
+area-cliente/
+  login.html              login (revendedor ou admin, redireciona conforme role)
+  dashboard.html          painel revendedor (fazer pedido, pedidos, cupons, perfil)
+  admin.html              painel admin (aprova├º├Áes, revendedores, produtos, pedidos, cupons)
+  caixa.html              PDV da loja (papel 'atendente'): registra venda presencial, vendas do dia, estoque
+assets/css/style.css      design system ├║nico (vari├íveis em :root)
+assets/js/
+  main.js                 intera├º├Áes da landing
+  supabase-config.js      URL + anon key (projeto real)
+  supabase-client.js      inst├óncia ├║nica do cliente Supabase (compartilhada)
+  cliente.js              acesso revendedor (auth, perfil, pedidos/cupons leitura, criar pedido)
+  admin.js                acesso admin (aprovar, revendedores, produtos, pedidos, cupons)
+  caixa.js                acesso atendente (cat├ílogo c/ estoque, registrar venda de loja, vendas do dia)
+  printer.js              comanda da venda: app nativo (silencioso) > Web Serial (Sweda) > impress├úo pelo Windows
+  offline-queue.js        fila offline do caixa (IndexedDB) + motor de sync (DupuroOffline)
+sw.js                     service worker (offline do caixa)
+manifest.webmanifest      manifesto PWA do caixa
+desktop/                  app Electron do PC da loja (casca + impress├úo nativa) ÔÇö build separado
+  app-ui.js               helpers de UI (DupuroUI.countUp)
+assets/img/brand/         logos PNG oficiais + favicons
+assets/img/fotos/         21 fotos profissionais otimizadas
+assets/fonts/Klinko-PlayfulBold.otf
+supabase/schema.sql       cópia do esquema do banco vivo (regenerado por dump — hoje 2026-11-17; inclui tabelas norte_* que não têm migração no repo); mudou schema → regenerar
+supabase/migration_*.sql  registro das migra├º├Áes incrementais (005+ aplicadas via MCP)
+supabase/functions/admin-delete-reseller/index.ts
+supabase/functions/sugerir-fiscal/index.ts   sugest├úo de perfil fiscal pelo nome (Jev/TypeSafe)
+experimentos/typesafe/    scripts + resultados dos testes com o Jev (README com os n├║meros)
+tools/jev                 CLI do Jev pro desenvolvimento (yes/pick/score/trechos) ÔÇö ver skill dupuro-jev
+tools/jev-prompt          analista de prompt (hook UserPromptSubmit em .claude/settings.json)
+docs/                     contexto detalhado por ├írea (ver ├¡ndice abaixo)
+```
+
+## Backend Supabase (real e validado)
+
+Projeto real em `supabase-config.js` (URL `zqadfktfplrbrjmepllh.supabase.co`). Duas camadas sobre o mesmo cliente compartilhado: `cliente.js` (usado por revenda+dashboard; a home n├úo carrega supabase-js ÔÇö s├│ `delivery.js` pros pre├ºos) e `admin.js` (admin). Conta admin: **kayocamargo@outlook.com** (`profiles.role = 'admin'`).
+
+- Cadastro dispara notifica├º├úo best-effort via Formspree (`data-formspree-action`), mas o `SEU_FORM_ID` ainda ├® placeholder ÔÇö cadastro funciona sem isso.
+
+## Regras que valem sempre
+
+- **Texto de fora nunca vira HTML**: todo dado do banco montado em `innerHTML` passa por `esc(...)` (tela nova tamb├®m). Detalhe em `docs/seguranca.md`.
+- **Pre├ºo, estoque e papel s├úo decididos no banco**: RPC nunca grava o que vem do navegador sem recalcular (exce├º├úo consciente: valor da venda de loja). Coluna nova sens├¡vel em `profiles` ÔåÆ incluir no trigger `profiles_protege_controle`.
+- **Fun├º├úo nova n├úo nasce execut├ível por anon**; RPC p├║blica precisa de `grant execute ... to anon` expl├¡cito. Fun├º├Áes internas ficam fora de anon/authenticated.
+- **Nunca calcular n├║mero de pedido/venda no cliente** (`next_pedido_numero()`/`next_venda_numero()`).
+- Di├ílogos do admin: `confirmar(msg)`/`aviso(msg)`, nunca `window.confirm/alert/prompt` (o Electron da loja n├úo suporta `prompt`). Erro do banco na tela via `motivoErro(e)`.
+- Sem emoji em bot├úo nem selo em cima de t├¡tulo; ├¡cones = sprite SVG. Cores s├│ pelas vari├íveis de `:root` em `style.css`.
+- Mudou CSS/JS/HTML do caixa ÔåÆ subir o `CACHE_VER` do `sw.js` (o SW usa `ignoreSearch`; mudan├ºa chega na 2┬¬ abertura).
+- Mudou o painel do revendedor (`dashboard.html`, `cliente.js`, `endereco.js`) ÔåÆ subir `VERSAO_PAINEL` no `dashboard.html` **e** `area-cliente/versao-painel.json` (aba aberta h├í dias recarrega sozinha ao voltar).
+- Bibliotecas do CDN com vers├úo fixa (supabase-js `2.118.0`, chart.js `4.5.1`) ÔÇö atualizar de prop├│sito.
+- Chaves (Focus, Mercado Pago, WhatsApp, ORS, TypeSafe) s├│ em secrets das Edge Functions, nunca no git/navegador.
+- Migra├º├Áes 005+ e Edge Functions s├úo aplicadas via **MCP do Supabase**; os `.sql`/`.ts` do repo s├úo o espelho ÔÇö conferir que o deploy bate com o arquivo antes de publicar por cima.
+
+## Onde est├í o resto (ler s├│ o que a tarefa pede)
+
+| Arquivo | Conte├║do |
+|---|---|
+| `docs/admin.md` | painel admin (abas, In├¡cio, Pedidos, N├║meros, Cadastros), modos de produto, produ├º├úo/custos, ajuste de estoque, filtro Varejo/Atacado, gr├íficos |
+| `docs/revenda.md` | cadastro/aprova├º├úo, pedido do revendedor (RPC, m├¡nimo por volume, entrega, a prazo), numera├º├úo, painel do revendedor, excluir revendedor |
+| `docs/caixa.md` | caixa/PDV: atendente, copo/self-service, app Electron, offline + sync, sess├úo de caixa, TEF, pagamento dividido, taxa de entrega, pedidos em aberto, promo├º├Áes, comanda, layout |
+| `docs/fiscal-nfce.md` | NFC-e (Focus NFe), cancelamento, cupom fiscal impresso, classifica├º├úo fiscal por perfil |
+| `docs/delivery.md` | Dupuro Delivery: p├íginas, cota├º├úo (ORS + Jev), checkout Mercado Pago, banco |
+| `docs/seguranca.md` | auditorias: permiss├Áes de fun├º├Áes, trigger de `profiles`, pre├ºo/estoque no banco, XSS |
+| `docs/whatsapp.md` | fila de avisos, modelos da Meta, aceite |
+| `docs/design-system.md` | design system v2/v3, assets, SEO |
+| `.claude/skills/dupuro-jev/` | quando usar o Jev (produto e desenvolvimento) e o `tools/jev` |
+| `.claude/skills/analise-de-prompt/` | toda mensagem do Kayo passa pelo Jev (hook `UserPromptSubmit` ÔåÆ `tools/jev-prompt`); abrir a resposta com `Jev (prompt): ÔÇª` |
+
+Pra achar um assunto sem ler tudo: `grep -n` em `docs/`; se a pergunta for de comportamento e sem palavra-chave, `tools/jev trechos "pergunta" docs/*.md`.
+
+
+
+supabase/schema.sql       cópia do esquema do banco vivo (regenerado por dump — hoje 2026-11-17; inclui tabelas norte_* que não têm migração no repo); mudou schema → regenerar
+
+
+- **Tabelas órfãs no banco** (não espelhadas no repo nem usadas pelo site): `norte_leads` e `norte_admins` (migrações de out/2026, projeto paralelo Norte Interior que compartilha o Supabase). Decisão pendente: espelhar ou derrubar.
+
+
+domínio `pws.dupuroacai.com` no GitHub Pages; checkout delivery com pagamento online (MP + pagar na entrega), primeiro Pix pago e entregue (DLW-0020, 2026-11-10).
+
+## Regras de delegação (gestor → agentes)
+
+- Ordem de inspeção: **grep/regex (grátis) → `tools/jev trechos` (centavos) → Claude lê (caro)**. Briefing de pesquisa: ≤6 perguntas.
+- Todo briefing de subagente termina com: "se os steps acabarem, ENTREGUE parcial em texto com UNVERIFIED nos faltantes — nunca finalize sem resposta".
+- Revisor grepa onde a feature É (inline do HTML conta), não onde o briefing acha que está.
+- Depois de TODO lote com código mudado: revisor no diff **e** teste funcional de porta (render real, burst de limite, `cron.job_run_details`). Revisão estática não pega deadlock de render nem `.rpc` inerte — pegamos os dois em produção.
+- Deploy Supabase: conferir vivo×repo antes de publicar por cima; migrations na ordem; nunca revogar grant de `authenticated` sem grep de PostgREST no front inteiro.
+- ⚠️  2026-11-17: CLAUDE.md foi commitado corrompido (base64→lixo) uma vez (788b0b0) e restaurado do working tree. Se virar base64 de novo, decodificar do working tree antes de qualquer commit.
+
+## Lacunas conhecidas
+Sem analytics/pixel; sem testes automatizados (validação manual); não testado em dispositivo real. (Checkout online com MP e hospedagem GitHub Pages existem — ver Eficiência/Negócio.)
