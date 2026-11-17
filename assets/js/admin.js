@@ -776,7 +776,7 @@ var DupuroAdmin = (function () {
       var temMP = !!d.mp_payment_id && d.mp_payment_id !== null;
       var mpAprovado = d.mp_status === 'approved' || d.mp_status === 'valor_divergente';
       if ((d.status === 'aguardando_pagamento' || d.status === 'expirado') && temMP) { g2.push(d); return; }
-      if ((d.status === 'cancelado' || d.status === 'entregue') && mpAprovado) { g3.push(d); return; }
+      if ((d.status === 'cancelado' || d.status === 'expirado') && mpAprovado) { g3.push(d); return; }
     });
     var ckR = await client.from('revenda_checkouts').select('id, token, revendedor_id, total, status, erro, mp_payment_id, criado_em, numero').eq('status', 'erro');
     var errMsg = ckR.error ? 'revenda_checkouts indisponível: ' + String(ckR.error.message || ckR.error) : null;

@@ -5117,7 +5117,7 @@
       if (g3.length) {
         html += '<div class="fin-grupo">' +
           '<h3 style="margin:0 0 6px;font-size:15px;">Estorno pendente no MP <span class="badge-pill cancelado hidden" data-fin-n="' + esc(g3.length) + '">' + g3.length + '</span></h3>' +
-          '<div class="subtitle">Pedido já resolvido mas dinheiro entrou — preciso estornar no painel do Mercado Pago.</div>' +
+          '<div class="subtitle">Pedido cancelado/expirado com dinheiro aprovado — verificar estorno no painel do Mercado Pago.</div>' +
           g3.map(function (d) {
             return '<div class="fin-row"><strong>' + esc(d.codigo) + '</strong> · ' + esc(d.cliente_nome || '—') +
               ' · ' + moeda(Number(d.total) || 0) +
