@@ -463,7 +463,7 @@
     if (!e || !e.tipo) return '';
     return (e.tipo === 'entrega' ? 'Entrega' : 'Retirada na fábrica') +
       (e.data ? ' · ' + diaCurto(e.data) : '') + (TURNO_TXT[e.turno] ? ', ' + TURNO_TXT[e.turno] : '') +
-      (e.cupom ? ' · cupom ' + e.cupom + (e.desconto_percent ? ' (−' + e.desconto_percent + '%)' : '') : '');
+      (e.cupom ? ' · cupom ' + e.cupom + (e.cupom_tipo === 'frete' ? ' (taxa grátis)' : e.desconto_percent ? ' (−' + e.desconto_percent + '%)' : '') : '');
   }
   function linhaTempo(o) {
     if (o.status === 'cancelado') {
@@ -1222,12 +1222,13 @@
   // Cupons que dá pra usar agora (do revendedor, não usados, na validade).
   function cuponsValidos() {
     var hoje = isoUTC(agoraCuiaba());
-    return currentCoupons.filter(function (c) { return !c.usado && c.pct > 0 && (!c.validade || c.validade >= hoje); })
-      .sort(function (a, b) { return b.pct - a.pct; });
+    return currentCoupons.filter(function (c) { return !c.usado && (c.tipo === 'frete' || c.pct > 0) && (c.tipo !== 'frete' || tipoEscolhido() === 'entrega') && (!c.validade || c.validade >= hoje); })
+      .sort(function (a, b) { return (b.tipo === 'frete' ? 1 : 0) - (a.tipo === 'frete' ? 1 : 0) || b.pct - a.pct; }); // frete primeiro, depois o maior %; cupom frete só aparece em entrega
   }
   function cupomEscolhido() {
     var r = checkout.querySelector('[name="cupom"]:checked');
-    return r && r.value ? cuponsValidos().filter(function (c) { return c.code === r.value; })[0] || null : null;
+    var c = r && r.value ? cuponsValidos().filter(function (x) { return x.code === r.value; })[0] || null : null;
+    return c; // cupom frete sumiu de validos em retirada: deixa de contar sozinho
   }
   // Mesma conta do banco: desconto em cada linha, arredondado em centavos.
   function totalComDesconto(pct) {
@@ -1238,12 +1239,14 @@
     var c = cupomEscolhido();
     var produtos = c ? totalComDesconto(c.pct) : sub;
     var taxa = taxaAtual();
+    var freteGratis = !!(c && c.tipo === 'frete'); // cupom taxa-grátis: o banco zera a taxa junto (migration_060)
+    var taxaCobrada = freteGratis ? 0 : taxa;
     document.getElementById('checkoutDesconto').classList.toggle('hidden', !c && taxa == null);
     document.getElementById('checkoutSubtotal').textContent = brl(sub);
-    document.getElementById('checkoutDescontoTxt').textContent = c ? 'Cupom ' + c.code + ' (−' + c.pct + '%): −' + brl(sub - produtos) : '';
-    document.getElementById('checkoutEntregaTxt').textContent = taxa != null ? 'Entrega: ' + brl(taxa) : '';
+    document.getElementById('checkoutDescontoTxt').textContent = c ? (freteGratis ? 'Cupom ' + c.code + ': taxa de entrega grátis' : 'Cupom ' + c.code + ' (−' + c.pct + '%): −' + brl(sub - produtos)) : '';
+    document.getElementById('checkoutEntregaTxt').textContent = taxa != null ? 'Entrega: ' + (freteGratis ? 'grátis (cupom)' : brl(taxa)) : '';
     var aCalcular = tipoEscolhido() === 'entrega' && taxa == null;
-    document.getElementById('checkoutTotal').textContent = brl(produtos + (taxa || 0)) + (aCalcular ? ' + entrega' : '');
+    document.getElementById('checkoutTotal').textContent = brl(produtos + (taxaCobrada || 0)) + (aCalcular ? ' + entrega' : '');
   }
 
   // ---- Taxa de entrega (migration_056): mesma regra e limite do delivery, calculada no servidor ----
@@ -1284,7 +1287,7 @@
     document.getElementById('checkoutCupomGrupo').classList.toggle('hidden', !validos.length);
     // O maior desconto já vem marcado; dá pra escolher outro ou não usar agora.
     document.getElementById('checkoutCupons').innerHTML = validos.map(function (c, i) {
-      return '<label class="opcao"><input type="radio" name="cupom" value="' + esc(c.code) + '"' + (i === 0 ? ' checked' : '') + '><span><strong>' + esc(c.code) + ' · ' + c.pct + '% de desconto</strong>' +
+      return '<label class="opcao"><input type="radio" name="cupom" value="' + esc(c.code) + '"' + (i === 0 ? ' checked' : '') + '><span><strong>' + esc(c.code) + ' · ' + (c.tipo === 'frete' ? 'taxa de entrega grátis' : c.pct + '% de desconto') + '</strong>' +
         '<small>' + (c.desc ? esc(c.desc) + ' · ' : '') + (c.validade ? 'vale até ' + formatDate(c.validade) : 'sem prazo') + '</small></span></label>';
     }).join('') + (validos.length ? '<label class="opcao"><input type="radio" name="cupom" value=""><span><strong>Não usar agora</strong><small>Guarda o cupom pra outro pedido</small></span></label>' : '');
   }
@@ -1354,7 +1357,7 @@
       entrega.cotacao_id = freteUsado.cotacao.id;
     }
     var subtotalAgora = (cupomUsado ? totalComDesconto(cupomUsado.pct) : cart.reduce(function (s, it) { return s + it.preco * it.quantidade; }, 0)) +
-      (freteUsado ? Number(freteUsado.taxa) : 0);
+      (freteUsado ? (cupomUsado && cupomUsado.tipo === 'frete' ? 0 : Number(freteUsado.taxa)) : 0); // cupom frete: banco zera a taxa
     if (entrega.forma === 'dinheiro' && document.getElementById('checkoutTroco').value.trim()) {
       entrega.troco_para = valorDigitado(document.getElementById('checkoutTroco').value);
       if (!entrega.troco_para || entrega.troco_para < subtotalAgora) { document.getElementById('checkoutTroco').focus(); return falha('O troco precisa ser pra um valor maior que o total (' + brl(subtotalAgora) + ').'); }
@@ -1414,7 +1417,7 @@
     document.getElementById('checkoutTroco').value = '';
     document.getElementById('sucessoTitulo').textContent = (numero || 'Pedido') + ' confirmado';
     document.getElementById('summarySuccessDetail').textContent = n + (n === 1 ? ' produto' : ' produtos') + ' · ' + brl(total) +
-      (cupomUsado ? ' com o cupom ' + cupomUsado.code + ' (−' + cupomUsado.pct + '%)' : '');
+      (cupomUsado ? ' com o cupom ' + cupomUsado.code + (cupomUsado.tipo === 'frete' ? ' (taxa grátis)' : ' (−' + cupomUsado.pct + '%)') : '');
     document.getElementById('sucessoUltimo').textContent = tipo === 'entrega' ? 'Entregue' : 'Retirado na fábrica';
     document.getElementById('sucessoQuando').textContent = rotuloDia(entrega.data) + ', ' + TURNOS[entrega.turno].nome.toLowerCase() + ' (' + TURNOS[entrega.turno].faixa + ')' +
       (tipo === 'entrega' ? ' · ' + endereco : ' · Av. das Torres, 16');
@@ -1555,7 +1558,7 @@
   // sem a taxa de entrega). Ao voltar pra aba, se saiu versão nova, recarrega — o carrinho
   // fica salvo no aparelho. No meio do pagamento, não. Recarrega uma vez por versão (o
   // HTML pode vir do cache por até 10 min e não queremos laço).
-  var VERSAO_PAINEL = '2026-11-16a'; // subir junto com area-cliente/versao-painel.json
+  var VERSAO_PAINEL = '2026-11-17a'; // subir junto com area-cliente/versao-painel.json
   var versaoConferida = 0;
   async function conferirVersao() {
     if (Date.now() - versaoConferida < 60e3 || !pagOnline.classList.contains('hidden')) return;
@@ -1685,7 +1688,7 @@
       return '<div class="coupon-card">' +
         '<div class="code">' + esc(c.code) + '</div>' +
         '<div class="desc">' + esc(c.desc) + '</div>' +
-        '<div class="meta"><span>' + (c.usado ? 'Já usado' : (c.pct ? c.pct + '% de desconto · ' : '') + (c.validade ? 'vale até ' + formatDate(c.validade) : 'sem prazo')) + '</span>' +
+        '<div class="meta"><span>' + (c.usado ? 'Já usado' : (c.tipo === 'frete' ? 'Taxa de entrega grátis · ' : (c.pct ? c.pct + '% de desconto · ' : '')) + (c.validade ? 'vale até ' + formatDate(c.validade) : 'sem prazo')) + '</span>' +
         (c.usado ? '' : '<button type="button" class="copy-btn" data-usar-cupom>Usar num pedido</button>') + '</div>' +
         '</div>';
     }).join('');

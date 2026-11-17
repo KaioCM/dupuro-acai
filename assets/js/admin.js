@@ -805,7 +805,7 @@ var DupuroAdmin = (function () {
   async function getAllCoupons() {
     var couponsResult = await client
       .from('coupons')
-      .select('id, revendedor_id, code, descricao, validade, usado')
+      .select('id, revendedor_id, code, descricao, desconto_percent, tipo, validade, usado')
       .order('created_at', { ascending: false });
     if (couponsResult.error) return [];
 
@@ -819,23 +819,27 @@ var DupuroAdmin = (function () {
         id: c.id,
         code: c.code,
         desc: c.descricao,
+        pct: c.desconto_percent || 0,
+        tipo: c.tipo || 'pct',
         validade: c.validade,
         usado: c.usado,
-        revendedorNome: reseller ? (reseller.empresa || reseller.nome) : '—'
+        revendedorNome: reseller ? (reseller.empresa || reseller.nome) : 'Cupom geral (delivery)'
       };
     });
   }
 
-  async function generateCoupon(revendedorId, desc, discountPercent, validDays) {
-    var code = 'DUPURO-' + Math.random().toString(36).substring(2, 7).toUpperCase();
+  async function generateCoupon(revendedorId, desc, discountPercent, validDays, tipo) {
+    tipo = tipo || 'pct';
+    var code = 'DUPURO-' + (tipo === 'frete' ? 'FRETE-' : '') + Math.random().toString(36).substring(2, 7).toUpperCase();
     var validade = new Date();
     validade.setDate(validade.getDate() + (validDays || 30));
 
     var result = await client.from('coupons').insert({
-      revendedor_id: revendedorId,
+      revendedor_id: revendedorId || null,
       code: code,
-      descricao: desc || (discountPercent + '% de desconto'),
-      desconto_percent: discountPercent,
+      descricao: desc || (tipo === 'frete' ? 'Taxa de entrega grátis' : discountPercent + '% de desconto'),
+      desconto_percent: tipo === 'frete' ? null : discountPercent,
+      tipo: tipo,
       validade: validade.toISOString().split('T')[0],
       usado: false
     });

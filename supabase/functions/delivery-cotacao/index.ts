@@ -195,14 +195,30 @@ Deno.serve(async (req: Request) => {
     }
     if (!dest) return json({ atende: false, mensagem: 'Não encontramos esse endereço no mapa. Confira o CEP e o número, marque sua casa no mapa, ou fale com a gente no WhatsApp.' })
 
-    // Distância de carro (ORS Directions).
+    // Distância de carro (ORS Directions). O ORS grava o que falhou nos logs da
+    // função (edge_logs) — antes sumia silencioso.
+    let lastOrsError = '' // diagnóstico temporário do erro do ORS (ver body.debug)
     const rr = await fetch(`${ORS}/openrouteservice/v2/directions/driving-car`, {
       method: 'POST',
       headers: { Authorization: key, 'Content-Type': 'application/json', Accept: 'application/json' },
       body: JSON.stringify({ coordinates: [[oLng, oLat], [dest.lng, dest.lat]], radiuses: [1000, 1000], units: 'm' }), // 1 km: ponto longe do asfalto (CEP de área grande) ainda acha rota
-    }).then((r) => r.json()).catch(() => null)
-    const metros = rr?.routes?.[0]?.summary?.distance
-    if (metros == null) return json({ atende: false, mensagem: 'Não conseguimos traçar a rota até esse endereço. Marque sua casa no mapa ou fale com a gente no WhatsApp.' })
+    }).then(async (r) => {
+      if (r.ok) return r.json()
+      const txt = await r.text().catch(() => '')
+      console.error('ORS directions', r.status, txt.slice(0, 300))
+      lastOrsError = r.status + ' ' + txt.slice(0, 160) // diagnóstico temporário (body.debug === 'dupuro')
+      return null
+    }).catch((e) => { console.error('ORS directions erro:', String((e as Error)?.message || e).slice(0, 200)); lastOrsError = 'fetch ' + String((e as Error)?.message || e).slice(0, 160); return null })
+    let metros = rr?.routes?.[0]?.summary?.distance
+    if (metros == null) {
+      // ORS fora do ar/sem quota não pode travar a venda: estimativa = linha reta
+      // × 1,35 (fator urbano do traçado real) e a cotação volta marcada imprecisa
+      // (a tela sugere conferir; o km real é só pra taxa, a rota usa o ponto).
+      const linna = distKm({ lat: oLat, lng: oLng }, dest)
+      if (linna > 60) return json({ atende: false, mensagem: 'Não conseguimos calcular a rota até esse endereço agora. Marque sua casa no mapa ou fale com a gente no WhatsApp.' })
+      metros = linna * 1350
+      impreciso = true
+    }
     const km = Math.round(metros / 100) / 10
     const taxa = calcTaxa(km, cfg.taxa)
     if (taxa == null) return json({ atende: false, km, mensagem: `Esse endereço fica a ${String(km).replace('.', ',')} km — por enquanto entregamos até ${cfg.taxa.max_km} km da loja.` })
@@ -215,6 +231,7 @@ Deno.serve(async (req: Request) => {
     return json({
       atende: true, km, taxa, lat: dest.lat, lng: dest.lng, place_id: null,
       endereco_formatado: endereco, impreciso, fonte: dest.layer || 'cep',
+      ...((body.debug === 'dupuro' && lastOrsError) ? { _diag: 'directions: ' + lastOrsError } : {}),
       cotacao: { exp, assinatura: await hmac(base), id: gravada?.id || null },
     })
   } catch (e) {
