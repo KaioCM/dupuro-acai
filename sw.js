@@ -7,7 +7,7 @@
 //
 // Suba o CACHE_VER quando mudar a lista de arquivos abaixo, pra forçar refresh.
 // ==========================================================================
-var CACHE_VER = 'dupuro-caixa-v75';
+var CACHE_VER = 'dupuro-caixa-v76'; // v76: admin.js adicionou mp_status/mp_payment_id e getFinanceiroPendente
 
 var SHELL = [
   '/area-cliente/caixa.html',

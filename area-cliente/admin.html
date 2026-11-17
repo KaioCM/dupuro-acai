@@ -141,6 +141,11 @@
       </div>
       </details>
 
+      <div class="panel hidden" id="financeiroBox">
+        <div class="panel-header"><h2>Financeiro pendente</h2></div>
+        <div id="finGrupos"></div>
+      </div>
+
       <div class="ped-fila" id="pedFila" aria-live="polite"></div>
 
       <div class="panel hidden" id="pedConcluidos">
@@ -2747,14 +2752,14 @@
 
   // ---- Pedidos ----
   async function populateResellerSelect() {
-    var resellers = await DupuroAdmin.getResellers();
-    var options = resellers.length
-      ? resellers.map(function (r) { return '<option value="' + r.id + '">' + (r.empresa || r.nome) + '</option>'; }).join('')
+    resellersCache = await DupuroAdmin.getResellers();
+    var options = resellersCache.length
+      ? resellersCache.map(function (r) { return '<option value="' + r.id + '">' + (r.empresa || r.nome) + '</option>'; }).join('')
       : '<option value="">Nenhum revendedor aprovado</option>';
     document.getElementById('orderRevendedor').innerHTML = options;
     // Cupom: além dos revendedores, aceita "geral" (value vazio) — usado no checkout do delivery.
     document.getElementById('couponRevendedor').innerHTML = '<option value="">— Cupom geral (delivery) —</option>' +
-      (resellers.length ? resellers.map(function (r) { return '<option value="' + r.id + '">' + (r.empresa || r.nome) + '</option>'; }).join('') : '');
+      (resellersCache.length ? resellersCache.map(function (r) { return '<option value="' + r.id + '">' + (r.empresa || r.nome) + '</option>'; }).join('') : '');
   }
 
   var SABORES = ['Açaí', 'Creme de Morango', 'Creme de Paçoca', 'Creme de Maracujá', 'Creme de Cupuaçu', 'Creme de Pistache', 'Creme de Ninho', 'Creme de Banana', 'Creme de Doce de Leite'];
@@ -5060,9 +5065,134 @@
   // (25 consultas, ~12 s). Agora cada aba carrega o que precisa quando é aberta;
   // leituras em comum vêm do cache do admin.js. Depois da aba inicial, as
   // outras carregam em segundo plano pra troca de aba ficar instantânea.
+
+  // Financeiro pendente no Painel de Pedidos: delivery com mp_status problemático
+  // + revenda_checkouts com erro. Renderiza 4 grupos dentro do card #financeiroBox.
+  async function renderFinanceiro() {
+    var box = document.getElementById('financeiroBox');
+    if (!box || !box.offsetParent) return; // só desenha quando visível
+    if (!resellersCache || resellersCache.length === 0) resellersCache = await DupuroAdmin.getResellers();
+    var byId = {};
+    resellersCache.forEach(function (r) { byId[r.id] = r; });
+    try {
+      var data = await DupuroAdmin.getFinanceiroPendente(byId);
+      var g1 = data.g1, g2 = data.g2, g3 = data.g3, g4 = data.g4, errFin = data.erro;
+      function fmtData(iso) {
+        if (!iso) return '';
+        var p = iso.split('T')[0].split('-');
+        return p[2] + '/' + p[1] + '/' + p[0];
+      }
+      var html = '';
+      // Erro geral da query revenda_checkouts
+      if (errFin) {
+        html += '<div class="fin-grupo"><p class="erro-linha">Não foi possível buscar checkouts travados: ' + esc(errFin) + '</p></div>';
+      }
+      // G1 - Valor divergente
+      if (g1.length) {
+        html += '<div class="fin-grupo">' +
+          '<h3 style="margin:0 0 6px;font-size:15px;">Valor divergente <span class="badge-pill neutro hidden" data-fin-n="' + esc(g1.length) + '">' + g1.length + '</span></h3>' +
+          '<div class="subtitle">Cliente pagou menos que o total — o pedido ficou preso sem resolver.</div>' +
+          g1.map(function (d) {
+            return '<div class="fin-row"><strong>' + esc(d.codigo) + '</strong> · ' + esc(d.cliente_nome || '—') +
+              ' · ' + moeda(Number(d.total) || 0) +
+              ' · <small>Status MP: ' + esc(String(d.mp_status || '')) + '</small>' +
+              '<button type="button" class="btn btn-dark-outline btn-sm" data-fin-mp="' + esc(d.token || '') + '">Conferir no MP</button>' +
+              '</div>';
+          }).join('') + '</div>';
+      }
+      // G2 - Aguardando com pagamento registrado
+      if (g2.length) {
+        html += '<div class="fin-grupo">' +
+          '<h3 style="margin:0 0 6px;font-size:15px;">Aguardando com pagamento registrado <span class="badge-pill enviado hidden" data-fin-n="' + esc(g2.length) + '">' + g2.length + '</span></h3>' +
+          '<div class="subtitle">PIX aprovado mas o status não atualizou — webhook perdido.</div>' +
+          g2.map(function (d) {
+            return '<div class="fin-row"><strong>' + esc(d.codigo) + '</strong> · ' + esc(d.cliente_nome || '—') +
+              ' · ' + moeda(Number(d.total) || 0) +
+              ' · <small>MP: ' + esc(String(d.mp_payment_id || '')) + '</small>' +
+              '<button type="button" class="btn btn-primary btn-sm" data-fin-mp="' + esc(d.token || '') + '">Conferir no MP</button>' +
+              '</div>';
+          }).join('') + '</div>';
+      }
+      // G3 - Estorno pendente no MP
+      if (g3.length) {
+        html += '<div class="fin-grupo">' +
+          '<h3 style="margin:0 0 6px;font-size:15px;">Estorno pendente no MP <span class="badge-pill cancelado hidden" data-fin-n="' + esc(g3.length) + '">' + g3.length + '</span></h3>' +
+          '<div class="subtitle">Pedido já resolvido mas dinheiro entrou — preciso estornar no painel do Mercado Pago.</div>' +
+          g3.map(function (d) {
+            return '<div class="fin-row"><strong>' + esc(d.codigo) + '</strong> · ' + esc(d.cliente_nome || '—') +
+              ' · ' + moeda(Number(d.total) || 0) +
+              ' · <small>MP ID: ' + esc(String(d.mp_payment_id || '')) + '</small>' +
+              '</div>';
+          }).join('') + '</div>';
+      }
+      // G4 - Checkout revenda travado
+      if (g4.length) {
+        html += '<div class="fin-grupo">' +
+          '<h3 style="margin:0 0 6px;font-size:15px;">Checkout de revenda travado <span class="badge-pill processando hidden" data-fin-n="' + esc(g4.length) + '">' + g4.length + '</span></h3>' +
+          '<div class="subtitle">Pagamento aprovado mas o pedido não criou — dinheiro retido.</div>' +
+          g4.map(function (c) {
+            var rev = byId[c.revendedor_id];
+            var nomeRev = rev ? (rev.empresa || rev.nome) : String(c.revendedor_id || '').slice(0, 9) + '…';
+            var errTxt = c.erro ? esc(c.erro) : '—';
+            var copiar = [
+              'Token: ' + esc((c.token || '').toString()),
+              'Revendedor: ' + nomeRev,
+              'Total: R$ ' + (Number(c.total) || 0),
+              'MP ID: ' + esc((c.mp_payment_id || '').toString())
+            ].join('\n');
+            return '<div class="fin-row"><strong>' + esc(c.numero || '#' + c.id) + '</strong> · ' + esc(nomeRev) +
+              ' · ' + moeda(Number(c.total) || 0) +
+              ' · <small>' + fmtData(c.criado_em) + '</small>' +
+              ' · <em>' + errTxt + '</em>' +
+              '<button type="button" class="btn btn-dark-outline btn-sm" data-fin-copy="' + btoa(encodeURIComponent(copiar)) + '">Copiar dados</button>' +
+              '</div>';
+          }).join('') + '</div>';
+      }
+      if (!html) {
+        html = '<div class="fila-vazia"><svg aria-hidden="true"><use href="#m-check"/></svg><div><strong>Nada pendente por aqui.</strong></div></div>';
+      }
+      box.querySelector('#finGrupos').innerHTML = html;
+      // Botões "Conferir no MP"
+      box.querySelectorAll('[data-fin-mp]').forEach(function (btn) {
+        btn.addEventListener('click', async function () {
+          var tok = this.getAttribute('data-fin-mp');
+          if (!tok) return;
+          this.disabled = true;
+          try {
+            var r = await client.functions.invoke('delivery-pagar', { body: { acao: 'status', token: tok } });
+            if (r.error) {
+              var msgErr = motivoErro(r.error);
+              try { var ctx = JSON.parse(r.error.context || '{}'); if (ctx && ctx.error) msgErr = ctx.error; } catch(e){}
+              aviso(msgErr + '.');
+            } else if (r.data && r.data.status === 'pago') {
+              await aviso('Status conferido e confirmado.');
+              DupuroAdmin.limparCache();
+              renderPedidosFila();
+              renderFinanceiro();
+            } else {
+              var stMsg = r.data && r.data.status ? ' (status: ' + esc(r.data.status) + ')' : '';
+              aviso('O pagamento ainda não foi aprovado no Mercado Pago.' + stMsg);
+            }
+          } catch (e) {
+            aviso('Falha na conexão: ' + motivoErro(e));
+          }
+          this.disabled = false;
+        });
+      });
+      // Botão "Copiar dados" (checkout revenda)
+      box.querySelectorAll('[data-fin-copy]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          try { var txt = decodeURIComponent(atob(this.getAttribute('data-fin-copy'))); navigator.clipboard.writeText(txt).then(function () { aviso('Dados copiados.'); }, function () { aviso('Não foi possível copiar para área de transferência.'); }); }
+          catch (e) { aviso('Não foi possível copiar os dados.'); }
+        });
+      });
+    } catch (e) {
+      box.querySelector('#finGrupos').innerHTML = '<div class="field-note show">Erro ao carregar financeiro pendente: ' + esc(motivoErro(e)) + '</div>';
+    }
+  }
   var CARREGA = {
     inicio: [renderInicio],
-    pedidos: [renderProducts, renderPedidosFila, renderOrders, populateResellerSelect, updateOrderNumberPreview, loadLimiteLitros],
+    pedidos: [renderProducts, renderPedidosFila, renderOrders, populateResellerSelect, updateOrderNumberPreview, loadLimiteLitros, renderFinanceiro],
     estoque: [renderProducts, resetProdForm, renderProducoes, renderAjustes],
     numeros: [renderOverview, renderAudits, renderCaixaFechamentos, renderTaxasEntregador, renderNotas],
     cadastros: [renderPending, renderResellers, renderProducts, renderAcompanhamentos, renderPromocoesAdmin, renderCoupons, loadLimiteLitros, populateResellerSelect],

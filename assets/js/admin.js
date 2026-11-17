@@ -758,10 +758,29 @@ var DupuroAdmin = (function () {
   async function getDeliveryPedidos() {
     var r = await client
       .from('delivery_pedidos')
-      .select('id, codigo, token, cliente_nome, cliente_telefone, endereco, complemento, total, itens, periodo, data_entrega, status, criado_em, pagar_na_entrega, forma_entrega, troco_para, recebido_forma, recebido_em')
+      .select('id, codigo, token, cliente_nome, cliente_telefone, endereco, complemento, total, itens, periodo, data_entrega, status, criado_em, pagar_na_entrega, forma_entrega, troco_para, recebido_forma, recebido_em, mp_status, mp_payment_id')
       .order('criado_em', { ascending: false })
       .limit(200);
     return r.error ? [] : (r.data || []);
+  }
+
+  // Financeiro pendente: grupos de itens financeiros que ficaram sem resolução
+  // automática (Valor divergente, PIX pago com webhook perdido, estorno no MP,
+  // checkout revenda travado). Usa os delivery carregados e faz uma consulta
+  // separada em revenda_checkouts (status = erro).
+  async function getFinanceiroPendente(revPorId) {
+    var dlv = await getDeliveryPedidos();
+    var g1 = [], g2 = [], g3 = [];
+    dlv.forEach(function (d) {
+      if (d.mp_status === 'valor_divergente') { g1.push(d); return; }
+      var temMP = !!d.mp_payment_id && d.mp_payment_id !== null;
+      var mpAprovado = d.mp_status === 'approved' || d.mp_status === 'valor_divergente';
+      if ((d.status === 'aguardando_pagamento' || d.status === 'expirado') && temMP) { g2.push(d); return; }
+      if ((d.status === 'cancelado' || d.status === 'entregue') && mpAprovado) { g3.push(d); return; }
+    });
+    var ckR = await client.from('revenda_checkouts').select('id, token, revendedor_id, total, status, erro, mp_payment_id, criado_em, numero').eq('status', 'erro');
+    var errMsg = ckR.error ? 'revenda_checkouts indisponível: ' + String(ckR.error.message || ckR.error) : null;
+    return { g1: g1, g2: g2, g3: g3, g4: (ckR.data || []), erro: errMsg, revPorId: revPorId };
   }
 
   // Pago → saiu pra entrega → entregue (o horário de cada passo fica gravado).
@@ -1085,6 +1104,7 @@ var DupuroAdmin = (function () {
     changePassword: changePassword,
     getAllOrders: getAllOrders,
     getDeliveryPedidos: getDeliveryPedidos,
+    getFinanceiroPendente: getFinanceiroPendente,
     cancelarDelivery: cancelarDelivery,
     ajustarEstoque: ajustarEstoque,
     getAjustesEstoque: getAjustesEstoque,
