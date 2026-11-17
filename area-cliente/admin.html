@@ -5070,7 +5070,7 @@
   // + revenda_checkouts com erro. Renderiza 4 grupos dentro do card #financeiroBox.
   async function renderFinanceiro() {
     var box = document.getElementById('financeiroBox');
-    if (!box || !box.offsetParent) return; // só desenha quando visível
+    if (!box) return; // chama por aba via CARREGA.pedidos — visível por definição
     if (!resellersCache || resellersCache.length === 0) resellersCache = await DupuroAdmin.getResellers();
     var byId = {};
     resellersCache.forEach(function (r) { byId[r.id] = r; });
@@ -5152,6 +5152,7 @@
         html = '<div class="fila-vazia"><svg aria-hidden="true"><use href="#m-check"/></svg><div><strong>Nada pendente por aqui.</strong></div></div>';
       }
       box.querySelector('#finGrupos').innerHTML = html;
+      box.classList.remove('hidden');
       // Botões "Conferir no MP"
       box.querySelectorAll('[data-fin-mp]').forEach(function (btn) {
         btn.addEventListener('click', async function () {
@@ -5188,6 +5189,7 @@
       });
     } catch (e) {
       box.querySelector('#finGrupos').innerHTML = '<div class="field-note show">Erro ao carregar financeiro pendente: ' + esc(motivoErro(e)) + '</div>';
+      box.classList.remove('hidden');
     }
   }
   var CARREGA = {
