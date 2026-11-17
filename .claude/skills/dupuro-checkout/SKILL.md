@@ -1,48 +1,37 @@
 ---
 name: dupuro-checkout
-description: Regras, arquitetura e checklist de qualidade para checkout do delivery Dupuro. Usa Mercado Pago + pagar na entrega (Pix/Cartão) via Checkout Pro. Cobrir triângulo: API → Frontend → Edge Function, com atenção ao estado, rede instável e falha de pagamento. Validação manual antes de aprovar; sem teste em dispositivo real ainda. TRINCHEIRA 1: checkout MP (Mercado Pago) | TRINCHEIRA 2: gateway host & deploy GitHub Pages | TRINCHEIRA 3: CTA WhatsApp fallback quando checkout não converte.
+description: Mapa vivo do checkout Dupuro (delivery + revenda): páginas, fluxo, status de pedido, Mercado Pago, webhook, cupons, taxa de entrega assinada, anti-abuso e protocolo de deploy/revisão. Use ao mexer ou depurar delivery/, Edge Functions delivery-*, revenda-pagar, tabela coupons, migrações de checkout, tela "Financeiro pendente" do admin, ou ao planejar mudanças de preço/pagamento/entrega — mesmo que o usuário não diga "checkout".
+---
 
-## Contexto do negócio
-- Delivery de açaí/cremes em Cuiabá-MT. Prime Pix pago e entregue: DLW-0020, 2026-11-10.
-- Checkout usa Mercado Pago (Checkout Pro) com opção "pagar na entrega".
-- Domínio hospedado no GitHub Pages (pws.dupuroacai.com ou domínio customizado configurado via DNS/CNAME).
-- **TRINCHEIRA 1 (G3):** Checkout online com MP — validar link da SDK MP, payload, callback webhook, tratamento de erro 4xx/5xx, redirecionamento pós-pagamento.
-- **TRINCHEIRA 2 (hosting):** Site hospedado em GitHub Pages (domínio pws.dupuroacai.com). Sem servidor backend próprio. Edge Functions Supabase tratam lógica server-side (auth, RPCs).
-- **TRINCHEIRA 3:** Se checkout falhar ou usuário desistir, CTA deve direcionar ao WhatsApp (5565992888228) como fallback — nunca deixar usuário sem saída.
+# Dupuro Checkout — mapa e regras do território
 
-## Arquitetura
-1. `delivery/checkout.html` — formulário (itens, endereço, forma de pagamento). Integra com MP JS SDK (MercadoPago.setPublishingKey, createPreference, initBrick).
-2. Edge Function (Supabase) — cria preference no MP (via SDK Node/REST), armazena preference_id no pedido.
-3. Webhook MP — notifica status do pagamento; atualiza pedido (paid/pending/cancelled).
-4. Fallback: botão WhatsApp no checkout para pedir atendimento manual.
+Site estático + Supabase (`zqadfktfplrbrjmepllh`). Veridade é o código/SQL; `docs/*.md` são mapa. O banco é COMPARTILHADO com o projeto Norte Interior (tabelas `norte_*`, cron, functions e secrets em comum).
 
-## Checklist de validação manual
-- [ ] Preference criada corretamente (valores, itens, metadados): POST /v1/preferences body válido.
-- [ ] Brick/Pix aparece no checkout e gera QR code/copiable reference funcional.
-- [ ] Pagamento Pix confirmado → webhook chega → pedido marcado paid.
-- [ ] Primeiro Pix pago e entregue (DLW-0020) reproduzível no fluxo.
-- [ ] Falha de pagamento (declined/expired) mostra mensagem clara + botão retry ou WhatsApp fallback.
-- [ ] Pagar na entrega: pedido criado com status pending_payment, recebe código rastreio.
-- [ ] Mobile: layout responsivo, botão CTA fixo visível.
-- [ ] Verificar se hosting GitHub Pages está apontando para domínio correto (DNS/CNAME).
-- [ ] Sem emoji em botões de ação (segurança/regra sempre).
+## Fluxo (delivery)
+`index.html` → `pedido.html` (3 telas: Escolher — Entrega — Pagar; `irPara/podeIr` ~:690-712) → `acompanhar.html?t=<token>` (polling 10/20/30s + mapa fase longe/perto/a_caminho). Carrinho em localStorage (`dupuro-delivery-carrinho`); preço exibido pode estar velho — o servidor recalcula.
 
-## G3 — Checklist de qualidade (G3)
-- [ ] Preferencias MP criadas sem dados sensíveis expostos (API key em secrets EF, nunca no client).
-- [ ] Tratamento completo de erros HTTP: catch network, parse JSON err, show motivoErro().
-- [ ] Estado local sincronizado com banco: após pagamento, reler pedido via RPC.
-- [ ] Nenhum innerHTML cru vindo do banco (usar esc()).
-- [ ] Sem hard-coding de chaves no git; tudo em Edge Function secrets.
-- [ ] Loading states nos botões para evitar double-submit.
+## Edge Functions
+- `delivery-checkout`: valida cotação assinada (HMAC `lat|lng|km|taxa|exp`, 2h), preço/estoque/turno no banco, cupom frete via RPC, cria `aguardando_pagamento`; expiração preguiçosa >3h (co-irmão cron `delivery-expirar`, 10 min).
+- `delivery-pagar`/`revenda-pagar`: Brick Pix/cartão; `{acao:'status'}` = polling (NUNCA rate-limitar esse caminho); valor sempre o do banco.
+- `delivery-mp-webhook`: NÃO confia no corpo — reconsulta `GET /v1/payments/{id}`; assinatura só com `MP_WEBHOOK_SECRET` setado (está setado); 429 por IP é proposital (MP re-notifica).
+- `delivery-cotacao`: ORS + cascata pin→Pelias→CEP→rua; Jev desempata endereço; fallback linha reta x1,35 marca `impreciso` (checkout não veta).
 
-## Hosting (GitHub Pages)
-- Site serve conteúdo estático (`index.html`, `delivery/`, etc.).
-- HTTPS via GitHub Pages (automático); certificado Let's Encrypt integrado.
-- Deploy via push para main → automatic deploy. Verificar branch source (.github/workflows/ ou setting).
-- Subdomínio: pws.dupuroacai.com → aponta para `<user>.github.io/dupuro-acai`.
-- Não há build step; editar HTML/CSS/JS → push → deploy automático.
+## Status
+Delivery: `aguardando_pagamento → pago → em_rota → entregue` + `cancelado`/`expirado`. **pago ≠ receita** (pagar-na-entrega nasce `pago` com `pagar_na_entrega=true`; receita real = `recebido_forma` ou `mp_status='approved'`). Único caminho que baixa estoque: RPC `delivery_confirmar_pagamento` (service_role, idempotente, aceita `aguardando|expirado`). Revenda: `processando→enviado→entregue|cancelado`; online passa por `revenda_checkouts` (simula com `__simulacao_ok__`; confirmar cria o pedido de verdade; `status='erro'+`mp approved` = dinheiro entrou sem pedido — tela admin).
 
-## Observações críticas
-- Checkout é o momento mais frágil da jornada do revendedor/cliente. Priorizar diagnóstico rápido.
-- Testes limitados a navegador desktop; nenhuma validação em dispositivo real ainda (P0 lacuna conhecida).
-- Webhook MP precisa ser tolerante a reentrância (status já processado = noop seguro).
+## Cupons
+`coupons`: tipo `pct` (1-100, dono revendedor) | `frete` (zera taxa; pode ser geral p/ delivery). Validação 100% server-side com `FOR UPDATE`. Delivery aceita só `frete` geral via `usar_cupom_frete` (2 args — exige migração 061 aplicada; 060 sozinha = overload ambíguo = checkout quebra). Cancelamento devolve (trigger `orders_cupom_status`, só UPDATE; DELETE não devolve). Cupom nunca desconta taxa (exceto tipo frete). PDV não tem cupom — `caixa_promocoes` é preço do dia aplicado no cliente (exceção consciente).
+
+## Anti-abuso (062/063, deployadas)
+`rate_check(p_key,p_max,p_janela_seg)` = upsert único, service_role only; baldes: `dlv-ip` 30/60s, `dlv-tel` 20/h, `dlvpay|rvpay` 40/h por token, `mpwh` 60/60s. `turno_ocupacao` conta não-pagos por **telefone distinto** (spam não sequestra vagas). Grants: anon sem acesso direto a `delivery_pedidos`/`revenda_checkouts`; authenticated só select/update (delivery) e select (checkouts) — **o painel admin usa PostgREST direto e QUEBRA se revogar de authenticated**.
+
+## Armadilhas provadas nesta trincheira
+1. `sb.rpc()` devolve `{data,error}` — objeto é sempre truthy; sempre `const { data } = ...` e comparar `=== false` (fail-open em erro). Bug real: limiter inerte em produção.
+2. Guarda `if (!box.offsetParent) return` em card que nasce `hidden` = deadlock (nada desenha, zero erros no console). Bug real.
+3. `schema.sql` é dump do banco VIVO compartilhado (Norte Interior); hoje é stub truncado — não recriar banco a partir dele sem regenerar.
+4. Migrações: números colidem (060→2, 053→2 nos comentários); ordem real só em `list_migrations` no banco. 060_cupom → 061 → 062 → 063 obrigatória.
+5. Tela "Financeiro pendente" (admin, aba Pedidos): G1 valor_divergente; G2 não-pago com pagamento registrado (botão "Conferir no MP" = reconciliação legítima via RPC); G3 estorno só para cancelado/expirado com approved|valor_divergente — entregue+approved é RECEITA; G4 revenda_checkouts erro.
+6. Deploy: conferir vivo×repo antes de publicar (`get_edge_function` vs arquivo); functions têm `verify_jwt` próprios (revenda-pagar=true). Arquivos do repo: escrever só via python/Node UTF-8 — PowerShell corrompeu CLAUDE.md (UTF-16LE/base64/CP850) em 2026-11-17.
+
+## Protocolo de mudança neste território
+Briefing ≤6 perguntas; ordem grep→`tools/jev trechos`→leitura. Revisão estática NÃO basta: teste funcional de porta (burst 429, render real no browser/Playwright, `cron.job_run_details`). Índices em `delivery_pedidos`: criar só quando >~5k linhas (hoje ~10; seq scan é ótimo em 10 linhas). Contas de teste em `CONTAS-TESTE.local.txt` (admin-teste serve para E2E do painel). Hosting: GitHub Pages (pws.dupuroacai.com) — git push = deploy dos estáticos; functions/migrations via MCP.
