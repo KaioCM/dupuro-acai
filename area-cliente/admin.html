@@ -627,18 +627,26 @@
         <summary class="btn btn-primary"><span aria-hidden="true">+</span> Gerar cupom</summary>
       <div class="panel">
         <div class="panel-header">
-          <div><h2>Gerar novo cupom</h2><div class="subtitle">Crie um cupom para um revendedor específico</div></div>
+          <div><h2>Gerar novo cupom</h2><div class="subtitle">Crie um cupom para um revendedor ou geral (taxa grátis no delivery)</div></div>
         </div>
         <form id="couponForm" class="order-form-grid">
           <div class="field" style="margin-bottom:0;">
+            <label for="couponTipo">Tipo</label>
+            <select id="couponTipo">
+              <option value="pct">Desconto em % no pedido</option>
+              <option value="frete">Taxa de entrega grátis (1 pedido)</option>
+            </select>
+          </div>
+          <div class="field" style="margin-bottom:0;">
             <label for="couponRevendedor">Revendedor</label>
             <select id="couponRevendedor"></select>
+            <div class="field-note-inline hidden" id="couponGeralNota">Sem revendedor: vale pro checkout do delivery (cupom geral).</div>
           </div>
           <div class="field" style="margin-bottom:0;">
             <label for="couponDesc">Descrição</label>
             <input type="text" id="couponDesc" placeholder="Ex: 10% off pedido acima de R$300">
           </div>
-          <div class="field" style="margin-bottom:0;">
+          <div class="field" style="margin-bottom:0;" id="couponPercentWrap">
             <label for="couponPercent">Desconto (%)</label>
             <input type="number" id="couponPercent" min="1" max="90" value="10">
           </div>
@@ -2744,7 +2752,9 @@
       ? resellers.map(function (r) { return '<option value="' + r.id + '">' + (r.empresa || r.nome) + '</option>'; }).join('')
       : '<option value="">Nenhum revendedor aprovado</option>';
     document.getElementById('orderRevendedor').innerHTML = options;
-    document.getElementById('couponRevendedor').innerHTML = options;
+    // Cupom: além dos revendedores, aceita "geral" (value vazio) — usado no checkout do delivery.
+    document.getElementById('couponRevendedor').innerHTML = '<option value="">— Cupom geral (delivery) —</option>' +
+      (resellers.length ? resellers.map(function (r) { return '<option value="' + r.id + '">' + (r.empresa || r.nome) + '</option>'; }).join('') : '');
   }
 
   var SABORES = ['Açaí', 'Creme de Morango', 'Creme de Paçoca', 'Creme de Maracujá', 'Creme de Cupuaçu', 'Creme de Pistache', 'Creme de Ninho', 'Creme de Banana', 'Creme de Doce de Leite'];
@@ -3092,7 +3102,7 @@
       : info.pagamento === 'online' ? 'Pago online' + (info.pago_metodo ? ' (' + (FORMA_REV[info.pago_metodo] || info.pago_metodo) + ')' : '')
       : 'Pagar na ' + (info.tipo === 'entrega' ? 'entrega' : 'retirada') + (info.forma ? ' (' + FORMA_REV[info.forma] + ')' : '') +
         (info.troco_para ? ' · troco pra ' + moeda(Number(info.troco_para)) : '');
-    var cupom = info.cupom ? 'Cupom ' + info.cupom + (info.desconto_percent ? ' (−' + info.desconto_percent + '%, já no valor)' : '') : null;
+    var cupom = info.cupom ? 'Cupom ' + info.cupom + (info.cupom_tipo === 'frete' ? ' (taxa grátis)' : info.desconto_percent ? ' (−' + info.desconto_percent + '%, já no valor)' : '') : null;
     return [info.tipo === 'entrega' ? 'Entrega' : 'Retira na fábrica', dia, TURNO_LABEL[info.turno], pag, cupom].filter(Boolean).join(' · ');
   }
 
@@ -3128,7 +3138,7 @@
     if (!o) return '';
     var info = o.entregaInfo || {};
     var linhas = ['Itens:'].concat(o.items.map(function (i) { return '• ' + i.itens; }));
-    linhas.push('Total: ' + moeda(o.valor) + (info.cupom ? ' (com o cupom ' + info.cupom + (info.desconto_percent ? ', −' + info.desconto_percent + '%' : '') + ')' : ''));
+    linhas.push('Total: ' + moeda(o.valor) + (info.cupom ? ' (com o cupom ' + info.cupom + (info.cupom_tipo === 'frete' ? ', taxa grátis' : info.desconto_percent ? ', −' + info.desconto_percent + '%' : '') + ')' : ''));
     return linhas.join('\n');
   }
   function entregaTexto(o) {
@@ -4309,6 +4319,20 @@
   });
 
   // ---- Cupons ----
+  // Tipo altera o form: 'frete' não usa %; cupom geral (sem revendedor) só existe pra taxa grátis.
+  function atualizarFormCupom() {
+    var tipo = document.getElementById('couponTipo').value;
+    document.getElementById('couponPercentWrap').classList.toggle('hidden', tipo === 'frete');
+    var sel = document.getElementById('couponRevendedor');
+    document.getElementById('couponGeralNota').classList.toggle('hidden', !(!sel.value && tipo === 'frete'));
+    if (tipo === 'frete' && !sel.value) {
+      var d = document.getElementById('couponDesc');
+      if (!d.value.trim()) d.placeholder = 'Ex: Frete grátis de desculpas — vale 1 entrega';
+    }
+  }
+  document.getElementById('couponTipo').addEventListener('change', atualizarFormCupom);
+  document.getElementById('couponRevendedor').addEventListener('change', atualizarFormCupom);
+
   async function renderCoupons() {
     var coupons = await DupuroAdmin.getAllCoupons();
     var body = document.getElementById('couponsBody');
@@ -4317,10 +4341,11 @@
       return;
     }
     body.innerHTML = coupons.map(function (c) {
+      var beneficio = c.tipo === 'frete' ? '<strong>Taxa grátis</strong>' : (c.pct ? '−' + c.pct + '%' : '—');
       return '<tr>' +
         '<td><strong>' + esc(c.code) + '</strong></td>' +
         '<td>' + esc(c.revendedorNome) + '</td>' +
-        '<td>' + esc(c.desc) + '</td>' +
+        '<td>' + beneficio + (c.desc ? ' · ' + esc(c.desc) : '') + '</td>' +
         '<td>' + formatDate(c.validade) + '</td>' +
         '<td>' + (c.usado ? 'Sim' : 'Não') + '</td>' +
         '<td class="admin-table-actions">' + menuAcoes(c.code, [{ attr: 'data-delete-coupon="' + c.id + '"', texto: 'Apagar cupom', perigo: true }]) + '</td>' +
@@ -4343,16 +4368,18 @@
     errorNote.classList.remove('show');
 
     var revendedorId = document.getElementById('couponRevendedor').value;
+    var tipo = document.getElementById('couponTipo').value;
     var desc = document.getElementById('couponDesc').value.trim();
     var percent = document.getElementById('couponPercent').value;
     var days = parseInt(document.getElementById('couponDays').value, 10);
 
-    if (!revendedorId) {
+    if (tipo !== 'frete' && !revendedorId) { // % precisa de um dono; taxa grátis pode ser geral (delivery)
+      errorNote.textContent = 'Escolha o revendedor (ou troque o tipo para "Taxa de entrega grátis").';
       errorNote.classList.add('show');
       return;
     }
 
-    var result = await DupuroAdmin.generateCoupon(revendedorId, desc || (percent + '% de desconto'), percent, days);
+    var result = await DupuroAdmin.generateCoupon(revendedorId || null, desc, percent, days, tipo);
     if (result.error) {
       errorNote.classList.add('show');
       return;

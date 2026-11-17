@@ -112,7 +112,7 @@ Deno.serve(async (req: Request) => {
       additional_info: {
         items: [
           ...(ped.itens || []).map((i: any) => ({ id: String(i.produto_id), title: i.nome + (i.sabor ? ' - ' + i.sabor : ''), quantity: i.quantidade, unit_price: Number(i.preco) })),
-          { id: 'taxa-entrega', title: 'Taxa de entrega', quantity: 1, unit_price: Number(ped.taxa) },
+          ...(Number(ped.taxa) > 0 ? [{ id: 'taxa-entrega', title: 'Taxa de entrega', quantity: 1, unit_price: Number(ped.taxa) }] : []), // cupom frete: taxa 0, sem linha
         ],
         payer: { first_name: payer.first_name, phone: { area_code: String(ped.cliente_telefone).slice(0, 2), number: String(ped.cliente_telefone).slice(2) } },
       },

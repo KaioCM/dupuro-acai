@@ -595,6 +595,12 @@ body.dl-pagando .dl-barra { display: none; }
 /* Como pagar: online x na entrega (migration_049) */
 .dl-formas { border: 0; margin: 16px 0 0; padding: 0; display: grid; gap: 8px; }
 .dl-formas legend { margin-bottom: 8px; font-size: 14px; font-weight: 800; color: #fff; }
+/* Cupom de taxa grátis no resumo do pagamento (migration_060) */
+.dl-cupomBox { margin-top: 14px; }
+.dl-cupomBox > label { display: block; font-size: 14px; font-weight: 800; color: #fff; margin-bottom: 6px; }
+.dl-cupomBox .dl-input input { background: rgba(255,255,255,.94); color: var(--text); text-transform: uppercase; }
+.dl-cupomBox .dl-input input::placeholder { text-transform: none; color: rgba(96,16,80,.45); }
+.dl-cupomBox #cupomDica { margin: 8px 0 0; font-size: 13px; color: var(--gold-soft); }
 .dl-forma { display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px; border-radius: 16px; background: rgba(255,255,255,.08); border: 1.5px solid rgba(255,255,255,.18); cursor: pointer; }
 .dl-forma:has(input:checked) { background: #fff; border-color: var(--gold); }
 .dl-forma input { flex: none; width: 20px; height: 20px; margin: 2px 0 0; accent-color: var(--roxo-700); }

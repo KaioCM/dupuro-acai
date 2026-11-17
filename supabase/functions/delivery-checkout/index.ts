@@ -5,9 +5,11 @@
 // delivery-cotacao, e o período/data é revalidado contra a config (dias e corte).
 // Cria o pedido 'aguardando_pagamento'. O pagamento acontece NO NOSSO SITE
 // (Payment Brick do Mercado Pago + Edge Function delivery-pagar); a preferência
-// do Checkout Pro continua sendo criada como plano B (init_point) caso o Brick
-// não carregue. Quem baixa o estoque é delivery_confirmar_pagamento (chamada
-// pela delivery-pagar e pelo webhook, idempotente).
+// do Checkout Pro continua sendo criada como plano B (caso o Brick não carregue).
+// Quem baixa o estoque é delivery_confirmar_pagamento (chamada pela delivery-pagar
+// e pelo webhook, idempotente). Cupom 'frete' (migration_060): campo `cupom` com
+// código de cupom GERAL de taxa grátis — consumido pela RPC usar_cupom_frete e o
+// pedido é gravado com taxa 0.
 //
 // Secrets: MP_ACCESS_TOKEN (Mercado Pago, produção ou TEST-...); MP_PUBLIC_KEY
 // (chave pública, vai pro navegador montar o Brick).
@@ -105,7 +107,20 @@ Deno.serve(async (req: Request) => {
     }
     if (!itens.length) return json({ error: 'Carrinho vazio.' }, 400)
     const subtotal = Math.round(itens.reduce((s, i) => s + i.preco * i.quantidade, 0) * 100) / 100
-    const total = Math.round((subtotal + taxa) * 100) / 100
+    // Cupom de taxa grátis (migration_060): só cupom GERAL (revendedor_id null) do tipo
+    // 'frete', consumido de forma atômica pela RPC — depois de validar preço, estoque,
+    // cotação assinada e turno, antes de gravar. A taxa assinada vale pra conferência;
+    // o pedido grava taxa 0 (o que o cliente paga é subtotal).
+    const cupom = String(b.cupom || '').trim().toUpperCase().slice(0, 30)
+    let taxaFinal = taxa
+    if (cupom) {
+      // p_pedido_trocado: se o cliente refez o pedido (mesmo cupom, pedido anterior
+      // abandonado), a RPC permite reancorar em vez de negar como "já usado".
+      const { data: gratis } = await sb.rpc('usar_cupom_frete', { p_code: cupom, p_pedido_trocado: (String(b.cupom_pedido || '').trim().toUpperCase().slice(0, 12) || null) })
+      if (!gratis) return json({ error: 'Cupom inválido, vencido ou já usado. Confira o código.' }, 400)
+      taxaFinal = 0
+    }
+    const total = Math.round((subtotal + taxaFinal) * 100) / 100
 
     // Pagamento na entrega (migration_049): dinheiro/débito/crédito/Pix na maquininha.
     const naEntrega = b.pagamento === 'entrega'
@@ -120,16 +135,19 @@ Deno.serve(async (req: Request) => {
 
     const { data: ped, error: e1 } = await sb.from('delivery_pedidos').insert({
       cliente_nome: nome, cliente_telefone: tel, endereco, complemento: b.complemento ? String(b.complemento).slice(0, 200) : null,
-      lat, lng, distancia_km: km, taxa, subtotal, total, itens, periodo, data_entrega: data,
+      lat, lng, distancia_km: km, taxa: taxaFinal, subtotal, total, itens, periodo, data_entrega: data,
       aceita_whatsapp: b.aceita_whatsapp !== false, // avisos do pedido no WhatsApp (migration_046)
       pagar_na_entrega: naEntrega, forma_entrega: formaEntrega, troco_para: trocoPara,
     }).select('id, codigo, token').single()
     if (e1 || !ped) return json({ error: 'Não foi possível registrar o pedido.' }, 500)
+    // Vínculo cupom→pedido (migration_061): usado_por aponta pra esse codigo; se o
+    // cliente trocar o endereço, a recriação reancora em vez de negar o cupom.
+    if (cupom && ped.codigo) await sb.from('coupons').update({ usado_por: ped.codigo }).eq('code', cupom)
 
     // Na entrega: vale na hora (decisão do Kayo) — entra na rota e baixa o estoque.
     if (naEntrega) {
       await sb.rpc('delivery_confirmar_pagamento', { p_codigo: ped.codigo, p_payment_id: null, p_metodo: 'na_entrega_' + formaEntrega, p_mp_status: 'na_entrega' })
-      return json({ codigo: ped.codigo, token: ped.token, total, na_entrega: true })
+      return json({ codigo: ped.codigo, token: ped.token, total, na_entrega: true, cupom_gratis: !!cupom })
     }
 
     // Preferência do Checkout Pro (Pix + cartão; sem boleto — entrega é no mesmo dia).
@@ -137,7 +155,7 @@ Deno.serve(async (req: Request) => {
     const pref = {
       items: [
         ...itens.map((i) => ({ id: String(i.produto_id), title: i.nome + (i.sabor ? ' - ' + i.sabor : ''), quantity: i.quantidade, unit_price: i.preco, currency_id: 'BRL' })),
-        { id: 'taxa-entrega', title: 'Taxa de entrega', quantity: 1, unit_price: taxa, currency_id: 'BRL' },
+        ...(taxaFinal > 0 ? [{ id: 'taxa-entrega', title: 'Taxa de entrega', quantity: 1, unit_price: taxaFinal, currency_id: 'BRL' }] : []), // cupom frete: sem linha de taxa
       ],
       payer: { name: nome, phone: { area_code: tel.slice(0, 2), number: tel.slice(2) } },
       external_reference: ped.codigo,
@@ -162,6 +180,7 @@ Deno.serve(async (req: Request) => {
     if (mp?.id) await sb.from('delivery_pedidos').update({ mp_preference_id: mp.id }).eq('id', ped.id)
     const teste = mpToken.startsWith('TEST-')
     return json({ codigo: ped.codigo, token: ped.token, total, public_key: publicKey,
+      cupom_gratis: !!cupom,
       init_point: mp?.id ? (teste ? mp.sandbox_init_point : mp.init_point) : null })
   } catch (e) {
     return json({ error: 'Falha no checkout: ' + String((e as Error)?.message || e) }, 500)

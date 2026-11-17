@@ -112,6 +112,11 @@
       <div class="ln"><span>Entrega</span><span id="rTaxa">—</span></div>
       <div class="ln" id="rQuandoLn" hidden><span>Receber</span><span id="rQuando"></span></div>
       <div class="ln tot"><span>Total</span><span id="rTot">R$ 0,00</span></div>
+      <div class="dl-cupomBox">
+        <label for="cupomDlv">Tem cupom de taxa grátis?</label>
+        <div class="dl-input"><span><svg class="i" aria-hidden="true"><use href="#d-cartao"/></svg></span><input id="cupomDlv" type="text" maxlength="30" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Ex: DUPURO-ABCDE"></div>
+        <p class="dl-dica" id="cupomDica" hidden>Se o cupom for válido, a taxa de entrega sai grátis na hora de pagar.</p>
+      </div>
       <fieldset class="dl-formas">
         <legend>Como você quer pagar?</legend>
         <label class="dl-forma"><input type="radio" name="comoPagar" value="online" checked>
@@ -364,9 +369,11 @@
     $('sacola').innerHTML = linhas; $('sacolaGaveta').innerHTML = linhas;
     $('sacolaVazia').hidden = !!cart.length; $('gavetaVazia').hidden = !!cart.length;
     $('gavetaSub').textContent = brl(subtotal());
-    var sub = subtotal(), taxa = cot && cot.atende ? cot.taxa : null, tot = sub + (taxa || 0);
+    var sub = subtotal(), taxa = cot && cot.atende ? cot.taxa : null;
+    if (pedidoAtual && pedidoAtual.cupom_gratis) taxa = 0; // cupom confirmado no checkout
+    var tot = sub + (taxa || 0);
     $('rSub').textContent = brl(sub);
-    $('rTaxa').textContent = taxa == null ? 'a partir de ' + brl(taxaBase()) : brl(taxa);
+    $('rTaxa').textContent = taxa == null ? 'a partir de ' + brl(taxaBase()) : (pedidoAtual && pedidoAtual.cupom_gratis ? 'Grátis (cupom)' : brl(taxa));
     $('rTot').textContent = brl(tot);
     $('barTot').textContent = brl(tot);
     $('barLbl').textContent = taxa == null ? 'Produtos' : 'Total';
@@ -782,6 +789,12 @@
   });
   $('trocoPara').addEventListener('focus', function () { document.querySelector('input[name="troco"][value="sim"]').checked = true; atualizarTroco(); });
   $('trocoPara').addEventListener('input', function () { document.querySelector('input[name="troco"][value="sim"]').checked = true; atualizarTroco(); pagMsg.innerHTML = ''; });
+  // Cupom de taxa grátis (migration_060): digitado aqui, vale só quando a delivery-checkout
+  // confirmar o código (a taxa some do resumo quando o pedido é criado com o cupom).
+  $('cupomDlv').addEventListener('input', function () {
+    this.value = this.value.toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 30);
+    $('cupomDica').hidden = !this.value;
+  });
 
   // ---- Pagamento no nosso site (Payment Brick do Mercado Pago) ----
   // 1) delivery-checkout cria o pedido (preço/estoque/frete conferidos no servidor);
@@ -792,7 +805,7 @@
   var pedidoAtual = null, brickCtl = null, pixTimer = null, pixAte = 0;
   function chaveDoPedido() {
     return JSON.stringify([cart, $('nome').value.trim(), telEl.value, enderecoTexto(), $('comp').value, cot && cot.cotacao && cot.cotacao.assinatura, janela && janela.data, janela && janela.periodo,
-      comoPagar(), formaEntrega, querTroco() ? $('trocoPara').value : '']);
+      comoPagar(), formaEntrega, querTroco() ? $('trocoPara').value : '', ($('cupomDlv').value || '').trim().toUpperCase()]);
   }
   function msgPagamento(html, tipo) { $('mpMsg').innerHTML = html ? '<div class="dl-msg ' + (tipo || 'erro') + '">' + html + '</div>' : ''; }
   function fecharPagamento() {
@@ -914,6 +927,8 @@
         periodo: janela.periodo, data: janela.data,
         aceita_whatsapp: !$('aceitaWhats').closest('label').hidden && $('aceitaWhats').checked,
         pagamento: comoPagar(), forma_entrega: formaEntrega,
+        cupom: ($('cupomDlv').value || '').trim().toUpperCase() || null,
+        cupom_pedido: (typeof pedidoAtual !== 'undefined' && pedidoAtual && pedidoAtual.cupom_gratis) ? pedidoAtual.codigo : null,
         troco_para: formaEntrega === 'dinheiro' && querTroco() ? valorDigitado($('trocoPara').value) : null
         });
         pedidoAtual = Object.assign({ chave: chave }, r);
