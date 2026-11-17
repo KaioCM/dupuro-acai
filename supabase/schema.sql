@@ -1,20 +1,20 @@
 -- ==========================================================================
--- Dupuro AÃ§aÃ­ â€” Esquema completo do banco vivo
+-- Dupuro Açaí — Esquema completo do banco vivo
 -- Gerado por dump em 2026-11-17 do projeto zqadfktfplrbrjmepllh
 -- Este arquivo reflete o esquema completo para um projeto NOVO.
--- Espelho incremental das migraÃ§Ãµes fica em migration_002â†’061.
+-- Espelho incremental das migrações fica em migration_002→061.
 --
--- AtenÃ§Ãµes:
---   (a) inclui norte_leads / norte_admins, que nÃ£o tÃªm migraÃ§Ã£o no repo;
---   (b) duas migraÃ§Ãµes numeradas 060 â€” a 060_cupom_taxa_gratis DEVE vir
+-- Atenções:
+--   (a) inclui norte_leads / norte_admins, que não têm migração no repo;
+--   (b) duas migrações numeradas 060 — a 060_cupom_taxa_gratis DEVE vir
 --       antes da 061;
---   (c) bucket de Storage nfce Ã© criado fora do SQL (dashboard/API)
---       e nÃ£o estÃ¡ neste arquivo;
---   (d) secrets de Edge Functions nÃ£o estÃ£o neste arquivo.
+--   (c) bucket de Storage nfce é criado fora do SQL (dashboard/API)
+--       e não está neste arquivo;
+--   (d) secrets de Edge Functions não estão neste arquivo.
 -- ==========================================================================
 
 
--- ---------- ExtensÃµes ----------
+-- ---------- Extensões ----------
 create extension if not exists pgcrypto with schema extensions;
 create extension if not exists "uuid-ossp" with schema extensions;
 
@@ -126,7 +126,7 @@ create table if not exists public.product_flavor_stock (
 );
 
 alter table public.product_flavor_stock enable row level security;
--- FK movida p/ FKs dependentes porque referencia products que Ã© criada depois
+-- FK movida p/ FKs dependentes porque referencia products que é criada depois
 
 -- ---------- acompanhamentos ----------
 create table if not exists public.acompanhamentos (
@@ -164,7 +164,7 @@ create table if not exists public.app_settings (
 alter table public.app_settings enable row level security;
 
 -- ==========================================================================
--- RETOCHE: Orders constraints (nÃ£o estavam inline no CREATE TABLE original)
+-- RETOCHE: Orders constraints (não estavam inline no CREATE TABLE original)
 -- ==========================================================================
 alter table public.orders add constraint orders_revendedor_id_fkey foreign key (revendedor_id) references auth.users(id) on delete set null;
 alter table public.orders add constraint orders_atendente_id_fkey foreign key (atendente_id) references auth.users(id) on delete set null;
@@ -182,7 +182,7 @@ alter table public.coupons add constraint coupons_revendedor_id_fkey foreign key
 alter table public.coupons add constraint coupons_tipo_check_vivo check ((tipo = any(array['pct','frete'])));
 
 -- ==========================================================================
--- TABELAS 9â€“30 â€” CRIADAS PELO DUMP (completas com colunas, tipos, constraints inline)
+-- TABELAS 9–30 — CRIADAS PELO DUMP (completas com colunas, tipos, constraints inline)
 -- ==========================================================================
 
 -- ---------- producoes ----------
@@ -608,14 +608,14 @@ alter table public.entrega_cotacoes add constraint entrega_cotacoes_taxa_check c
 
 -- ==========================================================================
 -- ==========================================================================
--- FKs / CHECKs DEPENDENTES â€” referenciam tabelas criadas mais adiante
+-- FKs / CHECKs DEPENDENTES — referenciam tabelas criadas mais adiante
 -- ==========================================================================
 alter table public.product_flavor_stock add constraint product_flavor_stock_produto_id_fkey foreign key (produto_id) references products(id) on delete cascade;
 alter table public.orders add constraint orders_caixa_sessao_id_fkey_dep foreign key (caixa_sessao_id) references caixa_sessoes(id) on delete set null;
 
 -- =========================================================
 -- Constraints FALTANTES do banco vivo para tabela products
--- (os CHECKs e FK nÃ£o foram incluÃ­dos inline no CREATE TABLE original)
+-- (os CHECKs e FK não foram incluídos inline no CREATE TABLE original)
 -- =========================================================
 alter table public.products add constraint products_estoque_ref_fkey foreign key (estoque_ref) references products(id) on delete set null;
 alter table public.products add constraint products_preco_check check ((preco >= 0));
@@ -628,10 +628,10 @@ alter table public.products add constraint products_modo_check_vivo check ((modo
 alter table public.products add constraint products_pedido_minimo_check check (((pedido_minimo >= 1) and (pedido_minimo <= 99)));
 
 -- ==========================================================================
--- Ãndices nÃ£o-criados-por-constraint
+-- Índices não-criados-por-constraint
 -- ==========================================================================
--- Ãndices adicionais para performance (nÃ£o correspondem a nenhuma constraint acima).
--- Os Ã­ndices de unicidade/pk/junÃ§Ã£o jÃ¡ estÃ£o cobertos pelos constraints inline/ALTER acima.
+-- Índices adicionais para performance (não correspondem a nenhuma constraint acima).
+-- Os índices de unicidade/pk/junção já estão cobertos pelos constraints inline/ALTER acima.
 -- create index if not exists na ordem correta das tabelas:
 
 create index if not exists idx_orders_status on public.orders(status);
@@ -661,7 +661,7 @@ create index if not exists idx_producao_gastos_producao_id on public.producao_ga
 create index if not exists idx_orders_original_unique on public.orders(numero, data);
 
 -- ==========================================================================
--- PolÃ­ticas RLS (53) â€” pg_policies
+-- Políticas RLS (53) — pg_policies
 -- ==========================================================================
 create policy acompanhamentos_delete_admin on public.acompanhamentos as permissive for delete to public using (is_admin());
 create policy acompanhamentos_insert_admin on public.acompanhamentos as permissive for insert to public with check (is_admin());
@@ -718,7 +718,7 @@ create policy whatsapp_config_admin on public.whatsapp_config as permissive for 
 create policy whatsapp_envios_admin_le on public.whatsapp_envios as permissive for select to authenticated using (( SELECT is_admin() AS is_admin));
 
 -- ==========================================================================
--- FunÃ§Ãµes (64 corpo) + Grants de Execute (~60)
+-- Funções (64 corpo) + Grants de Execute (~60)
 -- ==========================================================================
 
 -- handle_new_user
@@ -958,7 +958,7 @@ begin
     raise exception 'Informe o motivo do cancelamento.';
   end if;
   if not public.caixa_pode_mexer(p_numero) then
-    raise exception 'Sem permissÃ£o para cancelar esta venda.';
+    raise exception 'Sem permissão para cancelar esta venda.';
   end if;
 
   select jsonb_agg(to_jsonb(o)) into v_snap
@@ -985,7 +985,7 @@ as $function$
 declare v_snap jsonb; v_sessao bigint; r jsonb;
 begin
   if not public.caixa_pode_mexer(p_numero) then
-    raise exception 'Sem permissÃ£o para editar esta venda.';
+    raise exception 'Sem permissão para editar esta venda.';
   end if;
   if p_rows is null or jsonb_array_length(p_rows) = 0 then
     raise exception 'A venda precisa ter ao menos um item.';
@@ -1059,9 +1059,9 @@ as $function$
 declare v_numero text; v_existente text; r jsonb; v_primeira boolean := true;
 begin
   if not (public.is_atendente() or public.is_admin()) then
-    raise exception 'Sem permissÃ£o para sincronizar vendas.';
+    raise exception 'Sem permissão para sincronizar vendas.';
   end if;
-  if p_client_uuid is null then raise exception 'client_uuid obrigatÃ³rio.'; end if;
+  if p_client_uuid is null then raise exception 'client_uuid obrigatório.'; end if;
   select numero into v_existente from public.orders where client_uuid = p_client_uuid limit 1;
   if v_existente is not null then return v_existente; end if;
 
@@ -1117,9 +1117,9 @@ create or replace function public.abrir_caixa(p_fundo numeric)
 as $function$
 declare v_id bigint;
 begin
-  if not (public.is_atendente() or public.is_admin()) then raise exception 'Sem permissÃ£o.'; end if;
+  if not (public.is_atendente() or public.is_admin()) then raise exception 'Sem permissão.'; end if;
   if exists (select 1 from public.caixa_sessoes where status = 'aberta') then
-    raise exception 'JÃ¡ existe um caixa aberto.';
+    raise exception 'Já existe um caixa aberto.';
   end if;
   insert into public.caixa_sessoes (atendente_id, status, fundo_troco)
   values (auth.uid(), 'aberta', coalesce(p_fundo, 0)) returning id into v_id;
@@ -1138,9 +1138,9 @@ create or replace function public.fechar_caixa(p_sessao_id bigint, p_dinheiro_co
 as $function$
 declare v_fundo numeric; v_resumo jsonb; v_esperado numeric; v_dif numeric;
 begin
-  if not (public.is_atendente() or public.is_admin()) then raise exception 'Sem permissÃ£o.'; end if;
+  if not (public.is_atendente() or public.is_admin()) then raise exception 'Sem permissão.'; end if;
   select fundo_troco into v_fundo from public.caixa_sessoes where id = p_sessao_id and status = 'aberta' for update;
-  if not found then raise exception 'Caixa nÃ£o estÃ¡ aberto.'; end if;
+  if not found then raise exception 'Caixa não está aberto.'; end if;
   v_resumo := public.resumo_caixa(p_sessao_id);
   v_esperado := (v_resumo->>'dinheiro_esperado')::numeric;
   v_dif := coalesce(p_dinheiro_contado, 0) - v_esperado;
@@ -1163,7 +1163,7 @@ create or replace function public.resumo_caixa(p_sessao_id bigint)
 as $function$
 declare v_fundo numeric; v_total numeric; v_dinheiro numeric; v_qtd int; v_por_forma jsonb; v_mov jsonb;
 begin
-  if not (public.is_atendente() or public.is_admin()) then raise exception 'Sem permissÃ£o.'; end if;
+  if not (public.is_atendente() or public.is_admin()) then raise exception 'Sem permissão.'; end if;
   select fundo_troco into v_fundo from public.caixa_sessoes where id = p_sessao_id;
   select coalesce(sum(valor), 0), count(distinct numero)
     into v_total, v_qtd
@@ -1195,7 +1195,7 @@ begin
   select count(*) into v_qtd from public.caixa_promocoes
     where dia = new.dia and tipo = new.tipo and id <> new.id;
   if v_qtd >= 3 then
-    raise exception 'Limite de 3 promoÃ§Ãµes do tipo % por dia atingido.', new.tipo
+    raise exception 'Limite de 3 promoções do tipo % por dia atingido.', new.tipo
       using errcode = 'check_violation';
   end if;
   return new;
@@ -1258,7 +1258,7 @@ as $function$
     'sabores', case when p.multissabor then (
        select coalesce(jsonb_agg(jsonb_build_object('sabor', f.sabor, 'estoque', f.estoque) order by f.sabor), '[]'::jsonb)
        from public.product_flavor_stock f
-       where f.produto_id = src.id and (p.multissabor_incluir_acai or f.sabor <> 'AÃ§aÃ­')
+       where f.produto_id = src.id and (p.multissabor_incluir_acai or f.sabor <> 'Açaí')
     ) else '[]'::jsonb end
   ) order by p.preco), '[]'::jsonb)
   from ids
@@ -1402,7 +1402,7 @@ declare
   v_faltando text;
 begin
   if not public.is_admin() then
-    raise exception 'SÃ³ admin registra produÃ§Ã£o' using errcode = '42501';
+    raise exception 'Só admin registra produção' using errcode = '42501';
   end if;
 
   select string_agg(distinct p.nome, ', ') into v_faltando
@@ -1424,7 +1424,7 @@ begin
            rotulo = nullif(p_header->>'rotulo', ''),
            observacao = nullif(p_header->>'observacao', '')
      where id = v_id;
-    if not found then raise exception 'Leva % nÃ£o existe', v_id using errcode = 'P0002'; end if;
+    if not found then raise exception 'Leva % não existe', v_id using errcode = 'P0002'; end if;
     select coalesce(jsonb_agg(jsonb_build_object('produto_id', produto_id, 'sabor', sabor, 'quantidade', quantidade)), '[]'::jsonb)
       into v_antes from public.producao_itens where producao_id = v_id;
     delete from public.producao_gastos where producao_id = v_id;
@@ -1458,7 +1458,7 @@ declare
   v_antes jsonb;
 begin
   if not public.is_admin() then
-    raise exception 'SÃ³ admin apaga produÃ§Ã£o' using errcode = '42501';
+    raise exception 'Só admin apaga produção' using errcode = '42501';
   end if;
   select coalesce(jsonb_agg(jsonb_build_object('produto_id', produto_id, 'sabor', sabor, 'quantidade', quantidade)), '[]'::jsonb)
     into v_antes from public.producao_itens where producao_id = p_id;
@@ -1490,7 +1490,7 @@ begin
      or new.conta_teste is distinct from old.conta_teste
      or new.email is distinct from old.email
      or new.pode_prazo is distinct from old.pode_prazo then
-    raise exception 'SÃ³ um administrador pode mudar acesso, aprovaÃ§Ã£o, e-mail ou pagamento a prazo' using errcode = '42501';
+    raise exception 'Só um administrador pode mudar acesso, aprovação, e-mail ou pagamento a prazo' using errcode = '42501';
   end if;
   return new;
 end;
@@ -1508,7 +1508,7 @@ declare
   v_nome text;
 begin
   if not public.is_admin() then
-    raise exception 'SÃ³ admin ajusta estoque' using errcode = '42501';
+    raise exception 'Só admin ajusta estoque' using errcode = '42501';
   end if;
   if coalesce(p_delta, 0) = 0 then
     raise exception 'Informe quanto somar ou tirar' using errcode = '22023';
@@ -1554,7 +1554,7 @@ create or replace function public.criar_pedido_revendedor(p_rows jsonb, p_entreg
  set search_path to 'public'
 as $function$
 begin
-  if coalesce(p_entrega->>'pagamento', '') = 'online' then raise exception 'Pagamento online comeÃ§a pelo botÃ£o Pagar agora.'; end if;
+  if coalesce(p_entrega->>'pagamento', '') = 'online' then raise exception 'Pagamento online começa pelo botão Pagar agora.'; end if;
   return public.criar_pedido_revendedor_para(auth.uid(), p_rows, p_entrega);
 end $function$;
 revoke execute on function public.criar_pedido_revendedor(jsonb, jsonb) from public, anon, authenticated;
@@ -1613,8 +1613,8 @@ create or replace function public.wa_quando(p_data date, p_turno text)
  immutable
 as $function$
   select nullif(concat_ws(', ',
-    case when p_data is not null then (array['dom','seg','ter','qua','qui','sex','sÃ¡b'])[extract(dow from p_data)::int + 1] || ' ' || to_char(p_data, 'DD/MM') end,
-    case p_turno when 'manha' then 'de manhÃ£ (8h Ã s 12h)' when 'tarde' then 'Ã  tarde (13h Ã s 17h)' end), '');
+    case when p_data is not null then (array['dom','seg','ter','qua','qui','sex','sáb'])[extract(dow from p_data)::int + 1] || ' ' || to_char(p_data, 'DD/MM') end,
+    case p_turno when 'manha' then 'de manhã (8h às 12h)' when 'tarde' then 'à tarde (13h às 17h)' end), '');
 $function$;
 grant execute on function public.wa_quando(date, text) to public, authenticated, service_role;
 
@@ -1665,7 +1665,7 @@ begin
   if tg_op = 'INSERT' then
     if coalesce(new.role, 'revendedor') = 'revendedor' and not coalesce(new.conta_teste, false) then
       perform public.wa_aviso_interno('cadastro:' || new.id, 'Novo cadastro de revendedor',
-        coalesce(nullif(new.empresa, ''), new.nome, 'sem nome') || coalesce(' (' || nullif(new.cidade, '') || ')', '') || ' esperando aprovaÃ§Ã£o',
+        coalesce(nullif(new.empresa, ''), new.nome, 'sem nome') || coalesce(' (' || nullif(new.cidade, '') || ')', '') || ' esperando aprovação',
         'cadastro', new.id::text, 'pendente');
     end if;
   elsif new.status = 'aprovado' and old.status is distinct from 'aprovado' and new.role = 'revendedor' and new.aceita_whatsapp then
@@ -1702,12 +1702,12 @@ begin
   elsif p_status = 'processando' then
     perform public.wa_enfileirar('pedido_confirmado:' || p_numero, 'dupuro_pedido_confirmado', v_tel,
       jsonb_build_array(p_numero, case
-        when v_quando is null then 'A gente combina com vocÃª o dia da entrega'
-        when v_retira then 'Retirada na fÃ¡brica (Av. das Torres, 16) ' || v_quando
+        when v_quando is null then 'A gente combina com você o dia da entrega'
+        when v_retira then 'Retirada na fábrica (Av. das Torres, 16) ' || v_quando
         else 'Entrega ' || v_quando end), 'pedido', p_numero, 'processando', interval '60 seconds');
   elsif p_status = 'entregue' then
     perform public.wa_enfileirar('pedido_concluido:' || p_numero, 'dupuro_pedido_concluido', v_tel,
-      jsonb_build_array(p_numero, case when v_retira then 'retirado na fÃ¡brica' else 'entregue' end), 'pedido', p_numero, 'entregue', interval '60 seconds');
+      jsonb_build_array(p_numero, case when v_retira then 'retirado na fábrica' else 'entregue' end), 'pedido', p_numero, 'entregue', interval '60 seconds');
   end if;
 end;
 $function$;
@@ -1781,7 +1781,7 @@ begin
         'delivery', new.codigo, 'pago');
     else
       perform public.wa_enfileirar('delivery_pago:' || new.codigo, 'dupuro_delivery_pago', v_tel,
-        jsonb_build_array(initcap(split_part(trim(new.cliente_nome), ' ', 1)), new.codigo, coalesce(v_quando, 'no horÃ¡rio combinado')),
+        jsonb_build_array(initcap(split_part(trim(new.cliente_nome), ' ', 1)), new.codigo, coalesce(v_quando, 'no horário combinado')),
         'delivery', new.codigo, 'pago', interval '0', new.token::text);
       perform public.wa_aviso_interno('delivery:' || new.codigo, 'Delivery pago',
         new.codigo || ' de ' || new.cliente_nome || ', ' || public.wa_brl(new.total) || coalesce(', entrega ' || v_quando, ''),
@@ -1932,7 +1932,7 @@ create or replace function public.caixa_movimentar(p_tipo text, p_valor numeric,
 as $function$
 declare v_sessao bigint; v_row public.caixa_movimentos;
 begin
-  if not (public.is_atendente() or public.is_admin()) then raise exception 'Sem permissÃ£o.'; end if;
+  if not (public.is_atendente() or public.is_admin()) then raise exception 'Sem permissão.'; end if;
   select id into v_sessao from public.caixa_sessoes where status = 'aberta' limit 1;
   if v_sessao is null then raise exception 'Abra o caixa antes de mexer no dinheiro.'; end if;
   if p_tipo = 'reforco' then p_categoria := coalesce(p_categoria, 'troco'); end if;
@@ -1954,11 +1954,11 @@ create or replace function public.caixa_devolver_troco(p_id bigint, p_devolvido 
 as $function$
 declare v_row public.caixa_movimentos;
 begin
-  if not (public.is_atendente() or public.is_admin()) then raise exception 'Sem permissÃ£o.'; end if;
+  if not (public.is_atendente() or public.is_admin()) then raise exception 'Sem permissão.'; end if;
   select m.* into v_row from public.caixa_movimentos m join public.caixa_sessoes s on s.id = m.sessao_id
    where m.id = p_id and m.tipo = 'retirada' and m.anulado_em is null and s.status = 'aberta' for update of m;
-  if not found then raise exception 'Essa retirada nÃ£o estÃ¡ mais no caixa aberto.'; end if;
-  if coalesce(p_devolvido, -1) < 0 or p_devolvido > v_row.valor then raise exception 'O troco devolvido vai de R$ 0 atÃ© o valor retirado.'; end if;
+  if not found then raise exception 'Essa retirada não está mais no caixa aberto.'; end if;
+  if coalesce(p_devolvido, -1) < 0 or p_devolvido > v_row.valor then raise exception 'O troco devolvido vai de R$ 0 até o valor retirado.'; end if;
   update public.caixa_movimentos set devolvido = round(p_devolvido, 2), devolvido_em = case when p_devolvido > 0 then now() end
    where id = p_id returning * into v_row;
   return v_row;
@@ -1974,11 +1974,11 @@ create or replace function public.caixa_anular_movimento(p_id bigint)
  set search_path to 'public'
 as $function$
 begin
-  if not (public.is_atendente() or public.is_admin()) then raise exception 'Sem permissÃ£o.'; end if;
+  if not (public.is_atendente() or public.is_admin()) then raise exception 'Sem permissão.'; end if;
   update public.caixa_movimentos m set anulado_em = now()
     from public.caixa_sessoes s
    where m.id = p_id and s.id = m.sessao_id and s.status = 'aberta' and m.anulado_em is null;
-  if not found then raise exception 'Esse lanÃ§amento nÃ£o estÃ¡ mais no caixa aberto.'; end if;
+  if not found then raise exception 'Esse lançamento não está mais no caixa aberto.'; end if;
 end $function$;
 revoke execute on function public.caixa_anular_movimento(bigint) from public, anon, authenticated;
 grant execute on function public.caixa_anular_movimento(bigint) to authenticated, service_role;
@@ -2009,10 +2009,10 @@ create or replace function public.delivery_cancelar(p_id bigint)
 as $function$
 declare v public.delivery_pedidos%rowtype; it jsonb; v_src bigint; v_qtd int;
 begin
-  if not public.is_admin() then raise exception 'Sem permissÃ£o.'; end if;
+  if not public.is_admin() then raise exception 'Sem permissão.'; end if;
   select * into v from public.delivery_pedidos where id = p_id for update;
-  if not found then raise exception 'Pedido nÃ£o encontrado.'; end if;
-  if v.status not in ('pago', 'em_rota', 'aguardando_pagamento') then raise exception 'Esse pedido nÃ£o pode mais ser cancelado.'; end if;
+  if not found then raise exception 'Pedido não encontrado.'; end if;
+  if v.status not in ('pago', 'em_rota', 'aguardando_pagamento') then raise exception 'Esse pedido não pode mais ser cancelado.'; end if;
   if v.status in ('pago', 'em_rota') then
     for it in select * from jsonb_array_elements(v.itens) loop
       v_qtd := coalesce((it->>'quantidade')::int, 0);
@@ -2045,9 +2045,9 @@ declare
   v_pct int := 0; v_troco numeric; v_total numeric := 0; v_lat double precision; v_lng double precision;
   v_cot public.entrega_cotacoes; v_cot_id uuid; v_taxa numeric := 0;
 begin
-  if p_uid is null then raise exception 'Sem sessÃ£o ativa.'; end if;
+  if p_uid is null then raise exception 'Sem sessão ativa.'; end if;
   select pode_prazo into v_prazo from public.profiles where id = p_uid and status = 'aprovado' and role = 'revendedor';
-  if not found then raise exception 'Cadastro nÃ£o aprovado para fazer pedidos.'; end if;
+  if not found then raise exception 'Cadastro não aprovado para fazer pedidos.'; end if;
   if p_rows is null or jsonb_array_length(p_rows) = 0 then raise exception 'O pedido precisa ter ao menos um item.'; end if;
   if p_entrega is null or jsonb_typeof(p_entrega) <> 'object' then raise exception 'Escolha entrega ou retirada, o dia e o turno.'; end if;
 
@@ -2058,26 +2058,26 @@ begin
   v_end   := nullif(trim(coalesce(p_entrega->>'endereco', '')), '');
   v_obs   := nullif(trim(coalesce(p_entrega->>'observacao', '')), '');
   v_cupom_code := nullif(trim(coalesce(p_entrega->>'cupom', '')), '');
-  begin v_troco := nullif(p_entrega->>'troco_para', '')::numeric; exception when others then raise exception 'Valor do troco invÃ¡lido.'; end;
-  begin v_data := (p_entrega->>'data')::date; exception when others then raise exception 'Data de entrega invÃ¡lida.'; end;
+  begin v_troco := nullif(p_entrega->>'troco_para', '')::numeric; exception when others then raise exception 'Valor do troco inválido.'; end;
+  begin v_data := (p_entrega->>'data')::date; exception when others then raise exception 'Data de entrega inválida.'; end;
   if v_tipo = 'entrega' then
     begin v_cot_id := nullif(p_entrega->>'cotacao_id', '')::uuid; exception when others then v_cot_id := null; end;
     select * into v_cot from public.entrega_cotacoes where id = v_cot_id
        and (expira_em > now() or nullif(p_entrega->>'mp_payment_id', '') is not null);
-    if not found then raise exception 'Calcule a taxa de entrega de novo: atualize a pÃ¡gina e confira o endereÃ§o.'; end if;
+    if not found then raise exception 'Calcule a taxa de entrega de novo: atualize a página e confira o endereço.'; end if;
     v_taxa := v_cot.taxa; v_lat := v_cot.lat; v_lng := v_cot.lng;
   end if;
   if coalesce(v_tipo, '') not in ('entrega', 'retirada') then raise exception 'Escolha entrega ou retirada.'; end if;
-  if v_data is null or not coalesce(public.turno_aberto(v_data, v_turno), false) then raise exception 'Esse dia/turno nÃ£o estÃ¡ mais disponÃ­vel. Escolha outro.'; end if;
-  if v_pag not in ('na_entrega', 'a_prazo', 'online') then raise exception 'Forma de pagamento invÃ¡lida.'; end if;
-  if v_pag = 'a_prazo' and not v_prazo then raise exception 'Pagamento a prazo nÃ£o estÃ¡ liberado para a sua conta.'; end if;
+  if v_data is null or not coalesce(public.turno_aberto(v_data, v_turno), false) then raise exception 'Esse dia/turno não está mais disponível. Escolha outro.'; end if;
+  if v_pag not in ('na_entrega', 'a_prazo', 'online') then raise exception 'Forma de pagamento inválida.'; end if;
+  if v_pag = 'a_prazo' and not v_prazo then raise exception 'Pagamento a prazo não está liberado para a sua conta.'; end if;
   if v_pag <> 'na_entrega' then v_forma := null; v_troco := null; end if;
-  if v_forma is not null and v_forma not in ('dinheiro', 'pix', 'cartao', 'debito', 'credito') then raise exception 'Forma de pagamento invÃ¡lida.'; end if;
+  if v_forma is not null and v_forma not in ('dinheiro', 'pix', 'cartao', 'debito', 'credito') then raise exception 'Forma de pagamento inválida.'; end if;
   if v_forma is distinct from 'dinheiro' then v_troco := null; end if;
-  if v_tipo = 'entrega' and nullif(p_entrega->>'mp_payment_id', '') is null and public.turno_lotado(v_data, v_turno) then raise exception 'Esse turno de entrega lotou. Escolha outro dia ou turno (ou retire na fÃ¡brica).'; end if;
-  if v_tipo = 'entrega' and v_end is null then raise exception 'Informe o endereÃ§o de entrega.'; end if;
+  if v_tipo = 'entrega' and nullif(p_entrega->>'mp_payment_id', '') is null and public.turno_lotado(v_data, v_turno) then raise exception 'Esse turno de entrega lotou. Escolha outro dia ou turno (ou retire na fábrica).'; end if;
+  if v_tipo = 'entrega' and v_end is null then raise exception 'Informe o endereço de entrega.'; end if;
   if length(coalesce(v_end, '')) > 200 or length(coalesce(v_obs, '')) > 300 or coalesce(v_end, '') ~ '[<>]' or coalesce(v_obs, '') ~ '[<>]' then
-    raise exception 'EndereÃ§o ou observaÃ§Ã£o invÃ¡lidos.';
+    raise exception 'Endereço ou observação inválidos.';
   end if;
 
   if v_cupom_code is not null then
@@ -2093,17 +2093,17 @@ begin
       if not found or v_cupom.usado then return v_numero; end if;
     end if;
     if v_cupom.tipo = 'frete' then
-      if v_tipo <> 'entrega' then raise exception 'Cupom de taxa grÃ¡tis sÃ³ vale em pedidos com entrega.'; end if;
+      if v_tipo <> 'entrega' then raise exception 'Cupom de taxa grátis só vale em pedidos com entrega.'; end if;
       v_taxa := 0;
     else
-      if coalesce(v_cupom.desconto_percent, 0) not between 1 and 100 then raise exception 'Cupom invÃ¡lido, vencido ou jÃ¡ usado.'; end if;
+      if coalesce(v_cupom.desconto_percent, 0) not between 1 and 100 then raise exception 'Cupom inválido, vencido ou já usado.'; end if;
       v_pct := v_cupom.desconto_percent;
     end if;
   end if;
 
   if exists (select 1 from jsonb_array_elements(p_rows) e left join public.products p on p.id = (e->>'produto_id')::bigint
               where p.id is null or (e->>'quantidade')::int < 1 or (e->>'quantidade')::int > 99) then
-    raise exception 'Item invÃ¡lido no pedido.';
+    raise exception 'Item inválido no pedido.';
   end if;
   v_volume := public.volume_do_pedido(p_rows);
   v_dispensa := v_volume >= public.litros_dispensa_minimo();
@@ -2111,7 +2111,7 @@ begin
     select p.nome, p.pedido_minimo into v_falta from jsonb_array_elements(p_rows) e
       join public.products p on p.id = (e->>'produto_id')::bigint
      where (e->>'quantidade')::int < coalesce(p.pedido_minimo, 1) limit 1;
-    if found then raise exception 'Pedido mÃ­nimo de % Ã© % unidades.', v_falta.nome, v_falta.pedido_minimo; end if;
+    if found then raise exception 'Pedido mínimo de % é % unidades.', v_falta.nome, v_falta.pedido_minimo; end if;
   end if;
 
   select coalesce(sum(round(p.preco * (e->>'quantidade')::int * (100 - v_pct) / 100.0, 2)), 0) into v_total
@@ -2161,7 +2161,7 @@ create or replace function public.revenda_iniciar_checkout(p_rows jsonb, p_entre
 as $function$
 declare v_uid uuid := auth.uid(); v_ent jsonb; v_num text; v_total numeric; v_tok uuid;
 begin
-  if v_uid is null then raise exception 'Sem sessÃ£o ativa.'; end if;
+  if v_uid is null then raise exception 'Sem sessão ativa.'; end if;
   v_ent := (coalesce(p_entrega, '{}'::jsonb) - 'forma' - 'troco_para' - 'mp_payment_id' - 'pago_metodo') || jsonb_build_object('pagamento', 'online');
   update public.revenda_checkouts set status = 'expirado' where revendedor_id = v_uid and status = 'aguardando';
   begin
@@ -2290,7 +2290,7 @@ create or replace function public.admin_taxas_entrega()
 as $function$
 begin
   if not public.is_admin() then
-    raise exception 'SÃ³ o admin vÃª as taxas do entregador.';
+    raise exception 'Só o admin vê as taxas do entregador.';
   end if;
 
   return query
@@ -2351,7 +2351,7 @@ revoke execute on function public.usar_cupom_frete(text, text) from public, anon
 grant execute on function public.usar_cupom_frete(text, text) to service_role;
 
 -- ==========================================================================
--- Triggers (11) â€” pg_trigger non-internal
+-- Triggers (11) — pg_trigger non-internal
 -- ==========================================================================
 create trigger aviso_delivery_evento after update of status on public.delivery_pedidos for each row execute function aviso_delivery_evento();
 create trigger aviso_orders_evento after update on public.orders referencing old table as antigas new table as novas for each statement execute function aviso_orders_evento();
@@ -2365,14 +2365,14 @@ create trigger wa_orders_insert after insert on public.orders referencing new ta
 create trigger wa_orders_update after update on public.orders referencing old table as antes new table as depois for each statement execute function wa_orders_update();
 create trigger wa_profiles_evento after insert or update of status on public.profiles for each row execute function wa_profiles_evento();
 
--- Fase 2 concluÃ­da 2026-11-17; validar antes de usar em projeto novo.
+-- Fase 2 concluída 2026-11-17; validar antes de usar em projeto novo.
 
 
 -- ==========================================================================
--- FASE 3 â€” reconciliaÃ§Ã£o 2026-11-17 (pÃ³s-migrations 062/063/064 + grants de tabela)
+-- FASE 3 — reconciliação 2026-11-17 (pós-migrations 062/063/064 + grants de tabela)
 -- ==========================================================================
 -- Fonte: pg_* do banco vivo (projeto zqadfktfplrbrjmepllh).
--- ExecuÃ§Ã£o: de cima para baixo; o que vem por Ãºltimo vence.
+-- Execução: de cima para baixo; o que vem por último vence.
 -- Uso create or replace / drop policy if exists + create / create table if not exists.
 
 -- ---------- rate_buckets (062) ----------
@@ -2384,13 +2384,13 @@ create table if not exists public.rate_buckets (
     constraint rate_buckets_pkey primary key (key)
 );
 alter table public.rate_buckets enable row level security;
--- 062: SEM policies por desenho (acesso sÃ³ service_role via rate_check / pg_cron)
+-- 062: SEM policies por desenho (acesso só service_role via rate_check / pg_cron)
 
 -- Sequences existentes no banco (id_seq tables; rate_buckets usa pk text, sem sequence).
--- NÃ£o hÃ¡ sequÃªncia nova para rate_buckets.
+-- Não há sequência nova para rate_buckets.
 
--- ---------- FunÃ§Ãµes com estado novo (reemitidas cru via pg_get_functiondef) ----------
--- Nota: turno_ocupacao (063) agora usa count(distinct telefone Ãºnico) na contagem
+-- ---------- Funções com estado novo (reemitidas cru via pg_get_functiondef) ----------
+-- Nota: turno_ocupacao (063) agora usa count(distinct telefone único) na contagem
 -- de atendimentos aguardando pagamento.
 
 create or replace function public.rate_check(p_key text, p_max integer, p_janela_seg integer)
@@ -2423,7 +2423,7 @@ begin
 end $function$
 ;
 
--- 062 endureceu funÃ§Ãµes de restriÃ§Ã£o: service_role only. ACL vivo = postgres+service_role.
+-- 062 endureceu funções de restrição: service_role only. ACL vivo = postgres+service_role.
 revoke execute on function public.rate_check(text,int,int) from public, anon, authenticated;
 grant execute on function public.rate_check(text,int,int) to service_role;
 
@@ -2450,11 +2450,11 @@ as $function$
 $function$
 ;
 
--- 062 endureceu funÃ§Ãµes de restriÃ§Ã£o: service_role only. ACL vivo = postgres+service_role.
+-- 062 endureceu funções de restrição: service_role only. ACL vivo = postgres+service_role.
 revoke execute on function public.turno_ocupacao(date,text) from public, anon, authenticated;
 grant execute on function public.turno_ocupacao(date,text) to service_role;
 
--- Wa_* functions: 046 deixou ACL larga (=X/postgres â†’ PUBLIC, postgres, authenticated, service_role).
+-- Wa_* functions: 046 deixou ACL larga (=X/postgres → PUBLIC, postgres, authenticated, service_role).
 -- Agora com SET search_path TO 'public'.
 create or replace function public.wa_brl(v numeric)
  returns text
@@ -2477,8 +2477,8 @@ create or replace function public.wa_quando(p_data date, p_turno text)
  set search_path to 'public'
 as $function$
   select nullif(concat_ws(', ',
-    case when p_data is not null then (array['dom','seg','ter','qua','qui','sex','sÃ¡b'])[extract(dow from p_data)::int + 1] || ' ' || to_char(p_data, 'DD/MM') end,
-    case p_turno when 'manha' then 'de manhÃ£ (8h Ã s 12h)' when 'tarde' then 'Ã  tarde (13h Ã s 17h)' end), '');
+    case when p_data is not null then (array['dom','seg','ter','qua','qui','sex','sáb'])[extract(dow from p_data)::int + 1] || ' ' || to_char(p_data, 'DD/MM') end,
+    case p_turno when 'manha' then 'de manhã (8h às 12h)' when 'tarde' then 'à tarde (13h às 17h)' end), '');
 $function$
 ;
 
@@ -2487,7 +2487,7 @@ revoke execute on function public.wa_quando(date,text) from public, anon, authen
 grant execute on function public.wa_quando(date,text) to public, postgres, authenticated, service_role;
 
 -- ==========================================================================
--- Bloco 4 â€” 10 RLS policies (064) â€” emitidas da pg_policies do banco vivo
+-- Bloco 4 — 10 RLS policies (064) — emitidas da pg_policies do banco vivo
 -- ==========================================================================
 
 drop policy if exists profiles_select_own_or_admin on public.profiles;
@@ -2560,8 +2560,8 @@ create policy orders_insert_atendente
               and (usa_estoque = coalesce((select (p.modo = 'embalado') from products p where p.id = orders.produto_id), false)));
 
 -- ==========================================================================
--- Grants de tabela â€” ACL real via pg_class.relacl (31 tabelas)
--- As fases 1-2 ignoraram relacl de tabela; o 062 endureceu vÃ¡rias.
+-- Grants de tabela — ACL real via pg_class.relacl (31 tabelas)
+-- As fases 1-2 ignoraram relacl de tabela; o 062 endureceu várias.
 -- X=ALL, r=SELECT, w=UPDATE, a=INSERT, d=DELETE, D=TRUNCATE, x=REFERENCES, t=TRIGGER
 -- Entry sem role antes de '=' = PUBLIC. Ignorada entry do owner (postgres=...).
 -- ==========================================================================
@@ -2570,7 +2570,7 @@ create policy orders_insert_atendente
 -- caixa_promocoes, caixa_sessoes, coupons, delivery_config, estoque_ajustes,
 -- geo_enderecos, nfce_emissoes, order_audits, orders, producao_gastos, producao_itens,
 -- producoes, product_flavor_stock, products, profiles, rota_paradas, rota_posicao,
--- rotas, whatsapp_config, whatsapp_envios â€” ACL = postgres|anon|authenticated|service_role =arwdDxtm
+-- rotas, whatsapp_config, whatsapp_envios — ACL = postgres|anon|authenticated|service_role =arwdDxtm
 revoke all on public.acompanhamentos from public, anon, authenticated;
 grant all on public.acompanhamentos to postgres, anon, authenticated, service_role;
 
@@ -2646,41 +2646,41 @@ grant all on public.whatsapp_config to postgres, anon, authenticated, service_ro
 revoke all on public.whatsapp_envios from public, anon, authenticated;
 grant all on public.whatsapp_envios to postgres, anon, authenticated, service_role;
 
--- delivery_pedidos â€” ACL vivo: postgres|authenticated|service_role (SOMENTE, SEM anon)
+-- delivery_pedidos — ACL vivo: postgres|authenticated|service_role (SOMENTE, SEM anon)
 revoke all on public.delivery_pedidos from public, anon, authenticated;
 grant all on public.delivery_pedidos to authenticated, service_role;
 
--- entrega_cotacoes â€” ACL vivo: postgres|service_role (SOMENTE, SEM anon nem authenticated)
+-- entrega_cotacoes — ACL vivo: postgres|service_role (SOMENTE, SEM anon nem authenticated)
 revoke all on public.entrega_cotacoes from public, anon, authenticated;
 grant all on public.entrega_cotacoes to postgres, service_role;
 
--- norte_admins â€” ACL vivo: postgres|service_role (SOMENTE)
+-- norte_admins — ACL vivo: postgres|service_role (SOMENTE)
 revoke all on public.norte_admins from public, anon, authenticated;
 grant all on public.norte_admins to postgres, service_role;
 
--- norte_leads â€” ACL vivo: postgres|service_role=arwdDxtm, authenticated=r (SÃ“ SELECT)
+-- norte_leads — ACL vivo: postgres|service_role=arwdDxtm, authenticated=r (SÓ SELECT)
 revoke all on public.norte_leads from public, anon, authenticated;
 grant select on public.norte_leads to authenticated;
 grant all on public.norte_leads to postgres, service_role;
 
--- rate_buckets â€” ACL vivo: postgres|service_role (SOMENTE, SEM anon/authenticated)
+-- rate_buckets — ACL vivo: postgres|service_role (SOMENTE, SEM anon/authenticated)
 revoke all on public.rate_buckets from public, anon, authenticated;
 grant all on public.rate_buckets to service_role;
 
--- revenda_checkouts â€” ACL vivo: authenticated|service_role (SOMENTE, SEM anon)
+-- revenda_checkouts — ACL vivo: authenticated|service_role (SOMENTE, SEM anon)
 revoke all on public.revenda_checkouts from public, anon, authenticated;
 grant all on public.revenda_checkouts to authenticated, service_role;
 
 -- ==========================================================================
--- Cron jobs (pg_cron) â€” emitidos como comentÃ¡rio SQL (nÃ£o executa neste arquivo)
+-- Cron jobs (pg_cron) — emitidos como comentário SQL (não executa neste arquivo)
 -- ==========================================================================
--- pg_cron: job 'delivery-expirar' â€” schedule '*/10 * * * *' â€” comando: update public.delivery_pedidos set status = 'expirado', atualizado_em = now() where status = 'aguardando_pagamento' and criado_em < now() - interval '3 hours'; update public.revenda_checkouts set status = 'expirado' where status = 'aguardando' and criado_em < now() - interval '3 hours';
--- -- select cron.schedule('delivery-expirar', '*/10 * * * *', '...');  // descomentar ao reproduzir em projeto novo (requer extensÃ£o pg_cron)
+-- pg_cron: job 'delivery-expirar' — schedule '*/10 * * * *' — comando: update public.delivery_pedidos set status = 'expirado', atualizado_em = now() where status = 'aguardando_pagamento' and criado_em < now() - interval '3 hours'; update public.revenda_checkouts set status = 'expirado' where status = 'aguardando' and criado_em < now() - interval '3 hours';
+-- -- select cron.schedule('delivery-expirar', '*/10 * * * *', '...');  // descomentar ao reproduzir em projeto novo (requer extensão pg_cron)
 
--- pg_cron: job 'whatsapp-enviar' â€” schedule '* * * * *' â€” comando: select net.http_post(url := 'https://zqadfktfplrbrjmepllh.supabase.co/functions/v1/whatsapp-enviar', body := '{}'::jsonb, headers := '{"Content-Type": "application/json"}'::jsonb, timeout_milliseconds := 30000) where exists (select 1 from public.whatsapp_envios where status = 'pendente' e
--- -- select cron.schedule('whatsapp-enviar', '* * * * *', '...');  // descomentar ao reproduzir em projeto novo (requer extensÃ£o pg_cron)
+-- pg_cron: job 'whatsapp-enviar' — schedule '* * * * *' — comando: select net.http_post(url := 'https://zqadfktfplrbrjmepllh.supabase.co/functions/v1/whatsapp-enviar', body := '{}'::jsonb, headers := '{"Content-Type": "application/json"}'::jsonb, timeout_milliseconds := 30000) where exists (select 1 from public.whatsapp_envios where status = 'pendente' e
+-- -- select cron.schedule('whatsapp-enviar', '* * * * *', '...');  // descomentar ao reproduzir em projeto novo (requer extensão pg_cron)
 
--- FASE 3 concluÃ­da 2026-11-17: schema.sql reflete o banco vivo pÃ³s-migrations 062/063/064 (31 tabelas).
+-- FASE 3 concluída 2026-11-17: schema.sql reflete o banco vivo pós-migrations 062/063/064 (31 tabelas).
 
 
 
