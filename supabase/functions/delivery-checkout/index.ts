@@ -57,6 +57,15 @@ Deno.serve(async (req: Request) => {
     if (!mpToken) return json({ error: 'Pagamento online ainda em configuração. Fale com a gente no WhatsApp (65) 99288-8228.' }, 503)
     const b = await req.json().catch(() => ({}))
     const sb = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
+    // ---------- anti-abuso (migration_062): rate limit por IP ----------
+    // Validação de campos ocorre depois; o limite existe ANTES pra impedir spam de
+    // requisições com dados inválidos também — nada é gravado até a validação passar.
+    const ipCheckout = (req.headers.get('x-forwarded-for')?.split(',')[0].trim() || '')
+      || req.headers.get('cf-connecting-ip') || ''
+    if (ipCheckout) {
+      const ipOk = await sb.rpc('rate_check', { p_key: 'dlv-ip:' + ipCheckout, p_max: 30, p_janela_seg: 60 })
+      if (!ipOk) return json({ error: 'Muitas tentativas de pedido seguidas. Aguarde alguns minutos e tente de novo.' }, 429)
+    }
 
     const { data: row } = await sb.from('delivery_config').select('config').eq('id', 1).single()
     const cfg: any = row?.config
@@ -65,6 +74,11 @@ Deno.serve(async (req: Request) => {
     // Dados do cliente
     const nome = String(b.nome || '').trim().slice(0, 80)
     const tel = String(b.telefone || '').replace(/\D/g, '').slice(0, 13)
+    // Rate limit por telefone (max 20 pedidos/hora por número — anti-spam do mesmo WhatsApp).
+    if (tel.length >= 10) {
+      const telOk = await sb.rpc('rate_check', { p_key: 'dlv-tel:' + tel, p_max: 20, p_janela_seg: 3600 })
+      if (!telOk) return json({ error: 'Muitas tentativas de pedido seguidas. Aguarde alguns minutos e tente de novo.' }, 429)
+    }
     const endereco = String(b.endereco || '').trim().slice(0, 300)
     if (nome.length < 3) return json({ error: 'Informe seu nome.' }, 400)
     if (tel.length < 10) return json({ error: 'Informe um WhatsApp válido.' }, 400)

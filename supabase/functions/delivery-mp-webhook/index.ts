@@ -4,7 +4,8 @@
 // notificação: pegamos só o id e reconsultamos o pagamento na API do MP com o
 // nosso token (assim uma notificação forjada não marca nada como pago).
 // Aprovado → delivery_confirmar_pagamento (status 'pago' + baixa de estoque,
-// idempotente). Sempre responde 200 (senão o MP fica reenviando).
+// idempotente). Responde sempre 200 (salvo se assinatura inválida com secret = 401,
+// ou IP no limite = 429; neste último o MP reentrega as legítimas — propósito).
 //
 // Também confirma o pedido de revendedor pago online (REV-<checkout>).
 // Secrets: MP_ACCESS_TOKEN; MP_WEBHOOK_SECRET (opcional — se configurado,
@@ -32,8 +33,12 @@ Deno.serve(async (req: Request) => {
     const id = String(body?.data?.id || url.searchParams.get('data.id') || (tipo === 'payment' ? url.searchParams.get('id') : '') || '')
     if (tipo !== 'payment' || !id) return ok({ ok: true, ignorado: tipo || 'sem tipo' })
 
-    // Assinatura (se o secret estiver configurado no painel do MP e aqui).
+    const sb = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
+
+    // Warning: se o secret não estiver config, a assinatura não é validada.
+    // Obrigatoriedade do secret é passo de deploy manual — só loga, não muda comportamento.
     const secret = Deno.env.get('MP_WEBHOOK_SECRET')
+    if (!secret) console.error('[delivery-mp-webhook] MP_WEBHOOK_SECRET nao configurado — validacao de assinatura desligada')
     if (secret) {
       const sig = req.headers.get('x-signature') || ''
       const reqId = req.headers.get('x-request-id') || ''
@@ -44,11 +49,17 @@ Deno.serve(async (req: Request) => {
       }
     }
 
+    // Rate limit por IP (max 60 requisições em 60s): evita flood de notificações falsas.
+    const ip = req.headers.get('x-forwarded-for')?.split(',')[0].trim()
+      || req.headers.get('cf-connecting-ip') || ''
+    if (ip && !await sb.rpc('rate_check', { p_key: 'mpwh:' + ip, p_max: 60, p_janela_seg: 60 })) {
+      return new Response(JSON.stringify({ erro: 'muitas notificacoes' }), { status: 429, headers: { 'Content-Type': 'application/json' } })
+    }
+
     const pg: any = await fetch('https://api.mercadopago.com/v1/payments/' + encodeURIComponent(id), {
       headers: { Authorization: 'Bearer ' + mpToken },
     }).then((r) => r.json())
     const codigo = pg?.external_reference
-    const sb = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
 
     // Pedido de revendedor pago online (migration_051): REV-<id do checkout>.
     if (codigo && String(codigo).startsWith('REV-')) {

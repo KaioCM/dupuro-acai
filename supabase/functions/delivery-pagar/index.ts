@@ -88,6 +88,10 @@ Deno.serve(async (req: Request) => {
     }
     if (Date.parse(ped.criado_em) < Date.now() - 3 * 3600e3) return json({ error: 'O pedido expirou. Faça o pedido de novo.' }, 409)
 
+    // Rate limit (migration_062): max 40 tentativas de pagamento por pedido/hora.
+    const payOk = await sb.rpc('rate_check', { p_key: 'dlvpay:' + token, p_max: 40, p_janela_seg: 3600 })
+    if (!payOk) return json({ error: 'Muitas tentativas de pagamento nesse pedido. Tente novamente em instantes.' }, 429)
+
     const fd = b.formData || {}
     const metodo = String(fd.payment_method_id || '')
     if (!metodo) return json({ error: 'Escolha a forma de pagamento.' }, 400)
