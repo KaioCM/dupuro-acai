@@ -227,7 +227,7 @@ Deno.serve(async (req: Request) => {
 
       // Validar que linha existe e obter campos atuais
       const { data: oldRow, error: selErr } = await sb.from('qualificacao_leads')
-        .select('nome, negocio, telefone, cidade, bairro, turns')
+        .select('nome, negocio, telefone, cidade, bairro, turns, objecao, segmento, interesse, quer_amostra')
         .eq('token', leadToken)
         .maybeSingle()
       if (selErr) throw selErr
