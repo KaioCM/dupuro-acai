@@ -590,7 +590,6 @@ var DupuroChat = (function () {
         var li = ctx.interesse;
         flagStatus(li >= 2 ? 'potencial' : 'sem_acao').then(function(){});
         hideQuick();
-        skipLink().style.display = 'none';
         return;
       }
 
@@ -688,7 +687,6 @@ var DupuroChat = (function () {
           var li = ctx.interesse;
           flagStatus(li >= 2 ? 'potencial' : 'sem_acao').then(function(){});
           hideQuick();
-          skipLink().style.display = 'none';
           inputEl().disabled = true;
           sendBtn().disabled = true;
           return;
