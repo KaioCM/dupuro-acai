@@ -340,7 +340,31 @@
     </div>
 
     <div class="signup-card">
-      <div id="formWrapper">
+      <!-- Chat de qualificação -->
+      <div id="rvChat" class="rv-chat" hidden>
+        <div id="rvPanel" class="rv-panel">
+          <div class="rv-panel-row rv-panel-seg">Segmento: <span class="rv-chip-rv rv-panel-item">—</span></div>
+          <div class="rv-panel-row rv-panel-row-info" data-key="cidade">
+            <span>Cidade:</span><span class="rv-panel-val">—</span>
+          </div>
+          <div class="rv-panel-row rv-panel-row-info" data-key="negocio">
+            <span>Negócio:</span><span class="rv-panel-val">—</span>
+          </div>
+          <div class="rv-panel-row">
+            <span>Interesse:</span>
+            <div class="rv-dots"><span class="rv-dot"></span><span class="rv-dot"></span><span class="rv-dot"></span><span class="rv-dot"></span></div>
+          </div>
+          <div class="rv-panel-row rv-panel-status-wrap">Status: <span class="rv-chip-rv rv-panel-item rv-panel-status">—</span></div>
+        </div>
+        <div id="rvThread" class="rv-thread"></div>
+        <div id="rvQuick" class="rv-chips" hidden></div>
+        <div class="rv-input-row">
+          <input id="rvInput" class="rv-input" placeholder="Digite aqui…" autocomplete="off">
+          <button id="rvSend" class="btn btn-primary btn-sm">Enviar</button>
+        </div>
+        <a id="rvSkip" href="#">prefiro preencher manualmente</a>
+      </div>
+      <div id="formWrapper" class="hidden">
         <h3>Cadastro de revendedor</h3>
         <p class="hint">Crie sua conta — seu acesso ao painel do revendedor é liberado assim que o time Dupuro aprovar seu cadastro.</p>
         <form id="revendaForm" novalidate data-formspree-action="https://formspree.io/f/SEU_FORM_ID">
@@ -495,5 +519,6 @@
 <script src="../assets/js/supabase-client.js"></script>
 <script src="../assets/js/cliente.js?v=4"></script>
 <script src="../assets/js/main.js?v=3"></script>
+<script src="../assets/js/revenda-chat.js?v=1"></script>
 </body>
 </html>

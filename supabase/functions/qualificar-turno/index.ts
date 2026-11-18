@@ -287,8 +287,10 @@ Deno.serve(async (req: Request) => {
         // segmento: nunca sobrescreve com individuo_sem_negocio se já tem valor
         if (segCh !== 'individuo_sem_negocio' || !oldRow.segmento) up.segmento = segCh
 
-        // quer_amostra: one-way true
-        ;(up.quer_amostra as boolean) = (oldRow.quer_amostra as boolean) || objCh === 'amostra_teste'
+        // quer_amostra: one-way true — lê a MESMA fonte de novoObj que decidiu up.objecao;
+        // oldRow garante um-true real: se o turno anterior tinha amostra_teste na linha,
+        // qualquer update futuro mantém flag true (sinal vrai não apaga).
+        ;(up.quer_amostra as boolean) = (oldRow.quer_amostra === true) || novoObj === 'amostra_teste'
 
         // Campos parciais coalesce: só atualiza se vier não-null
         if (capNome(campos.nome)) up.nome = capNome(campos.nome)
