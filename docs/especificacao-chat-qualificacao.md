@@ -20,17 +20,31 @@ Nome: `qualificar-turno`. Padrão delivery-checkout (anon). Rate check por IP + 
 
 ### Banco
 
-Tabela `qualificacao_leads`:
+Tabela `qualificacao_leads` (`migration_068_qualificacao_leads.sql`):
 
 | Coluna | Tipo | Observação |
 |---|---|---|
-| `id` | uuid / bigserial | PK |
-| `telefone_hash` | text | SHA-256 do telefone |
-| `estado` | jsonb | Máquina de estados completa |
-| `segmento` | text | Classe do Jev (`pick`) |
-| `intenção` | text | Intent detectada |
-| `fit` | float | Score de encaixe |
-| `criado_em` | timestamptz | Timestamp |
+| `id` | uuid | PK |
+| `token` | uuid unique | Identificador do turno/chat |
+| `status` | text | 'em_chat', 'varejo', 'expansao', 'potencial', 'pronto_cadastro', 'convertido', 'sem_acao' |
+| `nome` | text (≤80) | Nome do visitante |
+| `negocio` | text (≤120) | Nome da empresa/negócio |
+| `telefone` | text (≤20) | Em claro só quando o visitante oferece no nó final, simétrico a `profiles.telefone` |
+| `cidade` | text (≤60) | Cidade |
+| `bairro` | text (≤60) | Bairro |
+| `segmento` | text | Classe detectada pelo Jev (`pick`) |
+| `objecao` | text | Objeção capturada durante o chat |
+| `interesse` | smallint (0–3) | Nível de interesse validado pela mineração de 26 conversas reais |
+| `quer_amostra` | boolean | Flag da política de amostra adiada; TRUE avança status para 'pronto_cadastro'/'convertido' |
+| `turns` | int | Número de voltas do chat |
+| `ultimo_texto` | text (≤300) | Última mensagem do lead |
+| `lead_profile` | uuid → profiles(id) | Vinculado via JWT no momento da conversão |
+| `criado_em` | timestamptz | Timestamp de criação |
+| `atualizado_em` | timestamptz | Atualizado automaticamente via trigger |
+
+Telefone em claro só quando o visitante o oferece no nó final, simétrico a `profiles.telefone`.  
+Os campos de qualificação (`objecao`, `interesse`, `quer_amostra`, `segmento`) são validados pela mineração de 26 conversas reais ([docs/achados-mining-whatsapp.md](achados-mining-whatsapp.md)).  
+Converter vincula `lead_profile` via JWT do `auth.uid()` retornado pela Edge.
 
 NUNCA em `norte_leads` (banco compartilhado, projeto do outro produto).
 
