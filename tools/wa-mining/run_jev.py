@@ -229,9 +229,12 @@ def run(smoke=False):
         # Noul type: API may return float confidence as 'noul' or bool
         if isinstance(con_noul, (int, float)):
             con_bool = con_noul > 0.5  # threshold for positive assertion
+            # Derive confidence: distância de 0.5 escalada p/ [0,1]
+            # p=0 ou p=1 → certidao total; p=0.5 → ambiguidade máxima
+            con_conf = min(1.0, max(0.0, abs(con_noul - 0.5) * 2))
         else:
             con_bool = bool(con_noul)
-        con_conf   = round(ocn.get("confidence", 0), 4)
+            con_conf = 0.0              # sem valor numérico → incerteza total
 
         row = {
             "id":             conv_id,
