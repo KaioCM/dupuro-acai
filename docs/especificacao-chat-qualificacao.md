@@ -1,5 +1,6 @@
 # Spec — Chat de qualificação de leads da revenda (P3)
 
+Status do produto: chat substitui o formulário de revenda (decisão Kayo, 2026-11-18); gates de construção abaixo permanecem.
 Blueprint: vídeo "JEV: Fazer dinheiro com IA..." (Maestros da IA, 2026-10) — formulário-chat com Jev como roteador em tempo real. Não é atendimento: qualifica quem chega na página de revenda e roteia (demo/agendamento/vendedor/autosserviço).
 
 ## Arquitetura (6 passos por turno)
@@ -33,10 +34,10 @@ Tabela `qualificacao_leads`:
 
 NUNCA em `norte_leads` (banco compartilhado, projeto do outro produto).
 
-### Front-end
-
-- Página `revenda/` ganha widget colapsável (não blocking; a literatura indica que 30% abandonam na primeira tela de chat).
-- Custo: ~US$ 0,0003/turno Jev + 1 geração curta. Latência percebida: painel atualiza antes da frase.
+### Front (decisão do dono — 2026-11-18)
+O chat É a porta da seção #revenda: substitui o formulário estático atual (`revenda/index.html:346`), não roda ao lado dele (duas portas para o mesmo cadastro dividem conversão). O formulário não desaparece — vira ETAPA do fluxo: tela final com campos pré-preenchidos pelas respostas do chat (nome, empresa, telefone, cidade, e-mail), reutilizando o signup existente (`main.js:117-150` → `cliente.js:25`) sem criar caminho de cadastro paralelo.
+- Fallback: se o chat falhar/carregar lento, a página ainda precisa permitir cadastro direto (link 'pular e preencher manualmente' → formulário atual, escondido por padrão).
+- Quem o chat qualifica como 'sem intenção' roteia para WhatsApp/fechamento gentil SEM chegar ao signup.
 
 ## Pré-condições para construir (gate)
 
@@ -46,6 +47,7 @@ NUNCA em `norte_leads` (banco compartilhado, projeto do outro produto).
 
 ## Anti-padrões
 
+- Não manter form + chat como duas portas paralelas para o mesmo cadastro (decisão do dono acima).
 - Jev não responde cliente (não gera texto).
 - Diagramas/visuais = render de dados estruturados, nunca geração de imagem.
 - Sem chatbot de atendimento geral (escopo creep).
