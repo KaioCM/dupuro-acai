@@ -1,6 +1,6 @@
 # Roteiro P3 — chat de qualificação da revenda (v1, calibrado nos achados 2026-11-18)
 
-Regras: sem LLM generativo (falas fixas; Jev só classifica turno a turno), o chat É a porta da seção #revenda (decisão do dono), form vira etapa final pré-preenchida, fallback "pular e preencher" sempre visível. Classificador por turno: pick(objeção) + score(interrupção 0–3) com as 3 zonas de confiança (≥0,85 segue auto; cinzenta pergunta de esclarecimento fixa; <0,60 humaniza — botão "falar com humano" leva ao WhatsApp).
+Regras: sem LLM generativo (falas fixas; Jev só classifica turno a turno), o chat É a porta da seção #revenda (decisão do dono), form vira etapa final pré-preenchida, fallback "pular e preencher" sempre visível. Classificador por turno: pick(objeção) + score(interesse 0–3) com as 3 zonas de confiança (≥0,85 segue auto; cinzenta pergunta de esclarecimento fixa; <0,60 humaniza — botão "falar com humano" leva ao WhatsApp).
 
 **N0 — Abertura (1 pergunta, sem formulário)**
 "Fala! Aqui é a Dupuro Açaí, fábrica em Cuiabá. Em 1 minuto eu te digo se a revenda cabe no seu negócio. Como você está chegando?"
