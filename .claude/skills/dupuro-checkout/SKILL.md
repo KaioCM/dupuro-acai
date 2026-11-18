@@ -35,3 +35,13 @@ Delivery: `aguardando_pagamento → pago → em_rota → entregue` + `cancelado`
 
 ## Protocolo de mudança neste território
 Briefing ≤6 perguntas; ordem grep→`tools/jev trechos`→leitura. Revisão estática NÃO basta: teste funcional de porta (burst 429, render real no browser/Playwright, `cron.job_run_details`). Índices em `delivery_pedidos`: criar só quando >~5k linhas (hoje ~10; seq scan é ótimo em 10 linhas). Contas de teste em `CONTAS-TESTE.local.txt` (admin-teste serve para E2E do painel). Hosting: GitHub Pages (pws.dupuroacai.com) — git push = deploy dos estáticos; functions/migrations via MCP.
+
+## Contratos entre camadas (lição consolidada 2026-11-18)
+
+Família de bug que dominou a semana: cada camada lê um campo que a camada vizinha não garante. Revisão estática NÃO pega — só teste funcional com dado real. Casos reais: filtro do admin lia `rotulado_em` ausente do select; destaque lia `analise_concluida` (coluna inexistente); sticky do qualificar-turno lia `oldRow.objecao` de um select que não trazia a coluna; CSAT lia motivos com `_` quando a RPC devolve com espaço; `data-error-text` sem CSS; cards nascendo `hidden` sem revelador; array posicional em RPC (PGRST102); `token` lido fora da IIFE.
+
+Checklist ao mexer em qualquer par front↔banco↔Edge↔admin:
+1. Todo campo lido por filtro/destaque/sticky PRECISA estar no select/query que alimenta a tela — conferir os DOIS lados no diff.
+2. Elemento que nasce `hidden` precisa de revelador nomeado no diff (e um estado terminal nunca pode esconder o fallback — regra do skip do chat).
+3. RPC via fetch cru: sempre objeto nomeado `{p_...}`; strings de erro do banco são contrato — o front casa EXATO ou normaliza dos dois lados.
+4. Depois de TODO lote com código: teste funcional de porta real (UI clicada, burst de rate-limit, linha no banco) — estática aprovada não é evidência.
