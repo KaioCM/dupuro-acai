@@ -73,7 +73,7 @@
           <li><strong>Diga quando quer receber</strong> ou retirar na fábrica.</li>
           <li><strong>Pague pelo site ou na entrega.</strong> O pedido vale na hora e você acompanha em Meus pedidos.</li>
         </ol>
-        <form id="primeiroSurvey" class="csat-primeiro hidden">
+        <form id="primeiroSurvey" class="csat-primeiro">
           <p class="csat-title">O que ainda te impede de fazer o primeiro pedido?</p>
           <div class="csat-chips" role="group" aria-label="Motivo"></div>
           <div class="csat-texto-extra hidden">
@@ -566,9 +566,17 @@
   var CSAT_MSG_OK = 'Obrigado! Seu cupom de 10%% no próximo pedido: <cupom>';
   var CSAT_MSG_JA = 'Você já avaliou este pedido.';
   var CSAT_MOTIVOS = {
-    'ja_respondido': CSAT_MSG_JA,
-    'sem_sessao': 'Entre de novo.',
-    'pedido nao encontrado': 'Pedido não encontrado.'
+    'ja respondido': CSAT_MSG_JA,
+    'sem sessao': 'Entre de novo.',
+    'pedido nao encontrado': 'Pedido não encontrado.',
+    'referencia invalida': 'Informe o número do pedido (ex.: PED-XXXX).',
+    'resposta vazia': 'Selecione uma nota ou escreva algo.',
+    'pesquisa fechada por hoje': 'Meta diária atingida. Volte amanhã.',
+    'so o admin registra ativacao': 'Somente administradores registram essa pesquisa.',
+    'numero de venda invalido': 'Número de venda deve estar no formato VND-XXXX.',
+    'canal invalido': 'Canal não permitido.',
+    'texto longo demais': 'Máximo 500 caracteres.',
+    'nota invalida': 'Nota deve ser entre 1 e 5.'
   };
   function showCsat(refId, box) {
     box.classList.remove('hidden');
@@ -578,35 +586,35 @@
     box.innerHTML =
       '<p class="csat-title">Nota para este pedido</p>' +
       '<p class="csat-hint">Sua opinião sobre este pedido; usamos só para melhorar.</p>' +
-      '<div class="csat-stars" id="csatStars-' + refId + '" role="group" aria-label="Selecione de 1 a 5 estrelas">' +
+      '<div class="csat-stars" id="csatStars-' + esc(refId) + '" role="group" aria-label="Selecione de 1 a 5 estrelas">' +
         [1,2,3,4,5].map(function(n){
           return '<button type="button" data-csat-nota="' + n + '">' + n + '</button>';
         }).join('') +
       '</div>' +
       '<label class="csat-texto-lbl hidden"><span class="campo-rotulo">O que poderíamos melhorar? (opcional)</span>' +
-        '<textarea id="csatTexto-' + refId + '" maxlength="500" rows="2"></textarea></label>' +
-      '<div class="csat-msg hidden" id="csatMsg-' + refId + '" role="alert"></div>' +
-      '<div class="csat-acao" id="csatAcao-' + refId + '">' +
-        '<button type="button" class="btn btn-primary btn-sm hidden" id="csatEnviar-' + refId + '">Enviar</button></div>';
+        '<textarea id="csatTexto-' + esc(refId) + '" maxlength="500" rows="2"></textarea></label>' +
+      '<div class="csat-msg hidden" id="csatMsg-' + esc(refId) + '" role="alert"></div>' +
+      '<div class="csat-acao" id="csatAcao-' + esc(refId) + '">' +
+        '<button type="button" class="btn btn-primary btn-sm hidden" id="csatEnviar-' + esc(refId) + '">Enviar</button></div>';
     ligarGoto(box);
     box.querySelectorAll('[data-csat-nota]').forEach(function(b){
       b.addEventListener('click', function(){
         box.querySelectorAll('[data-csat-nota]').forEach(function(x){ x.classList.remove('active'); });
         b.classList.add('active');
-        document.getElementById('csatTexto-' + refId).classList.toggle('hidden', false);
-        document.querySelector('#csatAcao-' + refId + ' button').classList.remove('hidden');
+        document.getElementById('csatTexto-' + esc(refId)).classList.toggle('hidden', false);
+        document.querySelector('#csatAcao-' + esc(refId) + ' button').classList.remove('hidden');
       });
     });
-    var enviarBtn = document.getElementById('csatEnviar-' + refId);
+    var enviarBtn = document.getElementById('csatEnviar-' + esc(refId));
     if (enviarBtn) enviarBtn.addEventListener('click', function(){
       var nota = parseInt(box.querySelector('[data-csat-nota].active')?.getAttribute('data-csat-nota'), 10);
       if (isNaN(nota)) return;
-      var txt = (document.getElementById('csatTexto-' + refId)?.value || '').trim();
+      var txt = (document.getElementById('csatTexto-' + esc(refId))?.value || '').trim();
       submitCsat(refId, nota, txt, box);
     });
   }
   function submitCsat(refId, nota, texto, box) {
-    box.querySelector('#csatAcao-' + refId + ' button').disabled = true;
+    box.querySelector('#csatAcao-' + esc(refId) + ' button').disabled = true;
     DupuroCliente.registrarPesquisa('painel', refId, nota, texto).then(function(res){
       if (!res.error && res.ok === true) {
         var cupomEsc = esc(res.cupom || '');
