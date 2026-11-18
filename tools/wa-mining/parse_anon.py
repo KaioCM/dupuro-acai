@@ -76,9 +76,10 @@ def _date_iso(raw):
     return f"{year:04d}-{m:02d}-{d:02d}"
 
 def parse_chat(text):
-    """Return (client_messages_list, dupuro_count, start_date, end_date)."""
+    """Return (client_messages_list, dupuro_count, n_media_discarded, start_date, end_date)."""
     client_msgs = []
     dupuro_msgs = 0
+    n_media_discarded = 0
     dt_start = None
     dt_end   = None
 
@@ -132,13 +133,16 @@ def parse_chat(text):
         content = re.sub(r'\n{3,}', '\n\n', content)
 
         if msg_class == "CLIENTE":
-            client_msgs.append(content)
+            if _is_media_blob(content):
+                n_media_discarded += 1      # discard media blobs entirely
+            else:
+                client_msgs.append(content)
         else:
             dupuro_msgs += 1
 
         i = j
 
-    return client_msgs, dupuro_msgs, dt_start or "", dt_end or ""
+    return client_msgs, dupuro_msgs, n_media_discarded, dt_start or "", dt_end or ""
 
 # --- Anonymization ---
 
@@ -162,6 +166,26 @@ def _is_phone(text_fragment):
     if re.fullmatch(r'\d{4}-\d{2}-\d{2}', text_fragment.strip()):
         return False
     return True
+
+# --- Media blob rejection (WhatsApp desktop embeds thumbnails as base64) ---
+
+_RE_JPEG_BOM = re.compile(r'^\s*/9j/')
+_RE_BASE64_LINE = re.compile(r'^[A-Za-z0-9+/]{80,}={0,2}$')
+_RE_DATA_IMAGE = re.compile(r'data:image', re.IGNORECASE)
+
+def _is_media_blob(text):
+    """Return True if text is a WhatsApp-desktop embedded media blob."""
+    stripped = text.strip()
+    if _RE_JPEG_BOM.match(stripped):
+        return True
+    if _RE_DATA_IMAGE.search(stripped):
+        return True
+    # Single-line base64 block (>=80 chars, ends with 0-2 padding)
+    for line in stripped.splitlines():
+        if _RE_BASE64_LINE.match(line.strip()):
+            return True
+    return False
+
 _RE_CPF    = re.compile(r'(?<!\d)\d{3}\.\d{3}\.\d{3}[-\s]?\d{2}(?!-?)')
 _RE_CNPJ   = re.compile(r'(?<!\d)\d{2,3}\.\d{3}\.\d{3}/\d{4}[-\s]?\d{2}')
 _RE_EMAIL  = re.compile(r'\S+@\S+\.\S+')
@@ -276,7 +300,7 @@ def run_pipeline(batch=True):
             if nl_idx > 0:
                 text = text[nl_idx + 1:]
 
-        client_msgs, dupuro_count, dt_start, dt_end = parse_chat(text)
+        client_msgs, dupuro_count, n_media_discarded, dt_start, dt_end = parse_chat(text)
 
         # Questions containing '?', anonymized
         questions = []
@@ -295,6 +319,7 @@ def run_pipeline(batch=True):
             "data_fim": dt_end,
             "n_cliente": len(client_msgs),
             "n_dupuro": dupuro_count,
+            "n_midia_descartada": n_media_discarded,
             "msgs_cliente": [anon_text(cm) for cm in client_msgs],
             "texto_cliente": joined_short,
             "perguntas": questions,
@@ -438,13 +463,15 @@ def smoke_show_sample():
     if text and ('criptografia' in text[:text.find('\n')] if text.find('\n') > 0 else ''):
         text = text[text.find('\n') + 1:]
 
-    client_msgs, dupuro_count, dt_start, dt_end = parse_chat(text)
+    client_msgs, dupuro_count, n_media_discarded, dt_start, dt_end = parse_chat(text)
 
     print("\n" + "="*60)
     print("SMOKE TEST - sample: {}".format(orig_name))
     print("  Date:     {} -> {}".format(dt_start, dt_end))
     print("  Client:   {} msgs".format(len(client_msgs)))
     print("  Dupuro:   {} msgs".format(dupuro_count))
+    if n_media_discarded > 0:
+        print("  Media discartada: {} blocos base64 removidos".format(n_media_discarded))
     print("="*60 + "\n")
 
     for i, cm in enumerate(client_msgs[:3]):
