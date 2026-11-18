@@ -1,6 +1,6 @@
 # Spec — Chat de qualificação de leads da revenda (P3)
 
-Status real (2026-11-18): o chat NÃO existe; o formulário de cadastro da revenda é e continua sendo a porta de entrada viva. Chat é proposta P3 gated nos achados do P0. A relação chat↔form (substituir / virar etapa / não construir) é DECISÃO ABERTA para a época da construção.
+Status (2026-11-18): DECISÃO DO DONO — o chat de qualificação VAI substituir o formulário de cadastro da revenda. Ainda NÃO construído (P3 em fila); a construção usa o desenho "Front" abaixo. Gates de aprendizado (P0) refinam as perguntas, não reabrem a decisão.
 Blueprint: vídeo "JEV: Fazer dinheiro com IA..." (Maestros da IA, 2026-10) — formulário-chat com Jev como roteador em tempo real. Não é atendimento: qualifica quem chega na página de revenda e roteia (demo/agendamento/vendedor/autosserviço).
 
 ## Arquitetura (6 passos por turno)
@@ -34,12 +34,11 @@ Tabela `qualificacao_leads`:
 
 NUNCA em `norte_leads` (banco compartilhado, projeto do outro produto).
 
-## Front (questão aberta — não decidir antes do P0)
-Três caminhos legítimos, a escolher quando o P3 entrar em construção, com os achados das 19 conversas na mesa:
-a) chat substitui o formulário (form vira etapa pré-preenchida do fluxo; risco: trocar um funil que já converteu 7 por um ineditado);
-b) chat como camada de qualificação ANTES do form (form intocado; chat só roteia/qualifica);
-c) não construir chat — o P0 mostrou que as objeções se resolvem com conteúdo/preço, não com conversa (resultado perfeitamente válido).
-Qualquer que for o escolhido: nunca duas portas paralelas de cadastro sem hierarquia clara (dividem conversão). Fallback de cadastro direto é obrigatório em a) e b).
+## Front (desenho aprovado — chat substitui o formulário)
+- O chat é a porta única da seção #revenda; o formulário atual (`revenda/index.html:346`) vira ETAPA FINAL do fluxo, pré-preenchida pelas respostas (nome, empresa, telefone, cidade, e-mail) — reutilizando o signup existente (`main.js:117-150` → `cliente.js:25`), sem caminho paralelo de cadastro.
+- Fallback obrigatório: link 'pular e preencher manualmente' abre o formulário atual para quem rejeita conversa.
+- Lead sem intenção: o chat encerra com gentileza e roteia para WhatsApp — não chega ao signup.
+- MVP SEM LLM: as falas do chat são roteiro fixo (copy escrita, 5-7 nós); o Jev faz o que sabe (segmento pelo nome, intenção, coerência, roteamento por confiança). LLM generativo nas falas é polimento futuro, não pré-requisito.
 
 ## Pré-condições para construir (gate)
 
@@ -49,7 +48,7 @@ Qualquer que for o escolhido: nunca duas portas paralelas de cadastro sem hierar
 
 ## Anti-padrões
 
-- Decidir chat-vs-form antes dos achados do P0 — ou registrar como decisão o que ainda é hipótese.
+- Reabrir como dúvida o que o dono já decidiu; registrar como decisão o que ainda é pergunta (os dois erros ocorreram 2026-11-18 — ver histórico de commits).
 - Jev não responde cliente (não gera texto).
 - Diagramas/visuais = render de dados estruturados, nunca geração de imagem.
 - Sem chatbot de atendimento geral (escopo creep).
