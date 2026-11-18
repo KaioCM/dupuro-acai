@@ -163,7 +163,7 @@ async function perguntarTurno(
 
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })
-  if (req.method !== 'POST') return json({ error: 'Use POST' }, 405)
+  if (req.method !== 'POST') return json({ erro: 'Use POST' }, 405)
 
   try {
     const sb = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
@@ -180,7 +180,7 @@ Deno.serve(async (req: Request) => {
     /* ── INICIAR ────────────────────────────────────────────────── */
     if (acao === 'iniciar') {
       const campos = (body.campos as { nome?: unknown; negocio?: unknown; telefone?: unknown; cidade?: unknown; bairro?: unknown } | undefined) ?? {}
-      if (!okCampos(campos)) return json({ error: 'Corpo inválido.' }, 400)
+      if (!okCampos(campos)) return json({ erro: 'Corpo inválido.' }, 400)
 
       // Rate limit por IP (mesma regra do delivery-checkout: ~ :66)
       const { data: ipOk } = await sb.rpc('rate_check', { p_key: 'lvi:' + ipRaw, p_max: 8, p_janela_seg: 3600 })
@@ -215,11 +215,11 @@ Deno.serve(async (req: Request) => {
     if (acao === 'turno') {
       const texto = ((body.texto != null ? String(body.texto).slice(0, 300) : '').trim()) || null
       const campos = (body.campos as { nome?: unknown; negocio?: unknown; telefone?: unknown; cidade?: unknown; bairro?: unknown } | undefined) ?? {}
-      if (!okCampos(campos)) return json({ error: 'Corpo inválido.' }, 400)
+      if (!okCampos(campos)) return json({ erro: 'Corpo inválido.' }, 400)
 
       // Token UUID do lead
       const leadToken = (typeof body.token === 'string' && IS_UUID.test(body.token)) ? body.token : ''
-      if (!leadToken) return json({ error: 'Token inválido.' }, 400)
+      if (!leadToken) return json({ erro: 'Token inválido.' }, 400)
 
       // Rate limit por token (24 turnos / 30 min)
       const { data: tokOk } = await sb.rpc('rate_check', { p_key: 'lvt:' + leadToken, p_max: 24, p_janela_seg: 1800 })
@@ -231,7 +231,7 @@ Deno.serve(async (req: Request) => {
         .eq('token', leadToken)
         .maybeSingle()
       if (selErr) throw selErr
-      if (!oldRow) return json({ error: 'Sessão inválida.' }, 404)
+      if (!oldRow) return json({ erro: 'Sessão inválida.' }, 404)
 
       // Chamada ÚNICA com TRÊS perguntas (paralelo-questions pattern)
       const SHOP = 'Dupuro Açaí, an açaí factory and wholesaler in Cuiabá, Brazil. They sell 10L boxes and tubs of pure açaí and cream ice cream flavors (ninho, morango, cupuaçu...). Wholesale starts at 1 box (10L). Address: Av. das Torres nº 16, Jardim Imperial II. No drive-thru.'
@@ -255,9 +255,11 @@ Deno.serve(async (req: Request) => {
       const up: Record<string, unknown> = {
         ultimo_texto: texto,
         atualizado_em: new Date().toISOString(),
-        quer_amostra: false, // reset padrão
       }
 
+      // Classificação pegajosa: os últimos turnos são ruído natural; o sinal
+      // do lead é a MELHOR mensagem, não a última. turns mantém last-write
+      // (perde sob paralelo sintético — chat real é sequencial, aceitável).
       let objecaoLabel: string | null = null
       let objConf = 0
       let interesScore: number | null = null
@@ -273,10 +275,18 @@ Deno.serve(async (req: Request) => {
         segmentoLabel = segCh
         segConf = segPr
 
-        up.objecao = objCh
-        up.interesse = result.interesse
-        up.segmento = segCh
-        up.quer_amostra = objCh === 'amostra_teste'
+        // interesse: max esticky — nunca rebaixa um turno fraco
+        const oldInter = Number(oldRow.interesse) || 0
+        if (result.interesse > oldInter) up.interesse = result.interesse
+
+        // objecao: só grava se novo e não é sem_intencao sobre objecao já existente
+        if (objCh && !(oldRow.objecao != null && objCh === 'sem_intencao')) up.objecao = objCh
+
+        // segmento: nunca sobrescreve com individuo_sem_negocio se já tem valor
+        if (segCh !== 'individuo_sem_negocio' || !oldRow.segmento) up.segmento = segCh
+
+        // quer_amostra: one-way true
+        ;(up.quer_amostra as boolean) = (oldRow.quer_amostra as boolean) || objCh === 'amostra_teste'
 
         // Campos parciais coalesce: só atualiza se vier não-null
         if (capNome(campos.nome)) up.nome = capNome(campos.nome)
@@ -293,7 +303,8 @@ Deno.serve(async (req: Request) => {
         if (capBairro(campos.bairro)) up.bairro = capBairro(campos.bairro)
       }
 
-      // turns++ sempre
+      // turns++ sempre (last-write; perde em paralelo sintético, mas chat real
+      // é sequencial por token, então não há corrida no produto)
       ;(up as any).turns = (Number(oldRow.turns) || 0) + 1
 
       const { error: updErr } = await sb.from('qualificacao_leads').update(up).eq('token', leadToken)
@@ -316,17 +327,17 @@ Deno.serve(async (req: Request) => {
     if (acao === 'flag') {
       const allowedStatuses = ['varejo','expansao','potencial','pronto_cadastro','sem_acao']
       const status = typeof body.status === 'string' ? body.status : ''
-      if (!allowedStatuses.includes(status)) return json({ error: 'Status inválido.' }, 400)
+      if (!allowedStatuses.includes(status)) return json({ erro: 'Status inválido.' }, 400)
 
       // Só permite se status_atual == 'em_chat'; 'convertido' NÃO setável por flag
       const tFlag = (typeof body.token === 'string' && IS_UUID.test(body.token)) ? body.token : ''
-      if (!tFlag) return json({ error: 'Token inválido.' }, 400)
+      if (!tFlag) return json({ erro: 'Token inválido.' }, 400)
       const { data: led, error: selErr } = await sb.from('qualificacao_leads')
         .select('status')
         .eq('token', tFlag)
         .maybeSingle()
       if (selErr) throw selErr
-      if (!led || led.status !== 'em_chat') return json({ error: 'Não é possível alterar esse status agora.' }, 400)
+      if (!led || led.status !== 'em_chat') return json({ erro: 'Não é possível alterar esse status agora.' }, 400)
 
       await sb.from('qualificacao_leads').update({ status, atualizado_em: new Date().toISOString() })
         .eq('token', tFlag)
@@ -336,13 +347,13 @@ Deno.serve(async (req: Request) => {
     /* ── CONVERTER ──────────────────────────────────────────────── */
     if (acao === 'converter') {
       // Exige Authorization bearer próprio — qualquer usuário autenticado
-      if (!jwt) return json({ error: 'Sem sessão' }, 401)
+      if (!jwt) return json({ erro: 'Sem sessão' }, 401)
       const { data: u } = await sb.auth.getUser(jwt)
-      if (!u?.user) return json({ error: 'Autenticação inválida' }, 401)
+      if (!u?.user) return json({ erro: 'Autenticação inválida' }, 401)
 
       const uid = u.user.id
       const leadTokenConv = (typeof body.token === 'string' && IS_UUID.test(body.token)) ? body.token : ''
-      if (!leadTokenConv) return json({ error: 'Token inválido.' }, 400)
+      if (!leadTokenConv) return json({ erro: 'Token inválido.' }, 400)
       // Apenas se status != 'convertido'
       await sb.from('qualificacao_leads')
         .update({ status: 'convertido', lead_profile: uid, atualizado_em: new Date().toISOString() })
@@ -351,8 +362,8 @@ Deno.serve(async (req: Request) => {
       return json({ ok: true })
     }
 
-    return json({ error: 'Ação inválida.' }, 400)
+    return json({ erro: 'Ação inválida.' }, 400)
   } catch (e) {
-    return json({ error: String((e as Error)?.message || e) }, 500)
+    return json({ erro: String((e as Error)?.message || e) }, 500)
   }
 })
