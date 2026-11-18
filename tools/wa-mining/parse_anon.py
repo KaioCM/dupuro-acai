@@ -69,11 +69,14 @@ def _msg_class(sender_raw):
     return "CLIENTE"
 
 def _date_iso(raw):
-    """dd/m/yy -> yyyy-mm-dd"""
+    """WhatsApp date (MM/DD/YY) -> yyyy-mm-dd; auto-correct if month > 12."""
     parts = raw.split("/")
-    d, m, y = int(parts[0]), int(parts[1]), int(parts[2])
+    a, b, y = int(parts[0]), int(parts[1]), int(parts[2])
     year = 2000 + y if y < 100 else y
-    return f"{year:04d}-{m:02d}-{d:02d}"
+    # If first part > 12 it must be the day → swap
+    if a > 12:
+        a, b = b, a
+    return f"{year:04d}-{a:02d}-{b:02d}"
 
 def parse_chat(text):
     """Return (client_messages_list, dupuro_count, n_media_discarded, start_date, end_date)."""
@@ -120,13 +123,16 @@ def parse_chat(text):
 
         msg_class = _msg_class(sender)
 
-        # Consume continuation lines (no timestamp prefix)
+        # Consume continuation lines (no timestamp prefix); discard quoted lines from store
         j = i + 1
         while j < len(lines):
             lm = RE_TS.match(lines[j])
             if lm:
                 break
-            content += "\n" + lines[j]
+            if lines[j].startswith('> '):
+                content += "\n[QUOTE REMOVIDA]"   # keep structure but strip quote text
+            else:
+                content += "\n" + lines[j]
             j += 1
 
         # Normalize multiple newlines
@@ -191,8 +197,24 @@ _RE_CNPJ   = re.compile(r'(?<!\d)\d{2,3}\.\d{3}\.\d{3}/\d{4}[-\s]?\d{2}')
 _RE_EMAIL  = re.compile(r'\S+@\S+\.\S+')
 _RE_LONGDIG = re.compile(r'(?<!\d)\d{7,}(?!\d)')
 
+# Name self-declaration patterns: capture NAME after trigger, replace NAME with \u27e8nome\u27e9
+# Common non-names (never scrub): voce, o senhor, a senhora, ele, ela, quem, aqui, ai, bem, bora
+_COMMON_NAMES = {"voce", "o senhor", "a senhora", "ele", "ela", "quem", "aqui", "ai", "bim", "bem", "bora", "isso", "nada", "tudo"}
+
+_RE_NOME1 = re.compile(r'(meu nome [e\u00e9]\s+)([A-Za-z\xc0-\xff]{2,})', re.IGNORECASE)
+_RE_NOME2 = re.compile(r'(me chamo\s+)([A-Za-z\xc0-\xff]{2,})', re.IGNORECASE)
+_RE_NOME3 = re.compile(r'(sou\s+(?:o|a|os|as)\s+)([A-Z][A-Za-z\xc0-\xff]+)', re.IGNORECASE)
+_RE_NOME4 = re.compile(r'(aqui [e\u00e9]\s+(?:o|a|os|as)\s+)([A-Za-z\xc0-\xff]{2,})', re.IGNORECASE)
+_RE_NOME5 = re.compile(r'(falo com\s+(?:o|a|a senhora|o senhor)?\s*)([A-Z][A-Za-z\xc0-\xff]{2,})', re.IGNORECASE)
+_NAME_REGEXES = [_RE_NOME1, _RE_NOME2, _RE_NOME3, _RE_NOME4, _RE_NOME5]
+_NAME_PLACEHOLDER = '\u27e8nome\u27e9'  # ⟨nome⟩
+
 def anon_text(text):
     """Replace sensitive data with placeholders."""
+    # 1) Scrub name self-declarations (keep trigger, replace captured name part)
+    for nm_re in _NAME_REGEXES:
+        text = nm_re.sub(r'\g<1>' + _NAME_PLACEHOLDER, text)
+    # 2) Structured PII
     text = _RE_CNPJ.sub('\u27e8cnpj\u27e9', text)     # <cnpj> angle-bracket style
     text = _RE_CPF.sub('\u27e8cpf\u27e9', text)        # <cpf>
     text = _RE_EMAIL.sub('\u27e8email\u27e9', text)    # <email>
@@ -396,15 +418,45 @@ PII_RULES = {
     "cnpj":        (_RE_CNPJ,   lambda _: True),
     "email":       (_RE_EMAIL,  lambda _: True),
     "numeros_long":(_RE_LONGDIG,lambda _: True),
+    "nome":        (None, lambda text: _pii_check_nome(text)),
 }
+
+def _pii_check_nome(text):
+    """Check for name leakage after scrub: trigger + [A-Z][a-z]{2,} where next token is NOT a common word."""
+    # Re-use same triggers; look for captured name parts that weren't scrubbed
+    for nm_re in _NAME_REGEXES:
+        matches = list(nm_re.finditer(text))
+        if not matches:
+            continue
+        for m in matches:
+            groups = m.groups()
+            for g in groups:
+                if not g:
+                    continue
+                # If the trigger group itself contains a capitalized word (>2 chars), it leaked
+                tokens = re.findall(r'[A-Za-z\xc0-\xff]{3,}', g)
+                for tok in tokens:
+                    if tok.lower() not in _COMMON_NAMES:
+                        return 1      # possible name leak
+    # Also catch bare "NomePronto" after known trigger keywords without formal capture
+    bare = re.compile(
+        r'(?:meu nome [e\u00e9]|me chamo|sou (?:o|a)\s+)([A-Z][A-Za-z\xc0-\xff]{2,})',
+        re.IGNORECASE
+    )
+    count = len(bare.findall(text))
+    return count
 
 def _pii_hit_count(text, cat_name):
     """Count real PII violations of a given category in a text string."""
-    regex, validator = PII_RULES[cat_name]
+    rule = PII_RULES[cat_name]
+    regex = rule[0]
+    validator = rule[1]
+    # For 'nome', validator receives the whole text; regex may be None
+    if regex is None:
+        return validator(text)
     count = 0
     for m in regex.finditer(text):
         full = m.group()
-        # For phone, strip optional leading + before validation
         frag = full[1:] if full.startswith('+') else full
         if validator(frag):
             count += 1
@@ -450,15 +502,15 @@ def self_test_pii():
         print("\n[FAIL] Self-test FAILED - {} potential leak(s).".format(total_violations), file=sys.stderr)
     return total_violations == 0
 
-# --- Smoke test display ---
+# --- Smoke test display (structure/counts ONLY — never real content) ---
 
 def smoke_show_sample():
-    """For first conversation: show full structure with placeholders."""
+    """For first conversation: show structure/counts with placeholders only."""
     convos, _ = enumerate_conversations()
     if not convos:
         print("No conversations found.", file=sys.stderr)
         return
-    orig_name, txt_path = convos[0]
+    _, txt_path = convos[0]     # do NOT reveal orig_name
     text = _read_txt(Path(txt_path))
     if text and ('criptografia' in text[:text.find('\n')] if text.find('\n') > 0 else ''):
         text = text[text.find('\n') + 1:]
@@ -466,25 +518,18 @@ def smoke_show_sample():
     client_msgs, dupuro_count, n_media_discarded, dt_start, dt_end = parse_chat(text)
 
     print("\n" + "="*60)
-    print("SMOKE TEST - sample: {}".format(orig_name))
-    print("  Date:     {} -> {}".format(dt_start, dt_end))
-    print("  Client:   {} msgs".format(len(client_msgs)))
-    print("  Dupuro:   {} msgs".format(dupuro_count))
+    print("SMOKE TEST - estrutura da primeira conversa")
+    print("  Date:       {} -> {}".format(dt_start, dt_end))
+    print("  Client msgs: {}".format(len(client_msgs)))
+    print("  Dupuro msgs: {}".format(dupuro_count))
     if n_media_discarded > 0:
-        print("  Media discartada: {} blocos base64 removidos".format(n_media_discarded))
+        print("  Midia descartada: {}".format(n_media_discarded))
     print("="*60 + "\n")
 
-    for i, cm in enumerate(client_msgs[:3]):
-        anon = anon_text(cm)
-        print("  [customer {}] {}".format(i + 1, repr(anon[:120])))
-    if len(client_msgs) > 3:
-        print("  ... +{} more customer message(s) omitted".format(len(client_msgs) - 3))
-
-    # Questions
+    # Show only placeholder pattern — never actual anonymized text
     questions = [anon_text(cm) for cm in client_msgs if '?' in cm]
-    print("\n  Questions detected: {}".format(len(questions)))
-    for q in questions[:3]:
-        print("    ? {}".format(repr(q[:100])))
+    print("  Perguntas detectadas: {}".format(len(questions)))
+    print("  Exemplo de placeholder: '... <nome>? ... <tel>? ...' (texto anonimizado)")
 
 # --- Entry point ---
 
