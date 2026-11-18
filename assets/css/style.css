@@ -2896,6 +2896,41 @@ a.stat-card.alerta .stat-sub { color: var(--warning); font-weight: 800; }
 .rev-historico[open] > summary { margin-bottom: 16px; }
 .rev-historico .chart-card { padding: 0; border: 0; }
 
+/* Mini-painel CSAT de avaliação por pedido */
+.rev-csat { padding: 12px 0 4px; font-size: 14px; color: var(--text); }
+.csat-title { font-weight: 700; color: var(--roxo-700); margin: 0 0 2px; font-size: 15px; }
+.csat-hint { font-size: 13px; color: var(--text-light); margin: 0 0 10px; }
+.csat-stars { display: flex; gap: 6px; flex-wrap: wrap; }
+.csat-stars button {
+  min-width: 44px; height: 44px; padding: 0 14px;
+  border: 2px solid rgba(96,16,80,0.22); border-radius: var(--radius-sm);
+  background: #fff; color: var(--text); font-weight: 700; font-size: 14px;
+  cursor: pointer; transition: border-color .12s, background .12s, color .12s;
+}
+.csat-stars button:hover { border-color: var(--roxo-700); }
+.csat-stars button.active { background: var(--roxo-700); border-color: var(--roxo-700); color: #fff; }
+.csat-texto-lbl { display: block !important; margin-top: 10px; }
+.csat-texto-lbl.hidden { display: none !important; }
+.csat-texto-lbl textarea { width: 100%; resize: vertical; }
+.csat-msg { margin-top: 10px; }
+.csat-ok { color: var(--verde-dark); }
+.csat-ok strong { color: var(--verde); }
+.csat-erro strong { color: var(--danger); }
+.csat-tentar-de-novo { margin-top: 6px; }
+.csat-acao { margin-top: 10px; }
+
+/* Micro-survey do primeiro pedido */
+.csat-primeiro { margin-top: 18px; padding-top: 14px; border-top: 1px solid rgba(96,16,80,0.1); font-size: 14px; }
+.csat-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+.csat-chip-btn {
+  padding: 8px 16px; border: 2px solid rgba(96,16,80,0.22); border-radius: var(--radius-full);
+  background: #fff; color: var(--text); font-weight: 700; font-size: 13px; cursor: pointer;
+  transition: border-color .12s, background .12s, color .12s;
+}
+.csat-chip-btn:hover { border-color: var(--roxo-700); }
+.csat-chip-btn.active { background: var(--roxo-700); border-color: var(--roxo-700); color: #fff; }
+.csat-texto-extra { margin: 8px 0 10px; }
+
 /* vitrine e resumo do pedido mais calmos */
 .pg-revenda .shop-section-title { font-size: 16px; margin: 4px 0 12px; }
 .pg-revenda .shop-section-title::after { display: none; }

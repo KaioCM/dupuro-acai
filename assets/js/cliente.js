@@ -304,6 +304,27 @@ var DupuroCliente = (function () {
     });
   }
 
+  // Registrar pesquisa CSAT / qualificador. Canais: painel | delivery | pdv | cadastro | primeiro_login | ativacao.
+  // A RPC substitui p_ref pelo uid do logged quando canal for 'primeiro_login'.
+  async function registrarPesquisa(p_canal, p_ref, p_nota, p_texto) {
+    var session = await getSession();
+    if (!session) return { error: new Error('Sem sessão ativa'), ok: false };
+    var result = await client.rpc('pesquisa_registrar', {
+      p_canal: p_canal,
+      p_ref: p_ref || null,
+      p_nota: (p_nota !== null && p_nota !== undefined) ? Number(p_nota) : null,
+      p_texto: p_texto || null
+    });
+    if (result.error) return { error: result.error, ok: false, cupom: null, motivo: null };
+    var data = result.data || {};
+    return {
+      ok: data.ok === true || data.ok === 'true',
+      cupom: data.cupom || null,
+      motivo: data.motivo || null,
+      error: null
+    };
+  }
+
   return {
     signup: signup,
     login: login,
@@ -323,7 +344,8 @@ var DupuroCliente = (function () {
     cotarEntrega: cotarEntrega,
     getLitrosDispensaMinimo: getLitrosDispensaMinimo,
     getOrders: getOrders,
-    getCoupons: getCoupons
+    getCoupons: getCoupons,
+    registrarPesquisa: registrarPesquisa
   };
 
 })();

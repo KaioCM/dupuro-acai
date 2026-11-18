@@ -73,6 +73,16 @@
           <li><strong>Diga quando quer receber</strong> ou retirar na fábrica.</li>
           <li><strong>Pague pelo site ou na entrega.</strong> O pedido vale na hora e você acompanha em Meus pedidos.</li>
         </ol>
+        <form id="primeiroSurvey" class="csat-primeiro hidden">
+          <p class="csat-title">O que ainda te impede de fazer o primeiro pedido?</p>
+          <div class="csat-chips" role="group" aria-label="Motivo"></div>
+          <div class="csat-texto-extra hidden">
+            <label for="primeiroExtra"><span class="campo-rotulo">Outra coisa — conte pra gente (opcional)</span>
+              <input type="text" id="primeiroExtra" maxlength="300" autocomplete="off"></label>
+          </div>
+          <div class="csat-msg hidden" id="primeiroMsg" role="alert"></div>
+          <button type="submit" class="btn btn-primary btn-sm csat-enviar-pp">Enviar</button>
+        </form>
       </div>
     </section>
 
@@ -517,9 +527,15 @@
       lista.dataset.ligado = '1';
       lista.addEventListener('click', function (e) {
         var b = e.target.closest('[data-repetir]');
-        if (!b) return;
-        var o = sortedByDate.filter(function (x) { return x.id === b.getAttribute('data-repetir'); })[0];
-        if (o) repetirPedido(itensRepetiveis(o));
+        if (b) { var o = sortedByDate.filter(function (x) { return x.id === b.getAttribute('data-repetir'); })[0]; if (o) repetirPedido(itensRepetiveis(o)); return; }
+        var a = e.target.closest('[data-avaliar]');
+        if (a) {
+          var id = a.getAttribute('data-avaliar');
+          var csatBox = document.getElementById('csat-' + id);
+          // Se já está aberto, fecha; senão, abre.
+          if (!csatBox.classList.contains('hidden')) { csatBox.classList.add('hidden'); return; }
+          showCsat(id, csatBox);
+        }
       });
     }
     if (!sortedByDate.length) {
@@ -537,10 +553,80 @@
           '<span class="rev-pedido-total">' + brl(o.valor) + '</span></div>' +
         '<p class="rev-pedido-sub">Feito em ' + formatDate(o.data) + (q ? ' · ' + esc(q) : '') + '</p>' +
         (aberto ? linhaTempo(o) : '') +
-        (o.status === 'entregue' ? '<button type="button" class="btn-link-acao rev-repetir-este" data-repetir="' + esc(o.id) + '">Pedir de novo</button>' : '') +
+        (o.status === 'entregue' ? '<button type="button" class="btn-link-acao rev-repetir-este" data-repetir="' + esc(o.id) + '">Pedir de novo</button>' +
+          '<button type="button" class="btn-link-acao rev-avaliar-este" data-avaliar="' + esc(o.id) + '">Avaliar</button>' : '') +
+        '<div class="rev-csat hidden" id="csat-' + esc(o.id) + '" role="region" aria-label="Avaliação do pedido ' + esc(o.id) + '"></div>' +
         '<details class="rev-itens-det"' + (i === 0 && aberto ? ' open' : '') + '><summary>' + o.items.length + (o.items.length === 1 ? ' item' : ' itens') + '</summary>' + itensHtml(o) + '</details>' +
         '</li>';
     }).join('');
+  }
+
+  // Painel inline CSAT: abre num `<div class="rev-csat">` sob o cartão do pedido.
+  var CSAT_ESTADOS = { vazia: 0, nota: 1, texto: 2, enviando: 3, feito: 4 };
+  var CSAT_MSG_OK = 'Obrigado! Seu cupom de 10%% no próximo pedido: <cupom>';
+  var CSAT_MSG_JA = 'Você já avaliou este pedido.';
+  var CSAT_MOTIVOS = {
+    'ja_respondido': CSAT_MSG_JA,
+    'sem_sessao': 'Entre de novo.',
+    'pedido nao encontrado': 'Pedido não encontrado.'
+  };
+  function showCsat(refId, box) {
+    box.classList.remove('hidden');
+    renderCsatPergunta(refId, box);
+  }
+  function renderCsatPergunta(refId, box) {
+    box.innerHTML =
+      '<p class="csat-title">Nota para este pedido</p>' +
+      '<p class="csat-hint">Sua opinião sobre este pedido; usamos só para melhorar.</p>' +
+      '<div class="csat-stars" id="csatStars-' + refId + '" role="group" aria-label="Selecione de 1 a 5 estrelas">' +
+        [1,2,3,4,5].map(function(n){
+          return '<button type="button" data-csat-nota="' + n + '">' + n + '</button>';
+        }).join('') +
+      '</div>' +
+      '<label class="csat-texto-lbl hidden"><span class="campo-rotulo">O que poderíamos melhorar? (opcional)</span>' +
+        '<textarea id="csatTexto-' + refId + '" maxlength="500" rows="2"></textarea></label>' +
+      '<div class="csat-msg hidden" id="csatMsg-' + refId + '" role="alert"></div>' +
+      '<div class="csat-acao" id="csatAcao-' + refId + '">' +
+        '<button type="button" class="btn btn-primary btn-sm hidden" id="csatEnviar-' + refId + '">Enviar</button></div>';
+    ligarGoto(box);
+    box.querySelectorAll('[data-csat-nota]').forEach(function(b){
+      b.addEventListener('click', function(){
+        box.querySelectorAll('[data-csat-nota]').forEach(function(x){ x.classList.remove('active'); });
+        b.classList.add('active');
+        document.getElementById('csatTexto-' + refId).classList.toggle('hidden', false);
+        document.querySelector('#csatAcao-' + refId + ' button').classList.remove('hidden');
+      });
+    });
+    var enviarBtn = document.getElementById('csatEnviar-' + refId);
+    if (enviarBtn) enviarBtn.addEventListener('click', function(){
+      var nota = parseInt(box.querySelector('[data-csat-nota].active')?.getAttribute('data-csat-nota'), 10);
+      if (isNaN(nota)) return;
+      var txt = (document.getElementById('csatTexto-' + refId)?.value || '').trim();
+      submitCsat(refId, nota, txt, box);
+    });
+  }
+  function submitCsat(refId, nota, texto, box) {
+    box.querySelector('#csatAcao-' + refId + ' button').disabled = true;
+    DupuroCliente.registrarPesquisa('painel', refId, nota, texto).then(function(res){
+      if (!res.error && res.ok === true) {
+        var cupomEsc = esc(res.cupom || '');
+        box.innerHTML = '<p class="csat-ok"><strong>Obrigado!</strong><br>Sua avaliação foi enviada com sucesso.</p>' +
+          (res.cupom ? ('<p>Cupom de 10% no próximo pedido: <strong>' + cupomEsc + '</strong></p>') : '');
+        return;
+      }
+      var motivo = res.motivo || '';
+      var msg = CSAT_MOTIVOS[motivo.toLowerCase().replace(/\s+/g,' ')];
+      if (!msg) msg = 'Erro ao enviar. Tente novamente mais tarde.';
+      box.innerHTML = '<p class="csat-erro"><strong>' + msg + '</strong></p>' +
+        '<button type="button" class="btn-link-acao csat-tentar-de-novo" data-avaliar-ref="' + esc(refId) + '">Tentar de novo</button>';
+      var tdBtn = box.querySelector('.csat-tentar-de-novo');
+      if (tdBtn) tdBtn.addEventListener('click', function(){
+        box.innerHTML = '';
+        renderCsatPergunta(refId, box);
+      });
+    }).catch(function(){
+      box.innerHTML = '<p class="csat-erro"><strong>Não foi possível enviar agora. Confira a internet.</strong></p>';
+    });
   }
 
   function renderHistoricoResumo() {
@@ -1558,7 +1644,7 @@
   // sem a taxa de entrega). Ao voltar pra aba, se saiu versão nova, recarrega — o carrinho
   // fica salvo no aparelho. No meio do pagamento, não. Recarrega uma vez por versão (o
   // HTML pode vir do cache por até 10 min e não queremos laço).
-  var VERSAO_PAINEL = '2026-11-17a'; // subir junto com area-cliente/versao-painel.json
+  var VERSAO_PAINEL = '2026-11-18a'; // subir junto com area-cliente/versao-painel.json
   var versaoConferida = 0;
   async function conferirVersao() {
     if (Date.now() - versaoConferida < 60e3 || !pagOnline.classList.contains('hidden')) return;
@@ -1830,6 +1916,55 @@
       window.location.href = 'login.html';
     });
   });
+
+  // ---- Micro-survey do primeiro login (primeiro_login) ----
+  (function setupPrimeiroSurvey() {
+    var FORM = document.getElementById('primeiroSurvey');
+    if (!FORM) return;
+    var CHIPS_TXT = ['Preço/mínimo','Como funciona','Quero testar antes','Outra coisa'];
+    var chipSel = null;
+    FORM.querySelector('.csat-chips').innerHTML = CHIPS_TXT.map(function(t){
+      return '<button type="button" class="csat-chip-btn" data-chip="' + esc(t) + '">' + esc(t) + '</button>';
+    }).join('');
+    FORM.querySelectorAll('.csat-chip-btn').forEach(function(b){
+      b.addEventListener('click', function(){
+        FORM.querySelectorAll('.csat-chip-btn').forEach(function(x){ x.classList.remove('active'); });
+        b.classList.add('active');
+        chipSel = b.getAttribute('data-chip');
+        FORM.querySelector('.csat-texto-extra').classList.toggle('hidden', chipSel !== 'Outra coisa');
+      });
+    });
+    FORM.addEventListener('submit', function(e){
+      e.preventDefault();
+      if (!chipSel) return;
+      var extra = '';
+      if (chipSel === 'Outra coisa') {
+        var el = document.getElementById('primeiroExtra');
+        extra = el ? el.value.trim() : '';
+      }
+      var txt = chipSel + (extra ? ': ' + extra : '');
+      var msgEl = document.getElementById('primeiroMsg');
+      msgEl.classList.remove('hidden');
+      msgEl.innerHTML = '<span style="color:var(--warning)">Enviando…</span>';
+      FORM.querySelector('.csat-enviar-pp').disabled = true;
+      DupuroCliente.registrarPesquisa('primeiro_login', '', null, txt).then(function(res){
+        var hideFn = function(){ FORM.classList.add('hidden'); };
+        if (res.motivo && /ja/i.test(res.motivo)) {
+          msgEl.textContent = 'Você já respondeu esta pergunta. Obrigado!';
+          setTimeout(hideFn, 2000);
+        } else if (!res.error && res.ok === true) {
+          msgEl.innerHTML = '<span class="csat-ok">Obrigado! Sua resposta foi registrada.</span>';
+          setTimeout(hideFn, 2500);
+        } else {
+          msgEl.innerHTML = '<span class="csat-erro">' + esc(res.motivo || 'Erro ao enviar.') + '</span>';
+          FORM.querySelector('.csat-enviar-pp').disabled = false;
+        }
+      }).catch(function(){
+        msgEl.innerHTML = '<span class="csat-erro">Não foi possível enviar agora. Confira a internet.</span>';
+        FORM.querySelector('.csat-enviar-pp').disabled = false;
+      });
+    });
+  })();
 
 })();
 </script>
