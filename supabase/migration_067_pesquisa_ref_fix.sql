@@ -69,6 +69,9 @@ begin
       return jsonb_build_object('ok', false, 'motivo', 'referencia invalida');
     end if;
   else -- ativacao: registro manual pelo admin
+    if v_ref is null or char_length(v_ref) > 40 then
+      return jsonb_build_object('ok', false, 'motivo', 'referencia invalida');
+    end if;
     if not public.is_admin() then return jsonb_build_object('ok', false, 'motivo', 'so o admin registra ativacao'); end if;
   end if;
 
