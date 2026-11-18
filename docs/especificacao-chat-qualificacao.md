@@ -69,3 +69,5 @@ A mineração das 26 conversas reais (docs/achados-mining-whatsapp.md) calibrou 
 - Jev não responde cliente (não gera texto).
 - Diagramas/visuais = render de dados estruturados, nunca geração de imagem.
 - Sem chatbot de atendimento geral (escopo creep).
+
+**Status**: MVP construído e testado ao vivo 2026-11-18 (conversa→lead→form prefill→cadastro→converter, green); política de amostra segue aberta — fala-ponte (c) em produção.

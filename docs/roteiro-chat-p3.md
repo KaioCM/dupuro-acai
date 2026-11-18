@@ -21,6 +21,7 @@ Regras: sem LLM generativo (falas fixas; Jev só classifica turno a turno), o ch
 - preco/margem: faz a conta na tela (custo/L → copo → lucro), nunca "depende".
 - minimo: "1 caixa por produto; 50 L no pedido dispensam mínimo" (regra real do revenda).
 - amostra: **[DECISÃO ABERTA DO DONO — 3 opções no doc: (a) pote-teste pago que vira crédito no 1º pedido; (b) amostra grátis só na 1ª entrega de teste em VG/Cba; (c) degustação no endereço da loja. Escolher antes do nó ir ao ar.]**
+Status: transitória (c) implementada no MVP; política final aguarda time.
 - pagamento/confiança: "a partir do 2º pedido você paga como quiser; o 1º pode ser com entrega" (regra real).
 
 **R5 — Fechamento** — "Já deixei teu cadastro meio pronto: [negócio], [telefone], [bairro]. Confere e completa em 2 minutos." → abre form atual PRÉ-PREENCHIDO (signup existente, caminho único; fallback manual sempre visível).
