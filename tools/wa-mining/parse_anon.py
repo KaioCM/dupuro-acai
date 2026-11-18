@@ -324,15 +324,15 @@ def run_pipeline(batch=True):
 
         client_msgs, dupuro_count, n_media_discarded, dt_start, dt_end = parse_chat(text)
 
-        # Questions containing '?', anonymized
+        # Questions containing '?', anonymized (kept for dedup only)
         questions = []
         for cm in client_msgs:
             if '?' in cm:
                 q = anon_text(cm)
                 questions.append(q)
 
-        # Join questions for truncated full text output
-        joined = "\n".join(questions)
+        # Join ALL client messages for full text output, truncated to 6000 chars
+        joined = "\n".join(anon_text(cm) for cm in client_msgs)
         joined_short = joined[:6000]
 
         record = {
