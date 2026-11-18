@@ -25,12 +25,14 @@ const json = (b: unknown, s = 200) => new Response(JSON.stringify(b), { status: 
 
 const TIPO = 'Dupuro Açaí, uma fábrica e loja de açaí e cremes em Cuiabá-MT, Brasil. Revende açaí para revendedores (a partir de 10 L por produto).'
 
+// v1 calibrada com a primeira resposta real (2026-11-18): "quero testar antes" era outro → confianca
+// chave renomeada de 'confianca_pagamento' para 'confianca' (alinhamento docs/pesquisa-ativacao.md)
 const TOPICO_CRITERIA: Record<string, string> = {
   acai_qualidade: 'Complaint about the product itself — bad taste, wrong temperature (not cold enough / melted), consistency issues, foreign object.',
   entrega: 'Delivery complaint — late, missed route stop, wrong address, driver problem.',
   preco: 'Price objection — says the product is too expensive, the delivery fee is too high, or disputes a charge.',
   duvida_operacional: 'Does not know how to use the panel, make an order, or pay — asks for help navigating the process.',
-  confianca_pagamento: 'Afraid to pay online, worried about billing/collection after paying Pix.',
+  confianca: 'Hesitation before committing — wants to try/test the product first, doubts about quality or fit for their business, fear of buying blind.',
   elogio: 'Positive feedback — praises the quality, service, delivery, or the brand overall.',
   concorrente: 'Mentions buying from another supplier/friend and possibly switching.',
   sem_demanda: 'Business did not pick up despite receiving product — slow sales, no demand.',
