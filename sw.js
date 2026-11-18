@@ -7,7 +7,7 @@
 //
 // Suba o CACHE_VER quando mudar a lista de arquivos abaixo, pra forçar refresh.
 // ==========================================================================
-var CACHE_VER = 'dupuro-caixa-v77'; // v77: printer.js mudou rodapé (link de avaliação na comanda)
+var CACHE_VER = 'dupuro-caixa-v78'; // v78: admin.js/admin.html mudam (aba Feedbacks + cupom origem)
 
 var SHELL = [
   '/area-cliente/caixa.html',

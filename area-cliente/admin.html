@@ -31,6 +31,7 @@
       <a href="rotas.html" class="sidebar-link"><span class="ic"><svg><use href="#m-globo"/></svg></span> Rotas de entrega</a>
       <a href="#estoque" class="sidebar-link" data-tab="estoque"><span class="ic"><svg><use href="#m-fabrica"/></svg></span> Produção e estoque</a>
       <a href="#numeros" class="sidebar-link" data-tab="numeros"><span class="ic"><svg><use href="#m-grafico"/></svg></span> Números</a>
+      <a href="#feedbacks" class="sidebar-link" data-tab="feedbacks"><span class="ic"><svg><use href="#m-chat"/></svg></span> Feedbacks</a>
       <a href="#cadastros" class="sidebar-link" data-tab="cadastros"><span class="ic"><svg><use href="#m-pasta"/></svg></span> Cadastros <span class="badge-pill hidden" data-badge="cadastros"></span></a>
     </nav>
 
@@ -668,7 +669,7 @@
       <div class="panel">
         <div class="panel-header"><h2>Todos os cupons</h2></div>
         <table class="data-table">
-          <thead><tr><th>Código</th><th>Revendedor</th><th>Descrição</th><th>Validade</th><th>Usado</th><th></th></tr></thead>
+          <thead><tr><th>Código</th><th>Revendedor</th><th>Descrição</th><th>Validade</th><th>Usado</th><th>Origem</th><th></th></tr></thead>
           <tbody id="couponsBody"></tbody>
         </table>
       </div>
@@ -741,6 +742,43 @@
       </div>
     </section>
 
+    <!-- ============ FEEDBACKS ============ -->
+    <section class="tab-panel hidden" id="tab-feedbacks">
+      <div class="app-topbar">
+        <div><h1>Feedbacks das pesquisas</h1><div class="subtitle">Respostas dos canais do app (painel, delivery, PDV etc.)</div></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header"><div><h2>Filtros e análise</h2></div></div>
+        <div class="order-form-grid" style="max-width:560px;">
+          <div class="field" style="margin-bottom:0;">
+            <label for="fbCanal">Canal</label>
+            <select id="fbCanal">
+              <option value="">Todos os canais</option>
+              <option value="painel">Painel</option>
+              <option value="delivery">Delivery</option>
+              <option value="pdv">PDV (caixa)</option>
+              <option value="primeiro_login">Primeiro login</option>
+              <option value="ativacao">Ativação</option>
+              <option value="cadastro">Cadastro</option>
+            </select>
+          </div>
+          <div class="field" style="margin-bottom:0;">
+            <label class="checkbox-label"><input type="checkbox" id="fbNaoRotulada"> Só não rotuladas</label>
+          </div>
+          <button type="button" class="btn btn-primary" id="fbAnalisarBtn">Analisar não rotuladas</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header"><div><h2>Respostas</h2></div></div>
+        <table class="data-table">
+          <thead><tr><th>Data</th><th>Canal</th><th>Nota</th><th>Texto</th><th>Tópico</th><th>Urgência</th><th>Coerente</th><th>Recompensa</th><th>Ref</th></tr></thead>
+          <tbody id="feedbacksBody"></tbody>
+        </table>
+      </div>
+    </section>
+
     <!-- ============ MINHA CONTA ============ -->
     <section class="tab-panel hidden" id="tab-conta">
       <div class="app-topbar">
@@ -802,7 +840,7 @@
   <a href="#pedidos" data-tab="pedidos"><span class="ic"><svg><use href="#m-painel"/></svg></span><span>Pedidos</span><span class="badge-pill hidden" data-badge="pedidos"></span></a>
   <a href="#estoque" data-tab="estoque"><span class="ic"><svg><use href="#m-fabrica"/></svg></span><span>Estoque</span></a>
   <a href="#numeros" data-tab="numeros"><span class="ic"><svg><use href="#m-grafico"/></svg></span><span>Números</span></a>
-  <button type="button" id="maisBtn" aria-controls="sidebar" aria-expanded="false" aria-label="Mais: cadastros, equipe e conta"><span class="ic"><svg><use href="#m-mais"/></svg></span><span>Mais</span><span class="badge-pill hidden" data-badge="cadastros"></span></button>
+  <button type="button" id="maisBtn" aria-controls="sidebar" aria-expanded="false" aria-label="Mais: cadastros, equipe, conta e Feedbacks"><span class="ic"><svg><use href="#m-mais"/></svg></span><span>Mais</span><span class="badge-pill hidden" data-badge="cadastros"></span></button>
 </nav>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.min.js"></script>
@@ -4342,7 +4380,7 @@
     var coupons = await DupuroAdmin.getAllCoupons();
     var body = document.getElementById('couponsBody');
     if (!coupons.length) {
-      body.innerHTML = '<tr><td colspan="6"><div class="empty-state">Nenhum cupom gerado ainda.</div></td></tr>';
+      body.innerHTML = '<tr><td colspan="7"><div class="empty-state">Nenhum cupom gerado ainda.</div></td></tr>';
       return;
     }
     body.innerHTML = coupons.map(function (c) {
@@ -4353,6 +4391,7 @@
         '<td>' + beneficio + (c.desc ? ' · ' + esc(c.desc) : '') + '</td>' +
         '<td>' + formatDate(c.validade) + '</td>' +
         '<td>' + (c.usado ? 'Sim' : 'Não') + '</td>' +
+        '<td>' + (c.origem ? '<span class="badge-pill" style="white-space:nowrap;">' + esc(c.origem) + '</span>' : '&mdash;') + '</td>' +
         '<td class="admin-table-actions">' + menuAcoes(c.code, [{ attr: 'data-delete-coupon="' + c.id + '"', texto: 'Apagar cupom', perigo: true }]) + '</td>' +
         '</tr>';
     }).join('');
@@ -4366,6 +4405,98 @@
       });
     });
   }
+
+  // ---- Feedbacks das pesquisas ----
+  var feedbacksCache = [], feedbacksErro = null, feedbacksCarregado = false;
+
+  async function carregarFeedbacks() {
+    feedbacksErro = null;
+    feedbacksCarregado = true;
+    var r = await DupuroAdmin.getPesquisas();
+    if (r.erro) {
+      feedbacksErro = r.erro;
+      aviso('Não foi possível carregar as pesquisas: ' + esc(r.erro) + '.');
+    } else {
+      feedbacksCache = r.linhas || [];
+    }
+    await renderFeedbacks();
+  }
+
+  async function renderFeedbacks() {
+    var canal = document.getElementById('fbCanal').value;
+    var naoRotulada = document.getElementById('fbNaoRotulada').checked;
+
+    // Lazy-load na primeira visita à aba (só roda se nunca carregou).
+    if (!feedbacksCarregado && !feedbacksErro) {
+      await carregarFeedbacks();
+      return;
+    }
+
+    // Filtra client-side
+    var rows = feedbacksCache.filter(function (r) {
+      if (canal && r.canal !== canal) return false;
+      if (naoRotulada && r.rotulado_em) return false; // rotulado = tem rotulado_em
+      return true;
+    });
+
+    var body = document.getElementById('feedbacksBody');
+    if (feedbacksErro) {
+      body.innerHTML = '<tr><td colspan="9"><div class="empty-state">Erro ao carregar: ' + esc(feedbacksErro) + '</div></td></tr>';
+    } else if (!rows.length) {
+      body.innerHTML = '<tr><td colspan="9"><div class="empty-state">Nenhuma resposta ainda.</div></td></tr>';
+    } else {
+      var html = rows.map(function (r) {
+        var notaHtml = r.nota != null ? '<strong>' + esc(r.nota) + '</strong>/5' : '&mdash;';
+        var textoTrunc = r.texto ? (r.texto.length > 120 ? esc(r.texto.slice(0, 120)) + '\u2026' : esc(r.texto)) : '&mdash;';
+        var urgenciaHtml = Number(r.urgencia) >= 6
+          ? '<span class="erro-linha">' + esc(r.urgencia != null ? r.urgencia : '\u2014') + '</span>'
+          : esc(r.urgencia != null ? r.urgencia : '\u2014');
+        var coerenteCell = r.coerente === null || r.coerente === undefined
+          ? '&mdash;'
+          : (r.coerente === false ? '<span class="badge-pill" style="white-space:nowrap;background:#ffe3e3;color:#c0392b;">nota\u2260texto</span>' : (r.coerente === true ? '<span class="badge-pill" style="white-space:nowrap;">ok</span>' : esc(String(r.coerente))));
+        var recompensa = r.recompensa ? esc(r.recompensa) : '&mdash;';
+        var ref = r.ref ? esc(r.ref) : '&mdash;';
+        return '<tr>' +
+          '<td>' + formatDate(r.criado_em) + '</td>' +
+          '<td><span class="badge-pill" style="white-space:nowrap;">' + esc(r.canal) + '</span></td>' +
+          '<td>' + notaHtml + '</td>' +
+          '<td title="' + esc(r.texto || '') + '">' + textoTrunc + '</td>' +
+          '<td>' + (r.topico ? '<span class="badge-pill" style="white-space:nowrap;">' + esc(r.topico) + '</span>' : '&mdash;') + '</td>' +
+          '<td>' + urgenciaHtml + '</td>' +
+          '<td>' + coerenteCell + '</td>' +
+          '<td>' + recompensa + '</td>' +
+          '<td>' + ref + '</td>' +
+          '</tr>';
+      }).join('');
+      body.innerHTML = html;
+      rotularTabela(body.parentNode);
+      new MutationObserver(function () { rotularTabela(body.parentNode); }).observe(body.parentNode, { childList: true });
+    }
+  }
+
+  document.getElementById('fbCanal').addEventListener('change', renderFeedbacks);
+  document.getElementById('fbNaoRotulada').addEventListener('change', renderFeedbacks);
+
+  document.getElementById('fbAnalisarBtn').addEventListener('click', async function () {
+    var btn = this;
+    btn.disabled = true;
+    btn.textContent = 'Analisando\u2026';
+    try {
+      var r = await DupuroAdmin.analisarPesquisas();
+      if (r.erro) {
+        aviso('A análise falhou: ' + esc(r.erro) + '.');
+      } else {
+        aviso('Análise concluída: ' + (r.analisadas || 0) + ' avaliada(s), ' + (r.erros || 0) + ' erro(s).');
+      }
+      // Recarrega os dados atualizados e re-renderiza
+      await carregarFeedbacks();
+    } catch (e) {
+      aviso('Falha na conexão: ' + motivoErro(e));
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Analisar não rotuladas';
+    }
+  });
 
   document.getElementById('couponForm').addEventListener('submit', async function (e) {
     e.preventDefault();
@@ -4413,7 +4544,7 @@
 
   // ---- Navegação: cada aba tem endereço próprio (#pedidos, #cadastros/produtos) ----
   // Recarregar a página volta pra mesma aba, e o Voltar do navegador funciona.
-  var ABAS = ['inicio', 'pedidos', 'estoque', 'numeros', 'cadastros', 'equipe', 'conta'];
+  var ABAS = ['inicio', 'pedidos', 'estoque', 'numeros', 'cadastros', 'feedbacks', 'equipe', 'conta'];
   var SUBS = ['revendedores', 'produtos', 'loja', 'cupons', 'regras'];
   var abaAtual = null, subAtual = 'revendedores';
   var links = document.querySelectorAll('.sidebar [data-tab], .bottom-nav [data-tab]');
@@ -4464,7 +4595,7 @@
     abaAtual = tab;
     document.querySelectorAll('.tab-panel').forEach(function (p) { p.classList.toggle('hidden', p.id !== 'tab-' + tab); });
     var maisBtn = document.getElementById('maisBtn');
-    var noMais = ['cadastros', 'equipe', 'conta'].indexOf(tab) !== -1;
+    var noMais = ['cadastros', 'equipe', 'conta', 'feedbacks'].indexOf(tab) !== -1;
     if (maisBtn) { maisBtn.classList.toggle('active', noMais); if (noMais) maisBtn.setAttribute('aria-current', 'page'); else maisBtn.removeAttribute('aria-current'); }
     links.forEach(function (l) {
       var on = l.getAttribute('data-tab') === tab;
@@ -5198,6 +5329,7 @@
     estoque: [renderProducts, resetProdForm, renderProducoes, renderAjustes],
     numeros: [renderOverview, renderAudits, renderCaixaFechamentos, renderTaxasEntregador, renderNotas],
     cadastros: [renderPending, renderResellers, renderProducts, renderAcompanhamentos, renderPromocoesAdmin, renderCoupons, loadLimiteLitros, populateResellerSelect],
+    feedbacks: [renderFeedbacks],
     equipe: [renderAdmins, renderAtendentes, preencherAcesso],
     conta: [renderWhatsapp]
   };
@@ -5223,7 +5355,7 @@
   resetAcompForm();
   admUpdatePromoTipo();
   // Listas que quase toda aba usa: pedidas juntas, em paralelo, já na abertura.
-  DupuroAdmin.getAllOrders(); DupuroAdmin.getPendingProfiles(); DupuroAdmin.getProducts();
+  DupuroAdmin.getAllOrders(); DupuroAdmin.getPendingProfiles(); DupuroAdmin.getProducts(); carregarFeedbacks();
   var inicial = lerEndereco();
   goTo(inicial.tab, inicial.sub, { substituir: true });
 

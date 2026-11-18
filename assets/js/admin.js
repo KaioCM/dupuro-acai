@@ -1064,6 +1064,25 @@ var DupuroAdmin = (function () {
   getCaixaFechamentos = comCache('getCaixaFechamentos', getCaixaFechamentos);
   getPromocoesHoje = comCache('getPromocoesHoje', getPromocoesHoje);
 
+  // ---------- Feedbacks: pesquisas da avaliação interna ----------
+  async function getPesquisas() {
+    var r = await client.from('pesquisa_respostas')
+      .select('id, canal, ref, nota, texto, topico, urgencia, coerente, confianca, recompensa, criado_em')
+      .order('id', { ascending: false }).limit(100);
+    var errMsg = r.error ? String(r.error.message || r.error) : null;
+    return { linhas: (r.data || []), erro: errMsg };
+  }
+
+  async function analisarPesquisas() {
+    var r = await client.functions.invoke('pesquisa-analisar', { body: { lote: 20 } });
+    if (r.error) {
+      var msg = String(r.error.message || r.error);
+      try { var c2 = JSON.parse(r.error.context || '{}'); if (c2 && c2.error) msg = c2.error; } catch (e) {}
+      return { ok: false, erro: msg };
+    }
+    return { ok: true, analisadas: (r.data && r.data.analisadas) || 0, erros: (r.data && r.data.erros) || 0, restantes: (r.data && r.data.restantes) || 0 };
+  }
+
   // Toda função exportada que não é leitura nem sessão é gravação: limpa o
   // cache antes e depois (vale também pras que devolvem promessa sem async).
   var NAO_GRAVA = {
@@ -1141,6 +1160,8 @@ var DupuroAdmin = (function () {
     setAcompanhamentoAtivo: setAcompanhamentoAtivo,
     deleteAcompanhamento: deleteAcompanhamento,
     getProducoes: getProducoes,
+    getPesquisas: getPesquisas,
+    analisarPesquisas: analisarPesquisas,
     createProducao: createProducao,
     updateProducao: updateProducao,
     deleteProducao: deleteProducao,
