@@ -40,6 +40,9 @@ NUNCA em `norte_leads` (banco compartilhado, projeto do outro produto).
 - Lead sem intenção: o chat encerra com gentileza e roteia para WhatsApp — não chega ao signup.
 - MVP SEM LLM: as falas do chat são roteiro fixo (copy escrita, 5-7 nós); o Jev faz o que sabe (segmento pelo nome, intenção, coerência, roteamento por confiança). LLM generativo nas falas é polimento futuro, não pré-requisito.
 
+## Inputs do roteiro (2026-11-18)
+A mineração das 26 conversas reais (docs/achados-mining-whatsapp.md) calibrou a taxonomia do classificador e o roteiro (docs/roteiro-chat-p3.md). Gate de construção restante: decisão do dono sobre a política de amostra (R4).
+
 ## Pré-condições para construir (gate)
 
 1. **P0 concluído** (19 conversas) → taxonomia de objeções real, não adivinhada.

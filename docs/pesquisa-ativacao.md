@@ -37,6 +37,8 @@ LGPD embutida: finalidade (melhorar o painel), controlador (Dupuro), forma (What
 
 ## Taxonomia inicial de objeções (para o Jev `pick`)
 
+- 2026-11-18: mineração das 26 conversas WhatsApp (docs/achados-mining-whatsapp.md) calibrou a taxonomia; o kit das 19 continua válido e a lista P0 contém 8 cadastrados desta amostra.
+
 | Rótulo | Significado |
 |---|---|
 | `preco_minimo` | Preço/mínimo de 10 L não cabe |
