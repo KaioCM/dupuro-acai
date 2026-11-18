@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Avaliar compra — Dupuro Açaí</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#601050">
+<link rel="icon" href="../assets/img/brand/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/style.css?v=70">
+<style>body{margin:0;background:var(--cream);font-family:Inter,sans-serif}.av-wrap{max-width:400px;margin:0 auto;padding:20px 16px;text-align:center}.av-logo{width:90px;height:auto;margin-bottom:12px}.av-title{font-size:20px;font-weight:700;color:var(--roxo-900);margin:0 0 4px}.av-sub{font-size:13px;color:var(--text-light);margin:0 0 14px}.av-box{background:var(--white);border-radius:var(--radius-md);padding:18px 16px;box-shadow:var(--shadow-sm)}.av-stars{text-align:center;margin-bottom:10px}.av-stars span.lb{display:inline-block;margin:0 2px;cursor:pointer;font-size:32px;color:#ddd;line-height:1}.av-stars span.lb.sel{color:var(--gold)}.av-stars label.ln{display:inline-block!important;width:auto!important;height:auto!important;font-size:13px!important;line-height:1!important;color:var(--text-light);margin-left:4px;padding:0}.av-stars label.ln:hover{color:var(--roxo-700)}textarea{width:100%;min-height:54px;resize:vertical;font-family:Inter,sans-serif;font-size:13px;border:1px solid #d4c4ce;border-radius:var(--radius-sm);padding:8px 10px;box-sizing:border-box;margin-bottom:10px}.btn-send{background:var(--roxo-700);color:var(--white);border:none;padding:8px 22px;border-radius:var(--radius-full);font-size:14px;font-weight:600;cursor:pointer}.btn-send[disabled]{opacity:.55;cursor:not-allowed}.msg-ok{color:var(--success);font-size:14px;margin-top:10px}.msg-ja{color:var(--text-light);font-size:14px;margin-top:10px}.msg-err{color:var(--danger);font-size:13px;margin-top:10px}.av-back{display:inline-block;margin-top:14px;color:var(--roxo-700);font-size:13px;text-decoration:none}</style>
+</head>
+<body>
+<div class="av-wrap">
+  <img src="../assets/img/brand/logo-principal-slogan.png" alt="Dupuro Açaí" class="av-logo">
+  <h1 class="av-title">Como foi sua compra na loja?</h1>
+  <p class="av-sub">Nos ajude a melhorar!</p>
+  <div id="formBox" class="av-box">
+    <div class="av-stars">
+      <span class="lb" data-v="1">&#9733;</span>
+      <span class="lb" data-v="2">&#9733;</span>
+      <span class="lb" data-v="3">&#9733;</span>
+      <span class="lb" data-v="4">&#9733;</span>
+      <span class="lb" data-v="5">&#9733;</span>
+      <label class="ln" id="lblNota"></label>
+    </div>
+    <textarea id="texto" placeholder="O que podemos melhorar?" maxlength="500"></textarea>
+    <button class="btn-send" id="enviar">Enviar</button>
+  </div>
+  <div id="okBox" hidden><p class="msg-ok"><strong>Obrigado! Sua avaliação foi enviada.</strong></p></div>
+  <div id="jaBox" hidden><p class="msg-ja"><strong>Você já avaliou esta compra.</strong></p></div>
+  <div id="errBox" hidden><p class="msg-err"></p></div>
+  <a class="av-back" href="index.html">Voltar ao início</a>
+</div>
+<script>
+(function(){
+  var btn = document.getElementById('enviar'), formBox = document.getElementById('formBox');
+  var enviado = false, sel = null, ref = '';
+  var qs = new URLSearchParams(location.search), refParam = qs.get('ref');
+  if (!/^[0-9A-Z]+$/.test(refParam)) {
+    formBox.hidden = true;
+    document.getElementById('errBox').hidden = false;
+    document.getElementById('errBox').querySelector('p').textContent = 'Código de venda inválido.';
+    return;
+  }
+  ref = refParam;
+  Array.from(document.querySelectorAll('.av-stars .lb')).forEach(function(s){
+    s.addEventListener('click', function(){
+      var v = parseInt(this.getAttribute('data-v'));
+      Array.from(document.querySelectorAll('.av-stars .lb')).forEach(function(l){ l.classList.remove('sel'); if(parseInt(l.getAttribute('data-v'))<=v) l.classList.add('sel'); });
+      sel = v; document.getElementById('lblNota').textContent = String(v);
+    });
+  });
+  btn.addEventListener('click', function(){
+    if(enviado) return;
+    if(!sel){ err('Selecione uma estrela.'); return; }
+    enviado = true; btn.disabled = true;
+    var texto = (document.getElementById('texto').value||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').substring(0,500);
+    fetch(DUPURO_SUPABASE_URL+'/rest/v1/rpc/pesquisa_registrar',{method:'POST',headers:{apikey:DUPURO_SUPABASE_ANON_KEY,'Content-Type':'application/json'},body:JSON.stringify(['pdv',ref,sel,texto])}).then(function(r){return r.json();}).then(function(j){
+      if(j&&j.ok){ formBox.hidden=true; document.getElementById('okBox').hidden=false; }
+      else if(j&&j.motivo&&j.motivo.indexOf('já responde')>=0){ formBox.hidden=true; document.getElementById('jaBox').hidden=false; }
+      else err((j&&j.motivo)||'Erro ao enviar.');
+    }).catch(function(){ err('Erro de conexão. Tente novamente.'); enviado=false; btn.disabled=false; });
+  });
+  function err(t){ document.getElementById('errBox').hidden=false; document.getElementById('errBox').querySelector('p').textContent=t; }
+})();
+</script>
+</body>
+</html>

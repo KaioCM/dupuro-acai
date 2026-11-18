@@ -160,6 +160,8 @@ var DupuroPrinter = (function () {
     }
     L.push({ t: '' });
     L.push({ t: 'Obrigado pela preferência!', center: true });
+    L.push({ t: 'Avalie sua compra:', center: true });
+    L.push({ t: 'dupuroacai.com/p/' + venda.numero, center: true });
     L.push({ t: 'Não é documento fiscal', center: true });
     return L;
   }
@@ -330,7 +332,8 @@ var DupuroPrinter = (function () {
       descontos +
       dupla('TOTAL', e(brl(venda.total)), 'total') +
       pagamento + entrega +
-      '<div class="rodape">Obrigado pela preferência! · Não é documento fiscal</div>' +
+      '<div class="rodape"><a href="https://dupuroacai.com/delivery/avaliar.html?ref=' + e(venda.numero) + '">Avalie sua compra!</a></div>' +
+      '<div class="rodape" style="font-size:10px;">Não é documento fiscal</div>' +
       '</body></html>';
   }
 
