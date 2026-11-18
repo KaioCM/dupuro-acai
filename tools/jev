@@ -21,6 +21,12 @@ Veja .claude/skills/dupuro-jev/SKILL.md para quando usar (e quando não).
 import argparse, json, os, sys, time, urllib.error, urllib.request
 from concurrent.futures import ThreadPoolExecutor
 
+for _s in (sys.stdout, sys.stderr):
+    try:
+        _s.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
+
 URL = "https://api.typesafe.ai/v1/systemone"
 MODEL = os.environ.get("JEV_MODEL", "jev-latest")
 PRECO_MTOK = 0.042  # US$ por milhão de tokens de entrada (docs.typesafe.ai/models)

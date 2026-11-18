@@ -13,6 +13,12 @@ e linhas "1. …", "2. …", o Jev também diz qual opção a mensagem escolhe (
 """
 import json, os, re, sys, urllib.request
 
+for _s in (sys.stdout, sys.stderr):
+    try:
+        _s.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
+
 URL = "https://api.typesafe.ai/v1/systemone"
 PROJETO = ("Dupuro Açaí: static website + Supabase back end (admin panel, cashier/POS PWA, "
            "reseller area, delivery, NFC-e tax receipts). The user is the business owner talking "
