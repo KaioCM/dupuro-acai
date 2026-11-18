@@ -61,7 +61,7 @@
     if(!sel){ err('Selecione uma estrela.'); return; }
     enviado = true; btn.disabled = true;
     var texto = (document.getElementById('texto').value||'').substring(0,500);
-    fetch(DUPURO_SUPABASE_URL+'/rest/v1/rpc/pesquisa_registrar',{method:'POST',headers:{apikey:DUPURO_SUPABASE_ANON_KEY,'Content-Type':'application/json'},body:JSON.stringify(['pdv',ref,sel,texto])}).then(function(r){return r.json();}).then(function(j){
+    fetch(DUPURO_SUPABASE_URL+'/rest/v1/rpc/pesquisa_registrar',{method:'POST',headers:{apikey:DUPURO_SUPABASE_ANON_KEY,'Content-Type':'application/json'},body:JSON.stringify({p_canal:'pdv',p_ref:ref,p_nota:sel,p_texto:texto})}).then(function(r){return r.json();}).then(function(j){
       if(j&&j.ok){ formBox.hidden=true; document.getElementById('okBox').hidden=false; }
       else if(j&&j.motivo=== 'ja respondido'){ formBox.hidden=true; document.getElementById('jaBox').hidden=false; }
       else err((j&&j.motivo)||'Erro ao enviar.');

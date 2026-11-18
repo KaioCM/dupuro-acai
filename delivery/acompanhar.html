@@ -211,7 +211,7 @@
     var texto = (document.getElementById('csatTxt').value || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').substring(0, 500);
     var url = DUPURO_SUPABASE_URL + '/rest/v1/rpc/pesquisa_registrar';
     var HEAD = { apikey: DUPURO_SUPABASE_ANON_KEY, 'Content-Type': 'application/json' };
-    fetch(url, { method:'POST', headers:HEAD, body:JSON.stringify(['delivery', window.__DL_TOKEN, nota, texto]) })
+    fetch(url, { method:'POST', headers:HEAD, body:JSON.stringify({p_canal:'delivery',p_ref:window.__DL_TOKEN,p_nota:nota,p_texto:texto}) })
       .then(function(r){ return r.json(); })
       .then(function(j){
         if (j && j.ok) {
