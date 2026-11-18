@@ -279,8 +279,10 @@ Deno.serve(async (req: Request) => {
         const oldInter = Number(oldRow.interesse) || 0
         if (result.interesse > oldInter) up.interesse = result.interesse
 
-        // objecao: só grava se novo e não é sem_intencao sobre objecao já existente
-        if (objCh && !(oldRow.objecao != null && objCh === 'sem_intencao')) up.objecao = objCh
+        // objecao: só grava quando vier novo E, se for sem_intencao,
+        // não apaga sinal existente (nullish-coerce ''→null do Postgres).
+        const novoObj = result?.objecao ? result.objecao[0] : null
+        if (novoObj && !(novoObj === 'sem_intencao' && (oldRow.objecao || ''))) up.objecao = novoObj
 
         // segmento: nunca sobrescreve com individuo_sem_negocio se já tem valor
         if (segCh !== 'individuo_sem_negocio' || !oldRow.segmento) up.segmento = segCh
