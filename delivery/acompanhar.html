@@ -47,6 +47,7 @@
   }
   if (!token) { semPedido('Acompanhar pedido', 'Abra o link que aparece depois do pagamento. Se perdeu o link, fale com a gente pelo WhatsApp com o código do pedido (ex.: DLV-0001).'); return; }
   if (!/^[0-9a-f-]{36}$/i.test(token)) { semPedido('Link incompleto', 'Esse link de acompanhamento veio cortado. Abra de novo pelo link completo ou fale com a gente pelo WhatsApp.'); return; }
+  window.__DL_TOKEN = token; // handler CSAT (script abaixo) lê daqui
 
   var ETAPAS = [
     { st: 'aguardando_pagamento', ic: '<svg class="i" aria-hidden="true"><use href="#d-cartao"/></svg>', titulo: 'Aguardando pagamento', txt: 'Assim que o Mercado Pago confirmar, seu pedido entra na rota.' },
@@ -170,7 +171,6 @@
   ciclo();
 })();
 </script>
-<script>window.__DL_TOKEN = token;</script>
 <div class="dl-csat" id="csatCard" hidden>
   <h3 class="dl-csat-title">Como foi a entrega?</h3>
   <p class="dl-csat-sub">Sua opinião sobre esta entrega; usamos só para melhorar.</p>
