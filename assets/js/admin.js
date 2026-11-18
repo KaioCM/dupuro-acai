@@ -1067,7 +1067,7 @@ var DupuroAdmin = (function () {
   // ---------- Feedbacks: pesquisas da avaliação interna ----------
   async function getPesquisas() {
     var r = await client.from('pesquisa_respostas')
-      .select('id, canal, ref, nota, texto, topico, urgencia, coerente, confianca, recompensa, criado_em')
+      .select('id, canal, ref, nota, texto, topico, urgencia, coerente, confianca, recompensa, criado_em, rotulado_em')
       .order('id', { ascending: false }).limit(100);
     var errMsg = r.error ? String(r.error.message || r.error) : null;
     return { linhas: (r.data || []), erro: errMsg };
