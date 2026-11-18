@@ -80,7 +80,7 @@ async function perguntarTurno(
         criteria: {
           revenda_serio: 'explicit resale/wholesale intent (resell, partner, minimum, box 10L price)',
           varejo_curiosidade: 'end consumer asking retail price/flavors, no resale signal',
-          amostra_teste: 'wants to try/test before committing, asks for sample',
+          amostra_teste: "wants to try, test or taste the product before buying, or asks for a sample — messages containing 'testar', 'provar', 'degustar' or 'amostra' belong HERE (not duvida_operacional)", // v6 calibrado com teste vivo 2026-11-18
           produto_duvida: 'purity, lactose, storage, expiration, babies',
           abrangencia_entrega: 'coverage: neighborhood, Várzea Grande, other cities',
           preco_minimo: 'price or minimum too high for their business',
