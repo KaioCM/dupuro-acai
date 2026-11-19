@@ -146,7 +146,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         document.getElementById('formWrapper').classList.add('hidden');
-        if (window.DupuroChat && DupuroChat.notifyConversion) { try { DupuroChat.notifyConversion(); } catch (e) {} }
         document.getElementById('formSuccess').style.display = 'block';
       });
     });
