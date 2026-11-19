@@ -1,6 +1,6 @@
 # Base de fatos do assistente — v2 (2026-11-19, respostas do Kayo incorporadas)
 
-Restam **[CONFIRMAR]**: lactose, validade, avaliação no Maps, leitura da regra de 30 L.
+Restam **[CONFIRMAR]**: lactose, validade.
 
 Fonte única do que o Haiku pode afirmar. Tudo marcado **[CONFIRMAR]** depende do Kayo. Preço, estoque, sabores disponíveis, taxa de entrega e turnos **não ficam aqui**: são lidos do banco na hora (`products`, `product_flavor_stock`, `delivery_catalogo()`, `delivery_config`).
 
@@ -9,19 +9,19 @@ Fonte única do que o Haiku pode afirmar. Tudo marcado **[CONFIRMAR]** depende d
 - Endereço: Av. das Torres, nº 16, Jardim Imperial II, Cuiabá-MT, 78076-001. Não tem drive-thru.
 - WhatsApp: (65) 99288-8228. (O número (65) 99694-9542 que aparece em fotos antigas NÃO é mais usado.)
 - Também vende pelo iFood.
-- Horário: Loja/fábrica: segunda a sábado, 13h às 19h30 (retirada e visita à fábrica nesse horário). Nota: o site ainda diz "Abre segunda-feira às 13:30" (index.html e revenda/index.html) — texto desatualizado, corrigir.
-- Avaliação no Google: Não citar. Só há 4,8 (33 avaliações) no próprio site; não confirmado no Google Maps. **[CONFIRMAR no Maps]**
+- Horário: Loja/fábrica: segunda a sábado, 13h às 19h30 (retirada e visita à fábrica nesse horário).
+- Google: 4,8 com 34 avaliações (conferido pelo Kayo em 2026-11-19). O perfil no Google ainda mostra o telefone antigo (65) 99694-9542 e não tem o site cadastrado — o Kayo vai corrigir.
 
 ## Produtos
 - Açaí e cremes em caixas; tamanhos do catálogo vêm do banco (no código existem 500 ml, 1 L, 2 L, 5 L, 10 L).
 - Cremes: Morango, Paçoca, Maracujá, Cupuaçu, Pistache, Ninho, Banana, Doce de Leite. Disponibilidade = estoque do dia.
 - Granola e complementos: itens avulsos.
 - Composição: o açaí **contém água e açúcar** (não é polpa pura). Lactose: **[CONFIRMAR]**. Armazenar em **freezer ou congelador**; **evitar recongelar** (descongelar e congelar de novo faz o açaí cristalizar). Validade: **[CONFIRMAR]**.
-- Atenção: o site diz "açaí 100% puro" / "Polpa 100% pura" (index.html:158; revenda/index.html:217) — conflita com a composição; decisão do Kayo.
+- Site corrigido em 2026-11-19: removidas as afirmações '100% puro/pura'.
 - Pergunta de saúde (ex.: "pode dar pra bebê?"): o assistente não orienta, sugere falar com pediatra/nutricionista e oferece o WhatsApp.
 
 ## Revenda (atacado)
-- **Regra nova (vigente quando a tarefa da regra for publicada)**: pedido de atacado precisa somar **no mínimo 30 L**, misturando caixas de 5 L e 10 L (ex.: 3 de 10 L, ou 6 de 5 L). **Primeiro pedido: sem mínimo**, qualquer quantidade de produtos de 5 L e 10 L. **[CONFIRMAR leitura]**
+- **Regra nova (vigente quando a tarefa da regra for publicada)**: pedido de atacado precisa somar **no mínimo 30 L**, misturando caixas de 5 L e 10 L (ex.: 3 de 10 L, ou 6 de 5 L). **Primeiro pedido: sem mínimo**, qualquer quantidade de produtos de 5 L e 10 L.
 - Rendimento: 1 caixa de 10 L ≈ 20 copos de 500 ml (conta de volume; com complementos rende um pouco mais). Preço sugerido de venda: R$ 18–20 o copo de 500 ml → R$ 360–400 por caixa de 10 L.
 - Cadastro: cria conta (nome, negócio, telefone, e-mail, cidade, senha ≥ 6). Fica **pendente** até o time Dupuro aprovar; só então o painel libera.
 - Pedido do revendedor vale na hora (sem confirmação do admin).
