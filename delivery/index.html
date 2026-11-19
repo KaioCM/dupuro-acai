@@ -38,7 +38,7 @@
     <div class="dl-hero-txt">
       <span class="dl-badge"><i></i> Entrega em Cuiabá e Várzea Grande</span>
       <h1>Açaí de qualidade <em>no conforto de casa</em></h1>
-      <p class="dl-lead">Caixas de açaí puro e cremes, direto da nossa fábrica pra sua família. Você escolhe se recebe de <strong>manhã ou à tarde</strong> — e acompanha cada etapa pelo celular.</p>
+      <p class="dl-lead">Caixas de açaí e cremes, direto da nossa fábrica pra sua família. Você escolhe se recebe de <strong>manhã ou à tarde</strong> — e acompanha cada etapa pelo celular.</p>
       <div class="dl-preco-gancho"><span>Caixas a partir de</span><strong id="gancho">R$ 25</strong></div>
       <div class="dl-acoes">
         <a class="dl-btn dl-btn-gold" href="pedido.html">Quero receber em casa</a>
@@ -55,15 +55,15 @@
       <div class="dl-polaroid"><img src="../assets/img/delivery/caixa-pote-morango.jpg" alt="" width="600" height="898"><span>direto da fábrica</span></div>
       <img class="dl-selo-gira" src="../assets/img/brand/selo-redondo.png" alt="">
       <div class="dl-float f1"><span class="ic"><svg><use href="#i-moto"/></svg></span><div>Manhã ou tarde<small>segunda a sábado</small></div></div>
-      <div class="dl-float f2"><span class="ic"><svg><use href="#i-estrela"/></svg></span><div>4,8 no Google<small>33 avaliações</small></div></div>
+      <div class="dl-float f2"><span class="ic"><svg><use href="#i-estrela"/></svg></span><div>4,8 no Google<small>34 avaliações</small></div></div>
     </div>
   </div>
 </header>
 
 <div class="dl-marquee" aria-hidden="true">
   <div class="dl-marquee-track">
-    <span>Entrega em Cuiabá e VG</span><i>●</i><span>Direto da fábrica</span><i>●</i><span>Açaí puro e cremes</span><i>●</i><span>Pix ou cartão</span><i>●</i><span>Acompanhe pelo celular</span><i>●</i>
-    <span>Entrega em Cuiabá e VG</span><i>●</i><span>Direto da fábrica</span><i>●</i><span>Açaí puro e cremes</span><i>●</i><span>Pix ou cartão</span><i>●</i><span>Acompanhe pelo celular</span><i>●</i>
+    <span>Entrega em Cuiabá e VG</span><i>●</i><span>Direto da fábrica</span><i>●</i><span>Açaí e cremes</span><i>●</i><span>Pix ou cartão</span><i>●</i><span>Acompanhe pelo celular</span><i>●</i>
+    <span>Entrega em Cuiabá e VG</span><i>●</i><span>Direto da fábrica</span><i>●</i><span>Açaí e cremes</span><i>●</i><span>Pix ou cartão</span><i>●</i><span>Acompanhe pelo celular</span><i>●</i>
   </div>
 </div>
 
@@ -71,7 +71,7 @@
   <div class="dl-wrap">
     <div class="dl-centro">
       <h2>Escolha o tamanho da família</h2>
-      <p class="dl-sub">Todos os tamanhos com açaí puro ou o creme que você preferir.</p>
+      <p class="dl-sub">Todos os tamanhos com açaí tradicional ou o creme que você preferir.</p>
     </div>
     <div class="dl-tamanhos" id="tamanhosLista">
       <div class="dl-tam"><div class="ph"><svg class="i" aria-hidden="true"><use href="#i-caixa"/></svg></div><div class="bd"><h3>Carregando…</h3></div></div>
@@ -87,7 +87,7 @@
       <img src="../assets/img/delivery/creme-colher-cupuacu.jpg" alt="Creme de cupuaçu sendo servido da caixa" loading="lazy" width="880" height="1174">
     </div>
     <div>
-      <h2>Açaí puro + cremes que dão água na boca</h2>
+      <h2>Açaí + cremes que dão água na boca</h2>
       <p class="dl-sub" id="saboresSub">Produzidos na nossa fábrica em Cuiabá. Estes são os sabores disponíveis hoje.</p>
       <div class="dl-chips" id="chipsSabores"></div>
     </div>
@@ -200,7 +200,7 @@
   caixas.forEach(function (p) { (p.sabores || []).forEach(function (s) { if (Number(s.estoque) > 0) vistos[s.sabor] = true; }); });
   var nomes = Object.keys(vistos).sort(function (a, b) { return a === 'Açaí' ? -1 : (b === 'Açaí' ? 1 : a.localeCompare(b)); });
   document.getElementById('chipsSabores').innerHTML = nomes.map(function (s) {
-    return '<span class="dl-chip-s"><i style="background:' + D.corSabor(s) + '"></i>' + esc(s === 'Açaí' ? 'Açaí puro' : D.nomeSabor(s)) + '</span>';
+    return '<span class="dl-chip-s"><i style="background:' + D.corSabor(s) + '"></i>' + esc(s === 'Açaí' ? 'Açaí tradicional' : D.nomeSabor(s)) + '</span>';
   }).join('');
   document.getElementById('provaSab').textContent = nomes.length || '—';
   document.getElementById('provaSabTxt').textContent = nomes.length === 1 ? 'sabor hoje' : 'sabores hoje';

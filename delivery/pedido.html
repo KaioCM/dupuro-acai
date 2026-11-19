@@ -228,7 +228,7 @@
   // Cada tamanho é uma linha; tocar abre só os sabores que têm hoje (esgotados
   // numa linha de texto). Antes eram 5 cartões abertos com 45 botões de sabor.
   var aberto = null;
-  function nomeSab(x) { return x === 'Açaí' ? 'Açaí puro' : D.nomeSabor(x); }
+  function nomeSab(x) { return x === 'Açaí' ? 'Açaí tradicional' : D.nomeSabor(x); }
   function cardProduto(p) {
     var foto = D.fotoProduto(p);
     var ph = foto ? '<img src="' + esc(D.miniatura(foto, 72)) + '" alt="" loading="lazy">' : '<svg class="i" aria-hidden="true"><use href="#d-caixa"/></svg>';
@@ -314,7 +314,7 @@
     st.qtd = 1;
     $('prods').querySelector('[data-q="' + id + '"]').textContent = '1';
     b.innerHTML = '<svg class="i" aria-hidden="true"><use href="#d-check"/></svg> Na sacola!';
-    avisarSacola(p.nome + (sabor ? ' · ' + (sabor === 'Açaí' ? 'Açaí puro' : D.nomeSabor(sabor)) : ''));
+    avisarSacola(p.nome + (sabor ? ' · ' + (sabor === 'Açaí' ? 'Açaí tradicional' : D.nomeSabor(sabor)) : ''));
     setTimeout(function () { b.textContent = 'Adicionar · ' + brl(p.preco); }, 1300);
     salvar(); render();
   });
@@ -360,7 +360,7 @@
   function qtdItens() { return cart.reduce(function (s, c) { return s + c.quantidade; }, 0); }
   function render() {
     var linhas = cart.map(function (c, i) {
-      return '<li><span class="t">' + esc(c.nome) + (c.sabor ? '<small>' + esc(c.sabor === 'Açaí' ? 'Açaí puro' : c.sabor) + '</small>' : '') +
+      return '<li><span class="t">' + esc(c.nome) + (c.sabor ? '<small>' + esc(c.sabor === 'Açaí' ? 'Açaí tradicional' : c.sabor) + '</small>' : '') +
           '<b class="v">' + brl(c.preco * c.quantidade) + '</b></span>' +
         '<span class="dl-qtd mini"><button type="button" data-menos="' + i + '" aria-label="Diminuir">' + (c.quantidade > 1 ? '−' : '<svg class="i" aria-hidden="true"><use href="#d-lixeira"/></svg>') + '</button><span>' + c.quantidade + '</span>' +
           '<button type="button" data-mais="' + i + '" aria-label="Aumentar">+</button></span>' +
@@ -384,7 +384,7 @@
     if (janela) $('rQuando').textContent = janela.titulo + ' · ' + janela.faixa;
     // Revisão da etapa 3
     $('revItens').innerHTML = cart.map(function (c) {
-      return '<div class="ln"><span><b>' + c.quantidade + '×</b> ' + esc(c.nome) + (c.sabor ? ' · ' + esc(c.sabor === 'Açaí' ? 'Açaí puro' : D.nomeSabor(c.sabor)) : '') + '</span><span>' + brl(c.preco * c.quantidade) + '</span></div>';
+      return '<div class="ln"><span><b>' + c.quantidade + '×</b> ' + esc(c.nome) + (c.sabor ? ' · ' + esc(c.sabor === 'Açaí' ? 'Açaí tradicional' : D.nomeSabor(c.sabor)) : '') + '</span><span>' + brl(c.preco * c.quantidade) + '</span></div>';
     }).join('');
     $('revEntrega').innerHTML =
       '<div class="lb"><svg class="i" aria-hidden="true"><use href="#d-usuario"/></svg> ' + esc($('nome').value.trim()) + ' · ' + esc($('tel').value) + '</div>' +
