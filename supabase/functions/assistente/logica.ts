@@ -46,11 +46,10 @@ export function ehSaude(t: string): boolean {
     .test(t)
 }
 
-/** Assunto cujo fato está marcado [CONFIRMAR]/[CONFERIR] na base → sempre humano.
- *  "Pedido mínimo" sem contexto de revenda (revend/atacado/litro/30 L/caixa) → humano (o mínimo do consumidor está pendente). */
+/** Assunto cujo fato está marcado [CONFIRMAR]/[CONFERIR] na base → sempre humano (lactose, validade).
+ *  Pedido mínimo NÃO é mais pendente: delivery R$ 20 e revenda 30 L estão nos fatos; sem contexto o Haiku responde os dois. */
 export function ehPendente(t: string): boolean {
-  if (/(lactose|sem\s+leite|validade|vencimento|vence\b|prazo\s+de\s+validade|pedido\s+m[ií]nimo\s+(?:do\s+)?(?:delivery|consumidor)|m[ií]nimo\s+(?:de\s+)?r\$\s*20)/i.test(t)) return true
-  if (/m[ií]nimo/i.test(t) && !/(revend|revender|atacad|litros?\b|\b\d+\s*l\b|caixas?\b)/i.test(t)) return true
+  if (/(lactose|sem\s+leite|validade|vencimento|vence\b|prazo\s+de\s+validade)/i.test(t)) return true
   return false
 }
 
@@ -105,4 +104,65 @@ export function diaCuiaba(agora: Date = new Date()): { dia: string; inicioISO: s
 /** Limpa a saída do Haiku: tira marcação e limita tamanho. */
 export function limparResposta(s: string): string {
   return String(s ?? '').replace(/[<>]/g, '').replace(/\s+/g, ' ').trim().slice(0, 400)
+}
+
+/* ── Etapa 4: visita do vendedor + histórico ─────────────────────────── */
+
+/** Cidade sem acento/caixa/espaços extras. */
+export function normalizarCidade(c: unknown): string {
+  return String(c ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\s+/g, ' ').trim()
+}
+export const CIDADES_VISITA: Record<string, string> = { 'cuiaba': 'Cuiabá', 'varzea grande': 'Várzea Grande' }
+export const DIAS_VISITA = ['seg', 'ter', 'qua', 'qui', 'sex']
+export const PERIODOS_VISITA = ['manha', 'tarde']
+
+/** Telefone com ou sem máscara → só dígitos (10–11, tolera +55 na frente); senão null. */
+export function normalizarTelefone(t: unknown): string | null {
+  let d = String(t ?? '').replace(/\D/g, '')
+  if ((d.length === 12 || d.length === 13) && d.startsWith('55')) d = d.slice(2)
+  if (d.length !== 10 && d.length !== 11) return null
+  const ddd = Number(d.slice(0, 2))
+  if (d[0] === '0' || ddd < 11 || ddd > 99) return null
+  if (d.length === 11 && d[2] !== '9') return null
+  if (/^(\d)\1+$/.test(d)) return null
+  return d
+}
+
+const limpaTxt = (x: unknown): string => String(x ?? '').replace(/[<>]/g, '').replace(/\s+/g, ' ').trim()
+
+export type Visita = { nome: string; telefone: string; cidade: string; bairro: string; dia: string; periodo: string }
+/** Valida o pedido de visita (cidade é checada primeiro). */
+export function validarVisita(b: any): { ok: true; v: Visita } | { ok: false; motivo: 'cidade_fora' | 'dados_invalidos' } {
+  const cidade = CIDADES_VISITA[normalizarCidade(b?.cidade)]
+  if (!cidade) return { ok: false, motivo: 'cidade_fora' }
+  const bairro = limpaTxt(b?.bairro)
+  const nome = limpaTxt(b?.nome)
+  const telefone = normalizarTelefone(b?.telefone)
+  const dia = typeof b?.dia === 'string' ? b.dia : ''
+  const periodo = typeof b?.periodo === 'string' ? b.periodo : ''
+  if (bairro.length < 2 || bairro.length > 60 || nome.length < 2 || nome.length > 80 || !telefone ||
+      !DIAS_VISITA.includes(dia) || !PERIODOS_VISITA.includes(periodo)) return { ok: false, motivo: 'dados_invalidos' }
+  return { ok: true, v: { nome, telefone, cidade, bairro, dia, periodo } }
+}
+
+export type Turno = { r: 'u' | 'a'; t: string }
+/** Normaliza o histórico lido do banco (descarta lixo) e acrescenta turnos; mantém os últimos n. */
+export function empilharHistorico(h: unknown, novos: Turno[], n = 6): Turno[] {
+  const base: Turno[] = Array.isArray(h)
+    ? h.filter((x: any) => x && (x.r === 'u' || x.r === 'a') && typeof x.t === 'string').map((x: any) => ({ r: x.r, t: x.t.slice(0, 500) }))
+    : []
+  return [...base, ...novos].slice(-n)
+}
+
+/** Histórico + pergunta atual → messages do Haiku: começa em 'user', alterna papéis (funde consecutivos iguais), termina na pergunta atual. */
+export function historicoParaMessages(h: Turno[], atual: string): { role: 'user' | 'assistant'; content: string }[] {
+  const out: { role: 'user' | 'assistant'; content: string }[] = []
+  for (const x of [...h, { r: 'u' as const, t: atual }]) {
+    const role = x.r === 'u' ? 'user' : 'assistant'
+    const content = x.r === 'u' ? `<pergunta>${x.t.replace(/[<>]/g, '')}</pergunta>` : x.t.replace(/[<>]/g, '')
+    if (!out.length && role === 'assistant') continue
+    if (out.length && out[out.length - 1].role === role) out[out.length - 1].content += '\n' + content
+    else out.push({ role, content })
+  }
+  return out
 }

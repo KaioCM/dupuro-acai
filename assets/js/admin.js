@@ -811,6 +811,23 @@ var DupuroAdmin = (function () {
     return { error: r.error, data: r.data };
   }
 
+  // ---------- Leads da Puri (assistente do site) ----------
+  // Conversas do assistente que viraram lead; visita_status 'pedida' = vendedor com amostras esperando contato.
+  async function getLeadsPuri() {
+    var r = await client
+      .from('qualificacao_leads')
+      .select('id, criado_em, pagina, fluxo, intencao, nome, telefone, cidade, bairro, visita_status, visita_dia, visita_periodo, visita_em, resumo, prioridade, movimento, lead_profile, status')
+      .eq('origem', 'puri')
+      .order('criado_em', { ascending: false })
+      .limit(200);
+    if (r.error) throw r.error;
+    return r.data || [];
+  }
+  async function setVisitaStatus(id, status) {
+    var r = await client.rpc('admin_visita_status', { p_lead: id, p_status: status });
+    return { error: r.error, data: r.data };
+  }
+
   // Contagem leve pro aviso de pedido novo (o admin confere a cada minuto, sem
   // baixar a lista inteira): pedidos de revendedor esperando confirmação e
   // entregas do delivery já pagas.
@@ -1149,6 +1166,8 @@ var DupuroAdmin = (function () {
     getAllCoupons: getAllCoupons,
     generateCoupon: generateCoupon,
     deleteCoupon: deleteCoupon,
+    getLeadsPuri: getLeadsPuri,
+    setVisitaStatus: setVisitaStatus,
     getProducts: getProducts,
     updateProduct: updateProduct,
     saveDualProduct: saveDualProduct,

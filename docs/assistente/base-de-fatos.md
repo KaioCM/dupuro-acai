@@ -40,7 +40,7 @@ Fonte única do que o Haiku pode afirmar. Tudo marcado **[CONFIRMAR]** depende d
 - Pagamento online: Pix ou crédito (Mercado Pago). Na entrega: dinheiro com troco, Pix, débito, crédito. Pedido online só entra na rota depois do pagamento confirmado.
 - Acompanhamento por link com etapas (saiu / a caminho / entregue).
 - CEP obrigatório e confirmação no mapa. Se o endereço não for aceito → oferecer WhatsApp.
-- Pedido mínimo do consumidor: **R$ 20**. [CONFERIR se o sistema já aplica]
+- Pedido mínimo do consumidor (delivery, pelo site): **R$ 20** em produtos, sem contar a taxa de entrega. Confirmado e aplicado em 2026-11-20 (Edge `delivery-checkout` v18).
 
 ## Dúvidas reais mais comuns (WhatsApp)
 Revender: valor para revender · preço dos baldes de 5 e 10 L · tem pedido mínimo? · entregam em Várzea Grande / Parque do Lago / no MT todo? · como testar antes de comprar? · manda amostra pelo motoboy? · quero consumir e, se gostar, revendo · faz um orçamento? · estão sem estoque? · quero 2 ou 3 caixas (fornecedor sem produto) · quero começar com pouco · tem os cremes / lista de preços? · posso pagar depois / na entrega?

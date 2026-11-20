@@ -378,11 +378,12 @@
       </div>
 
       <div class="subnav" id="cadSubnav" role="tablist" aria-label="Seções de cadastros">
-        <button type="button" class="subnav-btn active" role="tab" aria-selected="true" data-sub="revendedores">Revendedores <span class="badge-pill hidden" data-badge="cadastros"></span></button>
+        <button type="button" class="subnav-btn active" role="tab" aria-selected="true" data-sub="revendedores">Revendedores <span class="badge-pill hidden" data-badge="revendedores"></span></button>
         <button type="button" class="subnav-btn" role="tab" aria-selected="false" data-sub="produtos">Produtos</button>
         <button type="button" class="subnav-btn" role="tab" aria-selected="false" data-sub="loja">Loja</button>
         <button type="button" class="subnav-btn" role="tab" aria-selected="false" data-sub="cupons">Cupons</button>
         <button type="button" class="subnav-btn" role="tab" aria-selected="false" data-sub="regras">Regras de venda</button>
+        <button type="button" class="subnav-btn" role="tab" aria-selected="false" data-sub="puri">Leads da Puri <span class="badge-pill hidden" data-badge="puri"></span></button>
       </div>
 
       <div class="sub-panel" data-sub-panel="revendedores">
@@ -691,6 +692,14 @@
         </div>
         <div class="field-note-inline" id="limiteNota">Hoje: 30 L = 3 caixas de 10 L ou 6 de 5 L.</div>
       </div>
+      </div>
+
+      <div class="sub-panel hidden" data-sub-panel="puri">
+      <section class="fila-secao" aria-labelledby="tituloPuri">
+        <h2 id="tituloPuri">Leads da Puri</h2>
+        <p class="subtitle">Conversas da assistente do site que viraram contato. Quem pediu a visita de um vendedor com amostras aparece primeiro; chame pelo WhatsApp e marque o andamento.</p>
+        <div id="puriLeads"></div>
+      </section>
       </div>
     </section>
 
@@ -1627,10 +1636,15 @@
     if (campo) (campo.querySelector('.i-sabor') || campo.querySelector('.i-qtd')).focus({ preventScroll: true });
   });
 
+  // Contadores do menu Cadastros: revendedores esperando + visitas pedidas à Puri.
+  var pendentesN = 0, visitasPuriN = 0;
+
   // ---- Aprovações ----
   async function renderPending() {
     var pending = await DupuroAdmin.getPendingProfiles();
-    marcarBadge('cadastros', pending.length);
+    pendentesN = pending.length;
+    marcarBadge('revendedores', pendentesN);
+    marcarBadge('cadastros', pendentesN + visitasPuriN);
 
     var body = document.getElementById('pendingBody');
     if (!pending.length) {
@@ -4346,6 +4360,81 @@
     });
   }
 
+  // ---- Leads da Puri ----
+  var PURI_DIA = { seg: 'segunda', ter: 'terça', qua: 'quarta', qui: 'quinta', sex: 'sexta' };
+  var PURI_STATUS = { pedida: 'Pedida', agendada: 'Agendada', feita: 'Feita', cancelada: 'Cancelada' };
+  var PURI_FLUXO = { revender: 'Quer revender', consumir: 'Quer consumir', provar: 'Quer provar', duvida: 'Dúvida', humano: 'Falar com pessoa' };
+  function quandoPuri(iso) {
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return '—';
+    return d.toLocaleString('pt-BR', { timeZone: 'America/Cuiaba', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+  }
+  function waPuri(l) {
+    var d = String(l.telefone || '').replace(/\D/g, '');
+    if (d.length >= 10 && d.length <= 11) d = '55' + d;
+    else if (!(d.length >= 12 && d.length <= 13 && d.indexOf('55') === 0)) return '';
+    var texto = 'Oi, ' + (l.nome || '') + '! Aqui é da Dupuro Açaí. Você pediu pela nossa assistente a visita de um vendedor com amostras. Podemos combinar o dia?';
+    return 'https://wa.me/' + d + '?text=' + encodeURIComponent(texto);
+  }
+  async function renderLeadsPuri() {
+    var box = document.getElementById('puriLeads');
+    var leads;
+    try { leads = await DupuroAdmin.getLeadsPuri(); }
+    catch (e) { console.error(e); box.innerHTML = '<div class="empty-state">Não consegui carregar os leads agora: ' + esc(motivoErro(e)) + '.</div>'; return; }
+    visitasPuriN = leads.filter(function (l) { return l.visita_status === 'pedida'; }).length;
+    marcarBadge('puri', visitasPuriN);
+    marcarBadge('cadastros', pendentesN + visitasPuriN);
+    if (!leads.length) {
+      box.innerHTML = '<div class="empty-state">Nenhum lead da Puri ainda. Quando alguém pedir a visita de um vendedor ou deixar contato, aparece aqui.</div>';
+      return;
+    }
+    var ordem = { pedida: 0, agendada: 1 };
+    leads = leads.slice().sort(function (a, b) {
+      var oa = ordem[a.visita_status] != null ? ordem[a.visita_status] : 2, ob = ordem[b.visita_status] != null ? ordem[b.visita_status] : 2;
+      return oa - ob; // estável: dentro do grupo, mantém do mais novo pro mais antigo
+    });
+    function btnStatus(l, st, texto, perigo) {
+      return '<button type="button" class="btn ' + (perigo ? 'btn-dark-outline' : 'btn-primary') + ' btn-sm" data-puri-status="' + esc(st) + '" data-puri-id="' + esc(l.id) + '">' + texto + '</button>';
+    }
+    var linhas = leads.map(function (l) {
+      var onde = [l.bairro, l.cidade].filter(Boolean).map(esc).join(', ');
+      var origem = esc(l.pagina || '—') + ' · ' + esc(PURI_FLUXO[l.fluxo] || PURI_FLUXO[l.intencao] || l.fluxo || l.intencao || 'conversa');
+      var visita = '', acoes = '';
+      if (l.visita_status) {
+        var dia = PURI_DIA[l.visita_dia] || l.visita_dia || '';
+        var per = l.visita_periodo === 'manha' ? 'manhã' : l.visita_periodo === 'tarde' ? 'tarde' : (l.visita_periodo || '');
+        visita = '<strong>' + esc(dia) + (per ? ', de ' + esc(per) : '') + '</strong><br>' + esc(l.nome || '—') + '<br>' + esc(l.telefone || '—') +
+          '<br><span class="badge-pill">' + esc(PURI_STATUS[l.visita_status] || l.visita_status) + '</span>';
+        var wa = waPuri(l);
+        if (wa) acoes += '<a class="btn btn-green btn-sm" href="' + esc(wa) + '" target="_blank" rel="noopener">Chamar cliente no WhatsApp</a>';
+        if (l.visita_status === 'pedida') acoes += btnStatus(l, 'agendada', 'Marcar agendada');
+        if (l.visita_status === 'pedida' || l.visita_status === 'agendada') acoes += btnStatus(l, 'feita', 'Marcar feita') + btnStatus(l, 'cancelada', 'Cancelar', true);
+      } else {
+        visita = (l.resumo ? esc(l.resumo) : '<span class="subtitle">Sem visita pedida.</span>') + (l.nome ? '<br>' + esc(l.nome) : '') + (l.telefone ? '<br>' + esc(l.telefone) : '');
+      }
+      return '<tr>' +
+        '<td>' + quandoPuri(l.criado_em) + '</td>' +
+        '<td>' + origem + '</td>' +
+        '<td>' + (onde || '—') + '</td>' +
+        '<td>' + visita + '</td>' +
+        '<td><div class="admin-table-actions" style="white-space:normal;">' + acoes + '</div></td>' +
+        '</tr>';
+    }).join('');
+    box.innerHTML = '<div style="overflow-x:auto;"><table class="data-table"><thead><tr><th>Quando</th><th>Página e fluxo</th><th>Onde</th><th>Visita / resumo</th><th></th></tr></thead><tbody>' + linhas + '</tbody></table></div>';
+    box.querySelectorAll('[data-puri-status]').forEach(function (b) {
+      b.addEventListener('click', async function () {
+        var st = b.getAttribute('data-puri-status'), id = b.getAttribute('data-puri-id');
+        var frase = { agendada: 'Marcar esta visita como agendada?', feita: 'Marcar esta visita como feita?', cancelada: 'Cancelar este pedido de visita?' }[st];
+        if (!await confirmar(frase, { ok: st === 'cancelada' ? 'Cancelar visita' : 'Confirmar', perigo: st === 'cancelada' })) return;
+        b.disabled = true;
+        var r = await DupuroAdmin.setVisitaStatus(id, st);
+        if (r && r.error) { b.disabled = false; await aviso('Não consegui atualizar a visita: ' + motivoErro(r.error) + '.'); return; }
+        await renderLeadsPuri();
+        if (abaAtual === 'inicio') renderInicio();
+      });
+    });
+  }
+
   // ---- Feedbacks das pesquisas ----
   var feedbacksCache = [], feedbacksErro = null, feedbacksCarregado = false;
 
@@ -4485,7 +4574,7 @@
   // ---- Navegação: cada aba tem endereço próprio (#pedidos, #cadastros/produtos) ----
   // Recarregar a página volta pra mesma aba, e o Voltar do navegador funciona.
   var ABAS = ['inicio', 'pedidos', 'estoque', 'numeros', 'cadastros', 'feedbacks', 'equipe', 'conta'];
-  var SUBS = ['revendedores', 'produtos', 'loja', 'cupons', 'regras'];
+  var SUBS = ['revendedores', 'produtos', 'loja', 'cupons', 'regras', 'puri'];
   var abaAtual = null, subAtual = 'revendedores';
   var links = document.querySelectorAll('.sidebar [data-tab], .bottom-nav [data-tab]');
   var sidebar = document.getElementById('sidebar');
@@ -4628,15 +4717,20 @@
   async function renderInicio() {
     var r = await Promise.all([
       DupuroAdmin.getAllOrders(), DupuroAdmin.getPendingProfiles(),
-      DupuroAdmin.getProducts(), DupuroAdmin.getDeliveryPedidos()
+      DupuroAdmin.getProducts(), DupuroAdmin.getDeliveryPedidos(),
+      DupuroAdmin.getLeadsPuri().catch(function (e) { console.error(e); return []; }) // tabela/colunas novas: se faltar, o Início segue sem a visita
     ]);
     var pedidos = r[0], pendentes = r[1], estoque = contarEstoque(r[2]), delivery = r[3];
+    var visitas = r[4].filter(function (l) { return l.visita_status === 'pedida'; });
     var naoLoja = pedidos.filter(function (o) { return o.origem !== 'loja'; }); // mesma regra da fila de Pedidos
     var novos = naoLoja.filter(function (o) { return o.status === 'enviado'; });
     var confirmados = naoLoja.filter(function (o) { return o.status === 'processando'; });
     var entregas = delivery.filter(function (d) { return d.status === 'pago'; }); // 'pago' = confirmado: quem paga na entrega (migration_049) entra na rota com esse status e o dinheiro só entra na porta
     marcarBadge('pedidos', novos.length + entregas.length);
-    marcarBadge('cadastros', pendentes.length);
+    pendentesN = pendentes.length; visitasPuriN = visitas.length;
+    marcarBadge('revendedores', pendentesN);
+    marcarBadge('puri', visitasPuriN);
+    marcarBadge('cadastros', pendentesN + visitasPuriN);
 
     function resumoPedido(o) { return esc(o.numero) + ' · ' + esc(o.revendedorNome) + ' · ' + moeda(o.valor); }
     var itens = [];
@@ -4664,6 +4758,17 @@
       titulo: plural(pendentes.length, 'cadastro de revendedor esperando aprovação', 'cadastros de revendedor esperando aprovação'),
       detalhe: 'O mais antigo espera ' + haQuanto(pendentes[0].created_at).replace('há ', '') +
         ' · ' + pendentes.slice(0, 3).map(function (p) { return esc(p.empresa || p.nome || '—'); }).join(', ')
+    });
+    if (visitas.length) itens.push({
+      tom: 'atencao', n: visitas.length, ir: 'cadastros/puri', acao: 'Chamar clientes',
+      titulo: plural(visitas.length, 'visita de vendedor pedida pela Puri', 'visitas de vendedor pedidas pela Puri'),
+      detalhe: visitas.slice(0, 3).map(function (l) {
+        var dia = PURI_DIA[l.visita_dia] || l.visita_dia || '';
+        var per = l.visita_periodo === 'manha' ? 'manhã' : l.visita_periodo === 'tarde' ? 'tarde' : (l.visita_periodo || '');
+        var cd = new Date(l.criado_em), hj = new Date(), dd = Math.round((new Date(hj.getFullYear(), hj.getMonth(), hj.getDate()) - new Date(cd.getFullYear(), cd.getMonth(), cd.getDate())) / 86400000);
+        var pedida = dd <= 0 ? 'hoje' : dd === 1 ? 'ontem' : ('0' + cd.getDate()).slice(-2) + '/' + ('0' + (cd.getMonth() + 1)).slice(-2);
+        return esc(l.nome || '—') + ' · ' + esc(l.bairro || '—') + (l.cidade ? ', ' + esc(l.cidade) : '') + ' · ' + esc(dia || '—') + (per ? ', de ' + esc(per) : '') + ' (pedida ' + pedida + ')';
+      }).join('<br>')
     });
     if (estoque.esgotado || estoque.baixo) itens.push({
       tom: 'info', n: estoque.esgotado || estoque.baixo, ir: 'estoque', acao: 'Ver estoque',
@@ -5268,7 +5373,7 @@
     pedidos: [renderProducts, renderPedidosFila, renderOrders, populateResellerSelect, updateOrderNumberPreview, loadLimiteLitros, renderFinanceiro],
     estoque: [renderProducts, resetProdForm, renderProducoes, renderAjustes],
     numeros: [renderOverview, renderAudits, renderCaixaFechamentos, renderTaxasEntregador, renderNotas],
-    cadastros: [renderPending, renderResellers, renderProducts, renderAcompanhamentos, renderPromocoesAdmin, renderCoupons, loadLimiteLitros, populateResellerSelect],
+    cadastros: [renderPending, renderResellers, renderProducts, renderAcompanhamentos, renderPromocoesAdmin, renderCoupons, loadLimiteLitros, populateResellerSelect, renderLeadsPuri],
     feedbacks: [renderFeedbacks],
     equipe: [renderAdmins, renderAtendentes, preencherAcesso],
     conta: [renderWhatsapp]

@@ -15,7 +15,12 @@
        -> {ok:true, tipo:'intencao', intencao:'revender'|'consumir'|'provar'|'duvida'|'humano'|'incerto'}
         | {ok:true, tipo:'resposta', texto} | {ok:true, tipo:'humano', texto}
         | {ok:false, motivo:'limite_conversa'|'limite_dia'|'token_invalido'|'texto_invalido'|'erro'}
+   {acao:'catalogo'} (sem token) -> {ok:true, delivery:{a_partir_de, produto_id}, atacado:{caixa10:{preco,litros}|null, caixa5:...|null}} | {ok:false, motivo}
+   {acao:'visita', token, cidade, bairro, dia:'seg'..'sex', periodo:'manha'|'tarde', nome, telefone}
+       -> {ok:true} | {ok:false, motivo:'cidade_fora'|'dados_invalidos'|'token_invalido'|'ja_pedida'|'limite_dia'|'erro'}
    `iniciar` só é chamado na primeira mensagem livre (não ao abrir o painel).
+   Privacidade F3: bairro/nome/telefone vão só para `visita` (nunca para `mensagem`); nome/telefone ficam só em memória
+   e são apagados após o envio ou ao recomeçar; o balão guarda o telefone mascarado.
    Segurança: todo texto entra por textContent; nunca innerHTML com dado.
    ========================================================================== */
 (function () {
@@ -51,12 +56,32 @@
     limite: 'Agora é melhor seguir com uma pessoa.',
     limiteMsgs: 'Pra seguir, melhor com uma pessoa.',
     fimCampo: 'Pra seguir, fala com uma pessoa.',
-    // TODO Etapa 4: F2/F3/F4 reais; estes são placeholders simples.
-    consumir: 'Pra consumir em casa é pelo nosso delivery. Entregamos em Cuiabá e Várzea Grande.',
+    // TODO Etapa 4 (próximo lote): F4 real; `revender` é placeholder.
+    consumir: 'Pra consumir em casa é pelo nosso delivery, com entrega em Cuiabá e Várzea Grande. Pedido mínimo de R$ 20 em produtos.',
+    consumirPreco: function (p) { return 'Pra consumir em casa é pelo nosso delivery: caixas a partir de ' + p + ', com entrega em Cuiabá e Várzea Grande. Pedido mínimo de R$ 20 em produtos.'; },
     revender: 'Pra revender, você cria a conta, o time Dupuro aprova e o painel libera. Dá uma olhada em como funciona.',
     erroTemp: 'Não consegui responder agora. Tenta de novo ou fala com uma pessoa.',
-    provar: 'Você pode visitar a fábrica e provar: Av. das Torres, nº 16, Jardim Imperial II, Cuiabá. Funciona de segunda a sábado, das 13h às 19h30.'
+    provar: 'Dá pra provar de dois jeitos. Qual você prefere?',
+    fabrica: 'A fábrica fica na Av. das Torres, nº 16, Jardim Imperial II, Cuiabá-MT. Funciona de segunda a sábado, das 13h às 19h30. Quando quiser revender, é só chamar aqui.',
+    visitaIntro: 'A visita é grátis, de segunda a sexta, das 8h às 17h, em Cuiabá e Várzea Grande.',
+    pCidade: 'Em qual cidade você está?', pBairro: 'Qual o bairro?', pDia: 'Qual o melhor dia?', pPeriodo: 'Manhã ou tarde?',
+    pNome: 'Seu nome?', pTel: 'Seu WhatsApp com DDD?',
+    bairroRuim: 'Pode escrever o bairro de novo?',
+    nomeRuim: 'Pode escrever seu nome de novo?',
+    telRuim: 'Pode mandar o WhatsApp com DDD de novo? Ex.: (65) 99999-0000',
+    foraCidade: 'Por enquanto a visita é só em Cuiabá e Várzea Grande. Você pode provar na fábrica.',
+    visitaOk: 'Pronto! Nosso vendedor vai te chamar pra combinar.',
+    visitaJa: 'Seu pedido de visita já está com a gente. O vendedor vai te chamar.',
+    visitaDados: 'Alguma informação não passou. Vamos conferir de novo.',
+    escolhe: 'Escolhe uma das opções.',
+    perdi: 'Por segurança não guardo nome nem telefone quando a página recarrega. Qual é o seu nome?'
   };
+  var ENDERECO_FABRICA = 'Av. das Torres, 16, Jardim Imperial II, Cuiabá-MT, 78076-001';
+  var MAPA_FABRICA = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(ENDERECO_FABRICA);
+  var DIAS = { seg: 'segunda-feira', ter: 'terça-feira', qua: 'quarta-feira', qui: 'quinta-feira', sex: 'sexta-feira' };
+  var DIA_CURTO = { seg: 'Seg', ter: 'Ter', qua: 'Qua', qui: 'Qui', sex: 'Sex' };
+  var CIDADES = { cid_cuiaba: 'Cuiabá', cid_vg: 'Várzea Grande' };
+  var PASSOS = ['cidade', 'bairro', 'dia', 'periodo', 'nome', 'tel', 'confirma'];
   var CH = {
     abertura: [
       { id: 'revender', t: 'Quero revender' }, { id: 'consumir', t: 'Comprar pra consumir' },
@@ -75,12 +100,14 @@
   var I_CHAT = 'M4 5h16v11H9l-5 4z', I_X = 'M6 6l12 12M18 6L6 18', I_ENV = 'M4 12l16-8-6 16-3-7z', I_REC = 'M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7';
 
   // ---- Estado ----
-  function novoEstado() { return { msgs: [], chips: [], token: null, n: 0, etapa: 'abertura', assunto: null }; }
+  function novoEstado() { return { msgs: [], chips: [], token: null, n: 0, etapa: 'abertura', assunto: null, v: null }; }
+  var vNome = '', vTel = ''; // só em memória: nunca vão ao sessionStorage (o balão do nome guarda "(nome informado)"; o resumo guarda "você" no lugar do nome)
   var E = novoEstado();
   var aberto = false, ocupado = false, travado = null;
   var ger = 0; // geração da conversa: respostas de geração antiga (após Recomeçar) são descartadas
-  var ETAPAS = ['abertura', 'duvida', 'fim'], IDS_CHIP = ['revender', 'consumir', 'provar', 'duvida', 'outra', 'humano', 'retry'];
-  var HREF_OK = /^(https:\/\/wa\.me\/|\/(?![\/\\\t\r\n])|\.\.?\/|#)/;
+  var ETAPAS = ['abertura', 'duvida', 'fim'], IDS_CHIP = ['revender', 'consumir', 'provar', 'duvida', 'outra', 'humano', 'retry',
+    'fabrica', 'vendedor', 'como_entrega', 'cid_cuiaba', 'cid_vg', 'cid_outra', 'dia_seg', 'dia_ter', 'dia_qua', 'dia_qui', 'dia_sex', 'per_manha', 'per_tarde', 'confirmar', 'corrigir'];
+  var HREF_OK = /^(https:\/\/wa\.me\/|https:\/\/www\.google\.com\/maps\/search\/\?api=1&query=|\/(?![\/\\\t\r\n])|\.\.?\/|#)/;
   // O sessionStorage é dado externo: normaliza tudo antes de usar.
   function normalizar(s) {
     if (!s || typeof s !== 'object' || !Array.isArray(s.msgs)) return null;
@@ -93,6 +120,19 @@
       if (m && (m.de === 'u' || m.de === 'p') && typeof m.t === 'string') r.msgs.push({ de: m.de, t: m.t.slice(0, 2000) });
     });
     r.msgs = r.msgs.slice(-MAX_BALOES);
+    var semChips = false;
+    if (s.v && typeof s.v === 'object' && PASSOS.indexOf(s.v.passo) >= 0) {
+      var v = { passo: s.v.passo };
+      v.cidade = Object.keys(CIDADES).map(function (k) { return CIDADES[k]; }).indexOf(s.v.cidade) >= 0 ? s.v.cidade : null;
+      v.bairro = typeof s.v.bairro === 'string' ? s.v.bairro.slice(0, 80) : null;
+      v.dia = DIAS[s.v.dia] ? s.v.dia : null;
+      v.periodo = s.v.periodo === 'manha' || s.v.periodo === 'tarde' ? s.v.periodo : null;
+      r.v = v;
+      if (v.passo === 'tel' || v.passo === 'confirma') { // nome/telefone não sobrevivem ao recarregar
+        v.passo = 'nome'; semChips = true;
+        r.msgs.push({ de: 'p', t: T.perdi });
+      }
+    }
     (Array.isArray(s.chips) ? s.chips : []).forEach(function (c) {
       if (!c || typeof c !== 'object' || typeof c.t !== 'string' || !c.t || c.t.length > 80) return;
       if (c.href != null) {
@@ -102,6 +142,7 @@
         r.chips.push({ id: c.id, t: c.t });
       }
     });
+    if (semChips) r.chips = [CH.humano];
     return r;
   }
   try { var salvo = normalizar(JSON.parse(sessionStorage.getItem(CHAVE) || 'null')); if (salvo) E = salvo; } catch (e) {}
@@ -128,7 +169,11 @@
     }
     return {
       iniciar: function (pagina) { return post({ acao: 'iniciar', pagina: pagina }); },
-      mensagem: function (token, etapa, texto) { return post({ acao: 'mensagem', token: token, etapa: etapa, texto: texto }); }
+      mensagem: function (token, etapa, texto) { return post({ acao: 'mensagem', token: token, etapa: etapa, texto: texto }); },
+      catalogo: function () { return post({ acao: 'catalogo' }); },
+      visita: function (token, d) {
+        return post({ acao: 'visita', token: token, cidade: d.cidade, bairro: d.bairro, dia: d.dia, periodo: d.periodo, nome: d.nome, telefone: d.telefone });
+      }
     };
   }
 
@@ -143,8 +188,18 @@
       if (/\?|horario|entrega|endereco|onde|quanto|como|qual|preco|pagamento|duvida|pergunta/.test(t)) return 'duvida';
       return 'incerto';
     }
+    var visitasMock = 0;
     return {
       iniciar: function () { return atraso({ ok: true, token: 'mock-' + Date.now().toString(36) }); },
+      catalogo: function () { return atraso({ ok: true, delivery: { a_partir_de: 25, produto_id: 21 }, atacado: { caixa10: { preco: 145, litros: 10 }, caixa5: null } }); },
+      visita: function (token, d) {
+        var tel = String(d.telefone || '').replace(/\D/g, ''), c = norm(String(d.cidade || ''));
+        if (!d.nome || !d.bairro || !DIAS[d.dia] || (d.periodo !== 'manha' && d.periodo !== 'tarde') || tel.length < 10 || tel.length > 11) return atraso({ ok: false, motivo: 'dados_invalidos' });
+        if (c !== 'cuiaba' && c !== 'varzea grande') return atraso({ ok: false, motivo: 'cidade_fora' });
+        if (visitasMock > 0) return atraso({ ok: false, motivo: 'ja_pedida' });
+        visitasMock++;
+        return atraso({ ok: true });
+      },
       mensagem: function (token, etapa, texto) {
         var t = norm(texto);
         if (etapa === 'abertura') return atraso({ ok: true, tipo: 'intencao', intencao: intencao(t) });
@@ -295,10 +350,10 @@
   }
   function podarDom() { var b = baloes(); while (b.length > MAX_BALOES) { b[0].remove(); b = baloes(); } }
 
-  function usuarioDiz(t) { limparChips(); E.chips = []; guardar('u', t); addBalao('u', t); podarDom(); rolar(); }
+  function usuarioDiz(t, guardado) { limparChips(); E.chips = []; guardar('u', guardado === undefined ? t : guardado); addBalao('u', t); podarDom(); rolar(); }
 
   // Puri fala: "•••" por 0,3–1 s (sem atraso em reduced-motion), depois balão + chips.
-  function puriDiz(texto, chips) {
+  function puriDiz(texto, chips, guardado) {
     limparChips(); E.chips = [];
     var g = ger;
     var dig = el('div', 'puri-b p puri-dig'); dig.setAttribute('aria-hidden', 'true');
@@ -309,7 +364,7 @@
       setTimeout(function () {
         dig.remove();
         if (g !== ger) return ok(); // conversa recomeçada enquanto a Puri "digitava"
-        guardar('p', texto); E.chips = chips || []; salvar();
+        guardar('p', guardado === undefined ? texto : guardado); E.chips = chips || []; salvar();
         addBalao('p', texto); podarDom(); desenharChips(E.chips); atualizarCampo(); topoHum.href = waLink(); rolar();
         ok();
       }, espera);
@@ -321,7 +376,7 @@
 
   function recomecar() {
     ger++;
-    ultimoTexto = '';
+    ultimoTexto = ''; vNome = ''; vTel = '';
     E = novoEstado();
     ocupado = false; salvar(); msgs.textContent = ''; atualizarCampo(); topoHum.href = waLink();
     comecar(); focarEntrada();
@@ -334,36 +389,196 @@
   // Destino de cada opção (chip ou intenção vinda de texto livre). Sem guard de `ocupado`.
   function irPara(id) {
     switch (id) {
-      case 'revender': // TODO Etapa 4: F4 real
-        E.etapa = 'abertura'; E.assunto = 'revender';
+      case 'revender': // TODO Etapa 4 (próximo lote): F4 real
+        limparVisita(); E.etapa = 'abertura'; E.assunto = 'revender';
         return puriDiz(T.revender, [{ id: 'l', t: 'Ver como funciona a revenda', href: PAGINA === 'home' ? './revenda/#revenda' : (PAGINA === 'delivery' ? '../revenda/#revenda' : '#revenda') }, CH.humano]);
-      case 'consumir': // TODO Etapa 4: F2 real (preço ao vivo)
-        E.etapa = 'abertura'; E.assunto = 'consumir';
-        return puriDiz(T.consumir, [{ id: 'l', t: 'Abrir o delivery', href: PAGINA === 'delivery' ? './' : (PAGINA === 'revenda' ? '../delivery/' : './delivery/') }]);
-      case 'provar': // TODO Etapa 4: F3 real (vendedor com amostras)
-        E.etapa = 'abertura'; E.assunto = 'provar';
-        return puriDiz(T.provar, [CH.humano]);
+      case 'consumir': return irConsumir();
+      case 'provar':
+        limparVisita(); E.etapa = 'abertura'; E.assunto = 'provar';
+        return puriDiz(T.provar, [{ id: 'fabrica', t: 'Visitar a fábrica' }, { id: 'vendedor', t: 'Receber um vendedor com amostras' }, CH.humano]);
       case 'duvida': case 'outra':
-        E.etapa = 'duvida'; E.assunto = 'duvida';
+        limparVisita(); E.etapa = 'duvida'; E.assunto = 'duvida';
         return puriDiz(T.pergunta, []);
     }
     return puriDiz(T.incerto, CH.abertura);
+  }
+
+  // ---- F2: consumir (preço ao vivo do catálogo, cache 10 min) ----
+  var CAT_CHAVE = 'puri:cat', CAT_TTL = 600000, catMem = null;
+  function catalogo() {
+    var agora = Date.now();
+    if (catMem && agora - catMem.t < CAT_TTL) return Promise.resolve(catMem.d);
+    try {
+      var c = JSON.parse(sessionStorage.getItem(CAT_CHAVE) || 'null');
+      if (c && typeof c.t === 'number' && agora - c.t < CAT_TTL && c.d && c.d.ok) { catMem = c; return Promise.resolve(c.d); }
+    } catch (e) {}
+    return api.catalogo().then(function (r) {
+      if (r && r.ok) { catMem = { t: Date.now(), d: r }; try { sessionStorage.setItem(CAT_CHAVE, JSON.stringify(catMem)); } catch (e) {} }
+      return r;
+    }).catch(function () { return { ok: false }; });
+  }
+  function reais(v) { return 'R$ ' + (v % 1 ? v.toFixed(2).replace('.', ',') : String(v)); }
+  function irConsumir() {
+    limparVisita(); E.etapa = 'abertura'; E.assunto = 'consumir';
+    var g = ger, antes = ocupado;
+    ocupado = true; atualizarCampo();
+    var link = { id: 'l', t: 'Abrir o delivery', href: PAGINA === 'delivery' ? './' : (PAGINA === 'revenda' ? '../delivery/' : './delivery/') };
+    return catalogo().then(function (r) {
+      if (g !== ger) return;
+      var v = r && r.ok && r.delivery ? Number(r.delivery.a_partir_de) : NaN;
+      var fala = isFinite(v) && v > 0 ? T.consumirPreco(reais(v)) : T.consumir;
+      return puriDiz(fala, [link, { id: 'como_entrega', t: 'Como funciona a entrega?' }, { id: 'revender', t: 'Na verdade quero revender' }]).then(function () {
+        if (g === ger) { ocupado = antes; atualizarCampo(); }
+      });
+    });
+  }
+
+  // ---- F3: provar (fábrica ou visita do vendedor) ----
+  function limparVisita() { vNome = ''; vTel = ''; E.v = null; }
+  function irFabrica() {
+    limparVisita(); E.etapa = 'abertura'; E.assunto = 'provar';
+    return puriDiz(T.fabrica, [{ id: 'l', t: 'Ver no mapa', href: MAPA_FABRICA }, { id: 'revender', t: 'Quero revender' }]);
+  }
+  function resumoVisita(anonimo) {
+    var v = E.v;
+    return 'Visita em ' + v.bairro + ', ' + v.cidade + ', ' + DIAS[v.dia] + ' de ' + (v.periodo === 'manha' ? 'manhã' : 'tarde') + ', pra ' + (anonimo ? 'você' : vNome) + '.';
+  }
+  function chipsPasso(p) {
+    switch (p) {
+      case 'cidade': return [{ id: 'cid_cuiaba', t: 'Cuiabá' }, { id: 'cid_vg', t: 'Várzea Grande' }, { id: 'cid_outra', t: 'Outra cidade' }, CH.humano];
+      case 'dia': return ['seg', 'ter', 'qua', 'qui', 'sex'].map(function (d) { return { id: 'dia_' + d, t: DIA_CURTO[d] }; });
+      case 'periodo': return [{ id: 'per_manha', t: 'Manhã (8h–12h)' }, { id: 'per_tarde', t: 'Tarde (13h–17h)' }];
+      case 'confirma': return [{ id: 'confirmar', t: 'Confirmar' }, { id: 'corrigir', t: 'Corrigir' }];
+    }
+    return [CH.humano]; // bairro, nome, tel (texto livre)
+  }
+  function falaPasso(p) {
+    if (p === 'confirma') return resumoVisita();
+    return { cidade: T.pCidade, bairro: T.pBairro, dia: T.pDia, periodo: T.pPeriodo, nome: T.pNome, tel: T.pTel }[p] || T.incerto;
+  }
+  function perguntarPasso(p, prefixo) {
+    E.v.passo = p; salvar();
+    return puriDiz((prefixo ? prefixo + ' ' : '') + falaPasso(p), chipsPasso(p), p === 'confirma' ? (prefixo ? prefixo + ' ' : '') + resumoVisita(true) : undefined);
+  }
+  function iniciarVendedor(prefixo) {
+    vNome = ''; vTel = '';
+    E.etapa = 'abertura'; E.assunto = 'provar'; E.v = { passo: 'cidade', cidade: null, bairro: null, dia: null, periodo: null };
+    return perguntarPasso('cidade', prefixo || '');
+  }
+  // Espelha normalizarTelefone de supabase/functions/assistente/logica.ts
+  function normalizarTel(t) {
+    var d = String(t == null ? '' : t).replace(/\D/g, '');
+    if ((d.length === 12 || d.length === 13) && d.indexOf('55') === 0) d = d.slice(2);
+    if (d.length !== 10 && d.length !== 11) return null;
+    var ddd = Number(d.slice(0, 2));
+    if (d.charAt(0) === '0' || ddd < 11 || ddd > 99) return null;
+    if (d.length === 11 && d.charAt(2) !== '9') return null;
+    if (/^(\d)\1+$/.test(d)) return null;
+    return d;
+  }
+  function mascararTel(d) { return '(' + d.slice(0, 2) + ') ' + d.charAt(2) + '•••-•' + d.slice(-3); }
+  function aoChipVisita(c) {
+    if (c.id === 'fabrica') return irFabrica();
+    if (c.id === 'vendedor') return iniciarVendedor(T.visitaIntro);
+    if (!E.v) return puriDiz(T.incerto, CH.abertura);
+    if (c.id === 'cid_outra') { limparVisita(); E.assunto = 'provar'; return puriDiz(T.foraCidade, [{ id: 'fabrica', t: 'Visitar a fábrica' }, CH.humano]); }
+    if (CIDADES[c.id]) { E.v.cidade = CIDADES[c.id]; return perguntarPasso('bairro'); }
+    if (/^dia_/.test(c.id)) { E.v.dia = c.id.slice(4); return perguntarPasso('periodo'); }
+    if (c.id === 'per_manha' || c.id === 'per_tarde') { E.v.periodo = c.id === 'per_manha' ? 'manha' : 'tarde'; return perguntarPasso('nome'); }
+    if (c.id === 'corrigir') return iniciarVendedor('');
+    if (c.id === 'confirmar') return (!vNome || !vTel) ? iniciarVendedor(T.perdi) : enviarVisita();
+    return puriDiz(T.incerto, CH.abertura);
+  }
+  // Texto digitado durante o fluxo da visita: vai para o campo pedido, nunca para a Edge `mensagem`.
+  function enviarCampo() {
+    var g = ger, r = enviarCampoPasso();
+    if (!r || !r.then) return;
+    ocupado = true; atualizarCampo(); // segundo Enter só vale depois da fala do passo; o texto fica no campo
+    var fim = function () { if (g !== ger) return; ocupado = false; atualizarCampo(); if (aberto) focarEntrada(); };
+    r.then(fim, fim);
+  }
+  function enviarCampoPasso() {
+    var p = E.v.passo, texto = limpar(campo.value);
+    if (!texto) return;
+    campo.value = ''; campo.style.height = 'auto';
+    if (p === 'bairro') {
+      if (texto.length < 2 || texto.length > 60) return puriDiz(T.bairroRuim, [CH.humano]); // mesmo limite do servidor
+      E.v.bairro = texto; usuarioDiz(texto); return perguntarPasso('dia');
+    }
+    if (p === 'nome') {
+      if (texto.length < 2 || texto.length > 80) return puriDiz(T.nomeRuim, [CH.humano]);
+      vNome = texto; usuarioDiz(texto, '(nome informado)'); return perguntarPasso('tel');
+    }
+    if (p === 'tel') {
+      var d = normalizarTel(texto);
+      if (!d) return puriDiz(T.telRuim, [CH.humano]); // não ecoa o número inválido
+      vTel = d; usuarioDiz(mascararTel(d));
+      return perguntarPasso('confirma');
+    }
+    return puriDiz(T.escolhe, chipsPasso(p)); // passo de chips: não ecoa o texto
+  }
+  function enviarVisita() {
+    var g = ger, v = E.v;
+    ocupado = true; atualizarCampo();
+    var corpo = { cidade: v.cidade, bairro: v.bairro, dia: v.dia, periodo: v.periodo, nome: vNome, telefone: vTel };
+    garantirToken(g).then(function (ok) {
+      if (g !== ger) return;
+      if (ok === 'limite') { limparVisita(); return falhaF6(); }
+      if (ok !== 'ok') return falhaTemp();
+      return api.visita(E.token, corpo).then(function (r) { return tratarVisita(r, corpo, g, false); });
+    }).catch(function () { if (g === ger) return falhaTemp(); }).then(function () {
+      if (g !== ger) return;
+      ocupado = false; atualizarCampo(); if (aberto) focarEntrada();
+    });
+  }
+  function tratarVisita(r, corpo, g, tok) {
+    if (g !== ger) return;
+    var pos = [{ id: 'duvida', t: 'Tirar uma dúvida' }, { id: 'revender', t: 'Quero revender' }];
+    if (r && r.ok) { limparVisita(); salvar(); return puriDiz(T.visitaOk, pos); }
+    var m = r && r.motivo;
+    if (m === 'ja_pedida') { limparVisita(); salvar(); return puriDiz(T.visitaJa, pos); }
+    if (m === 'cidade_fora') { limparVisita(); salvar(); return puriDiz(T.foraCidade, [{ id: 'fabrica', t: 'Visitar a fábrica' }, CH.humano]); }
+    if (m === 'dados_invalidos') { return iniciarVendedor(T.visitaDados); } // recomeça do primeiro passo
+    if (m === 'limite_dia') { limparVisita(); return falhaF6(); }
+    if (m === 'token_invalido' && !tok) {
+      E.token = null; salvar();
+      return garantirToken(g).then(function (ok) {
+        if (g !== ger) return;
+        if (ok === 'limite') { limparVisita(); return falhaF6(); }
+        if (ok !== 'ok') return falhaTemp();
+        return api.visita(E.token, corpo).then(function (r2) { return tratarVisita(r2, corpo, g, true); });
+      });
+    }
+    return falhaTemp(); // erro | timeout | rede
   }
 
   function aoChip(c) {
     if (ocupado) return;
     usuarioDiz(c.t);
     if (c.id === 'retry') {
+      if (E.v && E.v.passo === 'confirma' && vNome && vTel) return enviarVisita();
       if (!ultimoTexto || E.etapa === 'fim') { E.etapa = 'duvida'; return puriDiz(T.pergunta, []); }
       return processar(ultimoTexto);
     }
+    if (c.id === 'como_entrega') {
+      limparVisita(); E.etapa = 'duvida'; E.assunto = 'duvida';
+      if (E.n >= MAX_MSGS) return falhaF6(T.limiteMsgs);
+      E.n++; ultimoTexto = c.t;
+      return processar(c.t);
+    }
+    if (c.id === 'fabrica' || c.id === 'vendedor' || CIDADES[c.id] || /^(cid_outra|dia_|per_|confirmar|corrigir)/.test(c.id)) return aoChipVisita(c);
     irPara(c.id);
   }
 
   function limpar(t) { return t.replace(/[<>]/g, '').replace(/\s+/g, ' ').trim().slice(0, MAX_CHARS); }
 
   function enviar() {
-    if (ocupado || E.etapa === 'fim') return;
+    if (ocupado) return; // o texto fica no campo; nada é descartado
+    if (E.etapa === 'fim') { // campo normalmente travado; se chegar aqui, a Puri orienta
+      campo.value = ''; campo.style.height = 'auto';
+      return puriDiz(T.escolhe, E.chips && E.chips.length ? E.chips : [CH.humano]);
+    }
+    if (E.v) return enviarCampo();
     var texto = limpar(campo.value);
     if (!texto) return;
     campo.value = ''; campo.style.height = 'auto';
@@ -423,6 +638,7 @@
     }
     if (r.tipo === 'humano') {
       E.assunto = 'humano';
+      if (fl.etapa === 'duvida') E.etapa = 'duvida'; // continua aceitando dúvida digitada
       return puriDiz(typeof r.texto === 'string' && r.texto ? r.texto : T.humano, [CH.humano]);
     }
     if (r.tipo === 'intencao') {

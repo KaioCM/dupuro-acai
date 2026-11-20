@@ -47,3 +47,13 @@ Cada saída de `mensagem` escreve uma linha JSON: `{"ev":"puri","etapa":"abertur
 Códigos de `motivo`: `ok` (resposta do Haiku aprovada, ou abertura classificada), `saude`, `pendente` ([CONFIRMAR]/mínimo sem contexto), `j3_baixo` (Jev: fatos não cobrem), `sem_fato` (Haiku devolveu SEM_FATO ou vazio), `max_tokens` (Haiku cortou), `suspeita` (link/@/telefone na resposta), `j4_inventou`, `jev_falhou` (erro/timeout do Jev; na abertura vira `incerto`), `haiku_falhou` (erro HTTP do Haiku; timeout do Haiku cai em `jev_falhou`), `limite_ip_dia`, `limite_conversa`, `limite_conversas_dia`, `limite_global_dia`, `token_invalido`, `texto_invalido`.
 
 Consultar: MCP `query_logs` (janela <= 24 h), `select timestamp, event_message from logs where source='function_logs' and event_message like '%"ev":"puri"%' order by timestamp desc`. Contar por motivo: filtrar e agrupar em `event_message`.
+
+## Ajustes da revisão da etapa 4 (v6)
+
+- Visita: a cota por IP (`puri-vis:`) só é consumida logo antes de gravar; token inválido, `ja_pedida`, `dados_invalidos` e `cidade_fora` não gastam cota.
+- Mensagem: quando Jev/Haiku falham, o turno do usuário ainda é gravado no histórico (sem resposta).
+- Telefone: `normalizarTelefone` exige DDD 11 a 99, 11 dígitos com 3º dígito 9 e rejeita dígito único repetido (ex.: 0000000000).
+
+## Mínimo do delivery (v7, 2026-11-20)
+
+- Pedido mínimo de R$ 20 do delivery entrou nos fatos; `ehPendente` só segura lactose/validade; "pedido mínimo" sem contexto é respondido pelo Haiku com os dois (R$ 20 delivery, 30 L revenda).

@@ -121,6 +121,12 @@ Deno.serve(async (req: Request) => {
     }
     if (!itens.length) return json({ error: 'Carrinho vazio.' }, 400)
     const subtotal = Math.round(itens.reduce((s, i) => s + i.preco * i.quantidade, 0) * 100) / 100
+    // Pedido mínimo do delivery (migration_075): só produtos, sem taxa; checado ANTES do
+    // cupom (que é consumido) e de qualquer gravação.
+    const minimo = Number(cfg.pedido_minimo_delivery ?? 0)
+    if (minimo > 0 && subtotal < minimo) {
+      return json({ error: `O pedido mínimo do delivery é de R$ ${minimo.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} em produtos (sem contar a entrega).` }, 400)
+    }
     // Cupom de taxa grátis (migration_060): só cupom GERAL (revendedor_id null) do tipo
     // 'frete', consumido de forma atômica pela RPC — depois de validar preço, estoque,
     // cotação assinada e turno, antes de gravar. A taxa assinada vale pra conferência;
