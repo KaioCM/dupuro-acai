@@ -57,3 +57,20 @@ Consultar: MCP `query_logs` (janela <= 24 h), `select timestamp, event_message f
 ## Mínimo do delivery (v7, 2026-11-20)
 
 - Pedido mínimo de R$ 20 do delivery entrou nos fatos; `ehPendente` só segura lactose/validade; "pedido mínimo" sem contexto é respondido pelo Haiku com os dois (R$ 20 delivery, 30 L revenda).
+
+## Ação revenda (4B-1, v10, 2026-11-20)
+
+`POST` com `{"acao":"revenda","token","passo":...}`. Exige `token` de lead `origem='puri'` (senão `token_invalido`). Todo passo grava `fluxo='revender'` e `intencao='revender'` (o CHECK do banco só aceita `revender`, não `revenda`). Erros: `{ok:false,motivo}` com `token_invalido`, `texto_invalido`, `dados_invalidos`, `limite_*`, `erro`.
+
+| passo | entrada | saída | grava | IA |
+|---|---|---|---|---|
+| `segmento` | `texto` (mascarado) | `{ok,segmento}` | `segmento`, `negocio` (≤120, mascarado) | J5 (choice; sem os marcadores). Falha/prob. < 0,5 → `outro`. Conta como mensagem (+1 `turns`). |
+| `perfil` | `segmento` (da lista), `cidade` 2–60, `bairro?` 2–60, `movimento` (`ate20`/`20a50`/`50a100`/`100mais`) | `{ok,fora_area,coerente}` | `cidade`, `bairro`, `movimento`, `segmento`, `coerente` | J9 (noul ≥ 0,5 → true; falha → null; não bloqueia). Ao Jev vão SÓ segmento, movimento e "Cuiabá/VG" ou "fora"; cidade e bairro nunca vão a IA. `fora_area` = cidade não é Cuiabá/VG (mesma normalização da visita). |
+| `escutar` | `texto`, `final` | `{ok,anotacoes:[...]\|null}` | com `final:true`: `anotacoes` `{quer (≤500 mascarado), topicos[]}` + `historico` | `final:false`: J2 "suficiente" (≥ 0,7) → H2 (Haiku, JSON de 2–4 tópicos ≤ 8 palavras). `final:true`: pula J2 e roda H2 se o texto tiver ≥ 15 caracteres. Timeout/erro → `anotacoes:null`. |
+| `simulacao` | `preco_copo` 18–20 (arredonda) | `{ok,simulacao}` | `simulacao` jsonb | Nenhuma. Servidor calcula: custo = "Caixa de Açaí 10 L" atacado (mesma busca do `catalogo`), 20 copos/caixa, copos/dia por movimento (10/35/75/120), 6 dias/semana. Exige `movimento` gravado (senão `dados_invalidos`). |
+
+Limites: `segmento`, `perfil` e `escutar` com `final:true` passam pelos mesmos limites da `mensagem` (IP/dia, conversa 25, conversas/dia, global/dia; falha fechada). `escutar` com `final:false` (rascunho) NÃO passa por esse portão e não gasta `turns`: exige texto mascarado ≥ 25 caracteres (senão `anotacoes:null` sem custo) e usa cotas próprias, falha fechada: `puri-esc:<token>` máx 4, `puri-escip:<hash ip>` máx 40/dia, `puri-escg-<dia Cuiabá>` máx 300/dia; estourou → `{ok:true,anotacoes:null}` (silencioso). `simulacao` só checa a cota de conversa (`puri-tok`). `segmento`, `perfil` e `escutar` final incrementam `turns` (perfil conta como mensagem, pois consome `puri-conv`/`puri-tok`). Os tópicos do H2 passam por filtro (descarta o que tiver link, e-mail ou telefone) e depois por `mascarar()`.
+
+Vai à IA: texto livre mascarado (telefone/e-mail/CPF/nome trocados, `[contato]`/`[nome]` removidos para o Jev) e os ids de segmento/movimento. Não vai: cidade, bairro, nome, telefone. Log: só códigos curtos (`ev:puri, etapa:revenda, passo`), nunca texto.
+
+`IPS_LIVRES` (index.ts): hashes de IP liberados dos limites POR IP (`puri-ip`, `puri-ipm`, `puri-cat`, `puri-vis`, `puri-escip`); globais e por token continuam valendo. Hoje: a máquina do Kayo (2026-11-20); se o provedor trocar o IP, atualizar o hash.

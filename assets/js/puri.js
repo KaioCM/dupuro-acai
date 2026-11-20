@@ -90,6 +90,22 @@
     humano: { id: 'humano', t: 'Falar com uma pessoa', href: WA_BASE, hum: true } // href real montado por waLink() ao desenhar
   };
 
+  // ---- F4: revender (constantes) ----
+  var SEG_ROT = { delivery_acai: 'delivery de açaí', acaiteria: 'açaiteria', lanchonete_bar: 'lanchonete ou bar', sorveteria: 'sorveteria', feira_evento: 'feira ou evento', mercado_varejo: 'mercado ou varejo', revenda_casa: 'revenda em casa', outro: 'outro tipo de negócio' };
+  var SEG_CHIPS = [['acaiteria', 'Açaiteria'], ['lanchonete_bar', 'Lanchonete ou bar'], ['delivery_acai', 'Delivery de açaí'], ['sorveteria', 'Sorveteria'], ['feira_evento', 'Feira ou evento'], ['mercado_varejo', 'Mercado ou varejo'], ['revenda_casa', 'Revenda em casa'], ['outro', 'Outro']];
+  var MOV_CHIPS = [['ate20', 'Até 20'], ['20a50', '20 a 50'], ['50a100', '50 a 100'], ['100mais', 'Mais de 100']];
+  var RP = ['segmento', 'cidade', 'cidade_outra', 'bairro', 'objetivo', 'movimento', 'sim', 'aprof', 'palpite', 'palpite_txt', 'resumo', 'regras'];
+  var FALA_NAO = 'Me conta o que é, então.';
+  var SIM_CHAVES = ['preco_copo', 'custo_caixa', 'copos_caixa', 'venda_caixa', 'sobra_caixa', 'copos_dia', 'caixas_semana', 'sobra_semana'];
+  var PRECOS = [18, 19, 20];
+  function temSeg(k) { return typeof k === 'string' && Object.prototype.hasOwnProperty.call(SEG_ROT, k); }
+  function sanSim(o) {
+    if (!o || typeof o !== 'object') return null;
+    var out = {};
+    SIM_CHAVES.forEach(function (k) { var n = Number(o[k]); out[k] = (o[k] != null && o[k] !== '' && isFinite(n)) ? n : null; });
+    return out.preco_copo == null ? null : out;
+  }
+
   // ---- Ícones inline ----
   var SVGNS = 'http://www.w3.org/2000/svg';
   function icone(d) {
@@ -100,7 +116,7 @@
   var I_CHAT = 'M4 5h16v11H9l-5 4z', I_X = 'M6 6l12 12M18 6L6 18', I_ENV = 'M4 12l16-8-6 16-3-7z', I_REC = 'M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7';
 
   // ---- Estado ----
-  function novoEstado() { return { msgs: [], chips: [], token: null, n: 0, etapa: 'abertura', assunto: null, v: null }; }
+  function novoEstado() { return { msgs: [], chips: [], token: null, n: 0, etapa: 'abertura', assunto: null, v: null, r: null }; }
   var vNome = '', vTel = ''; // só em memória: nunca vão ao sessionStorage (o balão do nome guarda "(nome informado)"; o resumo guarda "você" no lugar do nome)
   var E = novoEstado();
   var aberto = false, ocupado = false, travado = null;
@@ -138,10 +154,22 @@
       if (c.href != null) {
         if (typeof c.href !== 'string' || !HREF_OK.test(c.href)) return; // href suspeito: descarta o chip
         r.chips.push({ id: String(c.id || 'l').slice(0, 20), t: c.t, href: c.href, hum: c.hum === true });
-      } else if (IDS_CHIP.indexOf(c.id) >= 0) {
+      } else if (IDS_CHIP.indexOf(c.id) >= 0 || (typeof c.id === 'string' && /^r_[a-z0-9_]{1,30}$/.test(c.id))) {
         r.chips.push({ id: c.id, t: c.t });
       }
     });
+    if (s.r && typeof s.r === 'object' && RP.indexOf(s.r.passo) >= 0) { // F4: só dados de baixa sensibilidade (nunca nome/telefone)
+      var q = s.r;
+      r.r = {
+        passo: q.passo, segmento: temSeg(q.segmento) ? q.segmento : null,
+        cidade: typeof q.cidade === 'string' ? q.cidade.slice(0, 60) : null, bairro: typeof q.bairro === 'string' ? q.bairro.slice(0, 60) : null,
+        movimento: MOV_CHIPS.some(function (m) { return m[0] === q.movimento; }) ? q.movimento : null,
+        preco: PRECOS.indexOf(+q.preco) >= 0 ? +q.preco : null, sim: sanSim(q.sim), escN: Math.min(4, Math.max(0, +q.escN || 0)),
+        apOk: q.apOk === true, palOk: q.palOk === true,
+        resumo: sanTxt(q.resumo, 300) || null, problema: sanTxt(q.problema, 40) || null, resI: Math.min(MAX_BALOES, Math.max(0, Math.floor(+q.resI) || 0))
+      };
+      if (q.ap && typeof q.ap === 'object' && sanTxt(q.ap.p, 200)) r.r.ap = { p: sanTxt(q.ap.p, 200), rs: (Array.isArray(q.ap.rs) ? q.ap.rs : []).map(function (x) { return sanTxt(x, 60); }).filter(Boolean).slice(0, 4) };
+    }
     if (semChips) r.chips = [CH.humano];
     return r;
   }
@@ -173,6 +201,11 @@
       catalogo: function () { return post({ acao: 'catalogo' }); },
       visita: function (token, d) {
         return post({ acao: 'visita', token: token, cidade: d.cidade, bairro: d.bairro, dia: d.dia, periodo: d.periodo, nome: d.nome, telefone: d.telefone });
+      },
+      revenda: function (token, d) {
+        var b = { acao: 'revenda', token: token };
+        Object.keys(d).forEach(function (k) { b[k] = d[k]; });
+        return post(b);
       }
     };
   }
@@ -188,7 +221,7 @@
       if (/\?|horario|entrega|endereco|onde|quanto|como|qual|preco|pagamento|duvida|pergunta/.test(t)) return 'duvida';
       return 'incerto';
     }
-    var visitasMock = 0;
+    var visitasMock = 0, movMock = 'ate20', COPOS_MOCK = { ate20: 10, '20a50': 35, '50a100': 75, '100mais': 120 };
     return {
       iniciar: function () { return atraso({ ok: true, token: 'mock-' + Date.now().toString(36) }); },
       catalogo: function () { return atraso({ ok: true, delivery: { a_partir_de: 25, produto_id: 21 }, atacado: { caixa10: { preco: 145, litros: 10 }, caixa5: null } }); },
@@ -199,6 +232,38 @@
         if (visitasMock > 0) return atraso({ ok: false, motivo: 'ja_pedida' });
         visitasMock++;
         return atraso({ ok: true });
+      },
+      revenda: function (token, c) {
+        if (c.passo === 'segmento') {
+          var ts = norm(String(c.texto || '')), s = 'outro';
+          if (/delivery|ifood|entrega/.test(ts)) s = 'delivery_acai';
+          else if (/acaiteria|acai/.test(ts)) s = 'acaiteria';
+          else if (/lanchonete|bar|restaurante|padaria/.test(ts)) s = 'lanchonete_bar';
+          else if (/sorvet/.test(ts)) s = 'sorveteria';
+          else if (/feira|evento|festa/.test(ts)) s = 'feira_evento';
+          else if (/mercado|varejo|mercearia|loja/.test(ts)) s = 'mercado_varejo';
+          else if (/casa|vizinh|renda/.test(ts)) s = 'revenda_casa';
+          return atraso({ ok: true, segmento: s });
+        }
+        if (c.passo === 'perfil') {
+          if (!c.cidade || !Object.prototype.hasOwnProperty.call(COPOS_MOCK, c.movimento)) return atraso({ ok: false, motivo: 'dados_invalidos' });
+          movMock = c.movimento;
+          var nc = norm(String(c.cidade)).trim();
+          return atraso({ ok: true, fora_area: !(/cuiab|varzea/.test(nc) || nc === 'vg'), coerente: null });
+        }
+        if (c.passo === 'escutar') return atraso({ ok: true, anotacoes: String(c.texto || '').length >= 15 ? ['Quer revender açaí', 'Quer saber de preço no atacado'] : null });
+        if (c.passo === 'simulacao') {
+          var p = Number(c.preco_copo);
+          if (p !== 18 && p !== 19 && p !== 20) return atraso({ ok: false, motivo: 'dados_invalidos' });
+          var cd = COPOS_MOCK[movMock], cx = Math.floor(cd * 6 / 20), venda = p * 20, sobra = venda - 145;
+          return atraso({ ok: true, simulacao: { preco_copo: p, custo_caixa: 145, copos_caixa: 20, venda_caixa: venda, sobra_caixa: sobra, copos_dia: cd, caixas_semana: cx, sobra_semana: Math.round(cx * sobra * 100) / 100 } });
+        }
+        if (c.passo === 'aprofundar') return atraso({ ok: true, pergunta: 'Hoje, o que mais te trava pra vender açaí?', respostas: ['Não sei quanto pedir', 'Não tenho freezer', 'Não sei o preço certo'] });
+        if (c.passo === 'aprofundar_resp') return atraso({ ok: true });
+        if (c.passo === 'palpite') return atraso({ ok: true, palpite: 'Meu palpite: o que te segura é não saber quanto vai sair por semana. Acertei?' });
+        if (c.passo === 'palpite_resp') return atraso(c.valor === 'mosca' || c.valor === 'parte' || c.valor === 'nao' ? { ok: true } : { ok: false, motivo: 'dados_invalidos' });
+        if (c.passo === 'resumo') return atraso({ ok: true, resumo: 'Você quer vender açaí no copo e precisa de segurança no volume do pedido.', problema: 'Volume do pedido' });
+        return atraso({ ok: false, motivo: 'dados_invalidos' });
       },
       mensagem: function (token, etapa, texto) {
         var t = norm(texto);
@@ -212,7 +277,7 @@
   }
 
   // ---- DOM ----
-  var btn, painel, msgs, form, campo, env, topoHum;
+  var btn, painel, msgs, form, campo, env, topoHum, notasBox;
   function el(tag, cls, txt) { var e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; }
 
   function montar() {
@@ -244,7 +309,8 @@
     env = el('button', 'puri-env'); env.type = 'submit'; env.setAttribute('aria-label', 'Enviar'); env.appendChild(icone(I_ENV));
     form.appendChild(campo); form.appendChild(env);
 
-    painel.appendChild(topo); painel.appendChild(msgs); painel.appendChild(form);
+    notasBox = el('div', 'puri-notas'); notasBox.hidden = true;
+    painel.appendChild(topo); painel.appendChild(msgs); painel.appendChild(notasBox); painel.appendChild(form);
     document.body.appendChild(btn); document.body.appendChild(painel);
 
     btn.addEventListener('click', function () { aberto ? fechar() : abrir(); });
@@ -256,7 +322,7 @@
       if (ev.key === 'Enter' && !ev.shiftKey && !ev.isComposing) { ev.preventDefault(); enviar(); }
     });
     campo.addEventListener('input', function () {
-      campo.style.height = 'auto'; campo.style.height = Math.min(campo.scrollHeight, 96) + 'px';
+      campo.style.height = 'auto'; campo.style.height = Math.min(campo.scrollHeight, 96) + 'px'; agendarEscuta();
     });
     document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape' && aberto) fechar(); });
     window.addEventListener('resize', function () { if (aberto) travarScroll(); ajustarBotao(); });
@@ -338,18 +404,25 @@
   }
   function desenharTudo() {
     msgs.textContent = '';
-    E.msgs.forEach(function (m) { addBalao(m.de, m.t, false); });
+    var rc = E.r && E.r.resumo ? E.r : null;
+    if (rc && rc.resI === 0) msgs.appendChild(cartaoResumo(rc.resumo, rc.problema));
+    E.msgs.forEach(function (m, i) { addBalao(m.de, m.t, false); if (rc && rc.resI === i + 1) msgs.appendChild(cartaoResumo(rc.resumo, rc.problema)); });
+    if (E.r && E.r.passo === 'sim' && E.r.sim) msgs.appendChild(cartaoSim(E.r.sim));
     desenharChips(E.chips, false);
     atualizarCampo();
     rolar(true);
   }
   function guardar(de, t) {
     E.msgs.push({ de: de, t: t });
-    if (E.msgs.length > MAX_BALOES) E.msgs = E.msgs.slice(-MAX_BALOES);
+    if (E.msgs.length > MAX_BALOES) { var corte = E.msgs.length - MAX_BALOES; E.msgs = E.msgs.slice(-MAX_BALOES); if (E.r && E.r.resumo) E.r.resI = Math.max(0, (E.r.resI || 0) - corte); }
     salvar();
   }
   function podarDom() { var b = baloes(); while (b.length > MAX_BALOES) { b[0].remove(); b = baloes(); } }
 
+  function sanTxt(t, n) { return typeof t === 'string' ? t.replace(/[<>]/g, '').replace(/\s+/g, ' ').trim().slice(0, n) : ''; }
+  function mascararObj(t) { // guardado: sequências de 4+ dígitos viram "••••", e-mails viram "[e-mail]"
+    return String(t).replace(/[\w.+-]+@[\w-]+(\.[\w-]+)+/g, '[e-mail]').replace(/\d(?:[\s().-]*\d){3,}/g, '••••');
+  }
   function usuarioDiz(t, guardado) { limparChips(); E.chips = []; guardar('u', guardado === undefined ? t : guardado); addBalao('u', t); podarDom(); rolar(); }
 
   // Puri fala: "•••" por 0,3–1 s (sem atraso em reduced-motion), depois balão + chips.
@@ -376,7 +449,7 @@
 
   function recomecar() {
     ger++;
-    ultimoTexto = ''; vNome = ''; vTel = '';
+    ultimoTexto = ''; vNome = ''; vTel = ''; rRetry = null; clearTimeout(escTimer); escVoo = false; escUltimo = ''; limparNotas();
     E = novoEstado();
     ocupado = false; salvar(); msgs.textContent = ''; atualizarCampo(); topoHum.href = waLink();
     comecar(); focarEntrada();
@@ -389,9 +462,7 @@
   // Destino de cada opção (chip ou intenção vinda de texto livre). Sem guard de `ocupado`.
   function irPara(id) {
     switch (id) {
-      case 'revender': // TODO Etapa 4 (próximo lote): F4 real
-        limparVisita(); E.etapa = 'abertura'; E.assunto = 'revender';
-        return puriDiz(T.revender, [{ id: 'l', t: 'Ver como funciona a revenda', href: PAGINA === 'home' ? './revenda/#revenda' : (PAGINA === 'delivery' ? '../revenda/#revenda' : '#revenda') }, CH.humano]);
+      case 'revender': return iniciarR();
       case 'consumir': return irConsumir();
       case 'provar':
         limparVisita(); E.etapa = 'abertura'; E.assunto = 'provar';
@@ -434,7 +505,7 @@
   }
 
   // ---- F3: provar (fábrica ou visita do vendedor) ----
-  function limparVisita() { vNome = ''; vTel = ''; E.v = null; }
+  function limparVisita() { vNome = ''; vTel = ''; E.v = null; E.r = null; rRetry = null; clearTimeout(escTimer); limparNotas(); }
   function irFabrica() {
     limparVisita(); E.etapa = 'abertura'; E.assunto = 'provar';
     return puriDiz(T.fabrica, [{ id: 'l', t: 'Ver no mapa', href: MAPA_FABRICA }, { id: 'revender', t: 'Quero revender' }]);
@@ -552,10 +623,311 @@
     return falhaTemp(); // erro | timeout | rede
   }
 
+  // ---- F4: revender (um passo por vez; ROTEIRO F4 passos 1-5 e 10) ----
+  var rRetry = null, escTimer = 0, escVoo = false, escUltimo = '';
+  var FORA = 'Entregamos só em Cuiabá e Várzea Grande. De outra cidade, dá pra revender retirando na fábrica.';
+  var FALA_R = { segmento: 'Que tipo de negócio você tem (ou quer ter)?', cidade: 'Em que cidade?', cidade_outra: 'Qual cidade?', bairro: 'E o bairro?', objetivo: 'O que você quer com a revenda? Pode contar do seu jeito.', movimento: 'Quantos copos por dia você vende (ou imagina vender)?' };
+  var T_SIM = 'Fiz uma conta rápida com o seu movimento.';
+  var T_SEM_CUSTO = 'Não consegui puxar o preço do atacado agora. Mostro só quanto você vende por caixa.';
+  var T_REGRAS = 'Como funciona: o primeiro pedido não tem mínimo; depois, pedidos a partir de 30 L (3 caixas de 10 L ou 6 de 5 L). Granola e complementos não entram na conta. Entregamos em Cuiabá e Várzea Grande, ou você retira na fábrica.';
+  function sa(s) { return s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''); }
+  function fmtR(v) {
+    var n = Math.abs(v - Math.round(v)) < 0.005 ? String(Math.round(v)) : v.toFixed(2).replace('.', ',');
+    var p = n.split(','); p[0] = p[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    return 'R$ ' + p.join(',');
+  }
+  function chipsR(p) {
+    switch (p) {
+      case 'segmento': return SEG_CHIPS.map(function (s) { return { id: 'r_seg_' + s[0], t: s[1] }; });
+      case 'cidade': return [{ id: 'r_cid_cuiaba', t: 'Cuiabá' }, { id: 'r_cid_vg', t: 'Várzea Grande' }, { id: 'r_cid_outra', t: 'Outra cidade' }];
+      case 'bairro': case 'objetivo': return [{ id: 'r_pular', t: 'Pular' }];
+      case 'movimento': return MOV_CHIPS.map(function (m) { return { id: 'r_mv_' + m[0], t: m[1] }; });
+      case 'sim': return PRECOS.map(function (n) { return { id: 'r_preco_' + n, t: 'R$ ' + n }; }).concat([{ id: 'r_continuar', t: 'Continuar' }]);
+    }
+    return [];
+  }
+  function perguntarR(p, prefixo) {
+    if (!E.r) return;
+    E.r.passo = p; salvar();
+    if (p !== 'objetivo') { clearTimeout(escTimer); limparNotas(); }
+    return puriDiz((prefixo ? prefixo + ' ' : '') + FALA_R[p], chipsR(p));
+  }
+  function iniciarR() {
+    limparVisita(); E.etapa = 'abertura'; E.assunto = 'revender';
+    E.r = { passo: 'segmento', segmento: null, cidade: null, bairro: null, movimento: null, preco: null, sim: null, escN: 0 };
+    return perguntarR('segmento');
+  }
+  // Roda fn(g) com o campo travado; falhas viram "Tentar de novo" (rRetry refaz o mesmo passo).
+  function rede(fn) {
+    var g = ger; ocupado = true; atualizarCampo();
+    return Promise.resolve().then(function () { return fn(g); }).catch(function () { if (g === ger) return falhaTemp(); }).then(function () {
+      if (g !== ger) return;
+      ocupado = false; atualizarCampo(); if (aberto) focarEntrada();
+    });
+  }
+  function rodarR(fn) { rRetry = function () { return rede(fn); }; return rede(fn); }
+  // Chamada da Edge `revenda`: garante token, renova uma vez se token_invalido.
+  function chamarR(corpo, g, tok) {
+    return garantirToken(g).then(function (ok) {
+      if (g !== ger) return { velho: true };
+      if (ok === 'limite') return { limite: true };
+      if (ok !== 'ok') return { temp: true };
+      return api.revenda(E.token, corpo).then(function (r) {
+        if (g !== ger) return { velho: true };
+        if (r && r.ok) return { r: r };
+        var m = r && r.motivo;
+        if (m === 'limite_conversa' || m === 'limite_dia') return { limite: true };
+        if (m === 'token_invalido' && !tok) { E.token = null; salvar(); return chamarR(corpo, g, true); }
+        return { temp: true };
+      });
+    });
+  }
+  function falhaR(x) {
+    if (!x || x.velho) return;
+    if (x.limite) { E.r = null; return falhaF6(); }
+    return falhaTemp();
+  }
+  function segTexto(texto, g) {
+    return chamarR({ passo: 'segmento', texto: texto }, g).then(function (x) {
+      if (!x.r) return falhaR(x);
+      if (!E.r) return;
+      var s = temSeg(x.r.segmento) ? x.r.segmento : 'outro';
+      E.r.segmento = s; rRetry = null;
+      return perguntarR('cidade', 'Anotei: ' + SEG_ROT[s] + '.');
+    });
+  }
+  function definirCidade(texto) {
+    var n = sa(texto), c = /cuiab/.test(n) ? 'Cuiabá' : (/varzea/.test(n) ? 'Várzea Grande' : null);
+    E.r.cidade = c || texto.slice(0, 60);
+    return perguntarR('bairro', '');
+  }
+  function perfilR(g) {
+    var r = E.r, corpo = { passo: 'perfil', segmento: r.segmento || 'outro', cidade: r.cidade || 'Cuiabá', movimento: r.movimento };
+    if (r.bairro) corpo.bairro = r.bairro;
+    return chamarR(corpo, g).then(function (x) {
+      if (!x.r) return falhaR(x);
+      if (!E.r) return;
+      if (x.r.fora_area === true) return puriDiz(FORA).then(function () { return g === ger && E.r ? simR(18, g, T_SIM) : null; });
+      return simR(18, g, T_SIM);
+    });
+  }
+  function simR(preco, g, fala) {
+    return chamarR({ passo: 'simulacao', preco_copo: preco }, g).then(function (x) {
+      if (!x.r) return falhaR(x);
+      if (!E.r) return;
+      var s = sanSim(x.r.simulacao);
+      if (!s) return falhaTemp();
+      s.preco_copo = preco;
+      E.r.preco = preco; E.r.sim = s; E.r.passo = 'sim'; rRetry = null; salvar();
+      var ficha = function () {
+        if (g !== ger) return;
+        Array.prototype.forEach.call(msgs.querySelectorAll('.puri-sim'), function (n) { n.remove(); });
+        limparChips(); msgs.appendChild(cartaoSim(s)); E.chips = chipsR('sim'); salvar(); desenharChips(E.chips); rolar();
+      };
+      if (s.custo_caixa == null) fala = T_SEM_CUSTO;
+      if (fala) return puriDiz(fala, []).then(ficha);
+      ficha();
+    });
+  }
+  function cartaoSim(s) {
+    var c = el('div', 'puri-sim'); c.setAttribute('role', 'group'); c.setAttribute('aria-label', 'Simulação por caixa');
+    function lin(cls, partes) {
+      var p = el('p', 'puri-sim-l' + (cls ? ' ' + cls : ''));
+      partes.forEach(function (x) { if (typeof x === 'string') p.appendChild(document.createTextNode(x)); else p.appendChild(el('strong', 'puri-sim-n', x.n)); });
+      c.appendChild(p);
+    }
+    lin('puri-sim-t', ['1 caixa de 10 L ≈ ' + Math.round(s.copos_caixa || 20) + ' copos de 500 ml']);
+    if (s.venda_caixa != null) lin('', ['Vendendo a ' + fmtR(s.preco_copo) + ': ', { n: fmtR(s.venda_caixa) }, ' por caixa']);
+    if (s.custo_caixa != null) {
+      lin('', ['A caixa sai ', { n: fmtR(s.custo_caixa) }, ' no atacado']);
+      if (s.sobra_caixa != null) lin('puri-sim-sobra', ['Sobra ≈ ', { n: fmtR(s.sobra_caixa) }, ' por caixa']);
+      if (s.caixas_semana != null && s.sobra_semana != null) lin('', ['No seu movimento: ≈ ', { n: Math.round(s.caixas_semana) + ' caixas' }, ' por semana → ≈ ', { n: fmtR(s.sobra_semana) }, ' por semana']);
+    }
+    c.appendChild(el('p', 'puri-sim-nota', 'Estimativa, sem contar copo, cobertura e outros custos.'));
+    return c;
+  }
+  // Escuta ao vivo (passo "objetivo"): debounce 700 ms, 1 chamada em voo, resposta velha descartada.
+  function limparNotas() { escUltimo = ''; if (notasBox) { notasBox.hidden = true; notasBox.textContent = ''; } }
+  function mostrarNotas(arr) {
+    var ul = el('ul');
+    arr.slice(0, 6).forEach(function (a) { if (typeof a === 'string' && a.trim()) ul.appendChild(el('li', null, a.trim().slice(0, 120))); });
+    if (!ul.children.length) return;
+    notasBox.textContent = ''; notasBox.appendChild(el('strong', null, 'O que já anotamos')); notasBox.appendChild(ul); notasBox.hidden = false;
+  }
+  function agendarEscuta() {
+    clearTimeout(escTimer);
+    if (!E.r || E.r.passo !== 'objetivo') return;
+    var t = limpar(campo.value);
+    if (t.length < 25 || t.length - escUltimo.length < 20 || (E.r.escN || 0) >= 4) return;
+    escTimer = setTimeout(function () { escutar(t); }, 1200);
+  }
+  function escutar(t) {
+    if (escVoo || ocupado || !E.r || E.r.passo !== 'objetivo') return;
+    if ((E.r.escN || 0) >= 4) return;
+    var g = ger; escVoo = true; escUltimo = t; E.r.escN = (E.r.escN || 0) + 1; salvar();
+    chamarR({ passo: 'escutar', texto: t, final: false }, g).then(function (x) {
+      if (g !== ger || ocupado || !E.r || E.r.passo !== 'objetivo') return;
+      if (x.r && Array.isArray(x.r.anotacoes) && x.r.anotacoes.length) mostrarNotas(x.r.anotacoes);
+    }).catch(function () {}).then(function () { escVoo = false; agendarEscuta(); });
+  }
+  function esperaEscuta() { return new Promise(function (ok) { (function t(n) { if (!escVoo || n > 60) return ok(); setTimeout(function () { t(n + 1); }, 100); })(0); }); }
+  function objetivoFinal(texto, g) {
+    return esperaEscuta().then(function () {
+      if (g !== ger) return null;
+      return chamarR({ passo: 'escutar', texto: texto, final: true }, g);
+    }).then(function (x) {
+      if (!x || g !== ger || !E.r) return;
+      if (!x.r) return falhaR(x);
+      rRetry = null;
+      var an = Array.isArray(x.r.anotacoes) ? x.r.anotacoes.filter(function (a) { return typeof a === 'string' && a.trim(); }).slice(0, 6).map(function (a) { return a.trim().replace(/[.\s]+$/, ''); }) : [];
+      return perguntarR('movimento', an.length ? 'Anotei: ' + an.join('; ') + '.' : 'Anotado.');
+    });
+  }
+  // ---- F4 passos 6-8: aprofundamento, palpite, resumo (tudo da IA entra só por textContent, com corte defensivo) ----
+  function pontos() {
+    if (REDUZIDO) return function () {};
+    var d = el('div', 'puri-b p puri-dig'); d.setAttribute('aria-hidden', 'true');
+    d.appendChild(el('i')); d.appendChild(el('i')); d.appendChild(el('i'));
+    msgs.appendChild(d); rolar();
+    return function () { d.remove(); };
+  }
+  function aprofR(g) {
+    rRetry = function () { return rede(aprofR); };
+    E.r.passo = 'aprof'; limparChips(); E.chips = []; salvar();
+    var off = pontos();
+    return chamarR({ passo: 'aprofundar' }, g).then(function (x) {
+      off();
+      if (!x.r) return falhaR(x);
+      if (!E.r) return;
+      var q = sanTxt(x.r.pergunta, 200);
+      if (!q) { E.r.apOk = true; return palpiteR(g); }
+      var rs = (Array.isArray(x.r.respostas) ? x.r.respostas : []).map(function (t) { return sanTxt(t, 60); }).filter(Boolean).slice(0, 4);
+      E.r.ap = { p: q, rs: rs }; rRetry = null;
+      return puriDiz(q, rs.map(function (t, i) { return { id: 'r_ap_' + i, t: t }; }).concat([{ id: 'r_ap_pular', t: 'Pular' }]));
+    });
+  }
+  function aprofResp(texto) {
+    E.r.apOk = true; salvar();
+    return rodarR(function (g) {
+      return chamarR({ passo: 'aprofundar_resp', texto: texto }, g).then(function (x) {
+        if (!x.r) return falhaR(x);
+        if (!E.r) return;
+        return palpiteR(g);
+      });
+    });
+  }
+  function palpiteR(g) {
+    rRetry = function () { return rede(palpiteR); };
+    E.r.passo = 'palpite'; limparChips(); E.chips = []; salvar();
+    var off = pontos();
+    return chamarR({ passo: 'palpite' }, g).then(function (x) {
+      off();
+      if (!x.r) return falhaR(x);
+      if (!E.r) return;
+      var p = sanTxt(x.r.palpite, 220);
+      if (!p) { E.r.palOk = true; return resumoR(g); }
+      rRetry = null;
+      return puriDiz(p, [{ id: 'r_pp_mosca', t: 'Na mosca' }, { id: 'r_pp_parte', t: 'Em parte' }, { id: 'r_pp_nao', t: 'Não, é outra coisa' }]);
+    });
+  }
+  function palpiteResp(valor, texto) {
+    E.r.palOk = true; salvar();
+    return rodarR(function (g) {
+      var c = { passo: 'palpite_resp', valor: valor };
+      if (texto) c.texto = texto;
+      return chamarR(c, g).then(function (x) {
+        if (!x.r) return falhaR(x);
+        if (!E.r) return;
+        return resumoR(g);
+      });
+    });
+  }
+  function resumoR(g) {
+    rRetry = function () { return rede(resumoR); };
+    E.r.passo = 'resumo'; limparChips(); E.chips = []; salvar();
+    var off = pontos();
+    return chamarR({ passo: 'resumo' }, g).then(function (x) {
+      off();
+      if (!x.r) return falhaR(x);
+      if (!E.r) return;
+      var re = sanTxt(x.r.resumo, 300);
+      if (!re) return irRegras();
+      E.r.resumo = re; E.r.problema = sanTxt(x.r.problema, 40) || null; E.r.resI = E.msgs.length; salvar();
+      msgs.appendChild(cartaoResumo(E.r.resumo, E.r.problema)); rolar();
+      return irRegras();
+    });
+  }
+  function cartaoResumo(resumo, problema) {
+    var c = el('div', 'puri-resumo'); c.setAttribute('role', 'group'); c.setAttribute('aria-label', 'O que ficou do que você contou');
+    c.appendChild(el('p', 'puri-resumo-t', 'O que ficou do que você contou'));
+    c.appendChild(el('p', 'puri-resumo-l', resumo));
+    if (problema) c.appendChild(el('span', 'puri-resumo-pilula', problema));
+    return c;
+  }
+  // Retomada após recarregar no meio de um destes passos (o retorno da Edge não estava salvo).
+  function retomarR() {
+    var r = E.r, p = r.passo, retry = E.chips.some(function (c) { return c.id === 'retry'; }), vazio = !E.chips.length || retry;
+    if (p === 'aprof' && vazio) return rodarR(function (g) { return r.apOk ? palpiteR(g) : aprofR(g); });
+    if (p === 'palpite' && vazio) return rodarR(function (g) { return r.palOk ? resumoR(g) : palpiteR(g); });
+    if (p === 'palpite_txt' && (retry || (r.palOk && !E.chips.length))) return rodarR(function (g) { return r.palOk ? resumoR(g) : puriDiz(FALA_NAO, []); });
+    if (p === 'resumo') return rodarR(function () { return r.resumo ? irRegras() : resumoR(ger); });
+  }
+  function irRegras() {
+    E.r.passo = 'regras'; rRetry = null; salvar();
+    var href = PAGINA === 'home' ? './revenda/#revenda' : (PAGINA === 'delivery' ? '../revenda/#revenda' : '#revenda');
+    return puriDiz(T_REGRAS, [{ id: 'r_criar', t: 'Criar minha conta', href: href }, CH.humano]); // TODO 4C: abrir o cadastro no chat em vez de levar ao link
+  }
+  function aoChipR(c) {
+    if (!E.r) return puriDiz(T.incerto, CH.abertura);
+    var id = c.id, p = E.r.passo;
+    if (id.indexOf('r_seg_') === 0 && p === 'segmento' && temSeg(id.slice(6))) { E.r.segmento = id.slice(6); return perguntarR('cidade'); }
+    if (p === 'cidade' && id === 'r_cid_cuiaba') { E.r.cidade = 'Cuiabá'; return perguntarR('bairro'); }
+    if (p === 'cidade' && id === 'r_cid_vg') { E.r.cidade = 'Várzea Grande'; return perguntarR('bairro'); }
+    if (p === 'cidade' && id === 'r_cid_outra') return perguntarR('cidade_outra');
+    if (id === 'r_pular' && p === 'bairro') { E.r.bairro = null; return perguntarR('objetivo'); }
+    if (id === 'r_pular' && p === 'objetivo') return perguntarR('movimento');
+    if (p === 'movimento' && id.indexOf('r_mv_') === 0 && MOV_CHIPS.some(function (m) { return m[0] === id.slice(5); })) {
+      E.r.movimento = id.slice(5); salvar();
+      return rodarR(perfilR);
+    }
+    if (p === 'sim' && id.indexOf('r_preco_') === 0 && PRECOS.indexOf(+id.slice(8)) >= 0) {
+      var n = +id.slice(8);
+      return rodarR(function (g) { return simR(n, g, null); });
+    }
+    if (p === 'sim' && id === 'r_continuar') return rodarR(aprofR);
+    if (p === 'aprof' && id === 'r_ap_pular') { E.r.apOk = true; return rodarR(palpiteR); }
+    if (p === 'aprof' && /^r_ap_\d$/.test(id)) return aprofResp(sanTxt(c.t, 60));
+    if (p === 'palpite' && (id === 'r_pp_mosca' || id === 'r_pp_parte')) return palpiteResp(id === 'r_pp_mosca' ? 'mosca' : 'parte');
+    if (p === 'palpite' && id === 'r_pp_nao') { E.r.passo = 'palpite_txt'; salvar(); return puriDiz(FALA_NAO, []); }
+    return puriDiz(T.escolhe, chipsR(p));
+  }
+  function enviarR() {
+    var p = E.r.passo, texto = limpar(campo.value);
+    if (!texto) return;
+    campo.value = ''; campo.style.height = 'auto';
+    clearTimeout(escTimer);
+    if (p === 'segmento') { usuarioDiz(texto); return rodarR(function (g) { return segTexto(texto, g); }); }
+    if (p === 'cidade' || p === 'cidade_outra') {
+      if (texto.length < 2) return rede(function () { return puriDiz('Pode escrever a cidade de novo?', chipsR(p)); });
+      usuarioDiz(texto); return rede(function () { return definirCidade(texto); });
+    }
+    if (p === 'bairro') {
+      if (texto.length < 2 || texto.length > 60) return rede(function () { return puriDiz(T.bairroRuim, chipsR(p)); });
+      usuarioDiz(texto); E.r.bairro = texto; return rede(function () { return perguntarR('objetivo'); });
+    }
+    if (p === 'objetivo') { usuarioDiz(texto, mascararObj(texto)); return rodarR(function (g) { return objetivoFinal(texto, g); }); }
+    if (p === 'aprof') { usuarioDiz(texto, mascararObj(texto)); return aprofResp(texto); }
+    if (p === 'palpite_txt') { usuarioDiz(texto, mascararObj(texto)); return palpiteResp('nao', texto); }
+    if (p === 'resumo') return;
+    return rede(function () { return puriDiz(T.escolhe, E.chips && E.chips.length ? E.chips : chipsR(p)); }); // movimento / sim / palpite: só chips
+  }
+
   function aoChip(c) {
     if (ocupado) return;
     usuarioDiz(c.t);
+    if (/^r_/.test(c.id)) return aoChipR(c);
     if (c.id === 'retry') {
+      if (rRetry) return rRetry();
       if (E.v && E.v.passo === 'confirma' && vNome && vTel) return enviarVisita();
       if (!ultimoTexto || E.etapa === 'fim') { E.etapa = 'duvida'; return puriDiz(T.pergunta, []); }
       return processar(ultimoTexto);
@@ -578,6 +950,7 @@
       campo.value = ''; campo.style.height = 'auto';
       return puriDiz(T.escolhe, E.chips && E.chips.length ? E.chips : [CH.humano]);
     }
+    if (E.r && E.r.passo !== 'regras') return enviarR();
     if (E.v) return enviarCampo();
     var texto = limpar(campo.value);
     if (!texto) return;
@@ -694,6 +1067,9 @@
     montar();
     atualizarCampo();
     if (E.msgs.length) desenharTudo();
+    if (E.r && E.r.passo === 'sim') { E.chips = chipsR('sim'); desenharChips(E.chips, false); salvar(); } // retoma a escolha de preço
+    else if (E.r && ['aprof', 'palpite', 'palpite_txt', 'resumo'].indexOf(E.r.passo) >= 0) retomarR();
+    else if (E.r && E.r.passo !== 'regras' && E.chips.some(function (c) { return c.id === 'retry'; })) perguntarR(E.r.passo); // falha temporária: refaz a pergunta
     observar();
   }
   if (document.body) iniciar(); else document.addEventListener('DOMContentLoaded', iniciar);

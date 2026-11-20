@@ -110,7 +110,7 @@ export function limparResposta(s: string): string {
 
 /** Cidade sem acento/caixa/espaços extras. */
 export function normalizarCidade(c: unknown): string {
-  return String(c ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\s+/g, ' ').trim()
+  return String(c ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, ' ').trim()
 }
 export const CIDADES_VISITA: Record<string, string> = { 'cuiaba': 'Cuiabá', 'varzea grande': 'Várzea Grande' }
 export const DIAS_VISITA = ['seg', 'ter', 'qua', 'qui', 'sex']
@@ -133,7 +133,8 @@ const limpaTxt = (x: unknown): string => String(x ?? '').replace(/[<>]/g, '').re
 export type Visita = { nome: string; telefone: string; cidade: string; bairro: string; dia: string; periodo: string }
 /** Valida o pedido de visita (cidade é checada primeiro). */
 export function validarVisita(b: any): { ok: true; v: Visita } | { ok: false; motivo: 'cidade_fora' | 'dados_invalidos' } {
-  const cidade = CIDADES_VISITA[normalizarCidade(b?.cidade)]
+  const chaveCidade = normalizarCidade(b?.cidade)
+  const cidade = Object.hasOwn(CIDADES_VISITA, chaveCidade) ? CIDADES_VISITA[chaveCidade] : undefined
   if (!cidade) return { ok: false, motivo: 'cidade_fora' }
   const bairro = limpaTxt(b?.bairro)
   const nome = limpaTxt(b?.nome)
@@ -165,4 +166,121 @@ export function historicoParaMessages(h: Turno[], atual: string): { role: 'user'
     else out.push({ role, content })
   }
   return out
+}
+
+/* ── Etapa 4B-1: ação `revenda` ──────────────────────────────────────── */
+
+export const SEGMENTOS = ['delivery_acai', 'acaiteria', 'lanchonete_bar', 'sorveteria', 'feira_evento', 'mercado_varejo', 'revenda_casa', 'outro']
+export const MOVIMENTOS = ['ate20', '20a50', '50a100', '100mais']
+
+/** Id de segmento válido (devolvido pelo Jev ou vindo do navegador); qualquer outra coisa → 'outro'. */
+export function normalizarSegmento(x: unknown): string {
+  const s = typeof x === 'string' ? x.trim() : ''
+  return SEGMENTOS.includes(s) ? s : 'outro'
+}
+
+export type Perfil = { segmento: string; cidade: string; bairro: string | null; movimento: string; foraArea: boolean }
+/** Valida o perfil (segmento só aceita id da lista; cidade 2–60; bairro opcional 2–60; movimento da lista). */
+export function validarPerfil(b: any): { ok: true; v: Perfil } | { ok: false } {
+  const segmento = typeof b?.segmento === 'string' ? b.segmento : ''
+  const cidade = limpaTxt(b?.cidade)
+  const bairroRaw = limpaTxt(b?.bairro)
+  const movimento = typeof b?.movimento === 'string' ? b.movimento : ''
+  if (!SEGMENTOS.includes(segmento) || !MOVIMENTOS.includes(movimento)) return { ok: false }
+  if (cidade.length < 2 || cidade.length > 60) return { ok: false }
+  if (bairroRaw && (bairroRaw.length < 2 || bairroRaw.length > 60)) return { ok: false }
+  return { ok: true, v: { segmento, cidade, bairro: bairroRaw || null, movimento, foraArea: !Object.hasOwn(CIDADES_VISITA, normalizarCidade(cidade)) } }
+}
+
+export const COPOS_DIA: Record<string, number> = { ate20: 10, '20a50': 35, '50a100': 75, '100mais': 120 }
+
+export type Simulacao = { preco_copo: number; custo_caixa: number; copos_caixa: number; venda_caixa: number; sobra_caixa: number; copos_dia: number; caixas_semana: number; sobra_semana: number }
+/** Simulação de revenda (servidor): preço do copo 18–20 (arredonda), caixa de 10 L = 20 copos de 500 ml, 6 dias/semana. */
+export function calcularSimulacao(precoCopo: unknown, custoCaixa: number, movimento: string): Simulacao | null {
+  const n = Number(precoCopo)
+  const copos_dia = COPOS_DIA[movimento]
+  if (!Number.isFinite(n) || !copos_dia || !Number.isFinite(custoCaixa) || custoCaixa <= 0) return null
+  const preco_copo = Math.round(n)
+  if (preco_copo < 18 || preco_copo > 20) return null
+  const copos_caixa = 20
+  const venda_caixa = copos_caixa * preco_copo
+  const sobra_caixa = Math.round((venda_caixa - custoCaixa) * 100) / 100
+  const caixas_semana = Math.floor((copos_dia * 6) / copos_caixa)
+  const sobra_semana = Math.round(sobra_caixa * caixas_semana * 100) / 100
+  return { preco_copo, custo_caixa: custoCaixa, copos_caixa, venda_caixa, sobra_caixa, copos_dia, caixas_semana, sobra_semana }
+}
+
+/** Tópicos do Haiku (JSON estrito): 2–4 itens, ≤ 8 palavras, sem link/e-mail/telefone; lixo → null. */
+export function parseTopicos(s: string): string[] | null {
+  let j: any
+  try { j = JSON.parse(String(s ?? '').replace(/^\s*```(?:json)?|```\s*$/g, '').trim()) } catch { return null }
+  const arr = Array.isArray(j) ? j : j?.topicos
+  if (!Array.isArray(arr)) return null
+  const out = arr.filter((x: unknown) => typeof x === 'string')
+    .map((x: string) => x.replace(/[<>]/g, '').replace(/\s+/g, ' ').trim().split(' ').slice(0, 8).join(' '))
+    .filter((x: string) => x.length >= 3 && !respostaSuspeita(x, '') && !/https?:\/\/|www\.|@|\d{8}/i.test(x)).map((x: string) => mascarar(x)).slice(0, 4)
+  return out.length >= 2 ? out : null
+}
+
+/* ── Etapa 4B-2: aprofundar / palpite / resumo (revenda) ─────────────── */
+
+/** Texto de IA → uma linha, sem <>, sem marcadores de formatação nas pontas, mascarado, cortado em `max`. */
+export function limparIA(x: unknown, max: number): string {
+  return mascarar(String(x ?? '').replace(/[<>]/g, '').replace(/\s+/g, ' ').trim()).trim().slice(0, max).trim()
+}
+
+/** Pega o JSON da saída do Haiku (tolera cerca ``` e texto antes/depois); lixo → null. */
+export function extrairJson(s: string): any {
+  const t = String(s ?? '').replace(/```(?:json)?/g, '')
+  const a = t.indexOf('{'), b = t.lastIndexOf('}')
+  if (a < 0 || b <= a) return null
+  try { return JSON.parse(t.slice(a, b + 1)) } catch { return null }
+}
+
+const suspeitoIA = (x: string) => respostaSuspeita(x, '') || /https?:\/\/|www\.|@|\d{6,}|\[contato\]/i.test(x)
+
+export type PerguntaAprof = { pergunta: string; respostas: string[] }
+/** H3 (JSON estrito {"perguntas":[{"pergunta","respostas":[...]}]}): até 3 candidatas válidas.
+ *  pergunta 8–200 chars; 3–4 respostas de ≤ 6 palavras (≤ 60 chars); link/e-mail/telefone descarta a candidata. */
+export function parsePerguntasAprof(s: string): PerguntaAprof[] | null {
+  const j = extrairJson(s)
+  const arr = Array.isArray(j) ? j : j?.perguntas
+  if (!Array.isArray(arr)) return null
+  const out: PerguntaAprof[] = []
+  for (const it of arr) {
+    if (typeof it?.pergunta !== 'string' || !Array.isArray(it?.respostas)) continue
+    const pergunta = limparIA(it.pergunta, 200)
+    if (pergunta.length < 8 || suspeitoIA(pergunta)) continue
+    const respostas = it.respostas.filter((x: unknown) => typeof x === 'string')
+      .map((x: string) => limparIA(x, 200).split(' ').slice(0, 6).join(' ').slice(0, 60).trim())
+      .filter((x: string) => x.length >= 2 && !suspeitoIA(x)).slice(0, 4)
+    if (respostas.length < 3) continue
+    out.push({ pergunta, respostas })
+    if (out.length === 3) break
+  }
+  return out.length ? out : null
+}
+
+/** H4: uma frase de palpite; 10–220 chars; sem link/e-mail/telefone; lixo → null. */
+export function parsePalpite(s: string): string | null {
+  const t = limparIA(String(s ?? '').replace(/^["“”']+|["“”']+$/g, ''), 220)
+  if (t.length < 10 || suspeitoIA(t)) return null
+  return t
+}
+
+/** H5 (JSON estrito {"resumo","problema"}): resumo 10–300, problema 3–40 (≤ 5 palavras); suspeito → null. */
+export function parseResumo(s: string): { resumo: string; problema: string } | null {
+  const j = extrairJson(s)
+  if (typeof j?.resumo !== 'string' || typeof j?.problema !== 'string') return null
+  const resumo = limparIA(j.resumo, 300)
+  const problema = limparIA(j.problema, 200).split(' ').slice(0, 5).join(' ').slice(0, 40).trim()
+  if (resumo.length < 10 || problema.length < 3 || suspeitoIA(resumo) || suspeitoIA(problema)) return null
+  return { resumo, problema }
+}
+
+/** Resposta ao palpite: valor da lista; correção opcional (mascarada, ≤ 300). Inválido → null. */
+export function validarPalpiteResp(valor: unknown, texto: unknown): { valor: string; correcao: string | null } | null {
+  if (typeof valor !== 'string' || !['mosca', 'parte', 'nao'].includes(valor)) return null
+  const c = typeof texto === 'string' ? mascarar(texto.replace(/[<>]/g, '').replace(/\s+/g, ' ').trim()).slice(0, 300) : ''
+  return { valor, correcao: c || null }
 }
