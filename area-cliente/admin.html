@@ -855,7 +855,7 @@
 <script src="../assets/js/supabase-config.js"></script>
 <script src="../assets/js/supabase-client.js"></script>
 <script src="../assets/js/app-ui.js"></script>
-<script src="../assets/js/admin.js?v=11"></script>
+<script src="../assets/js/admin.js?v=12"></script>
 <script src="../assets/js/vendor/qrcode.js"></script>
 <script src="../assets/js/vendor/jszip.min.js"></script>
 <script src="../assets/js/printer.js?v=4"></script>
@@ -4362,6 +4362,8 @@
 
   // ---- Leads da Puri ----
   var PURI_DIA = { seg: 'segunda', ter: 'terça', qua: 'quarta', qui: 'quinta', sex: 'sexta' };
+  var PURI_SEG = { delivery_acai: 'Delivery de açaí', acaiteria: 'Açaiteria', lanchonete_bar: 'Lanchonete ou bar', sorveteria: 'Sorveteria', feira_evento: 'Feira ou evento', mercado_varejo: 'Mercado ou varejo', revenda_casa: 'Revenda em casa', outro: 'Outro tipo de negócio' };
+  var PURI_MOV = { ate20: 'Até 20 copos/dia', '20a50': '20 a 50 copos/dia', '50a100': '50 a 100 copos/dia', '100mais': 'Mais de 100 copos/dia' };
   var PURI_STATUS = { pedida: 'Pedida', agendada: 'Agendada', feita: 'Feita', cancelada: 'Cancelada' };
   var PURI_FLUXO = { revender: 'Quer revender', consumir: 'Quer consumir', provar: 'Quer provar', duvida: 'Dúvida', humano: 'Falar com pessoa' };
   function quandoPuri(iso) {
@@ -4389,9 +4391,11 @@
       return;
     }
     var ordem = { pedida: 0, agendada: 1 };
+    function grupoPuri(l) { return ordem[l.visita_status] != null ? ordem[l.visita_status] : (l.lead_profile ? 2 : 3); } // visitas pedidas, agendadas, convertidos, resto
     leads = leads.slice().sort(function (a, b) {
-      var oa = ordem[a.visita_status] != null ? ordem[a.visita_status] : 2, ob = ordem[b.visita_status] != null ? ordem[b.visita_status] : 2;
-      return oa - ob; // estável: dentro do grupo, mantém do mais novo pro mais antigo
+      var oa = grupoPuri(a), ob = grupoPuri(b);
+      if (oa !== ob) return oa - ob;
+      return oa === 2 ? (Number(b.prioridade) || 0) - (Number(a.prioridade) || 0) : 0; // convertidos: prioridade maior primeiro; senão mantém do mais novo pro mais antigo (sort estável)
     });
     function btnStatus(l, st, texto, perigo) {
       return '<button type="button" class="btn ' + (perigo ? 'btn-dark-outline' : 'btn-primary') + ' btn-sm" data-puri-status="' + esc(st) + '" data-puri-id="' + esc(l.id) + '">' + texto + '</button>';
@@ -4399,18 +4403,23 @@
     var linhas = leads.map(function (l) {
       var onde = [l.bairro, l.cidade].filter(Boolean).map(esc).join(', ');
       var origem = esc(l.pagina || '—') + ' · ' + esc(PURI_FLUXO[l.fluxo] || PURI_FLUXO[l.intencao] || l.fluxo || l.intencao || 'conversa');
-      var visita = '', acoes = '';
+      var visita = '', acoes = '', extra = '';
+      if (l.lead_profile) extra += '<br><span class="badge-pill">Virou conta</span>' + (Number(l.prioridade) ? ' <span class="badge-pill">Prioridade ' + esc(Number(l.prioridade)) + '/3</span>' : '');
+      var detPuri = [l.segmento ? (PURI_SEG[l.segmento] || l.segmento) : '', l.movimento ? (PURI_MOV[l.movimento] || l.movimento) : ''].filter(Boolean).map(esc).join(' · ');
+      if (detPuri) extra += '<br><span class="subtitle">' + detPuri + '</span>';
+      var probPuri = l.anotacoes && typeof l.anotacoes.problema === 'string' ? l.anotacoes.problema : '';
+      if (probPuri) extra += '<br><span class="badge-pill">' + esc(probPuri) + '</span>';
       if (l.visita_status) {
         var dia = PURI_DIA[l.visita_dia] || l.visita_dia || '';
         var per = l.visita_periodo === 'manha' ? 'manhã' : l.visita_periodo === 'tarde' ? 'tarde' : (l.visita_periodo || '');
         visita = '<strong>' + esc(dia) + (per ? ', de ' + esc(per) : '') + '</strong><br>' + esc(l.nome || '—') + '<br>' + esc(l.telefone || '—') +
-          '<br><span class="badge-pill">' + esc(PURI_STATUS[l.visita_status] || l.visita_status) + '</span>';
+          '<br><span class="badge-pill">' + esc(PURI_STATUS[l.visita_status] || l.visita_status) + '</span>' + (l.resumo ? '<br>' + esc(l.resumo) : '') + extra;
         var wa = waPuri(l);
         if (wa) acoes += '<a class="btn btn-green btn-sm" href="' + esc(wa) + '" target="_blank" rel="noopener">Chamar cliente no WhatsApp</a>';
         if (l.visita_status === 'pedida') acoes += btnStatus(l, 'agendada', 'Marcar agendada');
         if (l.visita_status === 'pedida' || l.visita_status === 'agendada') acoes += btnStatus(l, 'feita', 'Marcar feita') + btnStatus(l, 'cancelada', 'Cancelar', true);
       } else {
-        visita = (l.resumo ? esc(l.resumo) : '<span class="subtitle">Sem visita pedida.</span>') + (l.nome ? '<br>' + esc(l.nome) : '') + (l.telefone ? '<br>' + esc(l.telefone) : '');
+        visita = (l.resumo ? esc(l.resumo) : '<span class="subtitle">Sem visita pedida.</span>') + (l.nome ? '<br>' + esc(l.nome) : '') + (l.telefone ? '<br>' + esc(l.telefone) : '') + extra;
       }
       return '<tr>' +
         '<td>' + quandoPuri(l.criado_em) + '</td>' +

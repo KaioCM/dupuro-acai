@@ -179,6 +179,8 @@
     toggleRecovery(false);
   });
 
+  if (location.hash === '#recuperar') toggleRecovery(true); // link "Esqueci a senha" vindo da Puri
+
   document.getElementById('recoverySend').addEventListener('click', async function () {
     var em = document.getElementById('recoveryEmail');
     var errN = document.getElementById('recoveryError');

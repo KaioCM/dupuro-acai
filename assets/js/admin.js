@@ -816,7 +816,7 @@ var DupuroAdmin = (function () {
   async function getLeadsPuri() {
     var r = await client
       .from('qualificacao_leads')
-      .select('id, criado_em, pagina, fluxo, intencao, nome, telefone, cidade, bairro, visita_status, visita_dia, visita_periodo, visita_em, resumo, prioridade, movimento, lead_profile, status')
+      .select('id, criado_em, pagina, fluxo, intencao, nome, telefone, cidade, bairro, visita_status, visita_dia, visita_periodo, visita_em, resumo, prioridade, movimento, segmento, anotacoes, lead_profile, status')
       .eq('origem', 'puri')
       .order('criado_em', { ascending: false })
       .limit(200);

@@ -6,6 +6,8 @@
    MODO: padrão 'edge' (produção). Em localhost/127.0.0.1 vira 'mock' automaticamente,
    a menos que PURI.edgeLocal === true. PURI.api ('mock'|'edge') sobrescreve tudo.
    TESTE LOCAL: em localhost/127.0.0.1/[::1] a query ?puri=edge|mock sobrescreve o modo (ignorada em produção).
+   ENDPOINT: modo edge + host local → functions/v1/assistente-dev (ambiente de desenvolvimento); produção → functions/v1/assistente.
+   Em localhost, ?puri=prod força o endpoint de produção (só pra testar contra a produção quando necessário; ignorado fora de localhost).
    PÁGINA: PURI.pagina, senão detectada pelo caminho (/delivery/, /revenda/), senão 'home'.
 
    CONTRATO DA API (fixo) — POST JSON em `${DUPURO_SUPABASE_URL}/functions/v1/assistente`
@@ -34,7 +36,9 @@
   var PAGINA = cfg.pagina || (/\/delivery(\/|$)/.test(location.pathname) ? 'delivery' : /\/revenda(\/|$)/.test(location.pathname) ? 'revenda' : 'home');
   var LOCAL = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
   var QMODO = LOCAL ? (/[?&]puri=(edge|mock)(&|$)/.exec(location.search) || [])[1] : null;
-  var MODO = QMODO || cfg.api || ((LOCAL && cfg.edgeLocal !== true) ? 'mock' : MODO_PADRAO);
+  var QPROD = LOCAL && /[?&]puri=prod(&|$)/.test(location.search);
+  var FUNC = (LOCAL && !QPROD) ? 'assistente-dev' : 'assistente';
+  var MODO = QMODO || (QPROD ? 'edge' : null) || cfg.api || ((LOCAL && cfg.edgeLocal !== true) ? 'mock' : MODO_PADRAO);
 
   var WA_BASE = 'https://wa.me/5565992888228';
   // Rótulos do assunto do WhatsApp (F5). Nunca entra texto digitado pelo usuário.
@@ -90,6 +94,22 @@
     humano: { id: 'humano', t: 'Falar com uma pessoa', href: WA_BASE, hum: true } // href real montado por waLink() ao desenhar
   };
 
+  // ---- F4: revender (constantes) ----
+  var SEG_ROT = { delivery_acai: 'delivery de açaí', acaiteria: 'açaiteria', lanchonete_bar: 'lanchonete ou bar', sorveteria: 'sorveteria', feira_evento: 'feira ou evento', mercado_varejo: 'mercado ou varejo', revenda_casa: 'revenda em casa', outro: 'outro tipo de negócio' };
+  var SEG_CHIPS = [['acaiteria', 'Açaiteria'], ['lanchonete_bar', 'Lanchonete ou bar'], ['delivery_acai', 'Delivery de açaí'], ['sorveteria', 'Sorveteria'], ['feira_evento', 'Feira ou evento'], ['mercado_varejo', 'Mercado ou varejo'], ['revenda_casa', 'Revenda em casa'], ['outro', 'Outro']];
+  var MOV_CHIPS = [['ate20', 'Até 20'], ['20a50', '20 a 50'], ['50a100', '50 a 100'], ['100mais', 'Mais de 100']];
+  var RP = ['segmento', 'cidade', 'cidade_outra', 'bairro', 'objetivo', 'movimento', 'sim', 'aprof', 'palpite', 'palpite_txt', 'resumo', 'regras', 'conta'];
+  var FALA_NAO = 'Me conta o que é, então.';
+  var SIM_CHAVES = ['preco_copo', 'custo_caixa', 'copos_caixa', 'venda_caixa', 'sobra_caixa', 'copos_dia', 'caixas_semana', 'sobra_semana'];
+  var PRECOS = [18, 19, 20];
+  function temSeg(k) { return typeof k === 'string' && Object.prototype.hasOwnProperty.call(SEG_ROT, k); }
+  function sanSim(o) {
+    if (!o || typeof o !== 'object') return null;
+    var out = {};
+    SIM_CHAVES.forEach(function (k) { var n = Number(o[k]); out[k] = (o[k] != null && o[k] !== '' && isFinite(n)) ? n : null; });
+    return out.preco_copo == null ? null : out;
+  }
+
   // ---- Ícones inline ----
   var SVGNS = 'http://www.w3.org/2000/svg';
   function icone(d) {
@@ -100,7 +120,9 @@
   var I_CHAT = 'M4 5h16v11H9l-5 4z', I_X = 'M6 6l12 12M18 6L6 18', I_ENV = 'M4 12l16-8-6 16-3-7z', I_REC = 'M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7';
 
   // ---- Estado ----
-  function novoEstado() { return { msgs: [], chips: [], token: null, n: 0, etapa: 'abertura', assunto: null, v: null }; }
+  function novoEstado() { return { msgs: [], chips: [], token: null, n: 0, etapa: 'abertura', assunto: null, v: null, r: null }; }
+  var cc = null; // F4 passo 11 (conta): nome/telefone/e-mail/senha SÓ em memória; a senha só vai ao /auth/v1/signup (nunca a balão, E, sessionStorage, console ou à Edge da Puri)
+  var campoS; // input da senha (o textarea não tem type=password)
   var vNome = '', vTel = ''; // só em memória: nunca vão ao sessionStorage (o balão do nome guarda "(nome informado)"; o resumo guarda "você" no lugar do nome)
   var E = novoEstado();
   var aberto = false, ocupado = false, travado = null;
@@ -138,10 +160,22 @@
       if (c.href != null) {
         if (typeof c.href !== 'string' || !HREF_OK.test(c.href)) return; // href suspeito: descarta o chip
         r.chips.push({ id: String(c.id || 'l').slice(0, 20), t: c.t, href: c.href, hum: c.hum === true });
-      } else if (IDS_CHIP.indexOf(c.id) >= 0) {
+      } else if (IDS_CHIP.indexOf(c.id) >= 0 || (typeof c.id === 'string' && /^r_[a-z0-9_]{1,30}$/.test(c.id))) {
         r.chips.push({ id: c.id, t: c.t });
       }
     });
+    if (s.r && typeof s.r === 'object' && RP.indexOf(s.r.passo) >= 0) { // F4: só dados de baixa sensibilidade (nunca nome/telefone)
+      var q = s.r;
+      r.r = {
+        passo: q.passo, segmento: temSeg(q.segmento) ? q.segmento : null,
+        cidade: typeof q.cidade === 'string' ? q.cidade.slice(0, 60) : null, bairro: typeof q.bairro === 'string' ? q.bairro.slice(0, 60) : null,
+        movimento: MOV_CHIPS.some(function (m) { return m[0] === q.movimento; }) ? q.movimento : null,
+        preco: PRECOS.indexOf(+q.preco) >= 0 ? +q.preco : null, sim: sanSim(q.sim), escN: Math.min(4, Math.max(0, +q.escN || 0)),
+        apOk: q.apOk === true, palOk: q.palOk === true,
+        resumo: sanTxt(q.resumo, 300) || null, problema: sanTxt(q.problema, 40) || null, resI: Math.min(MAX_BALOES, Math.max(0, Math.floor(+q.resI) || 0))
+      };
+      if (q.ap && typeof q.ap === 'object' && sanTxt(q.ap.p, 200)) r.r.ap = { p: sanTxt(q.ap.p, 200), rs: (Array.isArray(q.ap.rs) ? q.ap.rs : []).map(function (x) { return sanTxt(x, 60); }).filter(Boolean).slice(0, 4) };
+    }
     if (semChips) r.chips = [CH.humano];
     return r;
   }
@@ -151,6 +185,28 @@
   // ---- Adaptador de API ----
   var api = MODO === 'edge' ? apiEdge() : apiMock();
 
+  // Cadastro direto no Supabase Auth (confirmação de e-mail desligada: devolve a sessão na hora). A senha só trafega aqui.
+  function signupReal(d) {
+    var base = window.DUPURO_SUPABASE_URL, k = window.DUPURO_SUPABASE_ANON_KEY;
+    if (!base || !k) return Promise.resolve({ r: 'erro' });
+    var ctl = ('AbortController' in window) ? new AbortController() : null, t = setTimeout(function () { if (ctl) ctl.abort(); }, TIMEOUT + 5000);
+    return fetch(base + '/auth/v1/signup', {
+      method: 'POST', signal: ctl ? ctl.signal : undefined,
+      headers: { 'apikey': k, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: d.email, password: d.senha, data: d.data })
+    }).then(function (res) {
+      return res.json().catch(function () { return {}; }).then(function (j) {
+        j = j && typeof j === 'object' ? j : {};
+        if (res.status >= 200 && res.status < 300) return j.access_token ? { r: 'ok', access_token: j.access_token } : { r: 'erro' };
+        if (res.status >= 500 || res.status === 429) return { r: 'erro' };
+        var txt = [j.msg, j.error_description, j.message, j.error_code, j.error].join(' ').toLowerCase();
+        if (/already|registered|exists/.test(txt)) return { r: 'existe' };
+        if (/password|weak|senha/.test(txt)) return { r: 'senha' };
+        return { r: 'erro' };
+      });
+    }).catch(function () { return { r: 'erro' }; }).then(function (x) { clearTimeout(t); return x; });
+  }
+
   function apiEdge() {
     function post(corpo) {
       var base = window.DUPURO_SUPABASE_URL, k = window.DUPURO_SUPABASE_ANON_KEY;
@@ -158,7 +214,7 @@
       var ctl = ('AbortController' in window) ? new AbortController() : null;
       var t = setTimeout(function () { if (ctl) ctl.abort(); }, TIMEOUT), t2;
       return Promise.race([
-        fetch(base + '/functions/v1/assistente', {
+        fetch(base + '/functions/v1/' + FUNC, {
           method: 'POST', signal: ctl ? ctl.signal : undefined,
           headers: { 'apikey': k, 'Authorization': 'Bearer ' + k, 'Content-Type': 'application/json' },
           body: JSON.stringify(corpo)
@@ -173,6 +229,13 @@
       catalogo: function () { return post({ acao: 'catalogo' }); },
       visita: function (token, d) {
         return post({ acao: 'visita', token: token, cidade: d.cidade, bairro: d.bairro, dia: d.dia, periodo: d.periodo, nome: d.nome, telefone: d.telefone });
+      },
+      converter: function (token, at) { return post({ acao: 'converter', token: token, access_token: at }); },
+      signup: signupReal,
+      revenda: function (token, d) {
+        var b = { acao: 'revenda', token: token };
+        Object.keys(d).forEach(function (k) { b[k] = d[k]; });
+        return post(b);
       }
     };
   }
@@ -188,7 +251,7 @@
       if (/\?|horario|entrega|endereco|onde|quanto|como|qual|preco|pagamento|duvida|pergunta/.test(t)) return 'duvida';
       return 'incerto';
     }
-    var visitasMock = 0;
+    var visitasMock = 0, movMock = 'ate20', COPOS_MOCK = { ate20: 10, '20a50': 35, '50a100': 75, '100mais': 120 };
     return {
       iniciar: function () { return atraso({ ok: true, token: 'mock-' + Date.now().toString(36) }); },
       catalogo: function () { return atraso({ ok: true, delivery: { a_partir_de: 25, produto_id: 21 }, atacado: { caixa10: { preco: 145, litros: 10 }, caixa5: null } }); },
@@ -200,6 +263,45 @@
         visitasMock++;
         return atraso({ ok: true });
       },
+      revenda: function (token, c) {
+        if (c.passo === 'segmento') {
+          var ts = norm(String(c.texto || '')), s = 'outro';
+          if (/delivery|ifood|entrega/.test(ts)) s = 'delivery_acai';
+          else if (/acaiteria|acai/.test(ts)) s = 'acaiteria';
+          else if (/lanchonete|bar|restaurante|padaria/.test(ts)) s = 'lanchonete_bar';
+          else if (/sorvet/.test(ts)) s = 'sorveteria';
+          else if (/feira|evento|festa/.test(ts)) s = 'feira_evento';
+          else if (/mercado|varejo|mercearia|loja/.test(ts)) s = 'mercado_varejo';
+          else if (/casa|vizinh|renda/.test(ts)) s = 'revenda_casa';
+          return atraso({ ok: true, segmento: s });
+        }
+        if (c.passo === 'perfil') {
+          if (!c.cidade || !Object.prototype.hasOwnProperty.call(COPOS_MOCK, c.movimento)) return atraso({ ok: false, motivo: 'dados_invalidos' });
+          movMock = c.movimento;
+          var nc = norm(String(c.cidade)).trim();
+          return atraso({ ok: true, fora_area: !(/cuiab|varzea/.test(nc) || nc === 'vg'), coerente: null });
+        }
+        if (c.passo === 'escutar') return atraso({ ok: true, anotacoes: String(c.texto || '').length >= 15 ? ['Quer revender açaí', 'Quer saber de preço no atacado'] : null });
+        if (c.passo === 'simulacao') {
+          var p = Number(c.preco_copo);
+          if (p !== 18 && p !== 19 && p !== 20) return atraso({ ok: false, motivo: 'dados_invalidos' });
+          var cd = COPOS_MOCK[movMock], cx = Math.floor(cd * 6 / 20), venda = p * 20, sobra = venda - 145;
+          return atraso({ ok: true, simulacao: { preco_copo: p, custo_caixa: 145, copos_caixa: 20, venda_caixa: venda, sobra_caixa: sobra, copos_dia: cd, caixas_semana: cx, sobra_semana: Math.round(cx * sobra * 100) / 100 } });
+        }
+        if (c.passo === 'aprofundar') return atraso({ ok: true, pergunta: 'Hoje, o que mais te trava pra vender açaí?', respostas: ['Não sei quanto pedir', 'Não tenho freezer', 'Não sei o preço certo'] });
+        if (c.passo === 'aprofundar_resp') return atraso({ ok: true });
+        if (c.passo === 'palpite') return atraso({ ok: true, palpite: 'Meu palpite: o que te segura é não saber quanto vai sair por semana. Acertei?' });
+        if (c.passo === 'palpite_resp') return atraso(c.valor === 'mosca' || c.valor === 'parte' || c.valor === 'nao' ? { ok: true } : { ok: false, motivo: 'dados_invalidos' });
+        if (c.passo === 'resumo') return atraso({ ok: true, resumo: 'Você quer vender açaí no copo e precisa de segurança no volume do pedido.', problema: 'Volume do pedido' });
+        return atraso({ ok: false, motivo: 'dados_invalidos' });
+      },
+      signup: function (d) {
+        if (/falha/.test(norm(String(d.email)))) return atraso({ r: 'erro' });
+        if (/existe/.test(norm(String(d.email)))) return atraso({ r: 'existe' });
+        if (String(d.senha).length < 6 || d.senha === '123') return atraso({ r: 'senha' });
+        return atraso({ r: 'ok', access_token: 'mock-access-token' });
+      },
+      converter: function () { return atraso({ ok: true }); },
       mensagem: function (token, etapa, texto) {
         var t = norm(texto);
         if (etapa === 'abertura') return atraso({ ok: true, tipo: 'intencao', intencao: intencao(t) });
@@ -212,7 +314,7 @@
   }
 
   // ---- DOM ----
-  var btn, painel, msgs, form, campo, env, topoHum;
+  var btn, painel, msgs, form, campo, env, topoHum, notasBox;
   function el(tag, cls, txt) { var e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; }
 
   function montar() {
@@ -242,9 +344,11 @@
     form = el('form', 'puri-form'); form.setAttribute('autocomplete', 'off');
     campo = el('textarea'); campo.rows = 1; campo.maxLength = MAX_CHARS; campo.placeholder = 'Escreva aqui'; campo.setAttribute('aria-label', 'Sua mensagem');
     env = el('button', 'puri-env'); env.type = 'submit'; env.setAttribute('aria-label', 'Enviar'); env.appendChild(icone(I_ENV));
-    form.appendChild(campo); form.appendChild(env);
+    campoS = el('input'); campoS.type = 'text'; campoS.hidden = true; campoS.maxLength = 72; campoS.setAttribute('autocomplete', 'off'); campoS.setAttribute('aria-label', 'Sua senha');
+    form.appendChild(campo); form.appendChild(campoS); form.appendChild(env);
 
-    painel.appendChild(topo); painel.appendChild(msgs); painel.appendChild(form);
+    notasBox = el('div', 'puri-notas'); notasBox.hidden = true;
+    painel.appendChild(topo); painel.appendChild(msgs); painel.appendChild(notasBox); painel.appendChild(form);
     document.body.appendChild(btn); document.body.appendChild(painel);
 
     btn.addEventListener('click', function () { aberto ? fechar() : abrir(); });
@@ -255,8 +359,11 @@
     campo.addEventListener('keydown', function (ev) {
       if (ev.key === 'Enter' && !ev.shiftKey && !ev.isComposing) { ev.preventDefault(); enviar(); }
     });
+    campoS.addEventListener('keydown', function (ev) {
+      if (ev.key === 'Enter' && !ev.isComposing) { ev.preventDefault(); enviar(); }
+    });
     campo.addEventListener('input', function () {
-      campo.style.height = 'auto'; campo.style.height = Math.min(campo.scrollHeight, 96) + 'px';
+      campo.style.height = 'auto'; campo.style.height = Math.min(campo.scrollHeight, 96) + 'px'; agendarEscuta();
     });
     document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape' && aberto) fechar(); });
     window.addEventListener('resize', function () { if (aberto) travarScroll(); ajustarBotao(); });
@@ -266,13 +373,14 @@
   function atualizarCampo() {
     var fim = E.etapa === 'fim';
     campo.disabled = fim;
+    campo.maxLength = (E.r && (E.r.passo === 'aprof' || E.r.passo === 'palpite_txt')) ? 300 : MAX_CHARS; // a Edge aceita 300 nesses passos
     env.disabled = fim || ocupado;
     campo.placeholder = fim ? T.fimCampo : 'Escreva aqui';
   }
   function movel() { return window.innerWidth < 640 || (window.matchMedia && matchMedia('(pointer: coarse)').matches); }
   // Desktop: foca o campo. Celular: foca o painel (não abre o teclado).
   function focarEntrada() {
-    if (movel() || campo.disabled) painel.focus({ preventScroll: true }); else campo.focus();
+    if (movel() || campo.disabled) painel.focus({ preventScroll: true }); else (campoS && !campoS.hidden ? campoS : campo).focus();
   }
 
   // ---- Abrir / fechar ----
@@ -294,6 +402,7 @@
   }
   function fechar() {
     aberto = false;
+    if (cc) { limparConta(); campoS.value = ''; }
     painel.classList.remove('on'); painel.inert = true; btn.classList.remove('puri-btn-aberto');
     btn.setAttribute('aria-expanded', 'false');
     destravar();
@@ -338,18 +447,25 @@
   }
   function desenharTudo() {
     msgs.textContent = '';
-    E.msgs.forEach(function (m) { addBalao(m.de, m.t, false); });
+    var rc = E.r && E.r.resumo ? E.r : null;
+    if (rc && rc.resI === 0) msgs.appendChild(cartaoResumo(rc.resumo, rc.problema));
+    E.msgs.forEach(function (m, i) { addBalao(m.de, m.t, false); if (rc && rc.resI === i + 1) msgs.appendChild(cartaoResumo(rc.resumo, rc.problema)); });
+    if (E.r && E.r.passo === 'sim' && E.r.sim) msgs.appendChild(cartaoSim(E.r.sim));
     desenharChips(E.chips, false);
     atualizarCampo();
     rolar(true);
   }
   function guardar(de, t) {
     E.msgs.push({ de: de, t: t });
-    if (E.msgs.length > MAX_BALOES) E.msgs = E.msgs.slice(-MAX_BALOES);
+    if (E.msgs.length > MAX_BALOES) { var corte = E.msgs.length - MAX_BALOES; E.msgs = E.msgs.slice(-MAX_BALOES); if (E.r && E.r.resumo) E.r.resI = Math.max(0, (E.r.resI || 0) - corte); }
     salvar();
   }
   function podarDom() { var b = baloes(); while (b.length > MAX_BALOES) { b[0].remove(); b = baloes(); } }
 
+  function sanTxt(t, n) { return typeof t === 'string' ? t.replace(/[<>]/g, '').replace(/\s+/g, ' ').trim().slice(0, n) : ''; }
+  function mascararObj(t) { // guardado: sequências de 4+ dígitos viram "••••", e-mails viram "[e-mail]"
+    return String(t).replace(/[\w.+-]+@[\w-]+(\.[\w-]+)+/g, '[e-mail]').replace(/\d(?:[\s().-]*\d){3,}/g, '••••');
+  }
   function usuarioDiz(t, guardado) { limparChips(); E.chips = []; guardar('u', guardado === undefined ? t : guardado); addBalao('u', t); podarDom(); rolar(); }
 
   // Puri fala: "•••" por 0,3–1 s (sem atraso em reduced-motion), depois balão + chips.
@@ -376,7 +492,7 @@
 
   function recomecar() {
     ger++;
-    ultimoTexto = ''; vNome = ''; vTel = '';
+    ultimoTexto = ''; vNome = ''; vTel = ''; limparConta(); rRetry = null; clearTimeout(escTimer); escVoo = false; escUltimo = ''; limparNotas();
     E = novoEstado();
     ocupado = false; salvar(); msgs.textContent = ''; atualizarCampo(); topoHum.href = waLink();
     comecar(); focarEntrada();
@@ -384,14 +500,12 @@
 
   var ultimoTexto = '';
   function falhaTemp() { return puriDiz(T.erroTemp, [{ id: 'retry', t: 'Tentar de novo' }, CH.humano]); }
-  function falhaF6(textoFala) { E.etapa = 'fim'; return puriDiz(textoFala || T.limite, [CH.humano]); }
+  function falhaF6(textoFala) { limparConta(); E.etapa = 'fim'; return puriDiz(textoFala || T.limite, [CH.humano]); }
 
   // Destino de cada opção (chip ou intenção vinda de texto livre). Sem guard de `ocupado`.
   function irPara(id) {
     switch (id) {
-      case 'revender': // TODO Etapa 4 (próximo lote): F4 real
-        limparVisita(); E.etapa = 'abertura'; E.assunto = 'revender';
-        return puriDiz(T.revender, [{ id: 'l', t: 'Ver como funciona a revenda', href: PAGINA === 'home' ? './revenda/#revenda' : (PAGINA === 'delivery' ? '../revenda/#revenda' : '#revenda') }, CH.humano]);
+      case 'revender': return iniciarR();
       case 'consumir': return irConsumir();
       case 'provar':
         limparVisita(); E.etapa = 'abertura'; E.assunto = 'provar';
@@ -434,7 +548,7 @@
   }
 
   // ---- F3: provar (fábrica ou visita do vendedor) ----
-  function limparVisita() { vNome = ''; vTel = ''; E.v = null; }
+  function limparVisita() { vNome = ''; vTel = ''; limparConta(); E.v = null; E.r = null; rRetry = null; clearTimeout(escTimer); limparNotas(); }
   function irFabrica() {
     limparVisita(); E.etapa = 'abertura'; E.assunto = 'provar';
     return puriDiz(T.fabrica, [{ id: 'l', t: 'Ver no mapa', href: MAPA_FABRICA }, { id: 'revender', t: 'Quero revender' }]);
@@ -552,10 +666,425 @@
     return falhaTemp(); // erro | timeout | rede
   }
 
+  // ---- F4: revender (um passo por vez; ROTEIRO F4 passos 1-5 e 10) ----
+  var rRetry = null, escTimer = 0, escVoo = false, escUltimo = '';
+  var FORA = 'Entregamos só em Cuiabá e Várzea Grande. De outra cidade, dá pra revender retirando na fábrica.';
+  var FALA_R = { segmento: 'Que tipo de negócio você tem (ou quer ter)?', cidade: 'Em que cidade?', cidade_outra: 'Qual cidade?', bairro: 'E o bairro?', objetivo: 'O que você quer com a revenda? Pode contar do seu jeito.', movimento: 'Quantos copos por dia você vende (ou imagina vender)?' };
+  var T_SIM = 'Fiz uma conta rápida com o seu movimento.';
+  var T_SEM_CUSTO = 'Não consegui puxar o preço do atacado agora. Mostro só quanto você vende por caixa.';
+  var T_REGRAS = 'Como funciona: o primeiro pedido não tem mínimo; depois, pedidos a partir de 30 L (3 caixas de 10 L ou 6 de 5 L). Granola e complementos não entram na conta. Entregamos em Cuiabá e Várzea Grande, ou você retira na fábrica.';
+  function sa(s) { return s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''); }
+  function fmtR(v) {
+    var n = Math.abs(v - Math.round(v)) < 0.005 ? String(Math.round(v)) : v.toFixed(2).replace('.', ',');
+    var p = n.split(','); p[0] = p[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    return 'R$ ' + p.join(',');
+  }
+  function chipsR(p) {
+    switch (p) {
+      case 'segmento': return SEG_CHIPS.map(function (s) { return { id: 'r_seg_' + s[0], t: s[1] }; });
+      case 'cidade': return [{ id: 'r_cid_cuiaba', t: 'Cuiabá' }, { id: 'r_cid_vg', t: 'Várzea Grande' }, { id: 'r_cid_outra', t: 'Outra cidade' }];
+      case 'bairro': case 'objetivo': return [{ id: 'r_pular', t: 'Pular' }];
+      case 'movimento': return MOV_CHIPS.map(function (m) { return { id: 'r_mv_' + m[0], t: m[1] }; });
+      case 'sim': return PRECOS.map(function (n) { return { id: 'r_preco_' + n, t: 'R$ ' + n }; }).concat([{ id: 'r_continuar', t: 'Continuar' }]);
+    }
+    return [];
+  }
+  function perguntarR(p, prefixo) {
+    if (!E.r) return;
+    E.r.passo = p; salvar();
+    if (p !== 'objetivo') { clearTimeout(escTimer); limparNotas(); }
+    return puriDiz((prefixo ? prefixo + ' ' : '') + FALA_R[p], chipsR(p));
+  }
+  function iniciarR() {
+    limparVisita(); E.etapa = 'abertura'; E.assunto = 'revender';
+    E.r = { passo: 'segmento', segmento: null, cidade: null, bairro: null, movimento: null, preco: null, sim: null, escN: 0 };
+    return perguntarR('segmento');
+  }
+  // Roda fn(g) com o campo travado; falhas viram "Tentar de novo" (rRetry refaz o mesmo passo).
+  function rede(fn) {
+    var g = ger; ocupado = true; atualizarCampo();
+    return Promise.resolve().then(function () { return fn(g); }).catch(function () { if (g === ger) return falhaTemp(); }).then(function () {
+      if (g !== ger) return;
+      ocupado = false; atualizarCampo(); if (aberto) focarEntrada();
+    });
+  }
+  function rodarR(fn) { rRetry = function () { return rede(fn); }; return rede(fn); }
+  // Chamada da Edge `revenda`: garante token, renova uma vez se token_invalido.
+  function chamarR(corpo, g, tok) {
+    return garantirToken(g).then(function (ok) {
+      if (g !== ger) return { velho: true };
+      if (ok === 'limite') return { limite: true };
+      if (ok !== 'ok') return { temp: true };
+      return api.revenda(E.token, corpo).then(function (r) {
+        if (g !== ger) return { velho: true };
+        if (r && r.ok) return { r: r };
+        var m = r && r.motivo;
+        if (m === 'limite_conversa' || m === 'limite_dia') return { limite: true };
+        if (m === 'token_invalido' && !tok) { E.token = null; salvar(); return chamarR(corpo, g, true); }
+        return { temp: true };
+      });
+    });
+  }
+  function falhaR(x) {
+    if (!x || x.velho) return;
+    if (x.limite) { E.r = null; return falhaF6(); }
+    return falhaTemp();
+  }
+  function segTexto(texto, g) {
+    return chamarR({ passo: 'segmento', texto: texto }, g).then(function (x) {
+      if (!x.r) return falhaR(x);
+      if (!E.r) return;
+      var s = temSeg(x.r.segmento) ? x.r.segmento : 'outro';
+      E.r.segmento = s; rRetry = null;
+      return perguntarR('cidade', 'Anotei: ' + SEG_ROT[s] + '.');
+    });
+  }
+  function definirCidade(texto) {
+    var n = sa(texto), c = /cuiab/.test(n) ? 'Cuiabá' : (/varzea/.test(n) ? 'Várzea Grande' : null);
+    E.r.cidade = c || texto.slice(0, 60);
+    return perguntarR('bairro', '');
+  }
+  function perfilR(g) {
+    var r = E.r, corpo = { passo: 'perfil', segmento: r.segmento || 'outro', cidade: r.cidade || 'Cuiabá', movimento: r.movimento };
+    if (r.bairro) corpo.bairro = r.bairro;
+    return chamarR(corpo, g).then(function (x) {
+      if (!x.r) return falhaR(x);
+      if (!E.r) return;
+      if (x.r.fora_area === true) return puriDiz(FORA).then(function () { return g === ger && E.r ? simR(18, g, T_SIM) : null; });
+      return simR(18, g, T_SIM);
+    });
+  }
+  function simR(preco, g, fala) {
+    return chamarR({ passo: 'simulacao', preco_copo: preco }, g).then(function (x) {
+      if (!x.r) return falhaR(x);
+      if (!E.r) return;
+      var s = sanSim(x.r.simulacao);
+      if (!s) return falhaTemp();
+      s.preco_copo = preco;
+      E.r.preco = preco; E.r.sim = s; E.r.passo = 'sim'; rRetry = null; salvar();
+      var ficha = function () {
+        if (g !== ger) return;
+        Array.prototype.forEach.call(msgs.querySelectorAll('.puri-sim'), function (n) { n.remove(); });
+        limparChips(); msgs.appendChild(cartaoSim(s)); E.chips = chipsR('sim'); salvar(); desenharChips(E.chips); rolar();
+      };
+      if (s.custo_caixa == null) fala = T_SEM_CUSTO;
+      if (fala) return puriDiz(fala, []).then(ficha);
+      ficha();
+    });
+  }
+  function cartaoSim(s) {
+    var c = el('div', 'puri-sim'); c.setAttribute('role', 'group'); c.setAttribute('aria-label', 'Simulação por caixa');
+    function lin(cls, partes) {
+      var p = el('p', 'puri-sim-l' + (cls ? ' ' + cls : ''));
+      partes.forEach(function (x) { if (typeof x === 'string') p.appendChild(document.createTextNode(x)); else p.appendChild(el('strong', 'puri-sim-n', x.n)); });
+      c.appendChild(p);
+    }
+    lin('puri-sim-t', ['1 caixa de 10 L ≈ ' + Math.round(s.copos_caixa || 20) + ' copos de 500 ml']);
+    if (s.venda_caixa != null) lin('', ['Vendendo a ' + fmtR(s.preco_copo) + ': ', { n: fmtR(s.venda_caixa) }, ' por caixa']);
+    if (s.custo_caixa != null) {
+      lin('', ['A caixa sai ', { n: fmtR(s.custo_caixa) }, ' no atacado']);
+      if (s.sobra_caixa != null) lin('puri-sim-sobra', ['Sobra ≈ ', { n: fmtR(s.sobra_caixa) }, ' por caixa']);
+      if (s.caixas_semana != null && s.sobra_semana != null) lin('', ['No seu movimento: ≈ ', { n: Math.round(s.caixas_semana) + ' caixas' }, ' por semana → ≈ ', { n: fmtR(s.sobra_semana) }, ' por semana']);
+    }
+    c.appendChild(el('p', 'puri-sim-nota', 'Estimativa, sem contar copo, cobertura e outros custos.'));
+    return c;
+  }
+  // Escuta ao vivo (passo "objetivo"): debounce 1200 ms, 1 chamada em voo, resposta velha descartada.
+  function limparNotas() { escUltimo = ''; if (notasBox) { notasBox.hidden = true; notasBox.textContent = ''; } }
+  function mostrarNotas(arr) {
+    var ul = el('ul');
+    arr.slice(0, 6).forEach(function (a) { if (typeof a === 'string' && a.trim()) ul.appendChild(el('li', null, a.trim().slice(0, 120))); });
+    if (!ul.children.length) return;
+    notasBox.textContent = ''; notasBox.appendChild(el('strong', null, 'O que já anotamos')); notasBox.appendChild(ul); notasBox.hidden = false;
+  }
+  function agendarEscuta() {
+    clearTimeout(escTimer);
+    if (!E.r || E.r.passo !== 'objetivo') return;
+    var t = limpar(campo.value);
+    if (t.length < 25 || t.length - escUltimo.length < 20 || (E.r.escN || 0) >= 4) return;
+    escTimer = setTimeout(function () { escutar(t); }, 1200);
+  }
+  function escutar(t) {
+    if (escVoo || ocupado || !E.r || E.r.passo !== 'objetivo') return;
+    if ((E.r.escN || 0) >= 4) return;
+    var g = ger; escVoo = true; escUltimo = t; E.r.escN = (E.r.escN || 0) + 1; salvar();
+    chamarR({ passo: 'escutar', texto: t, final: false }, g).then(function (x) {
+      if (g !== ger || ocupado || !E.r || E.r.passo !== 'objetivo') return;
+      if (x.r && Array.isArray(x.r.anotacoes) && x.r.anotacoes.length) mostrarNotas(x.r.anotacoes);
+    }).catch(function () {}).then(function () { escVoo = false; agendarEscuta(); });
+  }
+  function esperaEscuta() { return new Promise(function (ok) { (function t(n) { if (!escVoo || n > 60) return ok(); setTimeout(function () { t(n + 1); }, 100); })(0); }); }
+  function objetivoFinal(texto, g) {
+    return esperaEscuta().then(function () {
+      if (g !== ger) return null;
+      return chamarR({ passo: 'escutar', texto: texto, final: true }, g);
+    }).then(function (x) {
+      if (!x || g !== ger || !E.r) return;
+      if (!x.r) return falhaR(x);
+      rRetry = null;
+      var an = Array.isArray(x.r.anotacoes) ? x.r.anotacoes.filter(function (a) { return typeof a === 'string' && a.trim(); }).slice(0, 6).map(function (a) { return a.trim().replace(/[.\s]+$/, ''); }) : [];
+      return perguntarR('movimento', an.length ? 'Anotei: ' + an.join('; ') + '.' : 'Anotado.');
+    });
+  }
+  // ---- F4 passos 6-8: aprofundamento, palpite, resumo (tudo da IA entra só por textContent, com corte defensivo) ----
+  function pontos() {
+    if (REDUZIDO) return function () {};
+    var d = el('div', 'puri-b p puri-dig'); d.setAttribute('aria-hidden', 'true');
+    d.appendChild(el('i')); d.appendChild(el('i')); d.appendChild(el('i'));
+    msgs.appendChild(d); rolar();
+    return function () { d.remove(); };
+  }
+  function aprofR(g) {
+    rRetry = function () { return rede(aprofR); };
+    E.r.passo = 'aprof'; limparChips(); E.chips = []; salvar();
+    var off = pontos();
+    return chamarR({ passo: 'aprofundar' }, g).then(function (x) {
+      off();
+      if (!x.r) return falhaR(x);
+      if (!E.r) return;
+      var q = sanTxt(x.r.pergunta, 200);
+      if (!q) { E.r.apOk = true; return palpiteR(g); }
+      var rs = (Array.isArray(x.r.respostas) ? x.r.respostas : []).map(function (t) { return sanTxt(t, 60); }).filter(Boolean).slice(0, 4);
+      E.r.ap = { p: q, rs: rs }; rRetry = null;
+      return puriDiz(q, rs.map(function (t, i) { return { id: 'r_ap_' + i, t: t }; }).concat([{ id: 'r_ap_pular', t: 'Pular' }]));
+    });
+  }
+  function aprofResp(texto) {
+    texto = String(texto || '').slice(0, 300);
+    E.r.apOk = true; salvar();
+    return rodarR(function (g) {
+      return chamarR({ passo: 'aprofundar_resp', texto: texto }, g).then(function (x) {
+        if (!x.r) return falhaR(x);
+        if (!E.r) return;
+        return palpiteR(g);
+      });
+    });
+  }
+  function palpiteR(g) {
+    rRetry = function () { return rede(palpiteR); };
+    E.r.passo = 'palpite'; limparChips(); E.chips = []; salvar();
+    var off = pontos();
+    return chamarR({ passo: 'palpite' }, g).then(function (x) {
+      off();
+      if (!x.r) return falhaR(x);
+      if (!E.r) return;
+      var p = sanTxt(x.r.palpite, 220);
+      if (!p) { E.r.palOk = true; return resumoR(g); }
+      rRetry = null;
+      return puriDiz(p, [{ id: 'r_pp_mosca', t: 'Na mosca' }, { id: 'r_pp_parte', t: 'Em parte' }, { id: 'r_pp_nao', t: 'Não, é outra coisa' }]);
+    });
+  }
+  function palpiteResp(valor, texto) {
+    E.r.palOk = true; salvar();
+    return rodarR(function (g) {
+      var c = { passo: 'palpite_resp', valor: valor };
+      if (texto) c.texto = String(texto).slice(0, 300);
+      return chamarR(c, g).then(function (x) {
+        if (!x.r) return falhaR(x);
+        if (!E.r) return;
+        return resumoR(g);
+      });
+    });
+  }
+  function resumoR(g) {
+    rRetry = function () { return rede(resumoR); };
+    E.r.passo = 'resumo'; limparChips(); E.chips = []; salvar();
+    var off = pontos();
+    return chamarR({ passo: 'resumo' }, g).then(function (x) {
+      off();
+      if (!x.r) return falhaR(x);
+      if (!E.r) return;
+      var re = sanTxt(x.r.resumo, 300);
+      if (!re) return irRegras();
+      E.r.resumo = re; E.r.problema = sanTxt(x.r.problema, 40) || null; E.r.resI = E.msgs.length; salvar();
+      msgs.appendChild(cartaoResumo(E.r.resumo, E.r.problema)); rolar();
+      return irRegras();
+    });
+  }
+  function cartaoResumo(resumo, problema) {
+    var c = el('div', 'puri-resumo'); c.setAttribute('role', 'group'); c.setAttribute('aria-label', 'O que ficou do que você contou');
+    c.appendChild(el('p', 'puri-resumo-t', 'O que ficou do que você contou'));
+    c.appendChild(el('p', 'puri-resumo-l', resumo));
+    if (problema) c.appendChild(el('span', 'puri-resumo-pilula', problema));
+    return c;
+  }
+  // Retomada após recarregar no meio de um destes passos (o retorno da Edge não estava salvo).
+  function retomarR() {
+    var r = E.r, p = r.passo, retry = E.chips.some(function (c) { return c.id === 'retry'; }), vazio = !E.chips.length || retry;
+    if (p === 'aprof' && vazio) return rodarR(function (g) { return r.apOk ? palpiteR(g) : aprofR(g); });
+    if (p === 'palpite' && vazio) return rodarR(function (g) { return r.palOk ? resumoR(g) : palpiteR(g); });
+    if (p === 'palpite_txt' && (retry || (r.palOk && !E.chips.length))) return rodarR(function (g) { return r.palOk ? resumoR(g) : puriDiz(FALA_NAO, []); });
+    if (p === 'resumo') return rodarR(function () { return r.resumo ? irRegras() : resumoR(ger); });
+  }
+  function irRegras() {
+    E.r.passo = 'regras'; rRetry = null; salvar();
+    return puriDiz(T_REGRAS, [{ id: 'r_criar', t: 'Criar minha conta' }, CH.humano]);
+  }
+  // ---- F4 passo 11: criar a conta dentro do chat (um dado por vez; tudo só em memória) ----
+  var MAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  function modoSenha(on, ph) {
+    if (!campoS) return;
+    if (on) { campoS.type = 'password'; campoS.setAttribute('autocomplete', 'new-password'); campoS.placeholder = ph || ''; campoS.hidden = false; campo.hidden = true; }
+    else { campoS.value = ''; campoS.type = 'text'; campoS.setAttribute('autocomplete', 'off'); campoS.placeholder = ''; campoS.hidden = true; campo.hidden = false; }
+  }
+  function limparConta() { cc = null; modoSenha(false); }
+  function loginHref(hash) { return (PAGINA === 'home' ? './' : '../') + 'area-cliente/login.html' + (hash || ''); }
+  function perguntarConta(p, fala) {
+    cc.p = p; E.r.passo = 'conta'; salvar();
+    var f = fala, chips = [CH.humano];
+    if (p === 'nome') f = f || 'Pra criar sua conta, me diz seu nome.';
+    else if (p === 'tel') f = f || 'Seu WhatsApp com DDD?';
+    else if (p === 'email') f = f || 'Seu e-mail?';
+    else if (p === 'senha') { modoSenha(true, 'Crie uma senha (mín. 6)'); f = f || 'Crie uma senha (mínimo 6 caracteres).'; }
+    else if (p === 'senha2') { modoSenha(true, 'Repita a senha'); f = f || 'Repete a senha pra conferir.'; }
+    else if (p === 'aviso') { modoSenha(false); f = f || 'Posso te mandar avisos do seu cadastro e pedidos no WhatsApp?'; chips = [{ id: 'r_c_sim', t: 'Pode sim' }, { id: 'r_c_nao', t: 'Prefiro não' }]; }
+    return puriDiz(f, chips);
+  }
+  function iniciarConta(prefixo) {
+    cc = { p: 'nome', nome: '', tel: '', email: '', senha: '', s1: '', aceita: false };
+    return perguntarConta('nome', (prefixo ? prefixo + ' ' : '') + 'Pra criar sua conta, me diz seu nome.');
+  }
+  function retomarConta() { return iniciarConta('Pra continuar, preciso dos seus dados de novo.'); }
+  function enviarConta() {
+    var g = ger, r = enviarContaPasso();
+    if (!r || !r.then) return;
+    ocupado = true; atualizarCampo();
+    var fim = function () { if (g !== ger) return; ocupado = false; atualizarCampo(); if (aberto) focarEntrada(); };
+    r.then(fim, fim);
+  }
+  function enviarContaPasso() {
+    var p = cc.p, s, texto;
+    if (p === 'senha' || p === 'senha2') {
+      s = campoS.value; campoS.value = '';
+      if (!s) return;
+      usuarioDiz('••••••', '••••••'); // a senha nunca aparece em balão
+      if (p === 'senha') {
+        if (s.length < 6 || s.length > 72) return perguntarConta('senha', 'Essa senha não foi aceita. Tenta uma com pelo menos 6 caracteres.');
+        cc.s1 = s; return perguntarConta('senha2');
+      }
+      if (s !== cc.s1) { cc.s1 = ''; return perguntarConta('senha', 'As senhas não bateram. Vamos de novo.'); }
+      cc.senha = s; cc.s1 = '';
+      return perguntarConta('aviso');
+    }
+    texto = limpar(campo.value);
+    if (!texto) return;
+    campo.value = ''; campo.style.height = 'auto';
+    if (p === 'nome') {
+      if (texto.length < 2 || texto.length > 80) return puriDiz(T.nomeRuim, [CH.humano]);
+      cc.nome = texto; usuarioDiz(texto, '(nome informado)'); return perguntarConta('tel');
+    }
+    if (p === 'tel') {
+      var d = normalizarTel(texto);
+      if (!d) return puriDiz(T.telRuim, [CH.humano]);
+      cc.tel = d; usuarioDiz(mascararTel(d)); return perguntarConta('email');
+    }
+    if (p === 'email') {
+      var em = texto.toLowerCase();
+      if (em.length > 120 || !MAIL_RE.test(em)) return puriDiz('Esse e-mail não parece certo. Pode escrever de novo?', [CH.humano]);
+      cc.email = em; usuarioDiz(em, '[e-mail]'); return perguntarConta('senha');
+    }
+    if (p === 'erro') return puriDiz('Toque em "Tentar de novo".', [{ id: 'r_c_retry', t: 'Tentar de novo' }, CH.humano]);
+    return puriDiz(T.escolhe, [{ id: 'r_c_sim', t: 'Pode sim' }, { id: 'r_c_nao', t: 'Prefiro não' }]); // passo 'aviso': só chips
+  }
+  function aoChipConta(c) {
+    if (c.id === 'r_c_sim' || c.id === 'r_c_nao') {
+      if (cc.p !== 'aviso') return puriDiz(T.escolhe, [CH.humano]);
+      cc.aceita = c.id === 'r_c_sim'; return criarConta();
+    }
+    if (c.id === 'r_c_retry') return (cc.nome && cc.tel && cc.email && cc.senha) ? criarConta() : iniciarConta('Perdi os seus dados por segurança.');
+    return puriDiz(T.escolhe, [CH.humano]);
+  }
+  function criarConta() {
+    var g = ger, c = cc;
+    ocupado = true; atualizarCampo(); limparChips(); E.chips = []; salvar();
+    var dig = el('div', 'puri-b p puri-dig'); dig.setAttribute('aria-hidden', 'true');
+    dig.appendChild(el('i')); dig.appendChild(el('i')); dig.appendChild(el('i'));
+    msgs.appendChild(dig); rolar();
+    var corpo = { email: c.email, senha: c.senha, data: { nome: c.nome, empresa: '', telefone: c.tel, cidade: (E.r && E.r.cidade) || '', aceita_whatsapp: c.aceita } };
+    var fim = function () { if (g !== ger) return; ocupado = false; atualizarCampo(); if (aberto) focarEntrada(); };
+    return Promise.resolve().then(function () { return api.signup(corpo); }).catch(function () { return { r: 'erro' }; }).then(function (res) {
+      dig.remove();
+      if (g !== ger) return;
+      var r = res && res.r;
+      if (r === 'ok') {
+        var at = res.access_token; res = null;
+        var conv = Promise.resolve().then(function () { return garantirToken(g); }).then(function (ok) {
+          if (ok !== 'ok' || !E.token) return; // sem token: segue sem converter
+          return api.converter(E.token, at);
+        }).catch(function () {});
+        return conv.then(function () {
+          at = null;
+          if (g !== ger) return;
+          var prob = E.r && E.r.problema;
+          if (E.r) E.r.passo = 'regras';
+          limparConta(); salvar();
+          return puriDiz('Conta criada! Ela fica pendente até o time aprovar; a gente te avisa.' + (prob ? ' Já anotei o que você contou pra gente te ajudar no primeiro pedido.' : ''),
+            [{ id: 'r_c_painel', t: 'Ver o painel', href: loginHref() }, CH.humano]);
+        });
+      }
+      if (r === 'existe') {
+        if (E.r) E.r.passo = 'regras';
+        limparConta(); salvar();
+        return puriDiz('Você já tem conta com esse e-mail.', [{ id: 'r_c_login', t: 'Entrar', href: loginHref() }, { id: 'r_c_rec', t: 'Esqueci a senha', href: loginHref('#recuperar') }, CH.humano]);
+      }
+      if (r === 'senha') { cc.senha = ''; return perguntarConta('senha', 'Essa senha não foi aceita. Tenta uma com pelo menos 6 caracteres.'); }
+      cc.p = 'erro'; salvar();
+      return puriDiz('Não consegui criar a conta agora.', [{ id: 'r_c_retry', t: 'Tentar de novo' }, CH.humano]);
+    }).then(fim, fim);
+  }
+  function aoChipR(c) {
+    if (!E.r) return puriDiz(T.incerto, CH.abertura);
+    var id = c.id, p = E.r.passo;
+    if (id === 'r_criar' && p === 'regras') return iniciarConta('');
+    if (/^r_c_/.test(id) && p === 'conta') return cc ? aoChipConta(c) : retomarConta();
+    if (id.indexOf('r_seg_') === 0 && p === 'segmento' && temSeg(id.slice(6))) { E.r.segmento = id.slice(6); return perguntarR('cidade'); }
+    if (p === 'cidade' && id === 'r_cid_cuiaba') { E.r.cidade = 'Cuiabá'; return perguntarR('bairro'); }
+    if (p === 'cidade' && id === 'r_cid_vg') { E.r.cidade = 'Várzea Grande'; return perguntarR('bairro'); }
+    if (p === 'cidade' && id === 'r_cid_outra') return perguntarR('cidade_outra');
+    if (id === 'r_pular' && p === 'bairro') { E.r.bairro = null; return perguntarR('objetivo'); }
+    if (id === 'r_pular' && p === 'objetivo') return perguntarR('movimento');
+    if (p === 'movimento' && id.indexOf('r_mv_') === 0 && MOV_CHIPS.some(function (m) { return m[0] === id.slice(5); })) {
+      E.r.movimento = id.slice(5); salvar();
+      return rodarR(perfilR);
+    }
+    if (p === 'sim' && id.indexOf('r_preco_') === 0 && PRECOS.indexOf(+id.slice(8)) >= 0) {
+      var n = +id.slice(8);
+      return rodarR(function (g) { return simR(n, g, null); });
+    }
+    if (p === 'sim' && id === 'r_continuar') return rodarR(aprofR);
+    if (p === 'aprof' && id === 'r_ap_pular') { E.r.apOk = true; return rodarR(palpiteR); }
+    if (p === 'aprof' && /^r_ap_\d$/.test(id)) return aprofResp(sanTxt(c.t, 60));
+    if (p === 'palpite' && (id === 'r_pp_mosca' || id === 'r_pp_parte')) return palpiteResp(id === 'r_pp_mosca' ? 'mosca' : 'parte');
+    if (p === 'palpite' && id === 'r_pp_nao') { E.r.passo = 'palpite_txt'; salvar(); return puriDiz(FALA_NAO, []); }
+    return puriDiz(T.escolhe, chipsR(p));
+  }
+  function enviarR() {
+    var p = E.r.passo, texto = limpar(campo.value);
+    if (!texto) return;
+    campo.value = ''; campo.style.height = 'auto';
+    clearTimeout(escTimer);
+    if (p === 'segmento') { usuarioDiz(texto); return rodarR(function (g) { return segTexto(texto, g); }); }
+    if (p === 'cidade' || p === 'cidade_outra') {
+      if (texto.length < 2) return rede(function () { return puriDiz('Pode escrever a cidade de novo?', chipsR(p)); });
+      usuarioDiz(texto); return rede(function () { return definirCidade(texto); });
+    }
+    if (p === 'bairro') {
+      if (texto.length < 2 || texto.length > 60) return rede(function () { return puriDiz(T.bairroRuim, chipsR(p)); });
+      usuarioDiz(texto); E.r.bairro = texto; return rede(function () { return perguntarR('objetivo'); });
+    }
+    if (p === 'objetivo') { usuarioDiz(texto, mascararObj(texto)); return rodarR(function (g) { return objetivoFinal(texto, g); }); }
+    if (p === 'aprof') { usuarioDiz(texto, mascararObj(texto)); return aprofResp(texto); }
+    if (p === 'palpite_txt') { usuarioDiz(texto, mascararObj(texto)); return palpiteResp('nao', texto); }
+    if (p === 'resumo') return;
+    return rede(function () { return puriDiz(T.escolhe, E.chips && E.chips.length ? E.chips : chipsR(p)); }); // movimento / sim / palpite: só chips
+  }
+
   function aoChip(c) {
     if (ocupado) return;
     usuarioDiz(c.t);
+    if (/^r_/.test(c.id)) return aoChipR(c);
     if (c.id === 'retry') {
+      if (rRetry) return rRetry();
       if (E.v && E.v.passo === 'confirma' && vNome && vTel) return enviarVisita();
       if (!ultimoTexto || E.etapa === 'fim') { E.etapa = 'duvida'; return puriDiz(T.pergunta, []); }
       return processar(ultimoTexto);
@@ -578,6 +1107,8 @@
       campo.value = ''; campo.style.height = 'auto';
       return puriDiz(T.escolhe, E.chips && E.chips.length ? E.chips : [CH.humano]);
     }
+    if (E.r && E.r.passo === 'conta') return cc ? enviarConta() : retomarConta();
+    if (E.r && E.r.passo !== 'regras') return enviarR();
     if (E.v) return enviarCampo();
     var texto = limpar(campo.value);
     if (!texto) return;
@@ -694,6 +1225,10 @@
     montar();
     atualizarCampo();
     if (E.msgs.length) desenharTudo();
+    if (E.r && E.r.passo === 'sim') { E.chips = chipsR('sim'); desenharChips(E.chips, false); salvar(); } // retoma a escolha de preço
+    else if (E.r && ['aprof', 'palpite', 'palpite_txt', 'resumo'].indexOf(E.r.passo) >= 0) retomarR();
+    else if (E.r && E.r.passo === 'conta') retomarConta(); // nome/telefone/e-mail/senha não sobrevivem ao recarregar
+    else if (E.r && E.r.passo !== 'regras' && E.chips.some(function (c) { return c.id === 'retry'; })) perguntarR(E.r.passo); // falha temporária: refaz a pergunta
     observar();
   }
   if (document.body) iniciar(); else document.addEventListener('DOMContentLoaded', iniciar);

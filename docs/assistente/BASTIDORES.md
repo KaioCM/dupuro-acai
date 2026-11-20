@@ -57,3 +57,57 @@ Consultar: MCP `query_logs` (janela <= 24 h), `select timestamp, event_message f
 ## Mínimo do delivery (v7, 2026-11-20)
 
 - Pedido mínimo de R$ 20 do delivery entrou nos fatos; `ehPendente` só segura lactose/validade; "pedido mínimo" sem contexto é respondido pelo Haiku com os dois (R$ 20 delivery, 30 L revenda).
+
+## Ação revenda (4B-1, v10, 2026-11-20)
+
+`POST` com `{"acao":"revenda","token","passo":...}`. Exige `token` de lead `origem='puri'` (senão `token_invalido`). Todo passo grava `fluxo='revender'` e `intencao='revender'` (o CHECK do banco só aceita `revender`, não `revenda`). Erros: `{ok:false,motivo}` com `token_invalido`, `texto_invalido`, `dados_invalidos`, `limite_*`, `erro`.
+
+| passo | entrada | saída | grava | IA |
+|---|---|---|---|---|
+| `segmento` | `texto` (mascarado) | `{ok,segmento}` | `segmento`, `negocio` (≤120, mascarado) | J5 (choice; sem os marcadores). Falha/prob. < 0,5 → `outro`. Conta como mensagem (+1 `turns`). |
+| `perfil` | `segmento` (da lista), `cidade` 2–60, `bairro?` 2–60, `movimento` (`ate20`/`20a50`/`50a100`/`100mais`) | `{ok,fora_area,coerente}` | `cidade`, `bairro`, `movimento`, `segmento`, `coerente` | J9 (noul ≥ 0,5 → true; falha → null; não bloqueia). Ao Jev vão SÓ segmento, movimento e "Cuiabá/VG" ou "fora"; cidade e bairro nunca vão a IA. `fora_area` = cidade não é Cuiabá/VG (mesma normalização da visita). |
+| `escutar` | `texto`, `final` | `{ok,anotacoes:[...]\|null}` | com `final:true`: `anotacoes` `{quer (≤500 mascarado), topicos[]}` + `historico` | `final:false`: J2 "suficiente" (≥ 0,7) → H2 (Haiku, JSON de 2–4 tópicos ≤ 8 palavras). `final:true`: pula J2 e roda H2 se o texto tiver ≥ 15 caracteres. Timeout/erro → `anotacoes:null`. |
+| `simulacao` | `preco_copo` 18–20 (arredonda) | `{ok,simulacao}` | `simulacao` jsonb | Nenhuma. Servidor calcula: custo = "Caixa de Açaí 10 L" atacado (mesma busca do `catalogo`), 20 copos/caixa, copos/dia por movimento (10/35/75/120), 6 dias/semana. Exige `movimento` gravado (senão `dados_invalidos`). |
+
+Limites: `segmento`, `perfil` e `escutar` com `final:true` passam pelos mesmos limites da `mensagem` (IP/dia, conversa 25, conversas/dia, global/dia; falha fechada). `escutar` com `final:false` (rascunho) NÃO passa por esse portão e não gasta `turns`: exige texto mascarado ≥ 25 caracteres (senão `anotacoes:null` sem custo) e usa cotas próprias, falha fechada: `puri-esc:<token>` máx 4, `puri-escip:<hash ip>` máx 40/dia, `puri-escg-<dia Cuiabá>` máx 300/dia; estourou → `{ok:true,anotacoes:null}` (silencioso). `simulacao` só checa a cota de conversa (`puri-tok`). `segmento`, `perfil` e `escutar` final incrementam `turns` (perfil conta como mensagem, pois consome `puri-conv`/`puri-tok`). Os tópicos do H2 passam por filtro (descarta o que tiver link, e-mail ou telefone) e depois por `mascarar()`.
+
+Vai à IA: texto livre mascarado (telefone/e-mail/CPF/nome trocados, `[contato]`/`[nome]` removidos para o Jev) e os ids de segmento/movimento. Não vai: cidade, bairro, nome, telefone. Log: só códigos curtos (`ev:puri, etapa:revenda, passo`), nunca texto.
+
+`IPS_LIVRES` (index.ts): hashes de IP liberados dos limites POR IP (`puri-ip`, `puri-ipm`, `puri-cat`, `puri-vis`, `puri-escip`); globais e por token continuam valendo. Hoje: a máquina do Kayo (2026-11-20); se o provedor trocar o IP, atualizar o hash.
+
+## Revenda 4B-2 (aprofundar, palpite, resumo; 2026-11-20)
+Mesma ação `revenda` (token de lead `puri`), mesmos limites da `mensagem` (portão: turns, IP, token, conversas/dia, global; falha fechada). Cada passo conta 1 turno. `anotacoes` (jsonb) é mesclada, nunca sobrescrita.
+- `aprofundar` (sem corpo extra): H3 gera 3 perguntas candidatas, J6 escolhe 1. Resposta `{ok, pergunta, respostas[3-4]}`; falha ou sem `anotacoes.quer` → `{ok, pergunta:null}`. Grava `anotacoes.aprof_pergunta`.
+- `aprofundar_resp` `{texto}` (1–300): grava `anotacoes.aprof_resposta` (mascarada) e no histórico. Resposta `{ok}`.
+- `palpite`: H4 escreve "Meu palpite: ... Acertei?", J7 (`inventa`) barra se ≥ 0,5. Resposta `{ok, palpite}` (`null` se barrado/falhou). Grava `anotacoes.palpite`. O motivo da falha sai no log `palpite_diag` (`haiku_nulo`, `parse_rejeitou`, `j7_alto` + noul).
+- `palpite_resp` `{valor: mosca|parte|nao, texto?}`: grava `palpite_valor` e `palpite_correcao` (mascarada, ≤ 300). Resposta `{ok}`.
+- `resumo`: H5 devolve JSON `{resumo, problema}` (2ª pessoa; problema ≤ 5 palavras). Resposta `{ok, resumo, problema}` (`resumo:null` se falhou). Grava `resumo` e `anotacoes.problema`.
+- O que vai à IA (`contextoRevenda`): só rótulo do segmento, rótulo do movimento, `quer`, tópicos, pergunta+resposta do aprofundar e (no resumo) palpite/reação/correção. Nunca nome, telefone, cidade nem bairro. Tudo passa por `limparIA` (sem `<>`, mascarado, cortado).
+- Filtros de saída (`logica.ts`): `parsePerguntasAprof`, `parsePalpite`, `parseResumo` descartam link, e-mail, número de 6+ dígitos e `[contato]`; limites de tamanho/palavras. J7 foi reescrito (2026-11-20): a versão "inventa coisas que a pessoa não disse" barrava todo palpite (um palpite é inferência por natureza); agora barra só fato da empresa ou detalhe sem relação com o que a pessoa disse.
+- Histórico separado (2026-11-20): `historico` só guarda turnos de abertura e dúvida. Os textos de `escutar` e `aprofundar_resp` ficam só em `anotacoes` (antes vazavam para o Haiku da dúvida: depois de falar de freezer, "qual o horário?" recebeu texto de conservação).
+
+## Dúvida: blindagem contra assunto pendente (2026-11-20)
+- Prompt do Haiku: responder SÓ à pergunta atual; histórico só para entender referências; nunca acrescentar o que não está nos FATOS.
+- `ehPendente` agora também cobre freezer, congelar, conservar, estragar, armazenar, guardar, derreter (→ humano direto).
+- Checagem determinística `respostaForaDoAssunto` (logica.ts): se a resposta cita freezer/congel/validade/vencim/lactose/leite/estrag/conserv/armazen e a PERGUNTA atual não é sobre isso → humano (motivo de log `fora_do_assunto`).
+- J4 recebe `pending_topics_not_in_facts` e é instruído a responder "sim" se o rascunho tocar nesses assuntos.
+
+## Ação converter (2026-11-20)
+`{acao:'converter', token, access_token}` → `{ok:true}` | `{ok:false, motivo:'token_invalido'|'sessao_invalida'|'ja_convertido'|'erro'}`.
+- Valida token (`origem='puri'`), `sb.auth.getUser(access_token)` (service_role) e `profiles` com esse id, `role='revendedor'`, criado há ≤ 30 min; senão `sessao_invalida`. Lead com `lead_profile` → `ja_convertido`.
+- Grava `lead_profile = user.id`, `status='convertido'`, `prioridade` (smallint 0–3). O `access_token` não é guardado nem logado; e-mail nunca é lido.
+- Limite `puri-conv2:<token>` máx 3 (falha fechada, devolve `erro`).
+- J10 (`prioridadeLead`, choice p0–p3): esforço + interesse + encaixe a partir de segmento, movimento, `coerente`, tópicos, se respondeu o aprofundar e reação ao palpite. Sem dados pessoais. Falha → `prioridade` null.
+
+## Ajustes da revisão da etapa 4 (v11, 2026-11-20)
+- `respostaForaDoAssunto`: "leite" solto saiu (pegava "Doce de Leite"); ficam lactose e "sem leite".
+- `fatos.ts`: conservação (freezer, recongelar) saiu dos fatos; conservação e validade ficam PENDENTES até o dono confirmar (a base-de-fatos.md ainda os lista como confirmados: decisão do dono).
+- `ehPendente`: guardar/armazenar/vencer só contam com contexto de alimento (açaí, creme, caixa, produto, freezer, congelar); "guardar o pedido" e "vence o boleto" não são pendentes. `ehSaude`: `\bpressão` (não casa "impressão").
+- `revenda`: o log de falha só grava `passo` se estiver na lista de passos, senão `?`. `escutar` final mescla com as anotações existentes. `perfil` faz um único update (dados + turns). `palpite_resp` rejeita texto > 300 (como `aprofundar_resp`).
+- `converter`: se já existe outro lead com `lead_profile` = a conta, devolve `ja_convertido` (1 lead por conta).
+- Prompt do Haiku da dúvida: no máximo 2 frases e só o que a pergunta atual pede, sem outros assuntos do histórico.
+- Limite aceito: texto livre só passa por `mascarar()`; cidade/bairro ditos em prosa podem chegar à IA.
+
+## Ambientes
+- `assistente-dev`: desenvolvimento e testes. O front local (localhost, `?puri=edge`) chama `functions/v1/assistente-dev`; `?puri=prod` em localhost força a produção. Mesmas tabelas e secrets; use tokens de teste e apague o lead e as chaves `puri-tok:`/`puri-esc:` depois.
+- `assistente` (produção): só no publicar. Trava: deploy com os 3 arquivos completos (`index.ts`, `logica.ts`, `fatos.ts`) + teste de fumaça (iniciar, mensagem, revenda) logo depois. Volta = redeploy do HEAD do git.

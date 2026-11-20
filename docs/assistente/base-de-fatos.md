@@ -1,8 +1,8 @@
 # Base de fatos do assistente — v2 (2026-11-19, respostas do Kayo incorporadas)
 
-Restam **[CONFIRMAR]**: lactose, validade.
+Lactose e validade confirmadas em 2026-11-20.
 
-Fonte única do que o Haiku pode afirmar. Tudo marcado **[CONFIRMAR]** depende do Kayo. Preço, estoque, sabores disponíveis, taxa de entrega e turnos **não ficam aqui**: são lidos do banco na hora (`products`, `product_flavor_stock`, `delivery_catalogo()`, `delivery_config`).
+Fonte única do que o Haiku pode afirmar. Tudo marcado **[CONFIRMAR]** depende do Kayo (hoje não resta nenhum). Preço, estoque, sabores disponíveis, taxa de entrega e turnos **não ficam aqui**: são lidos do banco na hora (`products`, `product_flavor_stock`, `delivery_catalogo()`, `delivery_config`).
 
 ## Empresa
 - Dupuro Açaí — fábrica e distribuidora de açaí e cremes em Cuiabá-MT. "Puro como tem que ser".
@@ -16,7 +16,7 @@ Fonte única do que o Haiku pode afirmar. Tudo marcado **[CONFIRMAR]** depende d
 - Açaí e cremes em caixas; tamanhos do catálogo vêm do banco (no código existem 500 ml, 1 L, 2 L, 5 L, 10 L).
 - Cremes: Morango, Paçoca, Maracujá, Cupuaçu, Pistache, Ninho, Banana, Doce de Leite. Disponibilidade = estoque do dia.
 - Granola e complementos: itens avulsos.
-- Composição: o açaí **contém água e açúcar** (não é polpa pura). Lactose: **[CONFIRMAR]**. Armazenar em **freezer ou congelador**; **evitar recongelar** (descongelar e congelar de novo faz o açaí cristalizar). Validade: **[CONFIRMAR]**.
+- Composição: o açaí **contém água e açúcar** (não é polpa pura). Leite: o açaí é **100% livre de leite**; **todos os cremes têm leite** na composição (confirmado pelo Kayo em 2026-11-20). Armazenar em **freezer ou congelador**; **evitar recongelar** (descongelar e congelar de novo faz o açaí cristalizar) (confirmado pelo Kayo em 2026-11-20). Validade: **6 meses** mantido congelado, sem recongelar (derreter e congelar de novo) (confirmado pelo Kayo em 2026-11-20).
 - Site corrigido em 2026-11-19: removidas as afirmações '100% puro/pura'.
 - Pergunta de saúde (ex.: "pode dar pra bebê?"): o assistente não orienta, sugere falar com pediatra/nutricionista e oferece o WhatsApp.
 
