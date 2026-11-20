@@ -1592,9 +1592,12 @@ create or replace function public.criar_pedido_revendedor(p_rows jsonb, p_entreg
 as $function$
 begin
   if coalesce(p_entrega->>'pagamento', '') = 'online' then raise exception 'Pagamento online começa pelo botão Pagar agora.'; end if;
+  if p_entrega is not null and jsonb_typeof(p_entrega) = 'object' then
+    p_entrega := p_entrega - 'mp_payment_id' - 'pago_metodo';
+  end if;
   return public.criar_pedido_revendedor_para(auth.uid(), p_rows, p_entrega);
 end $function$;
-revoke execute on function public.criar_pedido_revendedor(jsonb, jsonb) from public, anon, authenticated;
+revoke execute on function public.criar_pedido_revendedor(jsonb, jsonb) from public, anon;
 grant execute on function public.criar_pedido_revendedor(jsonb, jsonb) to authenticated, service_role;
 
 -- orders_cupom_status
