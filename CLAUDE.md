@@ -5,7 +5,7 @@
 - **Site 100% estático** (HTML/CSS/JS puro): sem build, sem framework, sem npm. Editou → recarrega o preview.
 - **Preview**: servidor `dupuro-acai` na porta 8855, raiz serve `dupuro-acai/` (ex.: `/area-cliente/login.html`). Dashboard/admin exigem sessão Supabase — não dá pra clicar através deles sem login.
 - **Orientação de imagem**: as fotos em `assets/img/fotos/` **não têm tag EXIF** de orientação. Cheque orientação pelas dimensões via PowerShell (`System.Drawing`) — não abra o arquivo em tamanho cheio (caro em tokens). Deitada = conteúdo retrato salvo em landscape; corrija com `RotateFlip(Rotate270FlipNone)` (90° anti-horário) e atualize `width`/`height` no HTML.
-- Site em 3 partes: **Home** (`index.html`, 2 portas) · **Peça agora** (`delivery/`, compra online) · **Revenda** (`revenda/`). Demais contatos levam ao WhatsApp `5565992888228`.
+- Site em 3 partes: **Home** (`index.html`, 2 portas) · **Peça agora** (`delivery/`, compra online) · **Revenda** (`revenda/`). Demais contatos levam ao WhatsApp `5565992888228`. O botão flutuante agora é a Puri (assistente do site), que tem "Falar com uma pessoa" -> WhatsApp.
 
 ## Negócio
 
@@ -31,6 +31,8 @@ assets/js/
   caixa.js                acesso atendente (catálogo c/ estoque, registrar venda de loja, vendas do dia)
   printer.js              comanda da venda: app nativo (silencioso) > Web Serial (Sweda) > impressão pelo Windows
   offline-queue.js        fila offline do caixa (IndexedDB) + motor de sync (DupuroOffline)
+  puri.js                 assistente Puri: botão flutuante + chat em home/revenda/delivery (contrato em docs/assistente/BASTIDORES.md)
+assets/css/puri.css      estilo da Puri
 sw.js                     service worker (offline do caixa)
 manifest.webmanifest      manifesto PWA do caixa
 desktop/                  app Electron do PC da loja (casca + impressão nativa) — build separado
@@ -43,6 +45,7 @@ supabase/schema.sql       cópia do esquema do banco vivo (regenerado por dump �
 supabase/migration_*.sql  registro das migrações incrementais (005+ aplicadas via MCP)
 supabase/functions/admin-delete-reseller/index.ts
 supabase/functions/sugerir-fiscal/index.ts   sugestão de perfil fiscal pelo nome (Jev/TypeSafe)
+supabase/functions/assistente/             Edge do assistente Puri (Jev + Haiku); `qualificar-turno` desativada (responde 410)
 experimentos/typesafe/    scripts + resultados dos testes com o Jev (README com os números)
 tools/jev                 CLI do Jev pro desenvolvimento (yes/pick/score/trechos) — ver skill dupuro-jev
 tools/jev-prompt          analista de prompt (hook UserPromptSubmit em .claude/settings.json)
@@ -80,6 +83,7 @@ Projeto real em `supabase-config.js` (URL `zqadfktfplrbrjmepllh.supabase.co`). D
 | `docs/caixa.md` | caixa/PDV: atendente, copo/self-service, app Electron, offline + sync, sessão de caixa, TEF, pagamento dividido, taxa de entrega, pedidos em aberto, promoções, comanda, layout |
 | `docs/fiscal-nfce.md` | NFC-e (Focus NFe), cancelamento, cupom fiscal impresso, classificação fiscal por perfil |
 | `docs/delivery.md` | Dupuro Delivery: páginas, cotação (ORS + Jev), checkout Mercado Pago, banco |
+| `docs/assistente/` | Puri: PLANO, ROTEIRO, BASTIDORES (contrato), base-de-fatos |
 | `docs/seguranca.md` | auditorias: permissões de funções, trigger de `profiles`, preço/estoque no banco, XSS |
 | `docs/whatsapp.md` | fila de avisos, modelos da Meta, aceite |
 | `docs/design-system.md` | design system v2/v3, assets, SEO |

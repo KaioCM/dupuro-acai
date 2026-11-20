@@ -8,7 +8,7 @@ Botão flutuante no canto inferior direito, **no lugar do botão do WhatsApp**, 
 2. **revendedor sério** → qualifica e **cria a conta dentro da conversa** (e-mail e senha no chat);
 3. **quer consumir** → encaminha para o delivery;
 4. **quer provar** → visita à fábrica **ou** visita de um vendedor com amostras (seg–sex, 8h–17h) → aviso interno ao Kayo (nunca à Dilene).
-Os botões "Seja revendedor" do site abrem o assistente direto no fluxo de cadastro. O formulário antigo fica como reserva se o assistente falhar.
+Os botões "Seja revendedor" do site abrem o assistente direto no fluxo de cadastro. O formulário antigo fica como reserva se o assistente falhar. Nome do assistente: **Puri**.
 
 ## Camadas
 - **Código**: roteiro/estado de cada fluxo, validações, telas, números. Preço e estoque sempre do banco, nunca do LLM.
@@ -25,7 +25,7 @@ Haiku via **API da Anthropic** (cobrança separada da assinatura Pro). Limite su
 
 ## Etapas (cada uma só começa com ok do Kayo)
 0. **Fatos e limpeza** — base de fatos (`base-de-fatos.md`) conferida pelo Kayo; diff local do protótipo descartado (feito); memória.
-1. **Roteiro e partitura** — cada fluxo tela a tela; para cada tela o que faz código / Jev (pergunta e limiar) / Haiku (prompt) e o que acontece se falhar. Sem código.
+1. **Roteiro e partitura** — cada fluxo tela a tela; para cada tela o que faz código / Jev (pergunta e limiar) / Haiku (prompt) e o que acontece se falhar. Sem código. — **feito** (ROTEIRO.md, aprovado 2026-11-19)
 2. **Bastidores** — Edge Function nova do assistente (Jev + Haiku, limites, timeouts, respostas fixas de reserva), migração ampliando `qualificacao_leads` (fluxo, resumo, mapa, prioridade, visita), aviso interno de visita, testes direto na função.
 3. **Casca** — botão flutuante, painel (desktop expande no cadastro; mobile tela cheia), motor do chat e animações de base, "falar com uma pessoa". Modo dúvidas funcionando de ponta a ponta.
 4. **Fluxos** — cadastro com conta criada no chat; consumir → delivery; provar → fábrica ou vendedor; resumo ao vivo; botões "Seja revendedor" abrindo o fluxo.
@@ -34,3 +34,5 @@ Haiku via **API da Anthropic** (cobrança separada da assinatura Pro). Limite su
 
 ## Dependência
 A **nova regra de pedido mínimo** (tarefa separada, antes de o assistente ir ao ar): ver `base-de-fatos.md` §Revenda e a memória `dupuro-regra-minimo-30l`.
+
+Acesso ao banco: liberado em 2026-11-19 — executor/pesquisador/revisor herdam as ferramentas MCP do Supabase (pesquisador e revisor só leitura).

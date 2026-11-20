@@ -1,4 +1,4 @@
-# Assistente Dupuro — Roteiro e partitura (Etapa 1, rascunho para aprovação)
+# Assistente Dupuro — Roteiro e partitura (Etapa 1, aprovado com decisões de 2026-11-19)
 
 Base: `PLANO.md` (decisões) e `base-de-fatos.md` (o que pode ser afirmado). Referência de comportamento/visual: `referencias/jev-maestros-formulario/ANALISE.md`.
 
@@ -6,7 +6,7 @@ Base: `PLANO.md` (decisões) e `base-de-fatos.md` (o que pode ser afirmado). Ref
 - Voz Dupuro: informal e direta ("você", "pra"), frases curtas, **uma pergunta por vez**, sem emoji, sem selo/eyebrow.
 - Sempre há saída: chip **"Falar com uma pessoa"** (WhatsApp) em qualquer tela; **"Escrever do meu jeito"** e **"Pular"** nas perguntas abertas.
 - **Nunca inventar**: preço, estoque, taxa e turnos vêm do banco; o resto só da base de fatos. Sem fato → passa pra uma pessoa.
-- **Privacidade**: nome, telefone, e-mail e senha nunca vão ao Jev nem ao Haiku. Texto livre passa por um **mascarador** (troca telefone, e-mail, CPF/CNPJ por `[contato]`) antes de qualquer chamada. A senha é digitada em campo mascarado, nunca vira balão e vai direto do navegador para o Supabase Auth (signUp) — nem a Edge do assistente a vê.
+- **Privacidade**: nome, telefone, e-mail e senha nunca vão ao Jev nem ao Haiku. Texto livre passa por um **mascarador** (troca telefone, e-mail, CPF/CNPJ por `[contato]` e **nome** — "meu nome é X", "sou o X", "aqui é X" — por `[nome]`) antes de qualquer chamada. A senha é digitada em campo mascarado, nunca vira balão e vai direto do navegador para o Supabase Auth (signUp) — nem a Edge do assistente a vê.
 - Animações respeitam `prefers-reduced-motion` (exceção registrada ao design-system: o assistente tem movimento próprio).
 
 ## 1. Arquitetura do turno
@@ -48,7 +48,8 @@ Saída sempre **JSON estrito**, curta, temperatura baixa. Nunca recebe dados pes
 
 ## 4. Fluxos tela a tela
 ### F0 — Abertura
-Botão flutuante (no lugar do WhatsApp) → painel abre. Fala fixa: "Oi! Sou o assistente da Dupuro. Posso tirar uma dúvida ou te ajudar a começar." Chips: **Quero revender** · **Comprar pra consumir** · **Quero provar antes** · **Tirar uma dúvida**. Campo livre → J1 (+ J11).
+Botão flutuante (no lugar do WhatsApp) → painel abre. Fala fixa: "Oi! Eu sou a Puri, assistente da Dupuro. Posso tirar uma dúvida ou te ajudar a começar." Chips: **Quero revender** · **Comprar pra consumir** · **Quero provar antes** · **Tirar uma dúvida**. Campo livre → J1 (+ J11).
+O botão flutuante mostra o nome **Puri** (ex.: tooltip/rótulo "Fala com a Puri").
 Botões "Seja revendedor" do site abrem direto em F4.
 
 ### F1 — Dúvida
@@ -72,7 +73,7 @@ Chips **Visitar a fábrica** · **Receber um vendedor com amostras**.
 7. **Palpite** — H4 → J7 → "Na mosca / Em parte / Não, é outra coisa" (correção livre).
 8. **O especialista + resumo** — H5 ("O que ficou do que você contou" + pílula do problema).
 9. **Mapa do caso** — H6 → J8 → diagrama se monta nó a nó → "Está certo" / "Quero ajustar" (H7 → J8; até 2 ajustes; nós novos com "Ajustado").
-10. **Regras** (fixo + banco): mínimo 30 L por pedido (caixas de 5 e 10 L), **primeiro pedido sem mínimo**; pague como preferir (site ou entrega); entrega em Cuiabá/VG.
+10. **Regras** (fixo + banco): mínimo 30 L por pedido (soma de caixas de 5 e 10 L; granola e complementos não contam), **primeiro pedido sem mínimo**; pague como preferir (site ou entrega); entrega em Cuiabá/VG.
 11. **Conta** — nome → telefone (WhatsApp) → e-mail → senha (mascarada, com confirmação) → aceite de avisos no WhatsApp → **signUp no navegador** → `converter`.
    - E-mail já existe → "Você já tem conta" + link "Entrar" e "Esqueci a senha".
    - Sucesso → "Conta criada! Ela fica pendente até o time aprovar; a gente te avisa." + resumo final + chips "Ver o painel" (login) / "Falar com uma pessoa".
@@ -96,7 +97,6 @@ Negócio · Cidade/bairro · O que quer (resumo H5) · Movimento · Simulação 
 - Tela de leads no admin (Etapa 6): lista por prioridade, resumo, mapa, visita.
 
 ## 8. Decisões pendentes (Kayo)
-1. Aviso da visita: pendência no admin + botão manual pro vendedor está bom? Quem é o vendedor (nome/WhatsApp) para o botão?
-2. Texto de abertura e nome do assistente (tem nome? ex.: "Assistente Dupuro").
-3. Faixas de movimento (copos/dia) do passo 4 fazem sentido?
-4. Preço de venda padrão do simulador: R$ 18 ou R$ 20?
+1. Aviso da visita: pendência no admin + botão manual 'Avisar vendedor' — **nome/WhatsApp do vendedor: o Kayo informa depois**.
+
+Decididos em 2026-11-19: nome do assistente **Puri**; faixas de movimento aprovadas (até 20 · 20–50 · 50–100 · 100+); preço padrão do simulador **R$ 18**.
