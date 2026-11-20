@@ -132,7 +132,6 @@
             <div class="cart-head">Itens do pedido</div>
             <ul class="cart-list" id="orderCartList"></ul>
             <div class="order-total-row"><span class="lbl">Total</span><span class="val" id="orderCartTotal">—</span></div>
-            <div class="cart-volume-note hidden" id="orderVolumeNote"></div>
           </div>
           <button type="submit" class="btn btn-primary" id="orderSubmitBtn" style="grid-column:1/-1;">Criar pedido</button>
           <button type="button" class="btn btn-dark-outline hidden" id="orderEditCancel">Cancelar edição</button>
@@ -505,7 +504,6 @@
           <div class="field hidden" id="productAtacadoBlock" style="margin-bottom:0; grid-column:1/-1;">
             <div class="tipo-price-row">
               <div class="field" style="margin-bottom:0;"><label for="productPrecoAtacado">Preço atacado (R$)</label><input type="number" id="productPrecoAtacado" min="0" step="0.01" placeholder="20.80"></div>
-              <div class="field" style="margin-bottom:0;"><label for="productMinAtacado">Pedido mín. atacado</label><input type="number" id="productMinAtacado" min="1" max="99" step="1" value="1"></div>
             </div>
           </div>
           <div class="field" style="margin-bottom:0;" id="productEstoqueField">
@@ -515,7 +513,7 @@
           <div class="field" style="margin-bottom:0;" id="productLitrosField">
             <label for="productLitros">Litros por unidade</label>
             <input type="number" id="productLitros" min="0" step="0.001" placeholder="0">
-            <div class="field-note-inline">Volume que cada unidade soma no pedido (caixa 10 L = 10; pote 500 ml = 0,5). Deixe 0 para itens que não são açaí/creme (granola, refrigerante). Serve para dispensar o pedido mínimo em pedidos grandes.</div>
+            <div class="field-note-inline">Litros por unidade (ex.: 10 para caixa de 10 L). Deixe 0 para granola e complementos. Serve para somar o pedido mínimo do revendedor.</div>
           </div>
           <div class="field" style="margin-bottom:0;">
             <label for="productImagem" id="productImagemLabel">Imagem (opcional)</label>
@@ -679,19 +677,19 @@
       <div class="panel">
         <div class="panel-header">
           <div>
-            <h2>Regra de pedido mínimo</h2>
-            <div class="subtitle">Pedido grande dispensa o pedido mínimo de todos os itens — o cliente que puxa volume pode completar com 1 unidade de qualquer produto.</div>
+            <h2>Pedido mínimo do revendedor</h2>
+            <div class="subtitle">Soma de litros por pedido (caixas de 5 L e 10 L). Granola e complementos não entram na conta. O primeiro pedido de cada revendedor não tem mínimo, e pedido lançado aqui no admin também não.</div>
           </div>
         </div>
         <div class="limite-row">
           <div class="field" style="margin-bottom:0;">
-            <label for="limiteLitros">A partir de quantos litros no pedido?</label>
-            <input type="number" id="limiteLitros" min="1" step="0.5" placeholder="50">
+            <label for="limiteLitros">Mínimo de litros por pedido</label>
+            <input type="number" id="limiteLitros" min="1" step="1" placeholder="30">
           </div>
           <button type="button" class="btn btn-dark-outline btn-sm" id="salvarLimiteBtn">Salvar</button>
           <span class="limite-msg" id="limiteMsg"></span>
         </div>
-        <div class="field-note-inline">Hoje: 50 L = 5 caixas de 10 L, ou 10 caixas de 5 L, ou qualquer mistura. O volume de cada produto é o campo <strong>“Litros por unidade”</strong> do cadastro de cada produto.</div>
+        <div class="field-note-inline" id="limiteNota">Hoje: 30 L = 3 caixas de 10 L ou 6 de 5 L.</div>
       </div>
       </div>
     </section>
@@ -2013,10 +2011,9 @@
         // Pedido mínimo (badge por tipo quando é par)
         var minHtml = '';
         if (partner) {
-          var vv = p.tipo === 'varejo' ? p : partner, aa = p.tipo === 'atacado' ? p : partner;
+          var vv = p.tipo === 'varejo' ? p : partner;
           if (vv.pedidoMinimo > 1) minHtml += ' <span class="status-badge processando">Mín. varejo ' + vv.pedidoMinimo + '</span>';
-          if (aa.pedidoMinimo > 1) minHtml += ' <span class="status-badge processando">Mín. atacado ' + aa.pedidoMinimo + '</span>';
-        } else if (p.pedidoMinimo > 1) minHtml = ' <span class="status-badge processando">Pedido mín. ' + p.pedidoMinimo + '</span>';
+        } else if (p.tipo === 'varejo' && p.pedidoMinimo > 1) minHtml = ' <span class="status-badge processando">Pedido mín. ' + p.pedidoMinimo + '</span>';
         var stockHtml = (function () {
           var total = p.estoqueTotal;
           if (p.multissabor) {
@@ -2148,7 +2145,6 @@
     document.getElementById('productPrecoVarejo').value = varejoRow ? varejoRow.preco : '';
     document.getElementById('productMinVarejo').value = varejoRow ? (varejoRow.pedidoMinimo || 1) : 1;
     document.getElementById('productPrecoAtacado').value = atacadoRow ? atacadoRow.preco : '';
-    document.getElementById('productMinAtacado').value = atacadoRow ? (atacadoRow.pedidoMinimo || 1) : 1;
   }
 
   // Editor de produto varejo/atacado com estoque compartilhado (produto simples
@@ -2593,7 +2589,6 @@
     var precoVarejo = parseFloat(document.getElementById('productPrecoVarejo').value);
     var precoAtacado = parseFloat(document.getElementById('productPrecoAtacado').value);
     var minVarejo = clampMin(document.getElementById('productMinVarejo').value);
-    var minAtacado = clampMin(document.getElementById('productMinAtacado').value);
     var fileInput = document.getElementById('productImagem');
     var file = fileInput.files.length ? fileInput.files[0] : null;
     var litros = parseFloat(String(document.getElementById('productLitros').value).replace(',', '.'));
@@ -2631,7 +2626,7 @@
       var p = currentEditingProduct();
       var tipo = p.tipo;
       var preco = tipo === 'varejo' ? precoVarejo : precoAtacado;
-      var pedidoMinimo = tipo === 'varejo' ? minVarejo : minAtacado;
+      var pedidoMinimo = tipo === 'varejo' ? minVarejo : null;
       var estoquePayload = stockLocked ? p.estoque : estoque;
       result = await DupuroAdmin.updateProduct(p, nome, preco, tipo, multissabor, incluirAcai, estoquePayload, pedidoMinimo, file, litros);
       if (!result.error && result.id && !stockLocked) {
@@ -2654,7 +2649,7 @@
         nome: nome, multissabor: multissabor, incluirAcai: incluirAcai,
         estoque: estoque, flavorEntries: flavorEntries, litros: litros,
         varejo: { on: vOn, preco: precoVarejo, pedidoMinimo: minVarejo },
-        atacado: { on: aOn, preco: precoAtacado, pedidoMinimo: minAtacado },
+        atacado: { on: aOn, preco: precoAtacado },
         file: file, currentImageUrl: editingImageUrl
       });
     }
@@ -2851,8 +2846,6 @@
   // repopular o select de produtos, pra não perder o produto já escolhido).
   document.getElementById('orderUsaEstoque').addEventListener('change', function () {
     updateOrderSaborField();
-    renderOrderVolumeNote(); // lançamento retroativo também dispensa o mínimo
-    applyOrderMin();
   });
 
   function updateOrderValuePreview() {
@@ -2866,28 +2859,7 @@
     preview.value = (product.preco * qty).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   }
 
-  // Ao trocar de produto, ajusta o mínimo do campo de quantidade e já preenche
-  // com o pedido mínimo do produto.
-  // Pedido mínimo em vigor para o item sendo montado (1 quando dispensado).
-  function effectiveOrderMin() {
-    if (orderDispensaMinimo()) return 1;
-    var product = getSelectedProduct();
-    return product ? (product.pedidoMinimo || 1) : 1;
-  }
-
-  function applyOrderMin() {
-    var input = document.getElementById('orderQtd');
-    var min = effectiveOrderMin();
-    // O campo de quantidade é do MONTADOR de item, não do pedido — mas vive
-    // dentro do #orderForm. Um `min` nativo acima de 1 fazia o navegador barrar
-    // o "Criar pedido" ("O valor deve ser maior ou igual a 6"), mesmo com o item
-    // já no carrinho. O mínimo é regra de negócio: validamos no "Adicionar item",
-    // com mensagem própria, e deixamos o min nativo em 1.
-    input.min = 1;
-    if ((parseInt(input.value, 10) || 0) < min) input.value = min;
-  }
   document.getElementById('orderProduto').addEventListener('change', function () {
-    applyOrderMin();
     updateOrderValuePreview();
     updateOrderSaborField();
   });
@@ -2895,19 +2867,6 @@
 
   var orderCart = [];        // itens do pedido em montagem
 
-  // Dispensa do pedido mínimo por volume (migration_023): pedido que atinge o
-  // limite de litros libera os mínimos de todos os itens. Também dispensamos em
-  // lançamento retroativo ("Mexer no estoque" desmarcado).
-  var LIMITE_LITROS = 50;
-  function orderCartLitros() {
-    return orderCart.reduce(function (s, it) { return s + (it.litros || 0) * it.quantidade; }, 0);
-  }
-  function orderDispensaMinimo() {
-    if (!document.getElementById('orderUsaEstoque').checked) return true;
-    return orderCartLitros() >= LIMITE_LITROS;
-  }
-  function orderLitrosFaltando() { return Math.max(0, LIMITE_LITROS - orderCartLitros()); }
-  function fmtLitros(v) { return (Math.round(v * 100) / 100).toLocaleString('pt-BR') + ' L'; }
   var editingItemId = null;  // id da linha (item) sendo editada; null = criando
   var diasAbertos = null;    // dias expandidos no histórico; null = ainda não renderizou
   var diaTopoVisto = null;   // dia mais recente da última renderização
@@ -2946,31 +2905,6 @@
     list.querySelectorAll('[data-oc-i]').forEach(function (b) {
       b.addEventListener('click', function () { orderCart.splice(parseInt(b.getAttribute('data-oc-i'), 10), 1); renderOrderCart(); });
     });
-    renderOrderVolumeNote();
-    applyOrderMin(); // o carrinho mudou: a dispensa pode ter ligado/desligado
-  }
-
-  // Mostra o volume do pedido e se ele já dispensa os pedidos mínimos.
-  function renderOrderVolumeNote() {
-    var nota = document.getElementById('orderVolumeNote');
-    if (!nota) return;
-    if (!document.getElementById('orderUsaEstoque').checked) {
-      nota.className = 'cart-volume-note ok';
-      nota.classList.remove('hidden');
-      nota.innerHTML = '✅ Lançamento retroativo — pedido mínimo dispensado.';
-      return;
-    }
-    var litros = orderCartLitros();
-    if (!orderCart.length || litros <= 0) { nota.classList.add('hidden'); return; }
-    nota.classList.remove('hidden');
-    if (orderDispensaMinimo()) {
-      nota.className = 'cart-volume-note ok';
-      nota.innerHTML = '✅ <strong>' + fmtLitros(litros) + '</strong> no pedido — pedido mínimo dispensado.';
-    } else {
-      nota.className = 'cart-volume-note';
-      nota.innerHTML = '<strong>' + fmtLitros(litros) + '</strong> no pedido · faltam <strong>' +
-        fmtLitros(orderLitrosFaltando()) + '</strong> para dispensar os pedidos mínimos.';
-    }
   }
 
   // "Adicionar item ao pedido": valida e coloca o item atual no carrinho.
@@ -2981,19 +2915,14 @@
     var product = getSelectedProduct();
     var qty = getOrderQty();
     var sabor = product && product.multissabor ? document.getElementById('orderSabor').value : null;
-    var min = effectiveOrderMin();
-    if (!product || !qty || qty < min || qty > 99 || (product.multissabor && !sabor)) {
-      if (product && qty && qty < min) {
-        errorNote.textContent = 'Pedido mínimo deste produto: ' + min + ' un. — ou complete ' +
-          fmtLitros(orderLitrosFaltando()) + ' no pedido para liberar o mínimo de todos os itens.';
-      }
+    if (!product || !qty || qty < 1 || qty > 99 || (product.multissabor && !sabor)) {
       errorNote.classList.add('show');
       return;
     }
     var existing = orderCart.filter(function (it) { return it.productId === product.id && (it.sabor || null) === (sabor || null); })[0];
     if (existing) existing.quantidade = Math.min(99, existing.quantidade + qty);
     else orderCart.push({ productId: product.id, nome: product.nome, preco: product.preco, sabor: sabor, quantidade: qty, litros: product.litros || 0 });
-    document.getElementById('orderQtd').value = orderDispensaMinimo() ? 1 : (product.pedidoMinimo || 1);
+    document.getElementById('orderQtd').value = 1;
     updateOrderValuePreview();
     renderOrderCart();
   });
@@ -3209,7 +3138,7 @@
       if (a.evento === 'aprovado') return junta([
         'Seu cadastro de revendedor' + quem + ' foi aprovado!',
         'Já pode fazer seus pedidos pelo painel:\n' + SITE + 'area-cliente/login.html' + (dd.email ? '\nEntre com o e-mail ' + dd.email + ' e a senha que você criou no cadastro.' : ''),
-        'Lá você escolhe os produtos, o dia e o turno da entrega (ou a retirada na fábrica) e acompanha cada pedido. Os pedidos são a partir de 1 caixa de 10 L.',
+        'Lá você escolhe os produtos, o dia e o turno da entrega (ou a retirada na fábrica) e acompanha cada pedido. O primeiro pedido não tem mínimo; depois, os pedidos são a partir de ' + LITROS_MINIMO + ' L (ex.: ' + Math.ceil(LITROS_MINIMO / 10) + ' caixas de 10 L ou ' + Math.ceil(LITROS_MINIMO / 5) + ' de 5 L).',
         'Qualquer dúvida, é só responder aqui.']);
       return junta(['Analisamos seu cadastro de revendedor' + quem + ' e, por enquanto, não conseguimos aprovar.', mot]);
     }
@@ -3868,25 +3797,38 @@
     document.querySelector('#orderForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 
-  // ---- Limite de litros que dispensa o pedido mínimo ----
-  async function loadLimiteLitros() {
-    LIMITE_LITROS = await DupuroAdmin.getLitrosDispensaMinimo();
-    document.getElementById('limiteLitros').value = LIMITE_LITROS;
-    renderOrderVolumeNote();
+  // ---- Pedido mínimo do revendedor (litros por pedido) ----
+  var LITROS_MINIMO = 30; // valor configurado (usado no texto do WhatsApp de aprovação)
+  function renderLimiteNota(v) {
+    var el = document.getElementById('limiteNota');
+    if (!el) return;
+    var n = parseInt(v, 10);
+    if (isNaN(n) || n < 1) { el.textContent = ''; return; }
+    var c10 = n / 10, c5 = n / 5;
+    var fmt = function (x) { return (Math.round(x * 10) / 10).toLocaleString('pt-BR'); };
+    el.textContent = 'Hoje: ' + n + ' L = ' + fmt(c10) + ' caixa' + (c10 === 1 ? '' : 's') + ' de 10 L ou ' + fmt(c5) + ' de 5 L.';
   }
+  async function loadLimiteLitros() {
+    var v = await DupuroAdmin.getLitrosMinimoPedido();
+    LITROS_MINIMO = v;
+    document.getElementById('limiteLitros').value = v;
+    renderLimiteNota(v);
+  }
+  document.getElementById('limiteLitros').addEventListener('input', function () { renderLimiteNota(this.value); });
 
   document.getElementById('salvarLimiteBtn').addEventListener('click', async function () {
     var msg = document.getElementById('limiteMsg');
-    var v = parseFloat(String(document.getElementById('limiteLitros').value).replace(',', '.'));
-    if (isNaN(v) || v <= 0) { msg.textContent = 'Informe um número de litros válido.'; msg.className = 'limite-msg erro'; return; }
+    var raw = String(document.getElementById('limiteLitros').value).replace(',', '.');
+    var v = Number(raw);
+    if (!raw || isNaN(v) || v < 1 || Math.floor(v) !== v) { msg.textContent = 'Informe um número inteiro de litros (1 ou mais).'; msg.className = 'limite-msg erro'; return; }
     this.disabled = true;
-    var r = await DupuroAdmin.setLitrosDispensaMinimo(v);
+    var r = await DupuroAdmin.setLitrosMinimoPedido(v);
     this.disabled = false;
-    if (r.error) { msg.textContent = 'Não foi possível salvar.'; msg.className = 'limite-msg erro'; return; }
-    LIMITE_LITROS = v;
-    msg.textContent = '✅ Salvo — a partir de ' + v + ' L o pedido mínimo é dispensado.';
+    if (r.error) { msg.textContent = 'Não foi possível salvar: ' + motivoErro(r.error); msg.className = 'limite-msg erro'; return; }
+    LITROS_MINIMO = v;
+    msg.textContent = 'Pronto: pedido mínimo do revendedor agora é ' + v + ' L.';
     msg.className = 'limite-msg ok';
-    renderOrderVolumeNote();
+    renderLimiteNota(v);
   });
 
   // ---- Trilha de alterações/cancelamentos da loja (auditoria da caixa) ----
@@ -4314,9 +4256,7 @@
       var product = getSelectedProduct();
       var qty = getOrderQty();
       var sabor = product && product.multissabor ? document.getElementById('orderSabor').value : null;
-      var min = product ? (product.pedidoMinimo || 1) : 1;
-      if (!revendedorId || !product || !qty || qty < min || qty > 99 || !data || (product.multissabor && !sabor)) {
-        if (product && qty && qty < min) errorNote.textContent = 'Pedido mínimo deste produto: ' + min + ' un.';
+      if (!revendedorId || !product || !qty || qty < 1 || qty > 99 || !data || (product.multissabor && !sabor)) {
         errorNote.classList.add('show');
         return;
       }

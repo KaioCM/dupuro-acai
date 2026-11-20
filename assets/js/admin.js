@@ -479,7 +479,9 @@ var DupuroAdmin = (function () {
         }
       }
     }
-    var payload = { nome: nome, preco: preco, imagem_url: imagemUrl, tipo: tipo || 'varejo', multissabor: !!multissabor, multissabor_incluir_acai: !!multissaborIncluirAcai, estoque: estoque, pedido_minimo: pedidoMinimo || 1 };
+    var payload = { nome: nome, preco: preco, imagem_url: imagemUrl, tipo: tipo || 'varejo', multissabor: !!multissabor, multissabor_incluir_acai: !!multissaborIncluirAcai, estoque: estoque };
+    // pedido_minimo só vale no varejo; no atacado a regra é de litros por pedido (não sobrescreve a coluna).
+    if (pedidoMinimo != null) payload.pedido_minimo = pedidoMinimo || 1;
     if (litros != null) payload.litros = litros;
     var result = product
       ? await client.from('products').update(payload).eq('id', product.id).select('id').single()
@@ -559,11 +561,12 @@ var DupuroAdmin = (function () {
     var ownerPayload = {
       nome: spec.nome, preco: od.preco, imagem_url: imagemUrl,
       tipo: ownerTipo, multissabor: !!spec.multissabor, multissabor_incluir_acai: !!spec.incluirAcai,
-      estoque: spec.multissabor ? 0 : spec.estoque, pedido_minimo: od.pedidoMinimo || 1,
+      estoque: spec.multissabor ? 0 : spec.estoque,
       estoque_ref: null, estoque_ref_sabor: null,
       modo: 'embalado', acomp_gratis: 0, acomp_extra_preco: 0,
       litros: spec.litros || 0
     };
+    if (ownerTipo === 'varejo') ownerPayload.pedido_minimo = od.pedidoMinimo || 1;
     var ownerId = byTipo[ownerTipo] || null;
     var partnerIdOut = null;
     var res;
@@ -581,11 +584,12 @@ var DupuroAdmin = (function () {
       var partnerPayload = {
         nome: spec.nome, preco: pd.preco, imagem_url: imagemUrl,
         tipo: partnerTipo, multissabor: !!spec.multissabor, multissabor_incluir_acai: !!spec.incluirAcai,
-        estoque: 0, pedido_minimo: pd.pedidoMinimo || 1,
+        estoque: 0,
         estoque_ref: ownerId, estoque_ref_sabor: null,
         modo: 'embalado', acomp_gratis: 0, acomp_extra_preco: 0,
         litros: spec.litros || 0
       };
+      if (partnerTipo === 'varejo') partnerPayload.pedido_minimo = pd.pedidoMinimo || 1;
       var pres;
       if (partnerId) pres = await client.from('products').update(partnerPayload).eq('id', partnerId).select('id').single();
       else pres = await client.from('products').insert(partnerPayload).select('id').single();
@@ -647,16 +651,16 @@ var DupuroAdmin = (function () {
   }
 
   // ---------- Configurações (migration_023) ----------
-  // Litros no pedido que dispensam o pedido mínimo dos itens.
-  async function getLitrosDispensaMinimo() {
-    var result = await client.from('app_settings').select('valor').eq('chave', 'litros_dispensa_minimo').maybeSingle();
-    if (result.error || !result.data) return 50;
-    return Number(result.data.valor);
+  // Pedido mínimo do revendedor, em litros por pedido (caixas de 5 L e 10 L).
+  async function getLitrosMinimoPedido() {
+    var result = await client.from('app_settings').select('valor').eq('chave', 'litros_minimo_pedido').maybeSingle();
+    if (result.error || !result.data) return 30;
+    return Number(result.data.valor) || 30;
   }
 
-  async function setLitrosDispensaMinimo(litros) {
+  async function setLitrosMinimoPedido(litros) {
     var result = await client.from('app_settings')
-      .upsert({ chave: 'litros_dispensa_minimo', valor: litros, atualizado_em: new Date().toISOString() }, { onConflict: 'chave' });
+      .upsert({ chave: 'litros_minimo_pedido', valor: litros, atualizado_em: new Date().toISOString() }, { onConflict: 'chave' });
     return { error: result.error };
   }
 
@@ -1051,7 +1055,7 @@ var DupuroAdmin = (function () {
   getAllOrders = comCache('getAllOrders', getAllOrders);
   getOrderAudits = comCache('getOrderAudits', getOrderAudits);
   getProducts = comCache('getProducts', getProducts);
-  getLitrosDispensaMinimo = comCache('getLitrosDispensaMinimo', getLitrosDispensaMinimo);
+  getLitrosMinimoPedido = comCache('getLitrosMinimoPedido', getLitrosMinimoPedido);
   getAcompanhamentos = comCache('getAcompanhamentos', getAcompanhamentos);
   getDeliveryPedidos = comCache('getDeliveryPedidos', getDeliveryPedidos);
   getAvisosPendentes = comCache('getAvisosPendentes', getAvisosPendentes);
@@ -1153,8 +1157,8 @@ var DupuroAdmin = (function () {
     deleteProduct: deleteProduct,
     deleteProductById: deleteProductById,
     saveFlavorStock: saveFlavorStock,
-    getLitrosDispensaMinimo: getLitrosDispensaMinimo,
-    setLitrosDispensaMinimo: setLitrosDispensaMinimo,
+    getLitrosMinimoPedido: getLitrosMinimoPedido,
+    setLitrosMinimoPedido: setLitrosMinimoPedido,
     getAcompanhamentos: getAcompanhamentos,
     saveAcompanhamento: saveAcompanhamento,
     setAcompanhamentoAtivo: setAcompanhamentoAtivo,

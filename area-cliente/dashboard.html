@@ -128,7 +128,6 @@
                   <input type="number" id="summaryQty" min="1" max="99" step="1" value="1" inputmode="numeric">
                   <button type="button" id="qtyPlus" aria-label="Aumentar quantidade">+</button>
                 </div>
-                <div class="qty-hint" id="qtyHint" role="status" aria-live="polite"></div>
               </div>
 
               <div class="order-total-row">
@@ -921,30 +920,27 @@
     return qty;
   }
 
-  // Dispensa do pedido mínimo por volume (migration_023): quando o pedido atinge
-  // o limite de litros, os mínimos de cada item deixam de valer — é o cliente que
-  // puxa volume podendo completar com 1 unidade de qualquer coisa.
-  var LIMITE_LITROS = 50; // recarregado do banco na carga inicial
+  // Pedido mínimo (migration_070): 30 L por pedido (caixas de 5 e 10 L; granola e
+  // complementos têm litros 0 e não contam). 1º pedido do revendedor: sem mínimo.
+  // Não há mais mínimo por produto: qualquer item vai com 1 unidade.
+  var MIN_LITROS = 30;          // recarregado do banco na carga inicial
+  var PRIMEIRO_PEDIDO = false;  // idem
 
   function cartLitros() {
     return cart.reduce(function (s, it) { return s + (it.litros || 0) * it.quantidade; }, 0);
   }
-  function dispensaMinimo() { return cartLitros() >= LIMITE_LITROS; }
-  function litrosFaltando() { return Math.max(0, LIMITE_LITROS - cartLitros()); }
+  function faltaLitros() { return PRIMEIRO_PEDIDO ? 0 : Math.max(0, MIN_LITROS - cartLitros()); }
   function fmtLitros(v) {
     return (Math.round(v * 100) / 100).toLocaleString('pt-BR') + ' L';
   }
 
-  // Pedido mínimo do produto selecionado (1 = sem mínimo, ou dispensado por volume).
-  function minQty() {
-    if (dispensaMinimo()) return 1;
-    return selectedProduct ? (selectedProduct.pedidoMinimo || 1) : 1;
-  }
+  // Não existe mais mínimo por produto.
+  function minQty() { return 1; }
 
   function updateTotal() {
     var qty = getQty();
     var totalEl = document.getElementById('summaryTotal');
-    if (!selectedProduct || !qty || qty < minQty() || qty > 99) {
+    if (!selectedProduct || !qty || qty < 1 || qty > 99) {
       totalEl.textContent = '—';
       return;
     }
@@ -1005,7 +1001,6 @@
 
     if (!keepQty) summaryQtyInput.value = minQty();
     errorNote.classList.remove('show');
-    hideQtyHint();
     updateTotal();
     abrirPainelEscolha();
   }
@@ -1067,51 +1062,24 @@
     if (e.key === 'Escape' && document.body.classList.contains('escolhendo')) { fecharPainelEscolha(); deselectProduct(); }
   });
 
-  // Linha de preço/mínimo do item selecionado. Precisa ser reavaliada sempre que
-  // o carrinho muda: o pedido mínimo pode ter sido dispensado pelo volume.
+  // Linha de preço do item selecionado.
   function refreshMinUI() {
     if (!selectedProduct) return;
-    var min = minQty();
-    var original = selectedProduct.pedidoMinimo || 1;
-    var txt = brl(selectedProduct.preco) + ' / unidade';
-    if (min > 1) txt += ' · pedido mín. ' + min;
-    else if (original > 1) txt += ' · mínimo liberado pelo volume';
-    document.getElementById('summaryUnit').textContent = txt;
-    summaryQtyInput.min = min;
+    document.getElementById('summaryUnit').textContent = brl(selectedProduct.preco) + ' / unidade';
+    summaryQtyInput.min = 1;
   }
-
-  // Explica por que a quantidade não desce além do pedido mínimo do produto.
-  var qtyHint = document.getElementById('qtyHint');
-  function showQtyHint() {
-    qtyHint.textContent = 'A quantidade mínima para este produto é ' + minQty() + ' unidades.' +
-      ' Complete ' + fmtLitros(litrosFaltando()) + ' no pedido para liberar.';
-    qtyHint.classList.add('show');
-  }
-  function hideQtyHint() { qtyHint.classList.remove('show'); }
 
   document.getElementById('qtyMinus').addEventListener('click', function () {
-    var min = minQty();
-    var qty = getQty() || min;
-    if (qty <= min) {
-      summaryQtyInput.value = min;
-      if (min > 1) showQtyHint();
-      updateTotal();
-      return;
-    }
-    hideQtyHint();
-    summaryQtyInput.value = qty - 1;
+    var qty = getQty() || 1;
+    summaryQtyInput.value = Math.max(1, qty - 1);
     updateTotal();
   });
   document.getElementById('qtyPlus').addEventListener('click', function () {
     var qty = getQty() || 0;
     summaryQtyInput.value = Math.min(99, qty + 1);
-    hideQtyHint();
     updateTotal();
   });
-  // Digitar um valor abaixo do mínimo também avisa (sem travar a digitação).
   summaryQtyInput.addEventListener('input', function () {
-    var qty = getQty();
-    if (qty && qty < minQty()) showQtyHint(); else hideQtyHint();
     updateTotal();
   });
 
@@ -1157,11 +1125,6 @@
       }).filter(Boolean);
     } catch (e) { cart = []; }
   }
-  function minDoItem(it) {
-    if (dispensaMinimo()) return 1;
-    var p = productsCache.find(function (x) { return String(x.id) === String(it.productId); });
-    return p ? (p.pedidoMinimo || 1) : 1;
-  }
 
   function renderCart() {
     salvarCarrinho();
@@ -1184,24 +1147,31 @@
     }).join('');
     document.getElementById('cartTotal').textContent = brl(cart.reduce(function (s, it) { return s + it.preco * it.quantidade; }, 0));
     renderVolumeNote();
-    // O carrinho mudou: a dispensa do mínimo pode ter ligado/desligado.
     refreshMinUI();
   }
 
-  // Avisa quando o pedido liberou (ou está perto de liberar) os pedidos mínimos.
+  // Banner do pedido mínimo (30 L; 1º pedido sem mínimo) + trava do botão de seguir.
+  function exemploCaixas() {
+    var a = Math.ceil(MIN_LITROS / 10), b = Math.ceil(MIN_LITROS / 5);
+    return a + (a === 1 ? ' caixa' : ' caixas') + ' de 10 L ou ' + b + ' de 5 L';
+  }
   function renderVolumeNote() {
     var nota = document.getElementById('cartVolumeNote');
+    var falta = faltaLitros();
+    if (sendBtn) sendBtn.disabled = !!cart.length && falta > 0;
     if (!nota) return;
-    var litros = cartLitros();
-    if (!cart.length || litros <= 0) { nota.classList.add('hidden'); return; }
+    if (!cart.length) { nota.classList.add('hidden'); return; }
     nota.classList.remove('hidden');
-    if (dispensaMinimo()) {
+    if (PRIMEIRO_PEDIDO) {
       nota.className = 'cart-volume-note ok';
-      nota.innerHTML = '<strong>' + fmtLitros(litros) + '</strong> no pedido: o mínimo de cada produto está liberado. Pode pôr 1 unidade de qualquer um.';
-    } else {
+      nota.textContent = 'Primeiro pedido: sem mínimo. Monte do jeito que quiser.';
+    } else if (falta > 0) {
       nota.className = 'cart-volume-note';
-      nota.innerHTML = '<strong>' + fmtLitros(litros) + '</strong> no pedido. Com mais <strong>' + fmtLitros(litrosFaltando()) +
-        '</strong>, cada produto passa a valer a partir de 1 unidade.';
+      nota.innerHTML = 'Faltam <strong>' + esc(fmtLitros(falta)) + '</strong> para o pedido mínimo de <strong>' + esc(fmtLitros(MIN_LITROS)) +
+        '</strong> (ex.: ' + exemploCaixas() + '). Granola e complementos não entram na conta.';
+    } else {
+      nota.className = 'cart-volume-note ok';
+      nota.innerHTML = 'Pedido mínimo atingido: <strong>' + esc(fmtLitros(cartLitros())) + '</strong>.';
     }
   }
 
@@ -1225,11 +1195,7 @@
 
     var saborIndisponivel = selectedProduct && selectedProduct.multissabor &&
       (!sabor || (selectedProduct.saboresDisponiveis || []).indexOf(sabor) === -1);
-    if (!selectedProduct || !qty || qty < minQty() || qty > 99 || saborIndisponivel) {
-      if (selectedProduct && qty && qty < minQty()) {
-        errorNote.textContent = 'O pedido mínimo deste produto é ' + minQty() + ' unidades — ' +
-          'ou complete ' + fmtLitros(litrosFaltando()) + ' no pedido para liberar o mínimo de todos os itens.';
-      }
+    if (!selectedProduct || !qty || qty < 1 || qty > 99 || saborIndisponivel) {
       errorNote.classList.add('show');
       return;
     }
@@ -1386,9 +1352,20 @@
     }).join('') + (validos.length ? '<label class="opcao"><input type="radio" name="cupom" value=""><span><strong>Não usar agora</strong><small>Guarda o cupom pra outro pedido</small></span></label>' : '');
   }
 
+  // Mensagem de bloqueio quando falta litro pro pedido mínimo.
+  function avisoPedidoMinimo(el) {
+    el.textContent = 'Faltam ' + fmtLitros(faltaLitros()) + ' para o pedido mínimo de ' + fmtLitros(MIN_LITROS) + '. Granola e complementos não entram na conta.';
+    el.classList.add('show');
+  }
+  function capitalizar(t) { return t ? t.charAt(0).toUpperCase() + t.slice(1) : t; }
   function abrirRevisao() {
     cartError.classList.remove('show');
     if (!cart.length) return;
+    if (faltaLitros() > 0) {
+      avisoPedidoMinimo(cartError);
+      cartError.scrollIntoView({ behavior: 'smooth', block: 'center' }); // barra fixa do celular / "repetir pedido": leva o olho até o aviso
+      return;
+    }
     var dias = diasDisponiveis();
     document.getElementById('checkoutDia').innerHTML = dias.map(function (iso) { return '<option value="' + iso + '">' + rotuloDia(iso) + '</option>'; }).join('');
     if (!endCheckout.mexeu()) endCheckout.preencher(profile.endereco_detalhe, profile.endereco);
@@ -1422,6 +1399,7 @@
   checkout.addEventListener('submit', async function (e) {
     e.preventDefault();
     checkoutError.classList.remove('show');
+    if (faltaLitros() > 0) { avisoPedidoMinimo(checkoutError); return; }
     var tipo = tipoEscolhido();
     var turnoEl = checkout.querySelector('[name="turno"]:checked');
     var pagamento = checkout.querySelector('[name="pagamento"]:checked').value;
@@ -1478,7 +1456,7 @@
         renderShop();
       } else if (/Pedido m[íi]nimo|dia\/turno|endereço|prazo|entrega ou retirada|Data|Cupom|troco|Forma de pagamento|Pagamento online|Cadastro|lotou/i.test(msg)) {
         if (/taxa de entrega/i.test(msg)) frete = null; // cotação vencida: a próxima tentativa calcula de novo
-        falha(msg.replace(/^.*?(Pedido m|Esse dia|Esse turno|Informe|Pagamento|Escolha|Data|Cupom|O troco|Valor do troco|Forma|Cadastro|Calcule)/i, '$1')); // mensagens do banco, já em português
+        falha(capitalizar(msg.replace(/^.*?(O pedido m|Pedido m|Esse dia|Esse turno|Informe|Pagamento|Escolha|Data|Cupom|O troco|Valor do troco|Forma|Cadastro|Calcule)/i, '$1'))); // mensagens do banco, já em português
         if (/Cupom/i.test(msg)) DupuroCliente.getCoupons().then(function (l) { currentCoupons = l; montarCupons(); atualizarTotalRevisao(); });
       } else {
         falha(result.error.online ? msg : 'Não foi possível enviar agora. Confira a internet e tente de novo.');
@@ -1491,6 +1469,7 @@
 
   // Pedido gravado (na hora, ou quando o pagamento online foi aprovado): limpa e mostra o sucesso.
   function concluirPedido(numero, ctx) {
+    PRIMEIRO_PEDIDO = false; // pedido gravado de fato: deixou de ser o 1º
     var tipo = ctx.tipo, entrega = ctx.entrega, endereco = ctx.endereco, cupomUsado = ctx.cupomUsado;
     // Endereço novo vira o padrão do perfil (se marcado).
     if (tipo === 'entrega' && document.getElementById('checkoutSalvarEndereco').checked &&
@@ -1652,7 +1631,7 @@
   // sem a taxa de entrega). Ao voltar pra aba, se saiu versão nova, recarrega — o carrinho
   // fica salvo no aparelho. No meio do pagamento, não. Recarrega uma vez por versão (o
   // HTML pode vir do cache por até 10 min e não queremos laço).
-  var VERSAO_PAINEL = '2026-11-18a'; // subir junto com area-cliente/versao-painel.json
+  var VERSAO_PAINEL = '2026-11-19a'; // subir junto com area-cliente/versao-painel.json
   var versaoConferida = 0;
   async function conferirVersao() {
     if (Date.now() - versaoConferida < 60e3 || !pagOnline.classList.contains('hidden')) return;
@@ -1688,11 +1667,8 @@
     var it = cart[i];
     if (!it) return;
     if (b.hasAttribute('data-cart-mais')) { it.quantidade = Math.min(99, it.quantidade + 1); renderCart(); return; }
-    var min = minDoItem(it);
-    if (it.quantidade <= min) {
-      cartError.textContent = min > 1
-        ? 'O mínimo de ' + it.nome + ' é ' + min + ' unidades (com ' + fmtLitros(LIMITE_LITROS) + ' no pedido o mínimo some). Pra tirar, use o ×.'
-        : 'Pra tirar este item, use o ×.';
+    if (it.quantidade <= 1) {
+      cartError.textContent = 'Pra tirar este item, use o ×.';
       cartError.classList.add('show');
       return;
     }
@@ -1726,7 +1702,7 @@
       if (product.multissabor && it.sabor && (product.saboresDisponiveis || []).indexOf(it.sabor) === -1) return null;
       return { productId: product.id, nome: product.nome, preco: product.preco, sabor: it.sabor || null,
         litros: product.litros || 0,
-        quantidade: Math.min(99, Math.max(product.pedidoMinimo || 1, it.quantidade || 1)) };
+        quantidade: Math.min(99, Math.max(1, it.quantidade || 1)) };
     }).filter(Boolean);
   }
   function setupRepeatButton() {
@@ -1763,11 +1739,11 @@
   carregarCarrinho();
   renderCart();
   setupRepeatButton();
-  // Limite de litros que dispensa os pedidos mínimos (configurável pelo admin).
-  DupuroCliente.getLitrosDispensaMinimo().then(function (litros) {
-    LIMITE_LITROS = litros;
+  // Pedido mínimo em litros (configurável pelo admin) e se é o 1º pedido.
+  Promise.all([DupuroCliente.getLitrosMinimoPedido(), DupuroCliente.souPrimeiroPedido()]).then(function (r) {
+    MIN_LITROS = r[0];
+    PRIMEIRO_PEDIDO = r[1];
     renderVolumeNote();
-    refreshMinUI();
   });
 
   // ---- Cupons ----
@@ -1929,7 +1905,7 @@
   (function setupPrimeiroSurvey() {
     var FORM = document.getElementById('primeiroSurvey');
     if (!FORM) return;
-    var CHIPS_TXT = ['Preço/mínimo','Como funciona','Quero testar antes','Outra coisa'];
+    var CHIPS_TXT = ['Preço/pedido mínimo','Como funciona','Quero testar antes','Outra coisa'];
     var chipSel = null;
     FORM.querySelector('.csat-chips').innerHTML = CHIPS_TXT.map(function(t){
       return '<button type="button" class="csat-chip-btn" data-chip="' + esc(t) + '">' + esc(t) + '</button>';

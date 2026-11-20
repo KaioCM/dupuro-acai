@@ -193,17 +193,29 @@ var DupuroCliente = (function () {
     return createOrderCart([{ productId: productId, quantidade: quantidade, itens: itens, valor: valor, sabor: sabor }]);
   }
 
-  // Litros que dispensam o pedido mínimo dos itens (migration_023). Padrão 50.
-  async function getLitrosDispensaMinimo() {
-    var result = await client.rpc('litros_dispensa_minimo');
-    if (result.error || result.data == null) return 50;
-    return Number(result.data);
+  // Pedido mínimo do revendedor em litros por pedido (migration_070). Padrão 30.
+  // Tolera RPC ausente/erro (fallback 30).
+  async function getLitrosMinimoPedido() {
+    try {
+      var result = await client.rpc('litros_minimo_pedido');
+      if (result.error || result.data == null) return 30;
+      var n = Number(result.data);
+      return isFinite(n) && n >= 0 ? n : 30;
+    } catch (e) { return 30; }
+  }
+
+  // true se o revendedor ainda não fez nenhum pedido (1º pedido sem mínimo). Fallback false.
+  async function souPrimeiroPedido() {
+    try {
+      var result = await client.rpc('sou_primeiro_pedido');
+      if (result.error) return false;
+      return result.data === true;
+    } catch (e) { return false; }
   }
 
   // Pedido com vários itens ("carrinho"): grava N linhas com o MESMO numero.
   // Vai pela função criar_pedido_revendedor (migration_023), que valida o
-  // carrinho INTEIRO — inclusive a dispensa do pedido mínimo quando o volume do
-  // pedido atinge o limite. A policy orders_insert_self valida linha a linha e
+  // carrinho INTEIRO — inclusive o pedido mínimo em litros do pedido. A policy orders_insert_self valida linha a linha e
   // não enxergaria os outros itens, por isso a criação passa pela função.
   // Tudo numa transação só: se um item faltar estoque, nada é criado.
   // entrega = { tipo, data, turno, pagamento, forma, endereco, observacao } (migration_044).
@@ -342,7 +354,8 @@ var DupuroCliente = (function () {
     linhasPedido: linhasPedido,
     pagarOnline: pagarOnline,
     cotarEntrega: cotarEntrega,
-    getLitrosDispensaMinimo: getLitrosDispensaMinimo,
+    getLitrosMinimoPedido: getLitrosMinimoPedido,
+    souPrimeiroPedido: souPrimeiroPedido,
     getOrders: getOrders,
     getCoupons: getCoupons,
     registrarPesquisa: registrarPesquisa

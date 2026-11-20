@@ -47,5 +47,5 @@ Revender: valor para revender · preço dos baldes de 5 e 10 L · tem pedido mí
 Consumir: é puro, sem água nem açúcar? pode dar pra bebê? · tem sem lactose? · validade e como guardar · até onde entregam, quanto custa, que horas chega, como pagar, dá pra acompanhar?
 Outros: horário de funcionamento · o site não aceita meu endereço · não entendi como pedir/receber.
 
-## Pendências de texto no site (para a tarefa da regra nova)
+## Pendências de texto no site (para a tarefa da regra nova) — RESOLVIDA em 2026-11-19 (index.html, revenda/index.html, CLAUDE.md e docs atualizados com a regra de 30 L; o texto abaixo é o registro da pendência)
 Lista completa dos lugares com "a partir de 1 caixa"/"50 L dispensam" no relatório da Etapa 0 (index.html, revenda/index.html, admin.html, dashboard.html, cliente.js, admin.js, migrações/funções do banco, CLAUDE.md, docs/revenda.md, docs/roteiro-chat-p3.md, docs/pesquisa-ativacao.md). Conflito já existente: revenda/index.html:147 ("1 caixa / 50 L") × :255 ("primeiro pedido sem mínimo").

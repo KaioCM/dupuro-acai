@@ -9,7 +9,7 @@
 
 ## Negócio
 
-Fábrica/distribuidora de açaí e cremes em Cuiabá-MT (atendimento presencial, Av. das Torres nº 16, Jardim Imperial II, 78076-001). NÃO tem drive-thru. WhatsApp (65) 99288-8228. 4,8★ no Google (34 aval.). Vende também pelo iFood. Tagline: **"Puro como tem que ser"**. **Revenda a partir de 1 caixa de 10 L** (mínimo por produto; 50 L no pedido dispensam). Dois públicos: (1) quem quer virar revendedor, (2) revendedores ativos que precisam de painel. *Dados extraídos de Instagram/Maps — reconfirmar antes de publicar.*
+Fábrica/distribuidora de açaí e cremes em Cuiabá-MT (atendimento presencial, Av. das Torres nº 16, Jardim Imperial II, 78076-001). NÃO tem drive-thru. WhatsApp (65) 99288-8228. 4,8★ no Google (34 aval.). Vende também pelo iFood. Tagline: **"Puro como tem que ser"**. **Revenda: primeiro pedido sem mínimo; depois, a partir de 30 L por pedido** (caixas de 5 e 10 L somadas; configurável no admin). Dois públicos: (1) quem quer virar revendedor, (2) revendedores ativos que precisam de painel. *Dados extraídos de Instagram/Maps — reconfirmar antes de publicar.*
 
 ## Estrutura
 
@@ -76,7 +76,7 @@ Projeto real em `supabase-config.js` (URL `zqadfktfplrbrjmepllh.supabase.co`). D
 | Arquivo | Conteúdo |
 |---|---|
 | `docs/admin.md` | painel admin (abas, Início, Pedidos, Números, Cadastros), modos de produto, produção/custos, ajuste de estoque, filtro Varejo/Atacado, gráficos |
-| `docs/revenda.md` | cadastro/aprovação, pedido do revendedor (RPC, mínimo por volume, entrega, a prazo), numeração, painel do revendedor, excluir revendedor |
+| `docs/revenda.md` | cadastro/aprovação, pedido do revendedor (RPC, pedido mínimo de 30 L / primeiro pedido livre, entrega, a prazo), numeração, painel do revendedor, excluir revendedor |
 | `docs/caixa.md` | caixa/PDV: atendente, copo/self-service, app Electron, offline + sync, sessão de caixa, TEF, pagamento dividido, taxa de entrega, pedidos em aberto, promoções, comanda, layout |
 | `docs/fiscal-nfce.md` | NFC-e (Focus NFe), cancelamento, cupom fiscal impresso, classificação fiscal por perfil |
 | `docs/delivery.md` | Dupuro Delivery: páginas, cotação (ORS + Jev), checkout Mercado Pago, banco |

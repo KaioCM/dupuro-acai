@@ -1036,6 +1036,43 @@ as $function$
 $function$;
 grant execute on function public.litros_dispensa_minimo() to authenticated, service_role;
 
+-- litros_minimo_pedido
+create or replace function public.litros_minimo_pedido()
+ returns numeric
+ language sql
+ stable security definer
+ set search_path to 'public'
+as $function$
+  select coalesce((select valor from public.app_settings where chave = 'litros_minimo_pedido'), 30);
+$function$;
+revoke execute on function public.litros_minimo_pedido() from public, anon;
+grant execute on function public.litros_minimo_pedido() to authenticated, service_role;
+
+-- revendedor_primeiro_pedido
+create or replace function public.revendedor_primeiro_pedido(p_uid uuid)
+ returns boolean
+ language sql
+ stable security definer
+ set search_path to 'public'
+as $function$
+  select p_uid is not null
+     and not exists (select 1 from public.orders where revendedor_id = p_uid and status <> 'cancelado');
+$function$;
+revoke execute on function public.revendedor_primeiro_pedido(uuid) from public, anon, authenticated;
+grant execute on function public.revendedor_primeiro_pedido(uuid) to service_role;
+
+-- sou_primeiro_pedido
+create or replace function public.sou_primeiro_pedido()
+ returns boolean
+ language sql
+ stable security definer
+ set search_path to 'public'
+as $function$
+  select public.revendedor_primeiro_pedido(auth.uid());
+$function$;
+revoke execute on function public.sou_primeiro_pedido() from public, anon;
+grant execute on function public.sou_primeiro_pedido() to authenticated;
+
 -- volume_do_pedido
 create or replace function public.volume_do_pedido(p_rows jsonb)
  returns numeric
@@ -1075,7 +1112,7 @@ begin
       forma_pagamento, pagamentos, entrega, entrega_info, caixa_sessao_id, origem, atendente_id, client_uuid
     ) values (
       nullif(r->>'revendedor_id', '')::uuid, v_numero,
-      coalesce(nullif(r->>'data', ''), (now() at time zone 'America/Cuiuba')::date::text)::date,
+      coalesce(nullif(r->>'data', ''), (now() at time zone 'America/Cuiaba')::date::text)::date,
       r->>'itens', (r->>'valor')::numeric, 'entregue',
       nullif(r->>'produto_id', '')::bigint, nullif(r->>'quantidade', '')::int,
       nullif(r->>'sabor', ''),
@@ -1537,11 +1574,11 @@ as $function$
   select p_turno in ('manha', 'tarde')
      and extract(isodow from p_data) between 1 and 6
      and not public.data_bloqueada(p_data)
-     and p_data <= (now() at time zone 'America/Cuiuba')::date + 14
+     and p_data <= (now() at time zone 'America/Cuiaba')::date + 14
      and (
-       p_data > (now() at time zone 'America/Cuiuba')::date
-       or (p_data = (now() at time zone 'America/Cuiuba')::date
-           and (now() at time zone 'America/Cuiuba')::time < case p_turno when 'manha' then time '07:00' else time '11:00' end)
+       p_data > (now() at time zone 'America/Cuiaba')::date
+       or (p_data = (now() at time zone 'America/Cuiaba')::date
+           and (now() at time zone 'America/Cuiaba')::time < case p_turno when 'manha' then time '07:00' else time '11:00' end)
      );
 $function$;
 grant execute on function public.turno_aberto(date, text) to authenticated, service_role;
@@ -2033,20 +2070,20 @@ grant execute on function public.delivery_cancelar(bigint) to authenticated, ser
 
 -- criar_pedido_revendedor_para
 create or replace function public.criar_pedido_revendedor_para(p_uid uuid, p_rows jsonb, p_entrega jsonb)
- returns text
+returns text
  language plpgsql
  security definer
  set search_path to 'public'
 as $function$
 declare
-  v_numero text; v_volume numeric; v_dispensa boolean; v_falta record; r jsonb; v_prod record;
+  v_numero text; v_volume numeric; v_min numeric; v_pago boolean; r jsonb; v_prod record;
   v_qtd int; v_sabor text; v_tipo text; v_data date; v_turno text; v_pag text; v_forma text;
   v_end text; v_obs text; v_prazo boolean; v_info jsonb; v_cupom_code text; v_cupom record;
   v_pct int := 0; v_troco numeric; v_total numeric := 0; v_lat double precision; v_lng double precision;
-  v_cot public.entrega_cotacoes; v_cot_id uuid; v_taxa numeric := 0;
+  v_cot public.entrega_cotacoes; v_cot_id uuid; v_taxa numeric := 0; v_cupom_tipo text;
 begin
   if p_uid is null then raise exception 'Sem sessão ativa.'; end if;
-  select pode_prazo into v_prazo from public.profiles where id = p_uid and status = 'aprovado' and role = 'revendedor';
+  select pode_prazo into v_prazo from public.profiles where id = p_uid and status = 'aprovado' and role = 'revendedor' for update;
   if not found then raise exception 'Cadastro não aprovado para fazer pedidos.'; end if;
   if p_rows is null or jsonb_array_length(p_rows) = 0 then raise exception 'O pedido precisa ter ao menos um item.'; end if;
   if p_entrega is null or jsonb_typeof(p_entrega) <> 'object' then raise exception 'Escolha entrega ou retirada, o dia e o turno.'; end if;
@@ -2083,15 +2120,10 @@ begin
   if v_cupom_code is not null then
     select id, code, desconto_percent, tipo into v_cupom from public.coupons
      where code = v_cupom_code and revendedor_id = p_uid and not usado
-       and (validade is null or validade >= (now() at time zone 'America/Cuiuba')::date)
+       and (validade is null or validade >= (now() at time zone 'America/Cuiaba')::date)
      for update;
-    if not found then
-      select id, code, desconto_percent, tipo into v_cupom from public.coupons
-       where code = v_cupom_code
-         and (validade is null or validade >= (now() at time zone 'America/Cuiuba')::date)
-       for update;
-      if not found or v_cupom.usado then return v_numero; end if;
-    end if;
+    if not found then raise exception 'Cupom inválido, vencido ou já usado.'; end if;
+    v_cupom_tipo := v_cupom.tipo;
     if v_cupom.tipo = 'frete' then
       if v_tipo <> 'entrega' then raise exception 'Cupom de taxa grátis só vale em pedidos com entrega.'; end if;
       v_taxa := 0;
@@ -2106,12 +2138,14 @@ begin
     raise exception 'Item inválido no pedido.';
   end if;
   v_volume := public.volume_do_pedido(p_rows);
-  v_dispensa := v_volume >= public.litros_dispensa_minimo();
-  if not v_dispensa then
-    select p.nome, p.pedido_minimo into v_falta from jsonb_array_elements(p_rows) e
-      join public.products p on p.id = (e->>'produto_id')::bigint
-     where (e->>'quantidade')::int < coalesce(p.pedido_minimo, 1) limit 1;
-    if found then raise exception 'Pedido mínimo de % é % unidades.', v_falta.nome, v_falta.pedido_minimo; end if;
+  v_pago := v_pag = 'online' and nullif(p_entrega->>'mp_payment_id', '') is not null;
+  if not v_pago and not public.revendedor_primeiro_pedido(p_uid) then
+    v_min := public.litros_minimo_pedido();
+    if v_volume <= 0 or v_volume < v_min then
+      raise exception 'O pedido mínimo é de % L (ex.: % caixas de 10 L ou % de 5 L). Seu pedido tem % L.',
+        replace(trim_scale(v_min)::text, '.', ','), ceil(v_min / 10)::int, ceil(v_min / 5)::int,
+        replace(trim_scale(v_volume)::text, '.', ',');
+    end if;
   end if;
 
   select coalesce(sum(round(p.preco * (e->>'quantidade')::int * (100 - v_pct) / 100.0, 2)), 0) into v_total
@@ -2124,7 +2158,7 @@ begin
     'forma', v_forma, 'troco_para', v_troco, 'endereco', case when v_tipo = 'entrega' then v_end end, 'observacao', v_obs,
     'lat', v_lat, 'lng', v_lng, 'taxa_entrega', case when v_tipo = 'entrega' then v_taxa end, 'km', case when v_tipo = 'entrega' then v_cot.km end,
     'cupom', v_cupom_code, 'desconto_percent', nullif(v_pct, 0),
-    'cupom_tipo', case when v_cupom_code is not null then v_cupom.tipo end,
+    'cupom_tipo', v_cupom_tipo,
     'mp_payment_id', nullif(p_entrega->>'mp_payment_id', ''), 'pago_metodo', nullif(p_entrega->>'pago_metodo', '')));
 
   v_numero := public.next_pedido_numero();
@@ -2134,7 +2168,7 @@ begin
     v_sabor := nullif(r->>'sabor', '');
     insert into public.orders (revendedor_id, numero, data, itens, valor, status, produto_id, quantidade, sabor,
                                usa_estoque, origem, entrega, entrega_info, cupom_code)
-    values (p_uid, v_numero, (now() at time zone 'America/Cuiuba')::date,
+    values (p_uid, v_numero, (now() at time zone 'America/Cuiaba')::date,
             v_prod.nome || coalesce(' - ' || v_sabor, '') || ' x' || v_qtd,
             round(v_prod.preco * v_qtd * (100 - v_pct) / 100.0, 2), 'processando',
             v_prod.id, v_qtd, v_sabor, true, 'revendedor', v_tipo = 'entrega', v_info, v_cupom_code);
@@ -2142,7 +2176,7 @@ begin
   if v_tipo = 'entrega' and v_taxa > 0 then
     insert into public.orders (revendedor_id, numero, data, itens, valor, status, produto_id, quantidade, sabor,
                                usa_estoque, origem, entrega, entrega_info, cupom_code)
-    values (p_uid, v_numero, (now() at time zone 'America/Cuiuba')::date,
+    values (p_uid, v_numero, (now() at time zone 'America/Cuiaba')::date,
             'Taxa de entrega (' || replace(trim(to_char(v_cot.km, 'FM990.0')), '.', ',') || ' km)', v_taxa, 'processando',
             null, 1, null, false, 'revendedor', true, v_info, v_cupom_code);
   end if;
@@ -2263,7 +2297,7 @@ create or replace function public.delivery_turnos_lotados()
  set search_path to 'public'
 as $function$
   select coalesce(array_agg(d::date::text || '|' || t), '{}')
-    from generate_series((now() at time zone 'America/Cuiuba')::date, (now() at time zone 'America/Cuiuba')::date + 10, interval '1 day') d
+    from generate_series((now() at time zone 'America/Cuiaba')::date, (now() at time zone 'America/Cuiaba')::date + 10, interval '1 day') d
     cross join (values ('manha'), ('tarde')) v(t)
    where public.turno_lotado(d::date, t);
 $function$;
@@ -2295,8 +2329,8 @@ begin
 
   return query
   select 'delivery'::text, d.codigo,
-         coalesce((d.entregue_em at time zone 'America/Cuiuba')::date, d.data_entrega,
-                  (d.criado_em at time zone 'America/Cuiuba')::date),
+         coalesce((d.entregue_em at time zone 'America/Cuiaba')::date, d.data_entrega,
+                  (d.criado_em at time zone 'America/Cuiaba')::date),
          d.cliente_nome, d.taxa
     from delivery_pedidos d
    where d.status = 'entregue' and coalesce(d.taxa, 0) > 0
@@ -2329,13 +2363,13 @@ begin
   select * into v from public.coupons
    where code = upper(trim(coalesce(p_code, '')))
      and tipo = 'frete' and revendedor_id is null and not usado
-     and (validade is null or validade >= (now() at time zone 'America/Cuiuba')::date)
+     and (validade is null or validade >= (now() at time zone 'America/Cuiaba')::date)
    for update;
   if not found then
     select * into v from public.coupons
      where code = upper(trim(coalesce(p_code, '')))
        and tipo = 'frete' and revendedor_id is null
-       and (validade is null or validade >= (now() at time zone 'America/Cuiuba')::date)
+       and (validade is null or validade >= (now() at time zone 'America/Cuiaba')::date)
      for update;
     if not found or v.usado_por is distinct from nullif(trim(coalesce(p_pedido_trocado, '')), '') then return false; end if;
     if not exists (select 1 from public.delivery_pedidos d
