@@ -102,6 +102,7 @@
   var FALA_NAO = 'Me conta o que é, então.';
   var SIM_CHAVES = ['preco_copo', 'custo_caixa', 'copos_caixa', 'venda_caixa', 'sobra_caixa', 'copos_dia', 'caixas_semana', 'sobra_semana'];
   var PRECOS = [18, 19, 20];
+  var SEG_LABEL = {}; SEG_CHIPS.forEach(function (c) { SEG_LABEL[c[0]] = c[1]; });
   function temSeg(k) { return typeof k === 'string' && Object.prototype.hasOwnProperty.call(SEG_ROT, k); }
   function sanSim(o) {
     if (!o || typeof o !== 'object') return null;
@@ -180,7 +181,7 @@
     return r;
   }
   try { var salvo = normalizar(JSON.parse(sessionStorage.getItem(CHAVE) || 'null')); if (salvo) E = salvo; } catch (e) {}
-  function salvar() { try { sessionStorage.setItem(CHAVE, JSON.stringify(E)); } catch (e) {} }
+  function salvar() { try { sessionStorage.setItem(CHAVE, JSON.stringify(E)); } catch (e) {} atualizarCaso(); }
 
   // ---- Adaptador de API ----
   var api = MODO === 'edge' ? apiEdge() : apiMock();
@@ -314,7 +315,8 @@
   }
 
   // ---- DOM ----
-  var btn, painel, msgs, form, campo, env, topoHum, notasBox;
+  var btn, painel, msgs, form, campo, env, topoHum, notasBox, corpo, col, casoAside, casoAba, casoRows = {};
+  var casoPronto = false, casoAberto = false, casoTimer = 0, ultimaNota = ''; // "Seu caso": ultimaNota só em memória
   function el(tag, cls, txt) { var e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; }
 
   function montar() {
@@ -348,7 +350,22 @@
     form.appendChild(campo); form.appendChild(campoS); form.appendChild(env);
 
     notasBox = el('div', 'puri-notas'); notasBox.hidden = true;
-    painel.appendChild(topo); painel.appendChild(msgs); painel.appendChild(notasBox); painel.appendChild(form);
+    // "Seu caso" (resumo ao vivo da revenda): coluna à direita no desktop, aba recolhível no mobile
+    corpo = el('div', 'puri-corpo'); col = el('div', 'puri-col');
+    casoAba = el('button', 'puri-caso-aba'); casoAba.type = 'button'; casoAba.hidden = true;
+    casoAba.setAttribute('aria-expanded', 'false'); casoAba.setAttribute('aria-controls', 'puriCaso');
+    casoAside = el('aside', 'puri-caso'); casoAside.id = 'puriCaso'; casoAside.setAttribute('aria-label', 'Seu caso'); casoAside.hidden = true;
+    casoAside.appendChild(el('h2', 'puri-caso-t', 'Seu caso'));
+    var dl = el('dl', 'puri-caso-l');
+    CASO_CAMPOS.forEach(function (c) {
+      var box = el('div', 'puri-caso-i'), dd = el('dd', null, '—');
+      box.appendChild(el('dt', null, c[1])); box.appendChild(dd); dl.appendChild(box); casoRows[c[0]] = { box: box, dd: dd };
+    });
+    casoAside.appendChild(dl);
+    casoAba.addEventListener('click', function () { casoAberto = !casoAberto; atualizarCaso(); });
+    col.appendChild(casoAba); col.appendChild(casoAside); col.appendChild(msgs); col.appendChild(notasBox); col.appendChild(form);
+    corpo.appendChild(col);
+    painel.appendChild(topo); painel.appendChild(corpo);
     document.body.appendChild(btn); document.body.appendChild(painel);
 
     btn.addEventListener('click', function () { aberto ? fechar() : abrir(); });
@@ -366,7 +383,7 @@
       campo.style.height = 'auto'; campo.style.height = Math.min(campo.scrollHeight, 96) + 'px'; agendarEscuta();
     });
     document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape' && aberto) fechar(); });
-    window.addEventListener('resize', function () { if (aberto) travarScroll(); ajustarBotao(); });
+    window.addEventListener('resize', function () { if (aberto) travarScroll(); ajustarBotao(); clearTimeout(casoTimer); casoTimer = setTimeout(atualizarCaso, 150); });
   }
 
   // Campo/enviar: desligados depois do F6 (etapa 'fim') e enquanto a Puri processa.
@@ -376,6 +393,47 @@
     campo.maxLength = (E.r && (E.r.passo === 'aprof' || E.r.passo === 'palpite_txt')) ? 300 : MAX_CHARS; // a Edge aceita 300 nesses passos
     env.disabled = fim || ocupado;
     campo.placeholder = fim ? T.fimCampo : 'Escreva aqui';
+  }
+  // ---- "Seu caso": resumo ao vivo da conversa de revenda (tudo por textContent) ----
+  var CASO_CAMPOS = [['negocio', 'Negócio'], ['cidade', 'Cidade'], ['quer', 'O que quer'], ['mov', 'Movimento'], ['sim', 'Simulação'], ['etapa', 'Etapa']];
+  var MOV_ROT = { ate20: 'até 20 copos/dia', '20a50': '20 a 50 copos/dia', '50a100': '50 a 100 copos/dia', '100mais': '100 ou mais copos/dia' };
+  var CASO_ETAPA = { segmento: 'Seu negócio', cidade: 'Onde fica', cidade_outra: 'Onde fica', bairro: 'Onde fica', objetivo: 'O que você quer', movimento: 'Movimento', sim: 'Simulação', aprof: 'Entender melhor', palpite: 'Entender melhor', palpite_txt: 'Entender melhor', resumo: 'Resumo', regras: 'Regras', conta: 'Conta' };
+  function casoAtivo() { return !!(E.r && RP.indexOf(E.r.passo) >= 0); }
+  function casoLargo() { return window.innerWidth >= 900 && !(window.matchMedia && matchMedia('(pointer: coarse)').matches); }
+  function casoValores() {
+    var r = E.r, v = {};
+    v.negocio = (r.segmento && SEG_LABEL[r.segmento]) || '';
+    v.cidade = [r.cidade, r.bairro].filter(Boolean).join(' · ');
+    v.quer = r.problema || ultimaNota || '';
+    v.mov = (r.movimento && MOV_ROT[r.movimento]) || '';
+    v.sim = (r.sim && r.sim.sobra_semana != null && isFinite(r.sim.sobra_semana)) ? 'Sobra ≈ ' + fmtR(r.sim.sobra_semana) + ' por semana' : '';
+    v.etapa = CASO_ETAPA[r.passo] || '';
+    return v;
+  }
+  function atualizarCaso() {
+    if (!painel || !casoAside) return;
+    var ativo = casoAtivo(), largo = casoLargo();
+    if (largo ? casoAside.parentNode !== corpo : casoAside.parentNode !== col) { if (largo) corpo.appendChild(casoAside); else col.insertBefore(casoAside, msgs); }
+    painel.classList.toggle('puri-largo', ativo && largo);
+    var abaFocada = document.activeElement === casoAba;
+    casoAba.hidden = !ativo || largo;
+    if (abaFocada && casoAba.hidden) { var alvo = (campo && !campo.disabled && campo.offsetParent !== null) ? campo : painel; if (alvo === painel && !painel.hasAttribute('tabindex')) painel.setAttribute('tabindex', '-1'); alvo.focus(); }
+    if (!ativo) { casoPronto = false; casoAberto = false; ultimaNota = ''; casoAside.hidden = true; casoAba.setAttribute('aria-expanded', 'false'); return; }
+    casoAside.hidden = !largo && !casoAberto;
+    casoAba.setAttribute('aria-expanded', casoAberto ? 'true' : 'false');
+    var v = casoValores(), n = 0;
+    ['negocio', 'cidade', 'quer', 'mov', 'sim'].forEach(function (k) { if (v[k]) n++; });
+    casoAba.textContent = 'Seu caso · ' + n + ' de 5';
+    CASO_CAMPOS.forEach(function (c) {
+      var row = casoRows[c[0]], txt = v[c[0]] || '—';
+      if (row.dd.textContent === txt) return;
+      row.dd.textContent = txt;
+      if (casoPronto && !REDUZIDO) {
+        row.box.classList.remove('puri-mudou'); void row.box.offsetWidth; row.box.classList.add('puri-mudou');
+        clearTimeout(row.t); row.t = setTimeout(function () { row.box.classList.remove('puri-mudou'); }, 650);
+      }
+    });
+    casoPronto = true;
   }
   function movel() { return window.innerWidth < 640 || (window.matchMedia && matchMedia('(pointer: coarse)').matches); }
   // Desktop: foca o campo. Celular: foca o painel (não abre o teclado).
@@ -452,7 +510,7 @@
     E.msgs.forEach(function (m, i) { addBalao(m.de, m.t, false); if (rc && rc.resI === i + 1) msgs.appendChild(cartaoResumo(rc.resumo, rc.problema)); });
     if (E.r && E.r.passo === 'sim' && E.r.sim) msgs.appendChild(cartaoSim(E.r.sim));
     desenharChips(E.chips, false);
-    atualizarCampo();
+    atualizarCampo(); atualizarCaso();
     rolar(true);
   }
   function guardar(de, t) {
@@ -494,7 +552,7 @@
     ger++;
     ultimoTexto = ''; vNome = ''; vTel = ''; limparConta(); rRetry = null; clearTimeout(escTimer); escVoo = false; escUltimo = ''; limparNotas();
     E = novoEstado();
-    ocupado = false; salvar(); msgs.textContent = ''; atualizarCampo(); topoHum.href = waLink();
+    ocupado = false; ultimaNota = ''; salvar(); msgs.textContent = ''; atualizarCampo(); topoHum.href = waLink();
     comecar(); focarEntrada();
   }
 
@@ -765,14 +823,14 @@
       var ficha = function () {
         if (g !== ger) return;
         Array.prototype.forEach.call(msgs.querySelectorAll('.puri-sim'), function (n) { n.remove(); });
-        limparChips(); msgs.appendChild(cartaoSim(s)); E.chips = chipsR('sim'); salvar(); desenharChips(E.chips); rolar();
+        limparChips(); msgs.appendChild(cartaoSim(s, true)); E.chips = chipsR('sim'); salvar(); desenharChips(E.chips); rolar();
       };
       if (s.custo_caixa == null) fala = T_SEM_CUSTO;
       if (fala) return puriDiz(fala, []).then(ficha);
       ficha();
     });
   }
-  function cartaoSim(s) {
+  function cartaoSim(s, animar) {
     var c = el('div', 'puri-sim'); c.setAttribute('role', 'group'); c.setAttribute('aria-label', 'Simulação por caixa');
     function lin(cls, partes) {
       var p = el('p', 'puri-sim-l' + (cls ? ' ' + cls : ''));
@@ -786,6 +844,21 @@
       if (s.sobra_caixa != null) lin('puri-sim-sobra', ['Sobra ≈ ', { n: fmtR(s.sobra_caixa) }, ' por caixa']);
       if (s.caixas_semana != null && s.sobra_semana != null) lin('', ['No seu movimento: ≈ ', { n: Math.round(s.caixas_semana) + ' caixas' }, ' por semana → ≈ ', { n: fmtR(s.sobra_semana) }, ' por semana']);
     }
+    var nok = function (x) { return typeof x === 'number' && isFinite(x); };
+    if (nok(s.venda_caixa) && nok(s.custo_caixa) && nok(s.sobra_caixa) && s.venda_caixa > 0) {
+      var bar = el('div', 'puri-sim-barras'); bar.setAttribute('aria-hidden', 'true'); // os mesmos números já estão no texto acima
+      var fills = [];
+      [['Venda', s.venda_caixa, 'venda'], ['Custo', s.custo_caixa, 'custo'], ['Sobra', s.sobra_caixa, 'sobra']].forEach(function (b) {
+        var pct = Math.max(0, Math.min(100, b[1] / s.venda_caixa * 100));
+        var linha = el('div', 'puri-sim-barra'), trilho = el('span', 'puri-sim-trilho'), fill = el('i', b[2]);
+        fill.style.width = (animar && !REDUZIDO) ? '0%' : pct + '%'; fills.push([fill, pct]);
+        trilho.appendChild(fill);
+        linha.appendChild(el('span', 'puri-sim-bl', b[0])); linha.appendChild(trilho); linha.appendChild(el('span', 'puri-sim-bv', fmtR(b[1])));
+        bar.appendChild(linha);
+      });
+      c.appendChild(bar);
+      if (animar && !REDUZIDO) requestAnimationFrame(function () { requestAnimationFrame(function () { fills.forEach(function (f) { f[0].style.width = f[1] + '%'; }); }); });
+    }
     c.appendChild(el('p', 'puri-sim-nota', 'Estimativa, sem contar copo, cobertura e outros custos.'));
     return c;
   }
@@ -795,6 +868,7 @@
     var ul = el('ul');
     arr.slice(0, 6).forEach(function (a) { if (typeof a === 'string' && a.trim()) ul.appendChild(el('li', null, a.trim().slice(0, 120))); });
     if (!ul.children.length) return;
+    ultimaNota = ul.lastChild.textContent; atualizarCaso();
     notasBox.textContent = ''; notasBox.appendChild(el('strong', null, 'O que já anotamos')); notasBox.appendChild(ul); notasBox.hidden = false;
   }
   function agendarEscuta() {
@@ -823,6 +897,7 @@
       if (!x.r) return falhaR(x);
       rRetry = null;
       var an = Array.isArray(x.r.anotacoes) ? x.r.anotacoes.filter(function (a) { return typeof a === 'string' && a.trim(); }).slice(0, 6).map(function (a) { return a.trim().replace(/[.\s]+$/, ''); }) : [];
+      if (an.length) ultimaNota = an[an.length - 1].slice(0, 120);
       return perguntarR('movimento', an.length ? 'Anotei: ' + an.join('; ') + '.' : 'Anotado.');
     });
   }

@@ -2,7 +2,7 @@
    Puri — assistente flutuante da Dupuro (casca). Separado do style.css de propósito.
    Usa só as variáveis de :root do style.css (com fallback). Movimento próprio
    (exceção registrada no ROTEIRO §0), sempre respeitando prefers-reduced-motion.
-   z-index: botão 50 · painel aberto 70.
+   z-index: botão 50 · painel aberto 1100 (acima do .site-header, z 1000, no mobile em tela cheia).
    ========================================================================== */
 
 .puri-btn {
@@ -27,7 +27,7 @@
 
 /* Painel */
 .puri-painel {
-  position: fixed; right: 26px; bottom: 26px; z-index: 70;
+  position: fixed; right: 26px; bottom: 26px; z-index: 1100;
   width: 380px; height: min(600px, calc(100vh - 52px));
   display: flex; flex-direction: column; overflow: hidden;
   background: var(--cream, #FFF7EC); color: var(--text, #33122B);
@@ -138,3 +138,34 @@
 .puri-resumo-l { margin: 0 0 8px; font-size: 14.5px; line-height: 1.4; color: var(--text, #33122B); }
 .puri-resumo-pilula { display: inline-block; padding: 4px 12px; border-radius: 999px; background: var(--roxo-700, #601050); color: var(--white, #fff); font-size: 13px; font-weight: 700; }
 @media (prefers-reduced-motion: reduce) { .puri-resumo { animation: none !important; } }
+
+/* Corpo do painel: coluna do chat + "Seu caso" */
+.puri-corpo { flex: 1; min-height: 0; display: flex; }
+.puri-col { flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; }
+.puri-painel { transition: opacity .2s ease, transform .2s ease, width .2s ease, visibility 0s linear .2s; }
+.puri-painel.on { transition: opacity .2s ease, transform .2s ease, width .2s ease, visibility 0s; }
+.puri-painel.puri-largo { width: min(720px, calc(100vw - 52px)); }
+.puri-caso { flex: none; width: 300px; overflow-y: auto; padding: 16px 16px 12px; background: var(--cream-2, #FBEEDC); border-left: 1px solid var(--cream-2, #FBEEDC); border-left-color: color-mix(in srgb, var(--roxo-300, #A94E8C) 30%, transparent); }
+.puri-caso[hidden], .puri-caso-aba[hidden] { display: none; }
+.puri-caso-t { margin: 0 0 10px; font: 400 22px/1.1 var(--font-display, 'Klinko', 'Inter', sans-serif); color: var(--roxo-700, #601050); }
+.puri-caso-l { margin: 0; }
+.puri-caso-i { margin: 0 -8px 4px; padding: 6px 8px; border-radius: 10px; }
+.puri-caso-i dt { font-size: 12px; font-weight: 700; color: var(--roxo-700, #601050); }
+.puri-caso-i dd { margin: 1px 0 0; font-size: 14px; line-height: 1.35; color: var(--text, #33122B); overflow-wrap: anywhere; }
+.puri-caso-i.puri-mudou { animation: puriDestaque .6s ease-out; }
+@keyframes puriDestaque { from { background: var(--gold-soft, #FFD34D); } to { background: transparent; } }
+/* Janela estreita ou toque: aba recolhível no lugar da coluna */
+.puri-caso-aba { flex: none; display: block; width: 100%; min-height: 44px; padding: 10px 16px; text-align: left; background: var(--cream-2, #FBEEDC); color: var(--roxo-700, #601050); border: 0; border-bottom: 1px solid var(--cream-2, #FBEEDC); border-bottom-color: color-mix(in srgb, var(--roxo-300, #A94E8C) 30%, transparent); font: 700 14px/1.2 var(--font-body, 'Inter', sans-serif); cursor: pointer; }
+.puri-col > .puri-caso { width: auto; max-height: 34vh; border-left: 0; border-bottom: 1px solid var(--cream-2, #FBEEDC); padding: 10px 16px 6px; }
+.puri-col > .puri-caso .puri-caso-t { display: none; }
+@media (prefers-reduced-motion: reduce) { .puri-painel, .puri-painel.on { transition: none !important; } .puri-caso-i.puri-mudou { animation: none !important; } .puri-sim-barra i { transition: none !important; } }
+
+/* Barras do simulador (por caixa) */
+.puri-sim-barras { margin: 8px 0 4px; display: grid; gap: 6px; }
+.puri-sim-barra { display: grid; grid-template-columns: 44px 1fr 64px; align-items: center; gap: 8px; font-size: 12.5px; color: var(--text, #33122B); }
+.puri-sim-bv { min-width: 64px; white-space: nowrap; text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
+.puri-sim-trilho { display: block; height: 12px; border-radius: 999px; background: var(--cream-2, #FBEEDC); overflow: hidden; }
+.puri-sim-barra i { display: block; height: 100%; border-radius: 999px; transition: width .6s ease-out; }
+.puri-sim-barra i.venda { background: var(--roxo-500, #7E2065); }
+.puri-sim-barra i.custo { background: var(--roxo-300, #A94E8C); }
+.puri-sim-barra i.sobra { background: var(--gold, #F5B301); }
