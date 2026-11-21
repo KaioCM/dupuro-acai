@@ -10,7 +10,7 @@ web
 - **Revendedores** (sorveterias, lanchonetes, açaiterias de Cuiabá e Várzea Grande): compram açaí no atacado direto da fábrica pelo painel do revendedor (`area-cliente/dashboard.html`).
 - **Clientes de casa**: compram caixas de 1 L a 10 L e granola pelo Dupuro Delivery (`/delivery`), com entrega de segunda a sábado, manhã (8h–12h, pedido até 7h) ou tarde (13h–17h, pedido até 11h), raio de até 30 km.
 - **Atendente da loja da fábrica**: vende no balcão pelo caixa (`area-cliente/caixa.html`), muitas vezes no app desktop (Electron).
-- **Admins**: o Kayo (dono, que montou o sistema) e a sócia, que não montou e precisa achar tudo sem explicação. Usam o admin meio a meio no celular e no computador. As tarefas diárias têm o mesmo peso: confirmar pedidos, cuidar da produção e do estoque, ver os números e manter os cadastros (revendedores, produtos, cupons).
+- **Admins**: o Kayo (dono, que montou o sistema) e a sócia, que não montou e precisa achar tudo sem explicação. Usam o admin meio a meio no celular e no computador. As tarefas diárias têm o mesmo peso: acompanhar e despachar pedidos, cuidar da produção e do estoque, ver os números e manter os cadastros (revendedores, produtos, cupons).
 
 ## Product Purpose
 Site e sistema da Dupuro Açaí, fábrica de açaí em Cuiabá-MT. A meta central é tirar os pedidos do WhatsApp. Hoje o revendedor ainda avisa no WhatsApp que fez o pedido; o painel precisa ficar bom o bastante para que esse aviso deixe de ser necessário. Sucesso é cada pedido chegar e baixar o estoque sem conversa paralela.
@@ -19,7 +19,7 @@ Site e sistema da Dupuro Açaí, fábrica de açaí em Cuiabá-MT. A meta centra
 Açaí direto da fábrica; revenda: primeiro pedido sem mínimo; depois, a partir de 30 L por pedido (caixas de 5 e 10 L somadas). A mesma fábrica atende três canais: atacado (revenda), balcão da loja e delivery para casa. Estoque é por sabor.
 
 ## Operating Context
-- Pedido de revendedor vale na hora (desde 2026-10-24, sem confirmação do admin, igual ao delivery): as linhas já nascem `processando` e o estoque baixa na criação, via trigger `adjust_stock_on_order_change`. `criar_pedido_revendedor_para` valida estoque, mínimo de 30 L, cupom e rota antes de gravar.
+- Pedido de revendedor vale na hora (desde 2026-10-24, sem confirmação do admin, igual ao delivery): as linhas já nascem `processando` e o estoque baixa na criação, via trigger `adjust_stock_on_order_change`. `criar_pedido_revendedor_para` valida estoque, mínimo de 30 L, cupom, dia/turno e lotação, com preço do banco, antes de gravar.
 - Venda de balcão já nasce `entregue` e baixa estoque na hora. A loja tem cerca de 10 vendas por dia, contra cerca de 3 pedidos de revenda por semana no painel.
 - Delivery: tabela `delivery_pedidos`, com status próprio e pagamento Mercado Pago integrado. Já tem pedidos (DLV-0020, pago via Pix e entregue em 2026-11-10).
 - Produção é registrada em levas (`producoes`, `producao_gastos`, `producao_itens`) para calcular o custo por litro.
@@ -36,9 +36,9 @@ Açaí direto da fábrica; revenda: primeiro pedido sem mínimo; depois, a parti
 - Para o admin, o dono liberou mudar tudo, inclusive a aparência.
 
 ## Evidence on Hand
-- Dados reais no banco: cerca de 1.000 vendas de balcão, 42 pedidos de revenda, 5 revendedores aprovados e 10 cadastros pendentes (o mais antigo de 83 dias).
+- Dados reais no banco: cerca de 1.000 vendas de balcão, 42 pedidos de revenda, 5 revendedores aprovados e 10 cadastros pendentes (levantamento de 2026-11).
 - Avaliações Google exibidas na home.
-- O delivery já tem pedidos (ex.: DLV-0020). Não inventar números, depoimentos ou clientes.
+- Não inventar números, depoimentos ou clientes.
 
 ## Product Principles
 1. **O que precisa de você primeiro.** Toda tela operacional abre pela fila de ações, não pelo formulário de cadastro.
