@@ -111,3 +111,12 @@ Mesma ação `revenda` (token de lead `puri`), mesmos limites da `mensagem` (por
 ## Ambientes
 - `assistente-dev`: desenvolvimento e testes. O front local (localhost, `?puri=edge`) chama `functions/v1/assistente-dev`; `?puri=prod` em localhost força a produção. Mesmas tabelas e secrets; use tokens de teste e apague o lead e as chaves `puri-tok:`/`puri-esc:` depois.
 - `assistente` (produção): só no publicar. Trava: deploy com os 3 arquivos completos (`index.ts`, `logica.ts`, `fatos.ts`) + teste de fumaça (iniciar, mensagem, revenda) logo depois. Volta = redeploy do HEAD do git.
+
+## Visuais (Etapa 5A)
+- **Seu caso:** coluna à direita com painel largo (≥900px sem pointer coarse), ou aba recolhível; mostra os campos coletados; nada pessoal é persistido; "O que quer" vem da última anotação, só em memória.
+- **Barras do simulador:** barras comparando cenários de revenda dentro do chat, calculadas no navegador.
+- **Cena neon:** dados `CENAS` por segmento, desenhados em SVG com `stroke-dashoffset`; posição registrada em `E.r.cenaI`.
+- **Pixel art:** N = 10/35/75/120 pelo meio da faixa de movimento; Path2D sobre `CENAS` vira partículas (máx. 900); rAF único de ~2,5 s; em reduced motion ou redesenho, só o quadro final; posição em `E.r.pixI`. A legenda é `aria-hidden` (o contador muda a cada quadro); o `aria-label` do canvas informa o valor.
+- **Fallbacks:** tudo em try/catch; falha visual nunca quebra a conversa (exceção no rAF cai no quadro final e libera `_anim`).
+- **z-index:** painel 1100, acima do header 1000.
+- **Pendência:** o mapa do caso (5B, com IA no servidor).

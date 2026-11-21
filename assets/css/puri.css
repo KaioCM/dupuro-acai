@@ -113,7 +113,18 @@
   .puri-humano-topo { min-height: 44px; padding-top: 10px; padding-bottom: 10px; }
 }
 
+/* Cena neon do ponto de venda (desenhada por puri.js) */
+.puri-cena { flex: none; align-self: stretch; padding: 10px 12px 8px; border-radius: var(--radius-lg, 26px); background-color: var(--roxo-950, #240820); background-image: radial-gradient(color-mix(in srgb, var(--roxo-300, #A94E8C) 28%, transparent) 1px, transparent 1.2px); background-size: 14px 14px; }
+.puri-painel .puri-cena-svg { display: block; width: 100%; height: auto; }
+.puri-cena-svg path { fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.puri-cena.desenha path { stroke-dashoffset: 0 !important; }
+.puri-pixel { flex: none; align-self: stretch; padding: 10px 12px 8px; border-radius: var(--radius-lg, 26px); background-color: var(--roxo-950, #240820); background-image: radial-gradient(color-mix(in srgb, var(--roxo-300, #A94E8C) 28%, transparent) 1px, transparent 1.2px); background-size: 14px 14px; }
+.puri-pix-cv { width: 100%; }
+.puri-pix-cv canvas { display: block; width: 100%; image-rendering: pixelated; }
+.puri-pix-leg { margin: 6px 0 0; text-align: center; font: 600 12px/1.3 var(--font-body, 'Inter', sans-serif); color: var(--cream, #FFF7EC); }
+.puri-cena-leg { margin: 6px 0 0; text-align: center; font: 600 12px/1.3 var(--font-body, 'Inter', sans-serif); color: var(--cream, #FFF7EC); }
 @media (prefers-reduced-motion: reduce) {
+  .puri-cena-svg path { transition: none !important; stroke-dasharray: none !important; stroke-dashoffset: 0 !important; }
   .puri-btn, .puri-painel, .puri-painel.on, .puri-b, .puri-chips, .puri-dig i { transition: none !important; animation: none !important; }
   .puri-msgs { scroll-behavior: auto; }
 }

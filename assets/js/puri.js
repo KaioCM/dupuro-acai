@@ -173,7 +173,9 @@
         movimento: MOV_CHIPS.some(function (m) { return m[0] === q.movimento; }) ? q.movimento : null,
         preco: PRECOS.indexOf(+q.preco) >= 0 ? +q.preco : null, sim: sanSim(q.sim), escN: Math.min(4, Math.max(0, +q.escN || 0)),
         apOk: q.apOk === true, palOk: q.palOk === true,
-        resumo: sanTxt(q.resumo, 300) || null, problema: sanTxt(q.problema, 40) || null, resI: Math.min(MAX_BALOES, Math.max(0, Math.floor(+q.resI) || 0))
+        resumo: sanTxt(q.resumo, 300) || null, problema: sanTxt(q.problema, 40) || null, resI: Math.min(MAX_BALOES, Math.max(0, Math.floor(+q.resI) || 0)),
+        cenaI: typeof q.cenaI === 'number' && isFinite(q.cenaI) ? Math.min(MAX_BALOES, Math.max(0, Math.floor(q.cenaI))) : null,
+        pixI: typeof q.pixI === 'number' && isFinite(q.pixI) ? Math.min(MAX_BALOES, Math.max(0, Math.floor(q.pixI))) : null
       };
       if (q.ap && typeof q.ap === 'object' && sanTxt(q.ap.p, 200)) r.r.ap = { p: sanTxt(q.ap.p, 200), rs: (Array.isArray(q.ap.rs) ? q.ap.rs : []).map(function (x) { return sanTxt(x, 60); }).filter(Boolean).slice(0, 4) };
     }
@@ -503,11 +505,212 @@
     });
     msgs.appendChild(box);
   }
+  // ---- Cena neon do ponto de venda (dados: [cor, 'd do path'], só M L H V C Q A Z, sem transform; o canvas reusa via Path2D) ----
+  var COR_CENA = { g: 'var(--gold, #F5B301)', v: 'var(--verde, #8BB831)', c: 'var(--cream, #FFF7EC)' };
+  function copoCena(x, b, s) { // copo de açaí com cúpula e colher; (x, b) = canto esquerdo da base; s = escala
+    var y = b - 26 * s;
+    function k(v) { return Math.round(v * 10) / 10; }
+    return [
+      ['c', 'M' + k(x) + ' ' + k(y) + ' L' + k(x + 3 * s) + ' ' + k(b) + ' H' + k(x + 19 * s) + ' L' + k(x + 22 * s) + ' ' + k(y) + ' Z'],
+      ['g', 'M' + k(x - s) + ' ' + k(y) + ' C' + k(x - s) + ' ' + k(y - 14 * s) + ' ' + k(x + 23 * s) + ' ' + k(y - 14 * s) + ' ' + k(x + 23 * s) + ' ' + k(y)],
+      ['v', 'M' + k(x + 14 * s) + ' ' + k(y - 9 * s) + ' L' + k(x + 19 * s) + ' ' + k(y - 21 * s) + ' Q' + k(x + 21 * s) + ' ' + k(y - 27 * s) + ' ' + k(x + 25 * s) + ' ' + k(y - 24 * s) + ' Q' + k(x + 23 * s) + ' ' + k(y - 19 * s) + ' ' + k(x + 19 * s) + ' ' + k(y - 21 * s)]
+    ];
+  }
+  function circ(cx, cy, r) { return 'M' + (cx - r) + ' ' + cy + ' A' + r + ' ' + r + ' 0 1 0 ' + (cx + r) + ' ' + cy + ' A' + r + ' ' + r + ' 0 1 0 ' + (cx - r) + ' ' + cy; }
+  var CHAO = ['c', 'M8 128 H312'];
+  var CENAS = {
+    acaiteria: [CHAO, ['c', 'M20 128 V50 H200 V128'], ['g', 'M14 50 H206 L196 30 H24 Z'], ['v', 'M58 30 L54 50'], ['v', 'M92 30 L90 50'], ['v', 'M128 30 L128 50'], ['v', 'M162 30 L166 50'], ['c', 'M34 128 V92 H186 V128'], ['g', 'M34 92 H186']].concat(copoCena(244, 128, 2)),
+    lanchonete_bar: [CHAO, ['c', 'M12 128 V88 H200 V128'], ['g', 'M8 88 H204'], ['c', 'M38 74 H62 M50 74 V128 M42 128 H58'], ['c', 'M118 74 H142 M130 74 V128 M122 128 H138'], ['c', 'M80 22 V10 M140 22 V10'], ['g', 'M60 22 H160 V46 H60 Z'], ['v', 'M72 34 H148']].concat(copoCena(164, 88, 0.9), copoCena(240, 128, 1.6)),
+    delivery_acai: [CHAO, ['c', 'M10 96 H34 M16 108 H38'], ['c', circ(70, 110, 18)], ['c', circ(190, 110, 18)], ['c', 'M70 110 L100 84 H150 L190 110'], ['c', 'M190 110 L182 76 L196 66 H204'], ['v', 'M102 78 H142 M122 78 V84'], ['c', 'M46 90 H100 M70 110 L78 90'], ['g', 'M52 62 H100 V90 H52 Z'], ['v', 'M52 72 H100']].concat(copoCena(240, 128, 1.6)),
+    sorveteria: [CHAO, ['c', 'M16 128 V54 H176 V128'], ['g', 'M12 54 L24 34 H168 L180 54'], ['v', 'M12 54 Q24 68 36 54 Q48 68 60 54 Q72 68 84 54 Q96 68 108 54 Q120 68 132 54 Q144 68 156 54 Q168 68 180 54'], ['v', 'M30 128 V100 H162 V128'], ['c', 'M30 100 L40 88 H152 L162 100'], ['c', 'M200 62 L222 126 L244 62 Z'], ['c', 'M210 80 L236 80 M216 98 L230 98'], ['g', 'M198 62 C192 40 246 40 246 62'], ['v', 'M210 46 C210 30 234 30 234 46']].concat(copoCena(268, 128, 1)),
+    feira_evento: [CHAO, ['c', 'M10 20 Q100 44 190 20'], ['v', 'M35 26.7 H45 L40 37 Z'], ['g', 'M65 30.7 H75 L70 41 Z'], ['v', 'M95 32 H105 L100 42 Z'], ['g', 'M125 30.7 H135 L130 41 Z'], ['v', 'M155 26.7 H165 L160 37 Z'], ['g', 'M16 62 L100 30 L184 62 Z'], ['c', 'M30 62 V128 M170 62 V128'], ['c', 'M45 100 H155 M52 100 V128 M148 100 V128']].concat(copoCena(84, 100, 0.8), copoCena(232, 128, 1.6)),
+    mercado_varejo: [CHAO, ['c', 'M14 128 V40 H110 V128'], ['g', 'M14 66 H110 M14 92 H110'], ['v', 'M26 66 V54 H38 V66 M52 66 V50 H64 V66 M26 92 V80 H38 V92 M72 92 V76 H84 V92'], ['v', 'M130 128 V36 H190 V128 Z'], ['c', 'M138 128 V44 H182 V128 M138 70 H182 M138 98 H182'], ['g', 'M176 76 V92'], ['c', 'M214 56 H226 L236 100 H282 L292 66 H230'], ['c', 'M246 100 L245 114 M276 100 L275 114'], ['c', circ(245, 120, 6)], ['c', circ(275, 120, 6)]].concat(copoCena(252, 100, 0.8)),
+    revenda_casa: [CHAO, ['c', 'M24 128 V74 H150 V128'], ['g', 'M14 76 L87 28 L160 76'], ['c', 'M122 50 V32 H134 V58'], ['v', 'M42 88 H74 V112 H42 Z M58 88 V112 M42 100 H74'], ['c', 'M100 128 V92 H128 V128 M122 112 H123'], ['v', 'M190 128 V100 H240 V128'], ['g', 'M186 100 V92 H244 V100'], ['g', 'M205 92 Q215 82 225 92']].concat(copoCena(266, 128, 1)),
+    outro: [CHAO, ['c', 'M30 128 V56 H190 V128'], ['g', 'M22 56 L34 38 H186 L198 56 Z'], ['c', 'M50 128 V84 H82 V128'], ['v', 'M104 74 H170 V110 H104 Z'], ['g', 'M110 62 H164']].concat(copoCena(236, 128, 1.6))
+  };
+  function cenaEl(seg) { // monta o cartão (SVG por createElementNS; legenda por textContent). Null se algo falhar.
+    try {
+      var chave = CENAS[seg] ? seg : 'outro', rot = SEG_LABEL[seg] || SEG_LABEL.outro, NS = 'http://www.w3.org/2000/svg';
+      var c = el('div', 'puri-cena');
+      var svg = document.createElementNS(NS, 'svg');
+      svg.setAttribute('viewBox', '0 0 320 150'); svg.setAttribute('role', 'img'); svg.setAttribute('aria-label', 'Desenho de: ' + rot);
+      svg.setAttribute('class', 'puri-cena-svg'); svg.setAttribute('focusable', 'false');
+      var lista = CENAS[chave].slice().sort(function (a, b) { return parseFloat(a[1].slice(1)) - parseFloat(b[1].slice(1)); });
+      lista.forEach(function (it) {
+        var p = document.createElementNS(NS, 'path'); p.setAttribute('d', it[1]);
+        p.style.stroke = COR_CENA[it[0]]; p.style.filter = 'drop-shadow(0 0 3px ' + COR_CENA[it[0]] + ')';
+        svg.appendChild(p);
+      });
+      c.appendChild(svg);
+      c.appendChild(el('p', 'puri-cena-leg', 'Seu ponto: ' + rot));
+      return c;
+    } catch (e) { return null; }
+  }
+  function cenaDesenha(c) { // chamar com o cartão já no DOM (getTotalLength exige isso)
+    try {
+      var ps = c.querySelectorAll('path'), n = ps.length;
+      for (var i = 0; i < n; i++) {
+        var len = ps[i].getTotalLength() + 1;
+        ps[i].style.strokeDasharray = len + ' ' + len; ps[i].style.strokeDashoffset = len;
+        ps[i].style.transition = 'stroke-dashoffset .7s ease-out ' + (n > 1 ? (i * 1.3 / (n - 1)).toFixed(2) : 0) + 's';
+      }
+      void c.getBoundingClientRect();
+      requestAnimationFrame(function () { c.classList.add('desenha'); });
+    } catch (e) { c.classList.add('desenha'); }
+  }
+  function inserirCena() {
+    try {
+      var c = cenaEl(E.r.segmento); if (!c) return;
+      msgs.appendChild(c); E.r.cenaI = E.msgs.length; salvar();
+      if (!REDUZIDO) cenaDesenha(c);
+      rolar();
+    } catch (e) {}
+  }
+  // ---- Pixel art do movimento: cena pixelizada -> explode -> remonta em bonequinhos (canvas; rAF para no fim) ----
+  var PIX_N = { ate20: 10, '20a50': 35, '50a100': 75, '100mais': 120 };
+  var PIX_H = 150, PIX_BONECO = [[1, 0], [0, 1], [1, 1], [2, 1], [1, 2], [0, 3], [2, 3], [0, 4], [2, 4]];
+  function pixCores() {
+    var cs = getComputedStyle(document.documentElement);
+    function v(n, f) { var x = cs.getPropertyValue(n).trim(); return x || f; }
+    return { g: v('--gold', '#F5B301'), v: v('--verde', '#8BB831'), c: v('--cream', '#FFF7EC'), r: v('--roxo-300', '#A94E8C') };
+  }
+  function pixTexto(mov, n) { return '≈ ' + (n === undefined ? (mov === '100mais' ? '120+' : PIX_N[mov]) : n) + ' clientes por dia'; }
+  function pixLayout(N, W, H, cor) { // posições (canto sup. esq.) de cada pixel dos bonequinhos + tamanho da célula
+    var s = 6, cols = 1, rows = N, pX, pY;
+    for (; s >= 1; s -= 0.25) {
+      pX = 4 * s; pY = 6.2 * s;
+      cols = Math.max(1, Math.floor((W - 4 + s) / pX)); rows = Math.ceil(N / cols);
+      if (rows * pY - 1.2 * s <= H - 8) break;
+    }
+    pX = 4 * s; pY = 6.2 * s;
+    var oy = (H - (rows * pY - 1.2 * s)) / 2, paleta = [cor.g, cor.v, cor.c, cor.r], px = [];
+    for (var i = 0; i < N; i++) {
+      var lin = Math.floor(i / cols), n = Math.min(cols, N - lin * cols), x0 = (W - (n * pX - s)) / 2 + (i % cols) * pX, y0 = oy + lin * pY;
+      for (var k = 0; k < PIX_BONECO.length; k++) px.push({ x: x0 + PIX_BONECO[k][0] * s, y: y0 + PIX_BONECO[k][1] * s, c: paleta[i % 4] });
+    }
+    return { s: s, px: px };
+  }
+  function pixQuad(ctx, dpr, x, y, t, c, a) {
+    ctx.globalAlpha = a; ctx.fillStyle = c;
+    ctx.fillRect(Math.round(x * dpr) / dpr, Math.round(y * dpr) / dpr, t, t);
+  }
+  function pixFinal(card) { // quadro final (só os bonequinhos) no tamanho atual do cartão
+    var cv = card.querySelector('canvas'), W = Math.floor(card.querySelector('.puri-pix-cv').clientWidth);
+    if (!cv || W < 20) return false;
+    var dpr = Math.min(2, window.devicePixelRatio || 1), ctx = cv.getContext('2d');
+    cv.width = Math.round(W * dpr); cv.height = Math.round(PIX_H * dpr);
+    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.scale(dpr, dpr);
+    var L = pixLayout(PIX_N[card._mov], W, PIX_H, pixCores());
+    L.px.forEach(function (p) { pixQuad(ctx, dpr, p.x, p.y, L.s, p.c, 1); });
+    ctx.globalAlpha = 1; card._w = W;
+    card.querySelector('.puri-pix-leg').textContent = pixTexto(card._mov);
+    return true;
+  }
+  function pixAnima(card) { // devolve false se não puder animar (o chamador cai no quadro final)
+    var cv = card.querySelector('canvas'), W = Math.floor(card.querySelector('.puri-pix-cv').clientWidth), H = PIX_H;
+    if (!cv || W < 20 || typeof Path2D !== 'function') return false;
+    var cor = pixCores(), N = PIX_N[card._mov], dpr = Math.min(2, window.devicePixelRatio || 1), ctx = cv.getContext('2d');
+    // 1) cena do segmento num canvas offscreen -> células de 4 px acesas
+    var off = document.createElement('canvas'); off.width = W; off.height = H;
+    var oc = off.getContext('2d'), sc = Math.min(W / 320, H / 150);
+    oc.setTransform(sc, 0, 0, sc, (W - 320 * sc) / 2, (H - 150 * sc) / 2);
+    oc.lineWidth = 2.5; oc.lineCap = 'round'; oc.lineJoin = 'round';
+    var chave = CENAS[card._seg] ? card._seg : 'outro';
+    CENAS[chave].forEach(function (it) { oc.strokeStyle = cor[it[0] === 'g' ? 'g' : it[0] === 'v' ? 'v' : 'c']; oc.stroke(new Path2D(it[1])); });
+    var img = oc.getImageData(0, 0, W, H).data, lit = [], CEL = 4;
+    for (var cy = 0; cy < H; cy += CEL) for (var cx = 0; cx < W; cx += CEL) {
+      var best = -1, bi = 0;
+      for (var yy = cy; yy < Math.min(H, cy + CEL); yy++) for (var xx = cx; xx < Math.min(W, cx + CEL); xx++) {
+        var i = (yy * W + xx) * 4, al = img[i + 3]; if (al > best) { best = al; bi = i; }
+      }
+      if (best > 90) lit.push({ x: cx, y: cy, c: 'rgb(' + img[bi] + ',' + img[bi + 1] + ',' + img[bi + 2] + ')' });
+    }
+    if (!lit.length) return false;
+    if (lit.length > 900) { var k = lit.length / 900, red = []; for (var j = 0; j < 900; j++) red.push(lit[Math.floor(j * k)]); lit = red; }
+    var L = pixLayout(N, W, H, cor), D = L.px.slice(), P = lit.length;
+    for (var a = D.length - 1; a > 0; a--) { var b = Math.floor(Math.random() * (a + 1)), tmp = D[a]; D[a] = D[b]; D[b] = tmp; }
+    var parts = lit.map(function (p, n) {
+      var ang = Math.random() * Math.PI * 2, dist = 40 + Math.random() * 110;
+      return { x: p.x, y: p.y, c: p.c, ex: p.x + Math.cos(ang) * dist, ey: p.y + Math.sin(ang) * dist, d: n < D.length ? D[n] : null, dl: Math.random() * 0.25 };
+    });
+    var T0 = performance.now(), ultimo = -1;
+    function ease(u) { return u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2; }
+    function clamp(u) { return u < 0 ? 0 : u > 1 ? 1 : u; }
+    function fim() {
+      card._anim = false; card._raf = 0;
+      try { pixFinal(card); } catch (e) {}
+    }
+    function quadro(now) {
+      if (!card.isConnected) { card._anim = false; card._raf = 0; return; }
+      try {
+      var t = now - T0;
+      if (t >= 2500 || document.hidden || !aberto) return fim();
+      ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, cv.width, cv.height); ctx.scale(dpr, dpr);
+      var i, p;
+      if (t < 500) { for (i = 0; i < P; i++) { p = parts[i]; pixQuad(ctx, dpr, p.x, p.y, 3, p.c, 1); } }
+      else if (t < 1100) {
+        var u = (t - 500) / 600, e = 1 - (1 - u) * (1 - u);
+        for (i = 0; i < P; i++) { p = parts[i]; pixQuad(ctx, dpr, p.x + (p.ex - p.x) * e, p.y + (p.ey - p.y) * e, 3, p.c, 1); }
+      } else {
+        var u3 = (t - 1100) / 1400;
+        for (i = 0; i < P; i++) {
+          p = parts[i];
+          var ek = ease(clamp((u3 - p.dl) / 0.75));
+          if (p.d) pixQuad(ctx, dpr, p.ex + (p.d.x - p.ex) * ek, p.ey + (p.d.y - p.ey) * ek, 3 + (L.s - 3) * ek, ek < 0.5 ? p.c : p.d.c, 1);
+          else pixQuad(ctx, dpr, p.ex, p.ey, 3, p.c, 1 - clamp(u3 * 2.2));
+        }
+        for (i = P; i < D.length; i++) pixQuad(ctx, dpr, D[i].x, D[i].y, L.s, D[i].c, clamp((u3 - 0.55) / 0.45));
+        var n = Math.round(N * ease(clamp(u3)));
+        if (n !== ultimo) { ultimo = n; card.querySelector('.puri-pix-leg').textContent = pixTexto(card._mov, n); }
+      }
+      ctx.globalAlpha = 1;
+      card._raf = requestAnimationFrame(quadro);
+      } catch (e) { fim(); }
+    }
+    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); card._w = W; card._anim = true;
+    card.querySelector('.puri-pix-leg').textContent = pixTexto(card._mov, 0);
+    card._raf = requestAnimationFrame(quadro);
+    return true;
+  }
+  function pixelMonta(mov, seg, animar) {
+    try {
+      if (!PIX_N[mov]) return null;
+      var N = PIX_N[mov], card = el('div', 'puri-pixel'), wrap = el('div', 'puri-pix-cv'), cv = document.createElement('canvas');
+      cv.setAttribute('role', 'img'); cv.setAttribute('aria-label', 'Cerca de ' + N + (mov === '100mais' ? ' ou mais' : '') + ' clientes por dia');
+      cv.style.height = PIX_H + 'px';
+      wrap.appendChild(cv); card.appendChild(wrap); var leg = el('p', 'puri-pix-leg', pixTexto(mov)); leg.setAttribute('aria-hidden', 'true'); card.appendChild(leg);
+      card._mov = mov; card._seg = seg;
+      msgs.appendChild(card);
+      var ok = false;
+      if (animar && !REDUZIDO && aberto && !document.hidden) { try { ok = pixAnima(card); } catch (e) { ok = false; card._anim = false; } }
+      if (!ok) pixFinal(card);
+      if (typeof ResizeObserver === 'function') {
+        card._ro = new ResizeObserver(function () {
+          if (!card.isConnected) { card._ro.disconnect(); return; }
+          if (card._anim) return;
+          var w = Math.floor(wrap.clientWidth); if (w >= 20 && w !== card._w) pixFinal(card);
+        });
+        card._ro.observe(wrap);
+      }
+      return card;
+    } catch (e) { return null; }
+  }
+  function inserirPixel() {
+    try {
+      var c = pixelMonta(E.r.movimento, E.r.segmento, true); if (!c) return;
+      E.r.pixI = E.msgs.length; salvar(); rolar();
+    } catch (e) {}
+  }
   function desenharTudo() {
     msgs.textContent = '';
     var rc = E.r && E.r.resumo ? E.r : null;
+    var cn = E.r && E.r.segmento && typeof E.r.cenaI === 'number' ? E.r : null;
+    function cena(i) { if (cn && cn.cenaI === i) { var c = cenaEl(cn.segmento); if (c) msgs.appendChild(c); } }
+    var px = E.r && E.r.movimento && typeof E.r.pixI === 'number' ? E.r : null;
+    function pixel(i) { if (px && px.pixI === i) pixelMonta(px.movimento, px.segmento, false); }
+    cena(0); pixel(0);
     if (rc && rc.resI === 0) msgs.appendChild(cartaoResumo(rc.resumo, rc.problema));
-    E.msgs.forEach(function (m, i) { addBalao(m.de, m.t, false); if (rc && rc.resI === i + 1) msgs.appendChild(cartaoResumo(rc.resumo, rc.problema)); });
+    E.msgs.forEach(function (m, i) { addBalao(m.de, m.t, false); cena(i + 1); pixel(i + 1); if (rc && rc.resI === i + 1) msgs.appendChild(cartaoResumo(rc.resumo, rc.problema)); });
     if (E.r && E.r.passo === 'sim' && E.r.sim) msgs.appendChild(cartaoSim(E.r.sim));
     desenharChips(E.chips, false);
     atualizarCampo(); atualizarCaso();
@@ -515,7 +718,7 @@
   }
   function guardar(de, t) {
     E.msgs.push({ de: de, t: t });
-    if (E.msgs.length > MAX_BALOES) { var corte = E.msgs.length - MAX_BALOES; E.msgs = E.msgs.slice(-MAX_BALOES); if (E.r && E.r.resumo) E.r.resI = Math.max(0, (E.r.resI || 0) - corte); }
+    if (E.msgs.length > MAX_BALOES) { var corte = E.msgs.length - MAX_BALOES; E.msgs = E.msgs.slice(-MAX_BALOES); if (E.r && E.r.resumo) E.r.resI = Math.max(0, (E.r.resI || 0) - corte); if (E.r && typeof E.r.cenaI === 'number') E.r.cenaI = Math.max(0, E.r.cenaI - corte); if (E.r && typeof E.r.pixI === 'number') E.r.pixI = Math.max(0, E.r.pixI - corte); }
     salvar();
   }
   function podarDom() { var b = baloes(); while (b.length > MAX_BALOES) { b[0].remove(); b = baloes(); } }
@@ -750,6 +953,7 @@
   function perguntarR(p, prefixo) {
     if (!E.r) return;
     E.r.passo = p; salvar();
+    if (p === 'cidade' && E.r.segmento && E.r.cenaI == null) inserirCena();
     if (p !== 'objetivo') { clearTimeout(escTimer); limparNotas(); }
     return puriDiz((prefixo ? prefixo + ' ' : '') + FALA_R[p], chipsR(p));
   }
@@ -1120,6 +1324,7 @@
     if (id === 'r_pular' && p === 'objetivo') return perguntarR('movimento');
     if (p === 'movimento' && id.indexOf('r_mv_') === 0 && MOV_CHIPS.some(function (m) { return m[0] === id.slice(5); })) {
       E.r.movimento = id.slice(5); salvar();
+      if (E.r.pixI == null) inserirPixel();
       return rodarR(perfilR);
     }
     if (p === 'sim' && id.indexOf('r_preco_') === 0 && PRECOS.indexOf(+id.slice(8)) >= 0) {
