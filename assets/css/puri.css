@@ -180,3 +180,28 @@
 .puri-sim-barra i.venda { background: var(--roxo-500, #7E2065); }
 .puri-sim-barra i.custo { background: var(--roxo-300, #A94E8C); }
 .puri-sim-barra i.sobra { background: var(--gold, #F5B301); }
+
+/* ---- Mapa do caso (mesmo visual escuro da cena) ---- */
+.puri-mapa { flex: none; align-self: stretch; padding: 12px; border-radius: var(--radius-lg, 26px); background-color: var(--roxo-950, #240820); background-image: radial-gradient(color-mix(in srgb, var(--roxo-300, #A94E8C) 28%, transparent) 1px, transparent 1.2px); background-size: 14px 14px; }
+.puri-mapa-l { list-style: none; margin: 0; padding: 0; }
+.puri-mapa-no { --mc: var(--cream, #FFF7EC); margin: 0; padding: 8px 10px 9px 12px; border-radius: 12px; background: color-mix(in srgb, var(--cream, #FFF7EC) 7%, transparent); border: 1px solid color-mix(in srgb, var(--cream, #FFF7EC) 16%, transparent); border-left: 4px solid var(--mc); }
+.puri-mapa-negocio { --mc: var(--roxo-300, #A94E8C); }
+.puri-mapa-problema { --mc: var(--danger, var(--gold-strong, #E28F00)); }
+.puri-mapa-causa { --mc: var(--roxo-500, #7E2065); }
+.puri-mapa-risco { --mc: var(--gold, #F5B301); }
+.puri-mapa-destino { --mc: var(--verde, #8BB831); }
+.puri-mapa-passo { --mc: var(--cream, #FFF7EC); }
+.puri-mapa-no.aj { border-color: var(--gold, #F5B301); border-left-color: var(--mc); box-shadow: 0 0 0 1px var(--gold, #F5B301); }
+.puri-mapa-h { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin: 0 0 2px; }
+.puri-mapa-ti { font: 700 11px/1.3 var(--font-body, 'Inter', sans-serif); letter-spacing: .05em; text-transform: uppercase; color: color-mix(in srgb, var(--cream, #FFF7EC) 72%, transparent); }
+.puri-mapa-ajt { flex: none; font: 700 11px/1.3 var(--font-body, 'Inter', sans-serif); color: var(--gold, #F5B301); }
+.puri-mapa-tx { margin: 0; font: 600 13.5px/1.35 var(--font-body, 'Inter', sans-serif); color: var(--cream, #FFF7EC); overflow-wrap: anywhere; }
+.puri-mapa-seta { position: relative; min-height: 22px; margin: 0; padding-left: 38px; display: flex; align-items: center; }
+.puri-mapa-seta::before { content: ''; position: absolute; left: 21px; top: 1px; bottom: 6px; width: 2px; background: var(--roxo-300, #A94E8C); }
+.puri-mapa-seta::after { content: ''; position: absolute; left: 17px; bottom: 1px; border: 5px solid transparent; border-top: 6px solid var(--roxo-300, #A94E8C); border-bottom: 0; }
+.puri-mapa-leg { padding: 1px 9px; border-radius: 999px; background: color-mix(in srgb, var(--roxo-300, #A94E8C) 38%, transparent); color: var(--cream, #FFF7EC); font: 600 11px/1.4 var(--font-body, 'Inter', sans-serif); }
+.puri-mapa.anima .puri-mapa-no { transition: opacity .3s ease, transform .3s ease; }
+.puri-mapa.anima .puri-mapa-no:not(.vis) { opacity: 0; transform: translateY(6px); }
+.puri-mapa.anima .puri-mapa-seta { transition: opacity .3s ease; }
+.puri-mapa.anima:not(.fim) .puri-mapa-seta { opacity: .25; }
+@media (prefers-reduced-motion: reduce) { .puri-mapa .puri-mapa-no, .puri-mapa .puri-mapa-seta { transition: none !important; opacity: 1 !important; transform: none !important; } }

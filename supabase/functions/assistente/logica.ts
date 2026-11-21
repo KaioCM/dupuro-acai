@@ -305,6 +305,31 @@ export function parseResumo(s: string): { resumo: string; problema: string } | n
   return { resumo, problema }
 }
 
+export type MapaIA = { problema: string; causa: string; risco: string | null; destino: string; setas: (string | null)[] }
+/** H6/H7 (JSON estrito {"problema","causa","risco"|null,"destino","setas":[...]}): textos ≤ 70 (acima disso corta no último espaço antes de 69 + «…»; problema, causa e destino ≥ 4; risco opcional),
+ *  setas ≤ 22 (inválida/longa vira null; sempre devolve 4); link/e-mail/telefone → null (risco/seta viram null, os obrigatórios rejeitam tudo). */
+export function parseMapa(s: string): MapaIA | null {
+  const j = extrairJson(s)
+  if (!j || typeof j !== 'object' || Array.isArray(j)) return null
+  const corta = (x: string, max: number): string | null => {
+    if (x.length <= max) return x
+    const c = x.slice(0, max - 1), i = c.lastIndexOf(' ')
+    return i > 0 ? c.slice(0, i).trim() + '…' : null
+  }
+  const t = (x: unknown) => { if (typeof x !== 'string') return ''; const l = limparIA(x, 200); return corta(l, 70) ?? l.slice(0, 69) + '…' }
+  const problema = t(j.problema), causa = t(j.causa), destino = t(j.destino)
+  if ([problema, causa, destino].some((x) => x.length < 4 || suspeitoIA(x))) return null
+  const r = t(j.risco)
+  const risco = r.length >= 4 && !suspeitoIA(r) ? r : null
+  const setas: (string | null)[] = []
+  for (let i = 0; i < 4; i++) {
+    const x = Array.isArray(j.setas) && typeof j.setas[i] === 'string' ? limparIA(j.setas[i], 200) : ''
+    const xs = corta(x, 22)
+    setas.push(xs && xs.length >= 2 && !suspeitoIA(xs) ? xs : null)
+  }
+  return { problema, causa, risco, destino, setas }
+}
+
 /** Resposta ao palpite: valor da lista; correção opcional (mascarada, ≤ 300). Inválido → null. */
 export function validarPalpiteResp(valor: unknown, texto: unknown): { valor: string; correcao: string | null } | null {
   if (typeof valor !== 'string' || !['mosca', 'parte', 'nao'].includes(valor)) return null

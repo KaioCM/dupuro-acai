@@ -98,7 +98,11 @@
   var SEG_ROT = { delivery_acai: 'delivery de açaí', acaiteria: 'açaiteria', lanchonete_bar: 'lanchonete ou bar', sorveteria: 'sorveteria', feira_evento: 'feira ou evento', mercado_varejo: 'mercado ou varejo', revenda_casa: 'revenda em casa', outro: 'outro tipo de negócio' };
   var SEG_CHIPS = [['acaiteria', 'Açaiteria'], ['lanchonete_bar', 'Lanchonete ou bar'], ['delivery_acai', 'Delivery de açaí'], ['sorveteria', 'Sorveteria'], ['feira_evento', 'Feira ou evento'], ['mercado_varejo', 'Mercado ou varejo'], ['revenda_casa', 'Revenda em casa'], ['outro', 'Outro']];
   var MOV_CHIPS = [['ate20', 'Até 20'], ['20a50', '20 a 50'], ['50a100', '50 a 100'], ['100mais', 'Mais de 100']];
-  var RP = ['segmento', 'cidade', 'cidade_outra', 'bairro', 'objetivo', 'movimento', 'sim', 'aprof', 'palpite', 'palpite_txt', 'resumo', 'regras', 'conta'];
+  var RP = ['segmento', 'cidade', 'cidade_outra', 'bairro', 'objetivo', 'movimento', 'sim', 'aprof', 'palpite', 'palpite_txt', 'resumo', 'mapa', 'mapa_txt', 'regras', 'conta'];
+  var TIPOS_MAPA = ['negocio', 'problema', 'causa', 'risco', 'destino', 'passo'];
+  var TIT_MAPA = { negocio: 'Seu negócio', problema: 'O que trava', causa: 'Por que trava', risco: 'O risco', destino: 'Onde quer chegar', passo: 'Primeiro passo' };
+  var PASSOS_IA = ['palpite', 'resumo', 'aprofundar', 'mapa', 'mapa_ajuste']; // passos com IA: a Edge pode levar até ~20 s
+  var TIMEOUT_IA = 25000;
   var FALA_NAO = 'Me conta o que é, então.';
   var SIM_CHAVES = ['preco_copo', 'custo_caixa', 'copos_caixa', 'venda_caixa', 'sobra_caixa', 'copos_dia', 'caixas_semana', 'sobra_semana'];
   var PRECOS = [18, 19, 20];
@@ -175,7 +179,12 @@
         apOk: q.apOk === true, palOk: q.palOk === true,
         resumo: sanTxt(q.resumo, 300) || null, problema: sanTxt(q.problema, 40) || null, resI: Math.min(MAX_BALOES, Math.max(0, Math.floor(+q.resI) || 0)),
         cenaI: typeof q.cenaI === 'number' && isFinite(q.cenaI) ? Math.min(MAX_BALOES, Math.max(0, Math.floor(q.cenaI))) : null,
-        pixI: typeof q.pixI === 'number' && isFinite(q.pixI) ? Math.min(MAX_BALOES, Math.max(0, Math.floor(q.pixI))) : null
+        pixI: typeof q.pixI === 'number' && isFinite(q.pixI) ? Math.min(MAX_BALOES, Math.max(0, Math.floor(q.pixI))) : null,
+        mapas: (Array.isArray(q.mapas) ? q.mapas : []).slice(-3).map(function (x) {
+          var m = x && typeof x === 'object' ? sanMapa(x.m) : null;
+          return m && typeof x.i === 'number' && isFinite(x.i) ? { i: Math.min(MAX_BALOES, Math.max(0, Math.floor(x.i))), m: m } : null;
+        }).filter(Boolean),
+        mapaAj: Math.min(2, Math.max(0, Math.floor(+q.mapaAj) || 0)), mapaOk: q.mapaOk === true
       };
       if (q.ap && typeof q.ap === 'object' && sanTxt(q.ap.p, 200)) r.r.ap = { p: sanTxt(q.ap.p, 200), rs: (Array.isArray(q.ap.rs) ? q.ap.rs : []).map(function (x) { return sanTxt(x, 60); }).filter(Boolean).slice(0, 4) };
     }
@@ -211,18 +220,19 @@
   }
 
   function apiEdge() {
-    function post(corpo) {
+    function post(corpo, tmo) {
+      var lim = tmo || TIMEOUT; // tmo opcional: passos com IA esperam mais
       var base = window.DUPURO_SUPABASE_URL, k = window.DUPURO_SUPABASE_ANON_KEY;
       if (!base || !k) return Promise.resolve({ ok: false, motivo: 'erro' });
       var ctl = ('AbortController' in window) ? new AbortController() : null;
-      var t = setTimeout(function () { if (ctl) ctl.abort(); }, TIMEOUT), t2;
+      var t = setTimeout(function () { if (ctl) ctl.abort(); }, lim), t2;
       return Promise.race([
         fetch(base + '/functions/v1/' + FUNC, {
           method: 'POST', signal: ctl ? ctl.signal : undefined,
           headers: { 'apikey': k, 'Authorization': 'Bearer ' + k, 'Content-Type': 'application/json' },
           body: JSON.stringify(corpo)
         }).then(function (r) { return r.json(); }),
-        new Promise(function (res) { t2 = setTimeout(function () { res({ ok: false, motivo: 'erro' }); }, TIMEOUT + 200); })
+        new Promise(function (res) { t2 = setTimeout(function () { res({ ok: false, motivo: 'erro' }); }, lim + 200); })
       ]).catch(function () { return { ok: false, motivo: 'erro' }; })
         .then(function (j) { clearTimeout(t); clearTimeout(t2); return j && typeof j === 'object' ? j : { ok: false, motivo: 'erro' }; });
     }
@@ -238,7 +248,7 @@
       revenda: function (token, d) {
         var b = { acao: 'revenda', token: token };
         Object.keys(d).forEach(function (k) { b[k] = d[k]; });
-        return post(b);
+        return post(b, PASSOS_IA.indexOf(d.passo) >= 0 ? TIMEOUT_IA : undefined);
       }
     };
   }
@@ -392,14 +402,14 @@
   function atualizarCampo() {
     var fim = E.etapa === 'fim';
     campo.disabled = fim;
-    campo.maxLength = (E.r && (E.r.passo === 'aprof' || E.r.passo === 'palpite_txt')) ? 300 : MAX_CHARS; // a Edge aceita 300 nesses passos
+    campo.maxLength = (E.r && (E.r.passo === 'aprof' || E.r.passo === 'palpite_txt')) ? 300 : (E.r && E.r.passo === 'mapa_txt') ? 200 : MAX_CHARS; // a Edge aceita 300 nesses passos
     env.disabled = fim || ocupado;
     campo.placeholder = fim ? T.fimCampo : 'Escreva aqui';
   }
   // ---- "Seu caso": resumo ao vivo da conversa de revenda (tudo por textContent) ----
   var CASO_CAMPOS = [['negocio', 'Negócio'], ['cidade', 'Cidade'], ['quer', 'O que quer'], ['mov', 'Movimento'], ['sim', 'Simulação'], ['etapa', 'Etapa']];
   var MOV_ROT = { ate20: 'até 20 copos/dia', '20a50': '20 a 50 copos/dia', '50a100': '50 a 100 copos/dia', '100mais': '100 ou mais copos/dia' };
-  var CASO_ETAPA = { segmento: 'Seu negócio', cidade: 'Onde fica', cidade_outra: 'Onde fica', bairro: 'Onde fica', objetivo: 'O que você quer', movimento: 'Movimento', sim: 'Simulação', aprof: 'Entender melhor', palpite: 'Entender melhor', palpite_txt: 'Entender melhor', resumo: 'Resumo', regras: 'Regras', conta: 'Conta' };
+  var CASO_ETAPA = { segmento: 'Seu negócio', cidade: 'Onde fica', cidade_outra: 'Onde fica', bairro: 'Onde fica', objetivo: 'O que você quer', movimento: 'Movimento', sim: 'Simulação', aprof: 'Entender melhor', palpite: 'Entender melhor', palpite_txt: 'Entender melhor', resumo: 'Resumo', mapa: 'Mapa do caso', mapa_txt: 'Mapa do caso', regras: 'Regras', conta: 'Conta' };
   function casoAtivo() { return !!(E.r && RP.indexOf(E.r.passo) >= 0); }
   function casoLargo() { return window.innerWidth >= 900 && !(window.matchMedia && matchMedia('(pointer: coarse)').matches); }
   function casoValores() {
@@ -708,9 +718,11 @@
     function cena(i) { if (cn && cn.cenaI === i) { var c = cenaEl(cn.segmento); if (c) msgs.appendChild(c); } }
     var px = E.r && E.r.movimento && typeof E.r.pixI === 'number' ? E.r : null;
     function pixel(i) { if (px && px.pixI === i) pixelMonta(px.movimento, px.segmento, false); }
-    cena(0); pixel(0);
+    var mp = E.r && Array.isArray(E.r.mapas) ? E.r.mapas : [];
+    function mapa(i) { mp.forEach(function (x) { if (x.i === i) { try { var c = mapaEl(x.m, false); if (c) msgs.appendChild(c); } catch (e) {} } }); }
+    cena(0); pixel(0); mapa(0);
     if (rc && rc.resI === 0) msgs.appendChild(cartaoResumo(rc.resumo, rc.problema));
-    E.msgs.forEach(function (m, i) { addBalao(m.de, m.t, false); cena(i + 1); pixel(i + 1); if (rc && rc.resI === i + 1) msgs.appendChild(cartaoResumo(rc.resumo, rc.problema)); });
+    E.msgs.forEach(function (m, i) { addBalao(m.de, m.t, false); cena(i + 1); pixel(i + 1); mapa(i + 1); if (rc && rc.resI === i + 1) msgs.appendChild(cartaoResumo(rc.resumo, rc.problema)); });
     if (E.r && E.r.passo === 'sim' && E.r.sim) msgs.appendChild(cartaoSim(E.r.sim));
     desenharChips(E.chips, false);
     atualizarCampo(); atualizarCaso();
@@ -718,7 +730,7 @@
   }
   function guardar(de, t) {
     E.msgs.push({ de: de, t: t });
-    if (E.msgs.length > MAX_BALOES) { var corte = E.msgs.length - MAX_BALOES; E.msgs = E.msgs.slice(-MAX_BALOES); if (E.r && E.r.resumo) E.r.resI = Math.max(0, (E.r.resI || 0) - corte); if (E.r && typeof E.r.cenaI === 'number') E.r.cenaI = Math.max(0, E.r.cenaI - corte); if (E.r && typeof E.r.pixI === 'number') E.r.pixI = Math.max(0, E.r.pixI - corte); }
+    if (E.msgs.length > MAX_BALOES) { var corte = E.msgs.length - MAX_BALOES; E.msgs = E.msgs.slice(-MAX_BALOES); if (E.r && E.r.resumo) E.r.resI = Math.max(0, (E.r.resI || 0) - corte); if (E.r && typeof E.r.cenaI === 'number') E.r.cenaI = Math.max(0, E.r.cenaI - corte); if (E.r && typeof E.r.pixI === 'number') E.r.pixI = Math.max(0, E.r.pixI - corte); if (E.r && Array.isArray(E.r.mapas)) E.r.mapas = E.r.mapas.filter(function (x) { x.i -= corte; return x.i >= 0; }); }
     salvar();
   }
   function podarDom() { var b = baloes(); while (b.length > MAX_BALOES) { b[0].remove(); b = baloes(); } }
@@ -983,6 +995,7 @@
         var m = r && r.motivo;
         if (m === 'limite_conversa' || m === 'limite_dia') return { limite: true };
         if (m === 'token_invalido' && !tok) { E.token = null; salvar(); return chamarR(corpo, g, true); }
+        if (m === 'limite_ajuste') return { ajuste: true };
         return { temp: true };
       });
     });
@@ -1174,10 +1187,95 @@
       if (!x.r) return falhaR(x);
       if (!E.r) return;
       var re = sanTxt(x.r.resumo, 300);
-      if (!re) return irRegras();
+      if (!re) return mapaR(g);
       E.r.resumo = re; E.r.problema = sanTxt(x.r.problema, 40) || null; E.r.resI = E.msgs.length; salvar();
       msgs.appendChild(cartaoResumo(E.r.resumo, E.r.problema)); rolar();
-      return irRegras();
+      return mapaR(g);
+    });
+  }
+  // ---- Mapa do caso (opcional: qualquer falha segue em silêncio para as regras) ----
+  var FALA_MAPA_AJ = 'O que eu devo mudar no mapa?';
+  var CH_MAPA_OK = { id: 'r_mp_ok', t: 'Está certo' };
+  function sanMapa(m) {
+    if (!m || typeof m !== 'object' || !Array.isArray(m.nos)) return null;
+    var nos = [], setas = [];
+    m.nos.slice(0, 6).forEach(function (n, k) {
+      if (!n || typeof n !== 'object' || TIPOS_MAPA.indexOf(n.tipo) < 0) return;
+      var tx = sanTxt(n.texto, 70); if (!tx) return;
+      if (nos.length) setas.push(Array.isArray(m.setas) && typeof m.setas[k - 1] === 'string' ? (sanTxt(m.setas[k - 1], 22) || null) : null); // seta que liga o nó anterior original a este (k-1)
+      nos.push({ tipo: n.tipo, titulo: sanTxt(n.titulo, 24) || TIT_MAPA[n.tipo], texto: tx, ajustado: n.ajustado === true });
+    });
+    if (nos.length < 2) return null;
+    return { nos: nos, setas: setas, simples: m.simples === true, ajustes: Math.min(2, Math.max(0, Math.floor(+m.ajustes) || 0)) };
+  }
+  function mapaEl(m, animar) {
+    var c = el('div', 'puri-mapa'), ol = el('ol', 'puri-mapa-l'), nos = [];
+    ol.setAttribute('aria-label', 'Mapa do caso');
+    m.nos.forEach(function (n, i) {
+      var li = el('li', 'puri-mapa-no puri-mapa-' + n.tipo + (n.ajustado ? ' aj' : '')), h = el('p', 'puri-mapa-h');
+      h.appendChild(el('span', 'puri-mapa-ti', n.titulo));
+      if (n.ajustado) h.appendChild(el('span', 'puri-mapa-ajt', 'Ajustado'));
+      li.appendChild(h); li.appendChild(el('p', 'puri-mapa-tx', n.texto));
+      ol.appendChild(li); nos.push(li);
+      if (i < m.nos.length - 1) {
+        var s = el('li', 'puri-mapa-seta'); s.setAttribute('aria-hidden', 'true');
+        if (m.setas[i]) s.appendChild(el('span', 'puri-mapa-leg', m.setas[i]));
+        ol.appendChild(s);
+      }
+    });
+    c.appendChild(ol);
+    if (animar && !REDUZIDO) {
+      c.classList.add('anima');
+      nos.forEach(function (li, i) { setTimeout(function () { li.classList.add('vis'); }, 120 + i * 100); });
+      setTimeout(function () { c.classList.add('fim'); }, 120 + nos.length * 100 + 200);
+    }
+    return c;
+  }
+  function mapaChips(m) {
+    var l = [CH_MAPA_OK];
+    if (m.ajustes < 2) l.push({ id: 'r_mp_aj', t: m.ajustes ? 'Ajustar mais alguma coisa' : 'Quero ajustar' });
+    return l;
+  }
+  function mapaMostrar(m, fala) { // fala, depois o cartão, depois os chips
+    return puriDiz(fala, []).then(function () {
+      if (!E.r || (E.r.passo !== 'mapa' && E.r.passo !== 'mapa_txt')) return;
+      try {
+        var c = mapaEl(m, true); if (!c) throw 0;
+        msgs.appendChild(c);
+        E.r.mapas = (E.r.mapas || []).concat([{ i: E.msgs.length, m: m }]).slice(-3); E.r.mapaAj = m.ajustes; E.r.passo = 'mapa';
+        rolar();
+      } catch (e) { return irRegras(); }
+      E.chips = mapaChips(m); salvar(); desenharChips(E.chips); atualizarCampo(); rolar();
+    });
+  }
+  function mapaR(g) {
+    rRetry = null;
+    E.r.passo = 'mapa'; limparChips(); E.chips = []; salvar();
+    var off = pontos();
+    return chamarR({ passo: 'mapa' }, g).then(function (x) {
+      off();
+      if (x && x.velho) return;
+      if (!E.r) return;
+      var m = null;
+      try { m = x.r ? sanMapa(x.r.mapa) : null; } catch (e) { m = null; }
+      if (!m) return irRegras();
+      return mapaMostrar(m, 'Montei o mapa do seu caso. Confere?');
+    }).catch(function () { off(); if (g === ger && E.r) return irRegras(); });
+  }
+  function mapaAjusteR(texto, g) {
+    rRetry = function () { return rede(function (g2) { return mapaAjusteR(texto, g2); }); };
+    var off = pontos();
+    return chamarR({ passo: 'mapa_ajuste', texto: texto }, g).then(function (x) {
+      off();
+      if (x.velho) return;
+      if (!E.r) return;
+      if (x.ajuste) { E.r.passo = 'mapa'; rRetry = null; return puriDiz('Já usei os dois ajustes que tenho. Se estiver certo, seguimos.', [CH_MAPA_OK]); }
+      if (!x.r) return falhaR(x);
+      var m = null;
+      try { m = sanMapa(x.r.mapa); } catch (e) { m = null; }
+      rRetry = null;
+      if (!m || x.r.sem_mudanca) { E.r.passo = 'mapa'; return puriDiz('Não consegui ajustar isso com segurança, então mantive o mapa. O time confere com você depois.', [CH_MAPA_OK]); }
+      return mapaMostrar(m, 'Ajustei o mapa com o que você disse. Ficou certo agora?');
     });
   }
   function cartaoResumo(resumo, problema) {
@@ -1193,7 +1291,18 @@
     if (p === 'aprof' && vazio) return rodarR(function (g) { return r.apOk ? palpiteR(g) : aprofR(g); });
     if (p === 'palpite' && vazio) return rodarR(function (g) { return r.palOk ? resumoR(g) : palpiteR(g); });
     if (p === 'palpite_txt' && (retry || (r.palOk && !E.chips.length))) return rodarR(function (g) { return r.palOk ? resumoR(g) : puriDiz(FALA_NAO, []); });
-    if (p === 'resumo') return rodarR(function () { return r.resumo ? irRegras() : resumoR(ger); });
+    if (p === 'resumo') return rodarR(function () { return r.resumo ? mapaR(ger) : resumoR(ger); });
+    if (p === 'mapa') {
+      if (r.mapaOk) return irRegras();
+      var mp = r.mapas && r.mapas.length ? r.mapas[r.mapas.length - 1].m : null;
+      if (!mp) return rodarR(function () { return mapaR(ger); });
+      if (!E.chips.length) { E.chips = mapaChips(mp); salvar(); desenharChips(E.chips); atualizarCampo(); rolar(); }
+      return;
+    }
+    if (p === 'mapa_txt') {
+      var ult = E.msgs[E.msgs.length - 1];
+      if (retry || !ult || ult.t !== FALA_MAPA_AJ) return rodarR(function () { return puriDiz(FALA_MAPA_AJ, []); });
+    }
   }
   function irRegras() {
     E.r.passo = 'regras'; rRetry = null; salvar();
@@ -1314,6 +1423,12 @@
   function aoChipR(c) {
     if (!E.r) return puriDiz(T.incerto, CH.abertura);
     var id = c.id, p = E.r.passo;
+    if (id === 'r_mp_aj' && p === 'mapa') { E.r.passo = 'mapa_txt'; salvar(); return puriDiz(FALA_MAPA_AJ, []); }
+    if (id === 'r_mp_ok' && (p === 'mapa' || p === 'mapa_txt')) {
+      E.r.mapaOk = true; salvar();
+      try { chamarR({ passo: 'mapa_ok' }, ger).catch(function () {}); } catch (e) {}
+      return irRegras();
+    }
     if (id === 'r_criar' && p === 'regras') return iniciarConta('');
     if (/^r_c_/.test(id) && p === 'conta') return cc ? aoChipConta(c) : retomarConta();
     if (id.indexOf('r_seg_') === 0 && p === 'segmento' && temSeg(id.slice(6))) { E.r.segmento = id.slice(6); return perguntarR('cidade'); }
@@ -1356,6 +1471,11 @@
     if (p === 'aprof') { usuarioDiz(texto, mascararObj(texto)); return aprofResp(texto); }
     if (p === 'palpite_txt') { usuarioDiz(texto, mascararObj(texto)); return palpiteResp('nao', texto); }
     if (p === 'resumo') return;
+    if (p === 'mapa_txt') {
+      texto = texto.slice(0, 200);
+      if (texto.length < 4) return rede(function () { return puriDiz('Pode contar um pouco mais?', []); });
+      usuarioDiz(texto, mascararObj(texto)); return rodarR(function (g) { return mapaAjusteR(texto, g); });
+    }
     return rede(function () { return puriDiz(T.escolhe, E.chips && E.chips.length ? E.chips : chipsR(p)); }); // movimento / sim / palpite: só chips
   }
 
@@ -1506,7 +1626,7 @@
     atualizarCampo();
     if (E.msgs.length) desenharTudo();
     if (E.r && E.r.passo === 'sim') { E.chips = chipsR('sim'); desenharChips(E.chips, false); salvar(); } // retoma a escolha de preço
-    else if (E.r && ['aprof', 'palpite', 'palpite_txt', 'resumo'].indexOf(E.r.passo) >= 0) retomarR();
+    else if (E.r && ['aprof', 'palpite', 'palpite_txt', 'resumo', 'mapa', 'mapa_txt'].indexOf(E.r.passo) >= 0) retomarR();
     else if (E.r && E.r.passo === 'conta') retomarConta(); // nome/telefone/e-mail/senha não sobrevivem ao recarregar
     else if (E.r && E.r.passo !== 'regras' && E.chips.some(function (c) { return c.id === 'retry'; })) perguntarR(E.r.passo); // falha temporária: refaz a pergunta
     observar();

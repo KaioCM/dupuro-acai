@@ -4,7 +4,7 @@
 // Segredos: TYPESAFE_API_KEY (Jev) e ANTHROPIC_API_KEY (Haiku). Nunca logar chave nem texto do usuário.
 
 import { createClient } from 'jsr:@supabase/supabase-js@2'
-import { mascarar, validarTexto, UUID_RE, ehSaude, ehSaudeLeite, ehPendente, diaCuiaba, limparResposta, semMarcadores, normalizarIp, decidirAbertura, respostaSuspeita, validarVisita, empilharHistorico, historicoParaMessages, turnosParaJ3, normalizarCidade, normalizarSegmento, validarPerfil, calcularSimulacao, parseTopicos, parsePerguntasAprof, parsePalpite, parseResumo, validarPalpiteResp, limparIA, respostaForaDoAssunto, ASSUNTOS_PENDENTES } from './logica.ts'
+import { mascarar, validarTexto, UUID_RE, ehSaude, ehSaudeLeite, ehPendente, diaCuiaba, limparResposta, semMarcadores, normalizarIp, decidirAbertura, respostaSuspeita, validarVisita, empilharHistorico, historicoParaMessages, turnosParaJ3, normalizarCidade, normalizarSegmento, validarPerfil, calcularSimulacao, parseTopicos, parsePerguntasAprof, parsePalpite, parseResumo, parseMapa, type MapaIA, validarPalpiteResp, limparIA, respostaForaDoAssunto, ASSUNTOS_PENDENTES } from './logica.ts'
 import type { Turno } from './logica.ts'
 import { FATOS } from './fatos.ts'
 
@@ -241,7 +241,7 @@ const ROT_SEG: Record<string, string> = { delivery_acai: 'delivery de açaí', a
 const ROT_MOV: Record<string, string> = { ate20: 'até 20 copos por dia', '20a50': '20 a 50 copos por dia', '50a100': '50 a 100 copos por dia', '100mais': 'mais de 100 copos por dia' }
 
 /** Contexto para a IA: SÓ segmento (rótulo), movimento (rótulo), anotações já mascaradas e respostas anteriores. Sem nome/telefone/cidade/bairro. Sem `quer` → null. */
-function contextoRevenda(lead: any, com: { palpite?: boolean } = {}): string | null {
+function contextoRevenda(lead: any, com: { palpite?: boolean | 'confirmado' } = {}): string | null {
   const a = lead?.anotacoes && typeof lead.anotacoes === 'object' ? lead.anotacoes : {}
   const quer = limparIA(a.quer, 500)
   if (!quer) return null
@@ -251,7 +251,11 @@ function contextoRevenda(lead: any, com: { palpite?: boolean } = {}): string | n
   L.push('O que a pessoa quer: ' + quer)
   if (Array.isArray(a.topicos) && a.topicos.length) L.push('Tópicos: ' + a.topicos.filter((x: unknown) => typeof x === 'string').map((x: string) => limparIA(x, 80)).join('; '))
   if (a.aprof_pergunta && a.aprof_resposta) L.push('Pergunta feita: ' + limparIA(a.aprof_pergunta, 200) + '\nResposta da pessoa: ' + limparIA(a.aprof_resposta, 300))
-  if (com.palpite && a.palpite) {
+  if (com.palpite === 'confirmado') {
+    // mapa: o palpite (hipótese da IA) só vira fato se a pessoa confirmou em cheio; senão só entra a correção dela
+    if (a.palpite && a.palpite_valor === 'mosca') L.push('Palpite confirmado pela pessoa: ' + limparIA(a.palpite, 220))
+    else if (a.palpite_correcao) L.push('A pessoa corrigiu: ' + limparIA(a.palpite_correcao, 300))
+  } else if (com.palpite && a.palpite) {
     L.push('Palpite mostrado: ' + limparIA(a.palpite, 220))
     if (['mosca', 'parte', 'nao'].includes(a.palpite_valor)) L.push('Reação da pessoa ao palpite: ' + ({ mosca: 'acertou em cheio', parte: 'acertou em parte', nao: 'não era isso' } as Record<string, string>)[a.palpite_valor])
     if (a.palpite_correcao) L.push('Correção da pessoa: ' + limparIA(a.palpite_correcao, 300))
@@ -356,6 +360,77 @@ async function resumoRevenda(ctx: string): Promise<{ resumo: string; problema: s
     'Resuma "o que ficou do que você contou" em UMA frase de até 200 caracteres, em 2ª pessoa, sem inventar, e dê um nome curto (até 5 palavras) ao problema principal. Responda SOMENTE um JSON {"resumo":"...","problema":"..."}. ' + REGRAS_IA,
     ctx, 250)
   return t ? parseResumo(t) : null
+}
+
+/* ── Etapa 5B: mapa do caso (H6 monta, H7 ajusta, J8 confere) ───────────────── */
+const SYS_MAPA_FMT = 'Responda SOMENTE um JSON {"problema":"...","causa":"...","risco":"..." ou null,"destino":"...","setas":["...","...","...","..."]}. Cada texto: até 60 caracteres, frase nominal curta, 2ª pessoa quando couber, sem inventar fatos que não estejam no contexto. causa: só o que a pessoa disse ou confirmou, sem inventar motivo novo; na dúvida, escreva de forma geral. setas: 4 conectores MUITO curtos, de 1 a 3 palavras e NO MÁXIMO 22 caracteres cada (ex.: "trava em", "porque", "pode gerar", "para chegar a"), das ligações negócio→problema, problema→causa, causa→(risco ou destino), (risco→destino se houver risco); nunca frases. Sem preço, prazo ou promessa. '
+const SYS_H6 = 'Monte o mapa do caso desta pessoa. ' + SYS_MAPA_FMT + REGRAS_IA
+const SYS_H7 = 'Ajuste o mapa do caso conforme o pedido da pessoa. Mantenha o que não foi pedido para mudar. ' + SYS_MAPA_FMT + REGRAS_IA
+const PASSO_TXT = 'Primeiro pedido sem mínimo: começar pequeno e medir a saída'
+const TIT_MAPA: Record<string, string> = { negocio: 'Seu negócio', problema: 'O que trava', causa: 'Por que trava', risco: 'O risco', destino: 'Onde quer chegar', passo: 'Primeiro passo' }
+type NoMapa = { tipo: string; titulo: string; texto: string; ajustado: boolean }
+type MapaCaso = { nos: NoMapa[]; setas: (string | null)[]; simples: boolean; ajustes: number }
+
+/** Nó "Seu negócio": só código (rótulo do segmento + bairro e cidade do lead). */
+function textoNegocio(lead: any): string {
+  const rot = ROT_SEG[lead?.segmento] ?? 'negócio'
+  const loc = [lead?.bairro, lead?.cidade].filter((x: unknown) => typeof x === 'string' && x.trim()).map((x: string) => x.replace(/[<>]/g, '').trim()).join(', ')
+  return (rot.charAt(0).toUpperCase() + rot.slice(1) + (loc ? ' · ' + loc : '')).slice(0, 70)
+}
+/** Monta o mapa a partir do que a IA devolveu (ia) ou, sem IA, só com código. `antes` serve para calcular `ajustado`. */
+function montarMapa(lead: any, ia: MapaIA | null, antes: MapaCaso | null, ajustes: number): MapaCaso {
+  const a = lead?.anotacoes && typeof lead.anotacoes === 'object' ? lead.anotacoes : {}
+  const antesTxt = (tipo: string) => antes?.nos.find((n) => n.tipo === tipo)
+  const no = (tipo: string, texto: string): NoMapa => {
+    const ant = antesTxt(tipo)
+    return { tipo, titulo: TIT_MAPA[tipo], texto, ajustado: !!antes && (!ant || ant.ajustado || (ia != null && ant.texto !== texto)) }
+  }
+  const nos: NoMapa[] = [no('negocio', textoNegocio(lead))]
+  let setas: (string | null)[]
+  if (ia) {
+    nos.push(no('problema', ia.problema), no('causa', ia.causa))
+    if (ia.risco) nos.push(no('risco', ia.risco))
+    nos.push(no('destino', ia.destino), no('passo', PASSO_TXT))
+    setas = [...ia.setas.slice(0, nos.length - 2), 'começa por']
+  } else {
+    const prob = limparIA(a.problema, 60)
+    const top0 = Array.isArray(a.topicos) && typeof a.topicos[0] === 'string' ? limparIA(a.topicos[0], 80) : ''
+    const quer = limparIA(a.quer, 500)
+    let dest = 'Vender açaí com segurança'
+    if (top0.length >= 4 && top0.length <= 60) dest = top0
+    else if (quer.length >= 4) {
+      if (quer.length <= 60) dest = quer
+      else { const corte = quer.slice(0, 57).replace(/\s+\S*$/, '').trim(); if (corte.length >= 4) dest = corte + '…' }
+    }
+    nos.push(no('problema', prob.length >= 4 ? prob : 'O que você quer resolver'), no('destino', dest), no('passo', PASSO_TXT))
+    setas = nos.slice(1).map(() => null)
+  }
+  const m: MapaCaso = { nos, setas, simples: !ia, ajustes }
+  if (antes) m.nos.forEach((n) => { if (n.tipo === 'negocio' || n.tipo === 'passo') n.ajustado = false })
+  return m
+}
+/** J8: foca em INVENÇÃO e CONTRADIÇÃO (a redação antiga barrava rótulo fiel só por "vago"; medido 2026-11-21: 0,61–0,87 contra 0,28–0,67). */
+const J8_INSTR = 'Do any of these labels state a specific fact that is NOT supported by person_context, or contradict it? Paraphrases, generalizations and cautious summaries of what the person said should be answered no. Vagueness alone is not a reason to answer yes.'
+/** H6/H7 + J8. Devolve o mapa da IA ou null (Haiku/parse/Jev falharam, ou J8 ≥ 0,62 mesmo após 1 refação) + o último valor de J8. */
+async function gerarMapaIA(sys: string, user: string, t0: number, trace?: unknown[]): Promise<{ ia: MapaIA | null; j8: number | null }> {
+  let j8: number | null = null
+  for (let tent = 0; tent < 2; tent++) {
+    if (tent === 1 && Date.now() - t0 >= 6000) break
+    const t = await haikuTexto(sys, user, 300)
+    const ia = t ? parseMapa(t) : null
+    trace?.push({ tent, bruto: t, ia })
+    if (!ia) return { ia: null, j8 }
+    try {
+      const a = await jev(
+        { shop: SHOP, person_context: user.replace(/<\/?contexto>/g, ''), labels: { problema: ia.problema, causa: ia.causa, risco: ia.risco, destino: ia.destino, setas: ia.setas.filter((x) => x) } },
+        { rotulo_ruim: { type: 'noul', instructions: J8_INSTR } },
+      )
+      j8 = noul(a, 'rotulo_ruim')
+      if (trace) (trace[trace.length - 1] as any).j8 = j8
+    } catch (e) { console.error('mapa j8 falha', (e as Error)?.message?.slice(0, 40)); return { ia: null, j8 } }
+    if (j8 < 0.62) return { ia, j8 }
+  }
+  return { ia: null, j8 }
 }
 
 /* ── HTTP ─────────────────────────────────────────────────────────── */
@@ -570,11 +645,11 @@ Deno.serve(async (req: Request) => {
     if (acao === 'revenda') {
       const token = typeof body.token === 'string' ? body.token : ''
       const passo = typeof body.passo === 'string' ? body.passo : ''
-      const PASSOS = ['segmento', 'perfil', 'escutar', 'simulacao', 'aprofundar', 'aprofundar_resp', 'palpite', 'palpite_resp', 'resumo']
+      const PASSOS = ['segmento', 'perfil', 'escutar', 'simulacao', 'aprofundar', 'aprofundar_resp', 'palpite', 'palpite_resp', 'resumo', 'mapa', 'mapa_ajuste', 'mapa_ok']
       const falha = (motivo: string) => { logPuri('revenda', 'erro', motivo, { passo: PASSOS.includes(passo) ? passo : '?' }); return json({ ok: false, motivo }) }
       if (!UUID_RE.test(token)) return falha('token_invalido')
       if (!PASSOS.includes(passo)) return falha('dados_invalidos')
-      const { data: lead } = await sb.from('qualificacao_leads').select('id, turns, historico, segmento, movimento, anotacoes')
+      const { data: lead } = await sb.from('qualificacao_leads').select('id, turns, historico, segmento, movimento, cidade, bairro, resumo, anotacoes')
         .eq('token', token).eq('origem', 'puri').maybeSingle()
       if (!lead) return falha('token_invalido')
       /** Mesmos limites da `mensagem` (falha fechada). */
@@ -669,6 +744,8 @@ Deno.serve(async (req: Request) => {
       }
 
       if (passo === 'palpite') {
+        // idempotente: o front tem timeout menor que a Edge; "tentar de novo" não gera outro palpite
+        if (typeof anot.palpite === 'string' && anot.palpite) return json({ ok: true, palpite: anot.palpite })
         const g = await portao(); if (g) return falha(g)
         const ctx = contextoRevenda(lead)
         let p: string | null = null
@@ -689,6 +766,7 @@ Deno.serve(async (req: Request) => {
       }
 
       if (passo === 'resumo') {
+        if (typeof lead.resumo === 'string' && lead.resumo && typeof anot.problema === 'string' && anot.problema) return json({ ok: true, resumo: lead.resumo, problema: anot.problema })
         const g = await portao(); if (g) return falha(g)
         const ctx = contextoRevenda(lead, { palpite: true })
         let r: { resumo: string; problema: string } | null = null
@@ -696,6 +774,74 @@ Deno.serve(async (req: Request) => {
         await conta(r ? { resumo: r.resumo.slice(0, 300), anotacoes: { ...anot, problema: r.problema } } : {})
         logPuri('revenda', 'resumo', r ? 'ok' : (ctx ? 'sem_resumo' : 'sem_contexto'))
         return json(r ? { ok: true, resumo: r.resumo, problema: r.problema } : { ok: true, resumo: null })
+      }
+
+      /* ── 5B: mapa do caso ── */
+      if (passo === 'mapa' || passo === 'mapa_ajuste' || passo === 'mapa_ok') {
+        const t0 = Date.now()
+        const atual: MapaCaso | null = anot.mapa && typeof anot.mapa === 'object' && Array.isArray((anot.mapa as any).nos) ? anot.mapa as MapaCaso : null
+        const ajustesAtuais = typeof anot.mapa_ajustes === 'number' ? anot.mapa_ajustes : 0
+
+        if (passo === 'mapa_ok') {
+          if (!atual) return falha('dados_invalidos')
+          if (!await limiteOk(sb, 'puri-tok:' + token, LIMITE_MSG_CONVERSA)) return falha('limite_conversa')
+          await conta({ anotacoes: { ...anot, mapa_ok: true } })
+          logPuri('revenda', 'mapa_ok', 'ok')
+          return json({ ok: true })
+        }
+
+        const a = lead.anotacoes && typeof lead.anotacoes === 'object' ? lead.anotacoes as any : {}
+        const base = () => {
+          const ctx = contextoRevenda(lead, { palpite: 'confirmado' })
+          if (!ctx) return null
+          const resumo = typeof lead.resumo === 'string' && lead.resumo ? '\nResumo: ' + limparIA(lead.resumo, 300) : ''
+          const prob = typeof a.problema === 'string' && a.problema ? '\nProblema: ' + limparIA(a.problema, 80) : ''
+          return ctx + resumo + prob
+        }
+
+        if (passo === 'mapa') {
+          if (atual) return json({ ok: true, mapa: atual }) // idempotente: sem IA, sem turno
+          if (!a.problema && !a.quer) { logPuri('revenda', 'mapa', 'sem_contexto'); return json({ ok: true, mapa: null }) }
+          const g = await portao(); if (g) return falha(g)
+          const user = base()
+          let r: { ia: MapaIA | null; j8: number | null } = { ia: null, j8: null }
+          // DIAGNOSTICO: so existe quando o pathname contem /assistente-dev (nunca na producao /assistente) E body.debug === true
+          const trace: unknown[] | undefined = body.debug === true && /^(\/functions\/v1)?\/assistente-dev\/?$/.test(new URL(req.url).pathname) ? [] : undefined // regex ancorada: /assistente/assistente-dev (subcaminho na producao) NAO passa
+          if (user) { try { r = await gerarMapaIA(SYS_H6, user, t0, trace) } catch (e) { console.error('mapa falha', (e as Error)?.message?.slice(0, 40)) } }
+          const mapa = montarMapa(lead, r.ia, null, 0)
+          await conta({ anotacoes: { ...anot, mapa, mapa_ajustes: 0 } })
+          logPuri('revenda', 'mapa', r.ia ? 'ok' : 'simples', { j8: r.j8 == null ? 'na' : r.j8.toFixed(2) })
+          return json(trace ? { ok: true, mapa, dbg: trace } : { ok: true, mapa })
+        }
+
+        // mapa_ajuste
+        const v = validarTexto(body.texto)
+        if (!v.ok || v.texto.length > 200) return falha('texto_invalido')
+        const pedido = mascarar(v.texto).replace(/[<>]/g, '').replace(/\s+/g, ' ').trim().slice(0, 200)
+        if (pedido.length < 4) return falha('texto_invalido')
+        if (!atual) return falha('dados_invalidos')
+        if (ajustesAtuais >= 2) return falha('limite_ajuste')
+        const g = await portao(); if (g) return falha(g)
+        const ctx = base()
+        const tx = (tipo: string) => atual.nos.find((n) => n.tipo === tipo)?.texto ?? ''
+        const risco = tx('risco')
+        const anteriores: string[] = (Array.isArray(a.mapa_pedidos) ? a.mapa_pedidos.filter((x: unknown) => typeof x === 'string') : []).slice(-2)
+        // os pedidos de ajuste entram no contexto (H7 e J8): é o que a pessoa disse, então não é invenção
+        const user = ctx ? '<contexto>\n' + ctx.replace(/<\/?contexto>/g, '').trim() + '\nAjustes pedidos pela pessoa: ' + anteriores.concat(pedido).join('; ') + '\nMapa atual: problema: ' + tx('problema') + '; causa: ' + tx('causa') + '; risco: ' + (risco || 'nenhum') + '; destino: ' + tx('destino') + '\nPedido de ajuste: ' + pedido + '\n</contexto>' : null
+        let r: { ia: MapaIA | null; j8: number | null } = { ia: null, j8: null }
+        const traceA: unknown[] | undefined = body.debug === true && /^(\/functions\/v1)?\/assistente-dev\/?$/.test(new URL(req.url).pathname) ? [] : undefined
+        if (user) { try { r = await gerarMapaIA(SYS_H7, user, t0, traceA) } catch (e) { console.error('mapa_ajuste falha', (e as Error)?.message?.slice(0, 40)) } }
+        const novo = r.ia ? montarMapa(lead, r.ia, atual, ajustesAtuais + 1) : null
+        const mudou = !!novo && novo.nos.some((n) => (atual.nos.find((x) => x.tipo === n.tipo)?.texto ?? null) !== n.texto) || (!!novo && novo.nos.length !== atual.nos.length)
+        const pedidos = (Array.isArray(a.mapa_pedidos) ? a.mapa_pedidos.filter((x: unknown) => typeof x === 'string') : []).concat(pedido).slice(-2)
+        if (!novo || !mudou) {
+          await conta({})
+          logPuri('revenda', 'mapa_ajuste', 'sem_mudanca', { j8: r.j8 == null ? 'na' : r.j8.toFixed(2) })
+          return json(traceA ? { ok: true, mapa: atual, sem_mudanca: true, dbg: traceA } : { ok: true, mapa: atual, sem_mudanca: true })
+        }
+        await conta({ anotacoes: { ...anot, mapa: novo, mapa_ajustes: ajustesAtuais + 1, mapa_pedidos: pedidos } })
+        logPuri('revenda', 'mapa_ajuste', 'ok', { j8: r.j8 == null ? 'na' : r.j8.toFixed(2) })
+        return json(traceA ? { ok: true, mapa: novo, dbg: traceA } : { ok: true, mapa: novo })
       }
 
       // simulacao: só números calculados aqui (sem Jev/Haiku); preço da caixa lido do banco
