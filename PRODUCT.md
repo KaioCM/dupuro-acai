@@ -13,13 +13,13 @@ web
 - **Admins**: o Kayo (dono, que montou o sistema) e a sócia, que não montou e precisa achar tudo sem explicação. Usam o admin meio a meio no celular e no computador. As tarefas diárias têm o mesmo peso: confirmar pedidos, cuidar da produção e do estoque, ver os números e manter os cadastros (revendedores, produtos, cupons).
 
 ## Product Purpose
-Site e sistema da Dupuro Açaí, fábrica de açaí em Cuiabá-MT. A meta central é tirar os pedidos do WhatsApp. Hoje o revendedor ainda avisa no WhatsApp que fez o pedido; o painel precisa ficar bom o bastante para que esse aviso deixe de ser necessário. Sucesso é cada pedido chegar, ser confirmado e baixar o estoque sem conversa paralela.
+Site e sistema da Dupuro Açaí, fábrica de açaí em Cuiabá-MT. A meta central é tirar os pedidos do WhatsApp. Hoje o revendedor ainda avisa no WhatsApp que fez o pedido; o painel precisa ficar bom o bastante para que esse aviso deixe de ser necessário. Sucesso é cada pedido chegar e baixar o estoque sem conversa paralela.
 
 ## Positioning
 Açaí direto da fábrica; revenda: primeiro pedido sem mínimo; depois, a partir de 30 L por pedido (caixas de 5 e 10 L somadas). A mesma fábrica atende três canais: atacado (revenda), balcão da loja e delivery para casa. Estoque é por sabor.
 
 ## Operating Context
-- Pedido de revendedor nasce com status `enviado` e **não reserva estoque**. Na criação o sistema só valida se há estoque disponível. O estoque baixa somente quando o admin confirma (`processando`/`entregue`), via trigger `adjust_stock_on_order_change`.
+- Pedido de revendedor vale na hora (desde 2026-10-24, sem confirmação do admin, igual ao delivery): as linhas já nascem `processando` e o estoque baixa na criação, via trigger `adjust_stock_on_order_change`. `criar_pedido_revendedor_para` valida estoque, mínimo de 30 L, cupom e rota antes de gravar.
 - Venda de balcão já nasce `entregue` e baixa estoque na hora. A loja tem cerca de 10 vendas por dia, contra cerca de 3 pedidos de revenda por semana no painel.
 - Delivery: tabela `delivery_pedidos`, com status próprio e pagamento Mercado Pago integrado. Já tem pedidos (DLV-0020, pago via Pix e entregue em 2026-11-10).
 - Produção é registrada em levas (`producoes`, `producao_gastos`, `producao_itens`) para calcular o custo por litro.
