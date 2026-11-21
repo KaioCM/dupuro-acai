@@ -10,7 +10,7 @@ web
 - **Revendedores** (sorveterias, lanchonetes, açaiterias de Cuiabá e Várzea Grande): compram açaí no atacado direto da fábrica pelo painel do revendedor (`area-cliente/dashboard.html`).
 - **Clientes de casa**: compram caixas de 1 L a 10 L e granola pelo Dupuro Delivery (`/delivery`), com entrega de segunda a sábado, manhã (8h–12h, pedido até 7h) ou tarde (13h–17h, pedido até 11h), raio de até 30 km.
 - **Atendente da loja da fábrica**: vende no balcão pelo caixa (`area-cliente/caixa.html`), muitas vezes no app desktop (Electron).
-- **Admins**: o Kayo (dono, que montou o sistema) e a sócia, que não montou e precisa achar tudo sem explicação. Usam o admin meio a meio no celular e no computador. As tarefas diárias têm o mesmo peso: acompanhar e despachar pedidos, cuidar da produção e do estoque, ver os números e manter os cadastros (revendedores, produtos, cupons).
+- **Admins**: o Kayo, que montou o sistema, e a Dilene, proprietária, que não montou e precisa achar tudo sem explicação. Usam o admin meio a meio no celular e no computador. As tarefas diárias têm o mesmo peso: acompanhar e despachar pedidos, cuidar da produção e do estoque, ver os números e manter os cadastros (revendedores, produtos, cupons).
 
 ## Product Purpose
 Site e sistema da Dupuro Açaí, fábrica de açaí em Cuiabá-MT. A meta central é tirar os pedidos do WhatsApp. Hoje o revendedor ainda avisa no WhatsApp que fez o pedido; o painel precisa ficar bom o bastante para que esse aviso deixe de ser necessário. Sucesso é cada pedido chegar e baixar o estoque sem conversa paralela.
