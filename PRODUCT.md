@@ -1,1 +1,48 @@
-IyBQcm9kdWN0Cgo8IS0tIGltcGVjY2FibGU6cHJvZHVjdC1zY2hlbWEgMSAtLT4KCiMjIFBsYXRmb3JtCgp3ZWIKCiMjIFVzZXJzCi0gKipSZXZlbmRlZG9yZXMqKiAoc29ydmV0ZXJpYXMsIGxhbmNob25ldGVzLCBhw6dhaXRlcmlhcyBkZSBDdWlhYsOhIGUgVsOhcnplYSBHcmFuZGUpOiBjb21wcmFtIGHDp2HDrSBubyBhdGFjYWRvIGRpcmV0byBkYSBmw6FicmljYSBwZWxvIHBhaW5lbCBkbyByZXZlbmRlZG9yIChgYXJlYS1jbGllbnRlL2Rhc2hib2FyZC5odG1sYCkuCi0gKipDbGllbnRlcyBkZSBjYXNhKio6IGNvbXByYW0gY2FpeGFzIGRlIDEgTCBhIDEwIEwgZSBncmFub2xhIHBlbG8gRHVwdXJvIERlbGl2ZXJ5IChgL2RlbGl2ZXJ5YCksIGNvbSBlbnRyZWdhIGRlIHNlZ3VuZGEgYSBzw6FiYWRvLCBtYW5ow6MgKDho4oCTMTJoLCBwZWRpZG8gYXTDqSA3aCkgb3UgdGFyZGUgKDEzaOKAkzE3aCwgcGVkaWRvIGF0w6kgMTFoKSwgcmFpbyBkZSBhdMOpIDMwIGttLgotICoqQXRlbmRlbnRlIGRhIGxvamEgZGEgZsOhYnJpY2EqKjogdmVuZGUgbm8gYmFsY8OjbyBwZWxvIGNhaXhhIChgYXJlYS1jbGllbnRlL2NhaXhhLmh0bWxgKSwgbXVpdGFzIHZlemVzIG5vIGFwcCBkZXNrdG9wIChFbGVjdHJvbikuCi0gKipBZG1pbnMqKjogbyBLYXlvIChkb25vLCBxdWUgbW9udG91IG8gc2lzdGVtYSkgZSBhIHPDs2NpYSwgcXVlIG7Do28gbW9udG91IGUgcHJlY2lzYSBhY2hhciB0dWRvIHNlbSBleHBsaWNhw6fDo28uIFVzYW0gbyBhZG1pbiBtZWlvIGEgbWVpbyBubyBjZWx1bGFyIGUgbm8gY29tcHV0YWRvci4gQXMgdGFyZWZhcyBkacOpcmlhcyB0w6ptIG8gbWVzbW8gcGVzbzogY29uZmlybWFyIHBlZGlkb3MsIGN1aWRhciBkYSBwcm9kdcOnw6NvIGUgZG8gZXN0b3F1ZSwgdmVyIG9zIG7Dum1lcm9zIGUgbWFudGVyIG9zIGNhZGFzdHJvcyAocmV2ZW5kZWRvcmVzLCBwcm9kdXRvcywgY3Vwb25zKS4KCiMjIFByb2R1Y3QgUHVycG9zZQpTaXRlIGUgc2lzdGVtYSBkYSBEdXB1cm8gQcOnY8OtLCBmw6FicmljYSBkZSBBw6dhw60gZW0gQ3VpYWLDoS1NVC4gQSBtZXRhIGNlbnRyYWwgw6kgdGlyYXIgb3MgcGVkaWRvcyBkbyBXaGF0c0FwcC4gSG9qZSBvIHJldmVuZGVkb3IgYWluZGEgYXZpc2Egbm8gV2hhdHNBcHAgcXVlIGZleiBvIHBlZGlkbzsgbyBwYWluZWwgcHJlY2lzYSBmaWNhciBib20gbyBiYXN0YW50ZSBwYXJhIHF1ZSBlc3NlIGF2aXNvIGRlaXhlIGRlIHNlciBuZWNlc8Opw7Jpby4gU3VjZXNzbyDDqSBjYWRhIHBlZGlkbyBjaGVnYXIsIHNlciBjb25maXJtYWRvIGUgYmFpeGFyIG8gZXN0b3F1ZSBzZW0gY29udmVyc2EgcGFyYWxlbGEuCgojIyBQb3NpdGlvbmluZwpBw6dhw60gZGlyZXRvIGRhIGbDoWJyaWNhOyByZXZlbmRhIGEgcGFydGlyIGRlIDEgY2FpeGEgZGUgMTAgTCAobcOtbmltbyBwb3IgcHJvZHV0bywgZGlzcGVuc2FkbyBjb20gNTAgTCBubyBwZWRpZG8pLiBBIG1lc21hIGbDoWJyaWNhIGF0ZW5kZSB0cHLsscncyBjYW5haXM6IGF0YWNhZG8gKHJldmVuZGEpLCBiYWxjw6NvIGRhIGxvamEgZSBkZWxpdmVyeSBwYXJhIGNhc2EuIEVzdG9xdWUgw6kgcG9yIHNhYm9yLgoKIyMgT3BlcmF0aW5nIENvbnRleHQKLSBQZWRpZG8gZGUgcmV2ZW5kZWRvciBuYXNjZSBjb20gc3RhdHVzIGBlbnZpYWRvYCBlICoqbsOjbyByZXNlcnZhIGVzdG9xdWUqKi4gTmEgY3JpYcOpw7NvIG8gc2lzdGVtYSBzw6NzIHZhbGlkYSBzZSBow6kgZXN0b3F1ZSBkaXNwb3TDtuZWxsLiBPIGVzdG9xdWUgYmFpeGEgc29tZW50ZSBxdWFuZG8gbyBhZG1pbiBjb25maXJtYSAoYHByb2Nlc3NhbmRvYC9gZW50cmVndWVgKSwgdmlhIHRyaWdnZXIgYGFkanVzdF9zdG9ja19vbl9vcmRlcl9jaGFuZ2VgLgotIFZlbmRhIGRlIGJhbGTDo8OzKyBuYXNjZSBlbnRyZWd1ZWAgZSBiYWl4YSBlc3RvcXVlIG5hIGhvcmEuIEEgbG9qYSB0ZW0gY2VyY2EgZGUgMTAgdmVuZGFzIHBvciBkaWEsIGNvbnRyYSBjZXJjYSBkZSAzIHBlZGlkb3MgZGUgcmV2ZW5kYSBwb3Igc2VtYW5hIG5vIHBhaW5lbC4KLSBEZWxpdmVyeTogdGFiZWxhIGBkZWxpdmVyeV9wZWRpZG9zYCwgY29tIHN0YXR1cyBcw6lwcsNyaW8gZSBwYWdhbWVudG8gTWVyY2FkbyBQYWdvIGludGVncmFkbyAod2ViaG9vayBjb25maXJtYWRvKTsgasOkIHRlbSBwZWRpZG9zLCBpbmNsdWluZyBQaXggcGFnbyBlIGVudHJlZ3VlIChETFYtMDAyMCwgMjAyNi0xMS0xMCkuCi0gUHJvZHTDo8OjbyDDqSByZWdpc3RyYWRhIGVtIGxldmFzIChgcHJvZHVjb2VzYCwgYHByb2R1Y2FvX2dhc3Rvc2AsIGBwcm9kdWNhb19pdGVuc2ApIHBhcmEgY2FsY3VsYXIgbyBjdXN0byBwb3IgbGl0cm8uCi0gRmlzY2FsOiBORkMtZSB2aWEgZ2F0ZXdheSwgU2ltcGxlcyBOYWNpb25hbCwgQ0ZPUCA1MTAyLCBOQ00gMDgxMTkwMDAuCgojIyBDYXBhYmlsaXRpZXMgYW5kIENvbnN0cmFpbnRzCi0gU2l0ZSBlc8Olcdp0aWNvIG5vIEdpdEh1YiBQYWdlcyAoYGdpdCBwdXNoYCBwdWJsaWNhKSArIFN1cGFiYXNlIChQb3N0Z3JlcywgUkxTLCBFZGdlIEZ1bmN0aW9ucykuIFNlbSBidWlsZCBzdGVwOyBIVE1MIGNvbSBKUyBpbmxpbmUuCi0gVmFsb3JlcyBkZSBzdGF0dXMgbm8gYmFuY28gc8OjbyBmeXhpcyAoQ0hFQ0spOiBgcHJvY2Vzc2FuZG9gLCBgZW52aWFkb2AsIGBlbnRyZWd1ZWAsIGBjYW5jZWxhZG9gLiBOb21lcyBuYSB0ZWxhIHBvZGVtIG11ZGFyIHNlbSBtaWdyYcEpw7JvLg0KLSBPIGVzdG9xdWUgbnVuY2EgZmljYSBuZWdhdGl2byAoQ0hFQ0sgImVzdG9xdWUgPj0gMGIpLg0KLSBEYWRvcyBkZSBwcm9kdWLDp8OzOiBudW5jYSBlbWl0aXIgTkZDLWUgcmVhbCwgcmVnaXN0cmFyIHZlbmRhIHJlYWwgb3UgZmVjaGFyIGNhaXhhIHJlYWwgZW0gdGVzdGUuCgojIyBCcmFuZCBDb21taXRtZW50cwotIE5vbWUgIkR1cHVybyBBw6dhw60iOyBsb2dvIGVtIGBhc3NldHMvaW1nL2AuIEZhbGEgZW0gcG9ydHVnw6dzIGRvIEJyYXNpbCwgaW5mb3JtYWwgZSBkaXJldG8gKCJ2b8OpeiIsICJwcmEiKS4KLSBQYXJhIG8gYWRtaW4sIG8gZG9ubyBsaWJlcm91IG11ZGFyIHR1ZG8sIGluY2x1c2l2ZSBhIGFwYXLDr8OjYWEuCgojIyBFdmlkZW5jZSBvbiBIYW5kCi0gRGFkb3MgcmVhaXMgbm8gYmFuY286IGNlcmNhIGRlIDEuMDAwIHZlbmRhcyBkZSBiYWxjw6NvLCA0MiBwZWRpZG9zIGRlIHJldmVuZGEsIDUgcmV2ZW5kZWTDr3MgYXByb3ZhZG9zIGUgMTAgY2FkYXN0cm9zIHBlbmRlbnRlcyAobyBtdWlzIGFudGlnbyBkZSA4MyBkaWFzKS4KLSBBdmFsaWFtw6fDtWVzFHb29nbGUgZXhpYmlkYXMgbmEgaG9tZS4KLSBEZWxpdmVyeSBlbSBwcm9kw6fDr286IDEwIHBlZGlkb3MgcmVjZW50ZXMgKDIsigJlbnRyZWd1ZXM7IHVtIHBhZ28gcG9yIFBpeCB2aWEgTWVyY2FkbyBQYWdvLCBMRFYtMDAyMCwgMjAyNi0xMS0xMCkuIMS+x2VudGVyIG7Dp23tZXJvcywgZGVwb2ltZW50b3Mgb3UgY2xpZW50ZXMuCgojIyBQcm9kdWN0IFByaW5jaXBsZXMKMS4gKipPIHF1ZSBwcmVjaXNhIGRlIHZvw6pvIHByaW1laXJvLioqIFRvZGRhIHRlbGEgb3BlcmFjaW9uYWwgYWJyZSBwZWxsYSBmaWxhIGRlIGHDp8OswrTMsCcXJlIGZvcm1dw6Z1c0lmIGUgY2FkYXN0cm8uDQoyLiAqoz5c2J2aW8gcHIgeXF1ZW0gw6NvIG1vbnRvdcOpLioqIE9zIG5vbWVzIHNlZ3VlbSBvIGRpYSBkZSB0cmFiYWxobywgbsOfYXMgdGFib2VuYXMgZG8gYmFuY28uDQozLiAqKkVzdG9xdWUgw6kgc2FHcmFkby4qKiBUb2RhIGHDp8OjbyBxdWUgbWV4ZSBubyBlc3RvcXVlIGRpeiBvIHF1ZSB2YWkgYWNvbnRlY2VyLCBjb25maXJtYSBvIHJlc3VsdGFkbyBlIHBlcm1pdGUgZGVzZmF6ZXIuDQouICoqQ2VsdWxhciBlIGNvbXB1dGFkb3IgdmFsZW0gaWd1YWwuKiogQSBhw6fDo28gcHJpbmNpcGFsIGZpY2Egc2VtcHJlIHZpc8OndsBvcyBkb2lzLg0KNS4gKipUcHzlysY2FuaXMsIHVtIGx1Z2FyLioqIEF0YWNhZG8sIGJhbGjDr8OzIGUgZGVsaXZlcnkgY29udml2ZW0gY29tIGV0aXF1ZXRhIGRlIGNhbmFsLCBzZW0gdGVsYXMgZHVwbGljYWRhcy4=
+# Product
+
+<!-- impeccable:product-schema 1 -->
+
+## Platform
+
+web
+
+## Users
+- **Revendedores** (sorveterias, lanchonetes, açaiterias de Cuiabá e Várzea Grande): compram açaí no atacado direto da fábrica pelo painel do revendedor (`area-cliente/dashboard.html`).
+- **Clientes de casa**: compram caixas de 1 L a 10 L e granola pelo Dupuro Delivery (`/delivery`), com entrega de segunda a sábado, manhã (8h–12h, pedido até 7h) ou tarde (13h–17h, pedido até 11h), raio de até 30 km.
+- **Atendente da loja da fábrica**: vende no balcão pelo caixa (`area-cliente/caixa.html`), muitas vezes no app desktop (Electron).
+- **Admins**: o Kayo (dono, que montou o sistema) e a sócia, que não montou e precisa achar tudo sem explicação. Usam o admin meio a meio no celular e no computador. As tarefas diárias têm o mesmo peso: confirmar pedidos, cuidar da produção e do estoque, ver os números e manter os cadastros (revendedores, produtos, cupons).
+
+## Product Purpose
+Site e sistema da Dupuro Açaí, fábrica de açaí em Cuiabá-MT. A meta central é tirar os pedidos do WhatsApp. Hoje o revendedor ainda avisa no WhatsApp que fez o pedido; o painel precisa ficar bom o bastante para que esse aviso deixe de ser necessário. Sucesso é cada pedido chegar, ser confirmado e baixar o estoque sem conversa paralela.
+
+## Positioning
+Açaí direto da fábrica; revenda: primeiro pedido sem mínimo; depois, a partir de 30 L por pedido (caixas de 5 e 10 L somadas). A mesma fábrica atende três canais: atacado (revenda), balcão da loja e delivery para casa. Estoque é por sabor.
+
+## Operating Context
+- Pedido de revendedor nasce com status `enviado` e **não reserva estoque**. Na criação o sistema só valida se há estoque disponível. O estoque baixa somente quando o admin confirma (`processando`/`entregue`), via trigger `adjust_stock_on_order_change`.
+- Venda de balcão já nasce `entregue` e baixa estoque na hora. A loja tem cerca de 10 vendas por dia, contra cerca de 3 pedidos de revenda por semana no painel.
+- Delivery: tabela `delivery_pedidos`, com status próprio e pagamento Mercado Pago integrado. Já tem pedidos (DLV-0020, pago via Pix e entregue em 2026-11-10).
+- Produção é registrada em levas (`producoes`, `producao_gastos`, `producao_itens`) para calcular o custo por litro.
+- Fiscal: NFC-e via gateway, Simples Nacional, CFOP 5102, NCM 08119000.
+
+## Capabilities and Constraints
+- Site estático no GitHub Pages (`git push` publica) + Supabase (Postgres, RLS, Edge Functions). Sem build step; HTML com JS inline.
+- Valores de status no banco são fixos (CHECK): `processando`, `enviado`, `entregue`, `cancelado`. Nomes na tela podem mudar sem migração.
+- O estoque nunca fica negativo (CHECK `estoque >= 0`).
+- Dados de produção: nunca emitir NFC-e real, registrar venda real ou fechar caixa real em teste.
+
+## Brand Commitments
+- Nome "Dupuro Açaí"; logo em `assets/img/`. Fala em português do Brasil, informal e direto ("você", "pra").
+- Para o admin, o dono liberou mudar tudo, inclusive a aparência.
+
+## Evidence on Hand
+- Dados reais no banco: cerca de 1.000 vendas de balcão, 42 pedidos de revenda, 5 revendedores aprovados e 10 cadastros pendentes (o mais antigo de 83 dias).
+- Avaliações Google exibidas na home.
+- O delivery já tem pedidos (ex.: DLV-0020). Não inventar números, depoimentos ou clientes.
+
+## Product Principles
+1. **O que precisa de você primeiro.** Toda tela operacional abre pela fila de ações, não pelo formulário de cadastro.
+2. **Óbvio pra quem não montou.** Os nomes seguem o dia de trabalho, não as tabelas do banco.
+3. **Estoque é sagrado.** Toda ação que mexe no estoque diz o que vai acontecer, confirma o resultado e permite desfazer.
+4. **Celular e computador valem igual.** A ação principal fica sempre visível nos dois.
+5. **Três canais, um lugar.** Atacado, balcão e delivery convivem com etiqueta de canal, sem telas duplicadas.
