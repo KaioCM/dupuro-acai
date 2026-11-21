@@ -58,7 +58,7 @@ export function ehPendente(t: string): boolean {
 }
 
 /** Assuntos PENDENTES na base (sem fato): conservantes, derretimento na entrega. */
-export const ASSUNTOS_PENDENTES = 'conservantes, se derrete na entrega'
+export const ASSUNTOS_PENDENTES = 'conservantes, se derrete na entrega, nota fiscal'
 /** Assuntos sensíveis: a resposta só pode tocar em validade/lactose se a PERGUNTA for sobre isso (evita vazar do histórico). */
 const RE_RESP_PENDENTE = /(validade|vencim|lactose|sem\s+leite|estrag)/i
 const RE_PERG_PENDENTE = /(freezer|congel|validade|vencim|vence\b|lactose|leite|estrag|conserv|armazen|guard|derret|dura)/i
@@ -99,12 +99,14 @@ export function decidirAbertura(j1: string | undefined, p1: number, j11: number)
 }
 
 /** Resposta do Haiku com link, e-mail ou número de telefone que não seja o WhatsApp dos fatos → suspeita. */
-export function respostaSuspeita(r: string, waDigitos: string): boolean {
-  if (/https?:\/\/|www\.|@/i.test(r)) return true
+export function respostaSuspeita(r: string, waDigitos: string | string[]): boolean {
+  const was = Array.isArray(waDigitos) ? waDigitos : [waDigitos]
+  const semInsta = r.replace(/(?<![\w.])@dupuroacai(?![\w.])/gi, '')
+  if (/https?:\/\/|www\.|@/i.test(semInsta)) return true
   const seqs = r.match(/\d[\d\s().-]*\d/g) || []
   for (const q of seqs) {
     const d = q.replace(/\D/g, '')
-    if (d.length >= 8 && !(d === waDigitos || d === '55' + waDigitos || d === '78076001')) return true
+    if (d.length >= 8 && !(was.some((w) => d === w || d === '55' + w) || d === '78076001')) return true
   }
   return false
 }

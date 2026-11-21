@@ -1025,17 +1025,6 @@ $function$;
 revoke execute on function public.caixa_substituir_venda(text, text, jsonb) from public, anon, authenticated;
 grant execute on function public.caixa_substituir_venda(text, text, jsonb) to authenticated, service_role;
 
--- litros_dispensa_minimo
-create or replace function public.litros_dispensa_minimo()
- returns numeric
- language sql
- stable security definer
- set search_path to 'public'
-as $function$
-  select coalesce((select valor from public.app_settings where chave = 'litros_dispensa_minimo'), 50);
-$function$;
-grant execute on function public.litros_dispensa_minimo() to authenticated, service_role;
-
 -- litros_minimo_pedido
 create or replace function public.litros_minimo_pedido()
  returns numeric

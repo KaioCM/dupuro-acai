@@ -317,6 +317,7 @@
       converter: function () { return atraso({ ok: true }); },
       mensagem: function (token, etapa, texto) {
         var t = norm(texto);
+        if (/wikipedia/.test(t)) return atraso({ ok: true, tipo: 'resposta', texto: 'Isso foge do que eu sei: sou a assistente da Dupuro Açaí. Posso te ajudar com açaí, revenda ou entrega.', fora: true });
         if (etapa === 'abertura') return atraso({ ok: true, tipo: 'intencao', intencao: intencao(t) });
         if (/horario|hora|abre|fecha|funciona/.test(t)) return atraso({ ok: true, tipo: 'resposta', texto: 'Funcionamos de segunda a sábado, das 13h às 19h30.' });
         if (/entrega|entregam|frete|delivery/.test(t)) return atraso({ ok: true, tipo: 'resposta', texto: 'Entregamos em Cuiabá e Várzea Grande, até 30 km. A taxa aparece antes de você pagar.' });
@@ -1565,7 +1566,10 @@
     }
     if (r.tipo === 'resposta' && typeof r.texto === 'string') {
       E.etapa = 'duvida'; E.assunto = 'duvida';
-      return puriDiz(r.texto, [{ id: 'outra', t: 'Outra dúvida' }, CH.humano]);
+      if (r.fora === true) { // assunto sem relação com a Dupuro: oferece os caminhos do menu, sem "Falar com uma pessoa"
+        return puriDiz(r.texto, [{ id: 'outra', t: 'Outra dúvida' }].concat(CH.abertura.filter(function (c) { return c.id !== 'duvida'; })));
+      }
+      return puriDiz(r.texto, [{ id: 'outra', t: 'Outra dúvida' }, CH.humano]); // normal ou humano:true
     }
     if (r.tipo === 'humano') {
       E.assunto = 'humano';

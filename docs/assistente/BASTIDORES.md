@@ -23,7 +23,9 @@ Tudo via `rate_check` (janela 86400 s, chave com o dia de America/Cuiaba quando 
 - `iniciar`: 10/IP/dia (`puri-ip:<hash>`) e teto global folgado de 200 criações/dia (`puri-new-<dia>`). Não consome o teto principal.
 - `mensagem`: 60/IP/dia (`puri-ipm:<hash>`); 25/conversa (`turns` + `puri-tok:<token>`); **40 conversas/dia** contadas na PRIMEIRA mensagem de cada conversa (`puri-conv-<dia>`); **150 mensagens/dia globais** que chamam Jev/Haiku (`puri-global-<dia>`).
 - IP: `cf-connecting-ip`, senão o ÚLTIMO valor de `x-forwarded-for`; IPv6 vira o prefixo /64, IPv4 inteiro. Hash SHA-256 com sal = SHA-256(`SUPABASE_SERVICE_ROLE_KEY` + 'puri'), nunca logado.
-- Limpar testes: `delete from rate_buckets where key like 'puri-%'` (só chaves do assistente; as `pur-%` são da versão antiga).
+- **Isolamento do dev (2026-11-21):** na `assistente-dev` (pathname ancorado `^(/functions/v1)?/assistente-dev/?$`, a mesma regex do debug) TODAS as chaves de `rate_check` ganham o prefixo `dev:` (ex.: `dev:puri-conv-2026-11-21`). O prefixo é calculado por requisição (`const P` no handler) e passado explicitamente a `limiteOk`/`limiteIpOk`, sem variável global. A produção segue com chaves sem prefixo; assim os testes do dev não esgotam o contador global (`puri-conv-<dia>`, 40/dia) dos clientes reais. Limpar teste do dev: `delete from rate_buckets where key like 'dev:puri-%'`.
+- **J4 e contatos (2026-11-21):** "qual o instagram de vocês?" caía em `j4_inventou` (J3 0,98, J4 0,52) porque o @ da resposta parecia dado não suportado; a instrução do J4 agora diz que contatos presentes em `facts` (Instagram, WhatsApp, endereço, horário) são suportados.
+- Limpar testes (produção): `delete from rate_buckets where key like 'puri-%'` (só chaves do assistente; as `pur-%` são da versão antiga).
 
 ## Privacidade
 `mascarar()` (logica.ts) tira telefone, e-mail, CPF/CNPJ (`[contato]`) e nome (`[nome]`) antes de gravar e de chamar Jev/Haiku. `ultimo_texto` só guarda texto mascarado. O nome é mascarado inteiro: após "sou"/"aqui é" pega a sequência de palavras Capitalizadas com conectores (da, de, do, das, dos, e); após "meu nome é"/"me chamo"/"pode me chamar de" pega até 4 palavras em qualquer caixa. Logs só com status/código, nunca texto nem chave. Migrações `migration_072_puri_leads.sql` (`origem`, `pagina`, `intencao` em `qualificacao_leads`) e `migration_073_puri_checks.sql` (checks de `origem` = 'puri' e `intencao` nos 6 valores); RLS inalterada.
@@ -127,3 +129,20 @@ Mesma ação `revenda` (token de lead `puri`), mesmos limites da `mensagem` (por
 - **Fallbacks:** tudo em try/catch; falha visual nunca quebra a conversa (exceção no rAF cai no quadro final e libera `_anim`).
 - **z-index:** painel 1100, acima do header 1000.
 - **Pendência 5B (mapa do caso, com IA no servidor):** publicada em produção em 2026-11-21 (Edge com passos `mapa`, `mapa_ajuste`, `mapa_ok` e front).
+
+## Repertório ampliado (2026-11-21, só em `assistente-dev`)
+
+- **Catálogo ao vivo**: `contextoBanco()` (index.ts) lê `delivery_config` + `products` + `product_flavor_stock` e monta um bloco "CATÁLOGO AO VIVO" (preços do delivery, caixa de açaí 10 L no atacado, sabores com estoque > 0, dias/turnos com corte, taxa, pedido mínimo). Cache de 5 min em memória; qualquer falha devolve '' e a resposta segue só com `FATOS`. O bloco vai ao Haiku (system) e ao J3/J4 (`facts`). Nenhum dado de cliente entra.
+- **Fora de escopo**: o Haiku responde `FORA_ESCOPO` e o J3 traz a pergunta noul `fora_escopo` na mesma chamada. FORA se (Haiku FORA_ESCOPO e fora_escopo >= 0,5) ou fora_escopo >= 0,85; vale antes do corte do J3. Resposta `{ok:true, tipo:'resposta', texto: TXT_FORA, fora:true}` (compatível com o front antigo, que só vê `resposta`).
+- **Sem fato** (assunto da Dupuro que não está na base): continua `tipo:'humano'`, texto novo "Isso eu não tenho aqui. Se quiser, uma pessoa da equipe confirma pra você."
+- **Lista fechada**: "não vendemos X" é resposta válida (J3 respondível e J4 não conta como invenção). `pending_topics` do J4: conservantes, se derrete na entrega, nota fiscal.
+- **Evento/festa**: resposta sai dos fatos e inclui `humano:true` (o front pode oferecer a pessoa).
+- **Abertura**: se a intenção dá `incerto` e o texto parece pergunta, trata como dúvida (`responderDuvida`) e devolve `tipo:'resposta'|'humano'` (o `tratar()` do front já aceita esses tipos em qualquer etapa).
+- **WhatsApp da loja**: `respostaSuspeita` libera 556596949542 / 6596949542 / 96949542, além do WA da fábrica e do CEP.
+- Instagram (resolvido no código, 2026-11-21): `respostaSuspeita` remove `@dupuroacai` (sem diferenciar caixa) antes de testar `@`/e-mail; qualquer outro `@` continua barrado. Falta confirmar na prática (o teste de 2026-11-21 caiu em `humano` e o motivo não foi lido; ver pendências).
+- Atalho `pedido_humano` (dúvida): se o texto pede uma pessoa (atendente, "falar com pessoa/alguém", humano, vendedor de verdade), responde `{ok:true, tipo:'humano', texto:'Claro! É só tocar em "Falar com uma pessoa" que a equipe te atende no WhatsApp.'}` sem IA; log `motivo: pedido_humano`. Roda depois de `ehSaude` e `ehPendente`.
+- Atalho `atalho_instagram` (dúvida, sem IA): `/\binsta(gram)?\b/i` responde "O Instagram da Dupuro é @dupuroacai."; causa: o J4 marcava o @ como invenção.
+- Instagram resolvido pelo atalho (2026-11-21): `atalho_instagram` só dispara com as 3 condições juntas (mensagem até 60 caracteres, casa `insta(gram)` e casa `qual|cad[eê]|perfil|@|siga|seguir|tem insta`); "vi no instagram que tem pistache?" vai para a IA.
+- `atalhosDuvida(texto)` (index.ts) concentra saúde/leite, pendente, `pedido_humano` e `atalho_instagram` e vale nos DOIS ramos: abertura `incerto`→dúvida e ramo dúvida (mesmos textos, tipos, logs, grava histórico).
+- Regex novo do `pedido_humano` (exige pedido explícito): `\b(quero|preciso|posso|pode|gostaria de|deixa eu|me passa|chama|chamar)\b.{0,25}\b(atendente|pessoa|algu[eé]m|humano)\b|\bfalar com (uma |alguma |a |um )?(pessoa|atendente|algu[eé]m)\b|\bpessoa de verdade\b` (não casa "consumo humano" nem "tem atendente na loja?").
+- `respostaSuspeita` usa `(?<![\w.])@dupuroacai(?![\w.])`; `contextoBanco` só formata números finitos e, se falhar, guarda `''` em cache por 60 s.

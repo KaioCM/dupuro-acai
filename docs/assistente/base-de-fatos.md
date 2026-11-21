@@ -49,3 +49,15 @@ Outros: horário de funcionamento · o site não aceita meu endereço · não en
 
 ## Pendências de texto no site (para a tarefa da regra nova) — RESOLVIDA em 2026-11-19 (index.html, revenda/index.html, CLAUDE.md e docs atualizados com a regra de 30 L; o texto abaixo é o registro da pendência)
 Lista completa dos lugares com "a partir de 1 caixa"/"50 L dispensam" no relatório da Etapa 0 (index.html, revenda/index.html, admin.html, dashboard.html, cliente.js, admin.js, migrações/funções do banco, CLAUDE.md, docs/revenda.md, docs/roteiro-chat-p3.md, docs/pesquisa-ativacao.md). Conflito já existente: revenda/index.html:147 ("1 caixa / 50 L") × :255 ("primeiro pedido sem mínimo").
+
+## Fatos acrescentados (confirmado pelo Kayo em 2026-11-21)
+
+- Domingo e feriado: loja/fábrica e delivery NÃO funcionam. (confirmado pelo Kayo em 2026-11-21)
+- Retirada na fábrica: aceita Pix, dinheiro, débito e crédito. (confirmado pelo Kayo em 2026-11-21)
+- Loja física (balcão): vende copos de açaí (180 ml a 700 ml), marmitas e açaí por quilo; só na loja, não é vendido pelo site. Contato da loja: WhatsApp (65) 9694-9542. A Puri não cita preço de copo. (confirmado pelo Kayo em 2026-11-21)
+- Festas e eventos: atendemos, mas precisa combinar com a equipe. (confirmado pelo Kayo em 2026-11-21)
+- Sem açúcar: ainda não temos opção sem açúcar. (confirmado pelo Kayo em 2026-11-21)
+- Instagram: @dupuroacai. (confirmado pelo Kayo em 2026-11-21)
+- Painel do revendedor: acompanhar pedidos, histórico, status de entrega e cupons; a tabela completa de preços de atacado aparece depois do cadastro aprovado. (confirmado pelo Kayo em 2026-11-21)
+- Lista fechada: a Dupuro vende SOMENTE açaí e cremes em caixas e potes, granola Tia Sônia 1 kg, complementos e os demais produtos do CATÁLOGO AO VIVO (pelo site e para revenda); e só na loja física também copos, marmitas e açaí por quilo. Não vende lanches, salgados, pizza, refeições, bebidas alcoólicas nem outros produtos fora disso. Telefones: (65) 9694-9542 é o WhatsApp da LOJA física; (65) 99288-8228 é o da fábrica/site. (confirmado pelo Kayo em 2026-11-21)
+- Saíram de `fatos.ts` e passaram a vir do banco (catálogo ao vivo): dias e turnos do delivery com cortes, taxa de entrega e pedido mínimo do delivery.
