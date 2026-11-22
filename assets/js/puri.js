@@ -81,7 +81,7 @@
     perdi: 'Por segurança não guardo nome nem telefone quando a página recarrega. Qual é o seu nome?'
   };
   var ENDERECO_FABRICA = 'Av. das Torres, 16, Jardim Imperial II, Cuiabá-MT, 78076-001';
-  var MAPA_FABRICA = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(ENDERECO_FABRICA);
+  var MAPA_FABRICA = 'https://www.google.com/maps?cid=17555207674774734721';
   var DIAS = { seg: 'segunda-feira', ter: 'terça-feira', qua: 'quarta-feira', qui: 'quinta-feira', sex: 'sexta-feira' };
   var DIA_CURTO = { seg: 'Seg', ter: 'Ter', qua: 'Qua', qui: 'Qui', sex: 'Sex' };
   var CIDADES = { cid_cuiaba: 'Cuiabá', cid_vg: 'Várzea Grande' };
@@ -134,7 +134,7 @@
   var ger = 0; // geração da conversa: respostas de geração antiga (após Recomeçar) são descartadas
   var ETAPAS = ['abertura', 'duvida', 'fim'], IDS_CHIP = ['revender', 'consumir', 'provar', 'duvida', 'outra', 'humano', 'retry',
     'fabrica', 'vendedor', 'como_entrega', 'cid_cuiaba', 'cid_vg', 'cid_outra', 'dia_seg', 'dia_ter', 'dia_qua', 'dia_qui', 'dia_sex', 'per_manha', 'per_tarde', 'confirmar', 'corrigir'];
-  var HREF_OK = /^(https:\/\/wa\.me\/|https:\/\/www\.google\.com\/maps\/search\/\?api=1&query=|\/(?![\/\\\t\r\n])|\.\.?\/|#)/;
+  var HREF_OK = /^(https:\/\/wa\.me\/|\/(?![\/\\\t\r\n])|\.\.?\/|#)/;
   // O sessionStorage é dado externo: normaliza tudo antes de usar.
   function normalizar(s) {
     if (!s || typeof s !== 'object' || !Array.isArray(s.msgs)) return null;
@@ -163,7 +163,7 @@
     (Array.isArray(s.chips) ? s.chips : []).forEach(function (c) {
       if (!c || typeof c !== 'object' || typeof c.t !== 'string' || !c.t || c.t.length > 80) return;
       if (c.href != null) {
-        if (typeof c.href !== 'string' || !HREF_OK.test(c.href)) return; // href suspeito: descarta o chip
+        if (typeof c.href !== 'string' || !(HREF_OK.test(c.href) || c.href === MAPA_FABRICA)) return; // href suspeito: descarta o chip
         r.chips.push({ id: String(c.id || 'l').slice(0, 20), t: c.t, href: c.href, hum: c.hum === true });
       } else if (IDS_CHIP.indexOf(c.id) >= 0 || (typeof c.id === 'string' && /^r_[a-z0-9_]{1,30}$/.test(c.id))) {
         r.chips.push({ id: c.id, t: c.t });
