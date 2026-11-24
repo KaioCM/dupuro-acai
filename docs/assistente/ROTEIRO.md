@@ -12,8 +12,8 @@ Base: `PLANO.md` (decisões) e `base-de-fatos.md` (o que pode ser afirmado). Ref
 ## 1. Arquitetura do turno
 - Navegador → Edge Function nova **`assistente`** (service_role, pública com token de conversa + rate_check):
   - `iniciar` → cria conversa (linha em `qualificacao_leads` ampliada) e devolve token.
-  - `escutar` → chamado com debounce (~700 ms) enquanto a pessoa digita: Jev decide se já dá pra pré-gerar; se sim, Haiku já escreve anotações/cena. O Enter só "revela".
-  - `turno` → mensagem enviada; devolve `{mensagens[], chips[], painel{}, cena{}, pixel{}, simulador{}, diagrama{}, proximo}`.
+  - `mensagem` → texto livre da abertura (`etapa:"abertura"`, devolve a intenção) ou da dúvida (`etapa:"duvida"`, devolve a resposta ou `humano`).
+  - `revenda` → um `passo` por chamada (`segmento`, `interpretar`, `qualif`, `escutar`, `simulacao`, `aprofundar`, `palpite`, `resumo`, `mapa`, `destino`, `contato` etc.; lista completa em `BASTIDORES.md`).
   - `visita` → registra pedido de visita do vendedor.
   - `catalogo` → preço/litros das caixas de atacado 5 L e 10 L e preço "a partir de" do delivery (para simulador e respostas).
   - `converter` → liga a conversa ao `profiles.id` após o signUp.
@@ -48,7 +48,7 @@ Saída sempre **JSON estrito**, curta, temperatura baixa. Nunca recebe dados pes
 
 ## 4. Fluxos tela a tela
 ### F0 — Abertura
-Botão flutuante (no lugar do WhatsApp) → painel abre. Fala fixa: "Oi! Eu sou a Puri, assistente da Dupuro. Posso tirar uma dúvida ou te ajudar a começar." Chips: **Quero revender** · **Comprar pra consumir** · **Quero provar antes** · **Tirar uma dúvida**. Campo livre → J1 (+ J11).
+Botão flutuante (no lugar do WhatsApp) → painel abre. Fala fixa: "Oi! Eu sou a Puri, assistente da Dupuro. Posso tirar uma dúvida ou te ajudar a começar." Se a pessoa só cumprimenta, a Puri responde (sem IA): "Oi, tudo bem? Eu sou a Puri. Me conta: você quer revender, comprar pra você, provar antes ou tirar uma dúvida?"; se só agradece: "Por nada! Se precisar de mais alguma coisa, é só falar."; se não dá para entender: "Não peguei bem. Você quer revender, comprar pra você, provar ou tirar uma dúvida?" Chips: **Quero revender** · **Comprar pra consumir** · **Quero provar antes** · **Tirar uma dúvida**. Campo livre → J1 (+ J11).
 O botão flutuante mostra o nome **Puri** (ex.: tooltip/rótulo "Fala com a Puri").
 Botões "Seja revendedor" do site abrem direto em F4.
 
@@ -68,7 +68,7 @@ Chips **Visitar a fábrica** · **Receber um vendedor com amostras**.
 2. **Cidade e bairro** — código normaliza; fora de Cuiabá/VG → explica (entrega só lá, retirada na fábrica) e segue.
 3. **O que você quer com a revenda?** (livre) — escuta ao vivo: J2 → H2 (anotações) + elementos da cena; Enter revela na hora.
 4. **Movimento** — "Quantos copos você imagina vender por dia?" chips (até 20 · 20–50 · 50–100 · 100+) → **pixel art em escala real** (clientes por dia; neon pixeliza → explode → remonta; contador sobe).
-5. **Simulador "quanto rende 1 caixa"** — 1 caixa de 10 L ≈ 20 copos de 500 ml; preço de venda ajustável (R$ 18–20, padrão R$ 18); custo = preço real da caixa (banco) → mostra venda, custo e sobra por caixa e por semana (pelo movimento do passo 4). Tudo código.
+5. **Simulador "quanto rende 1 caixa"** — 1 caixa de 10 L ≈ 20 copos de 500 ml; preço de venda ajustável (R$ 17–22, padrão R$ 18); custo = preço real da caixa (banco) → mostra venda, custo e sobra por caixa e por semana (pelo movimento do passo 4). Tudo código.
 6. **Aprofundamento** — H3 gera 3 → J6 escolhe 1 → mostra com respostas rápidas + "Escrever do meu jeito" + "Pular".
 7. **Palpite** — H4 → J7 → "Na mosca / Em parte / Não, é outra coisa" (correção livre).
 8. **O especialista + resumo** — H5 ("O que ficou do que você contou" + pílula do problema).

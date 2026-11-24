@@ -46,6 +46,8 @@ supabase/migration_*.sql  registro das migrações incrementais (005+ aplicadas 
 supabase/functions/admin-delete-reseller/index.ts
 supabase/functions/sugerir-fiscal/index.ts   sugestão de perfil fiscal pelo nome (Jev/TypeSafe)
 supabase/functions/assistente/             Edge do assistente Puri (Jev + Haiku); `qualificar-turno` desativada (responde 410)
+tools/puri-publicar-prod.ps1     publica a Puri de PRODUÇÃO (`assistente`) com trava, backup, teste de fumaça e volta; `puri-publicar-dev.ps1` publica só a de teste (`assistente-dev`)
+puri_fatos (tabela)           fatos da Puri editáveis por assunto (rascunho x publicado), subaba "Fatos da Puri" no admin, só o dono; a Edge oficial lê com a publicação da Etapa 6
 experimentos/typesafe/    scripts + resultados dos testes com o Jev (README com os números)
 tools/jev                 CLI do Jev pro desenvolvimento (yes/pick/score/trechos) — ver skill dupuro-jev
 tools/jev-prompt          analista de prompt (hook UserPromptSubmit em .claude/settings.json)
@@ -83,7 +85,7 @@ Projeto real em `supabase-config.js` (URL `zqadfktfplrbrjmepllh.supabase.co`). D
 | `docs/caixa.md` | caixa/PDV: atendente, copo/self-service, app Electron, offline + sync, sessão de caixa, TEF, pagamento dividido, taxa de entrega, pedidos em aberto, promoções, comanda, layout |
 | `docs/fiscal-nfce.md` | NFC-e (Focus NFe), cancelamento, cupom fiscal impresso, classificação fiscal por perfil |
 | `docs/delivery.md` | Dupuro Delivery: páginas, cotação (ORS + Jev), checkout Mercado Pago, banco |
-| `docs/assistente/` | Puri: PLANO, ROTEIRO, BASTIDORES (contrato), base-de-fatos |
+| `docs/assistente/` | Puri: PLANO, ROTEIRO, BASTIDORES (estado atual e contrato), ETAPA2/3/5-CONTRATO, base-de-fatos |
 | `docs/seguranca.md` | auditorias: permissões de funções, trigger de `profiles`, preço/estoque no banco, XSS |
 | `docs/whatsapp.md` | fila de avisos, modelos da Meta, aceite |
 | `docs/design-system.md` | design system v2/v3, assets, SEO |

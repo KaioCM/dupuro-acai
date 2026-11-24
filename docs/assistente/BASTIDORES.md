@@ -1,13 +1,21 @@
-# Bastidores do assistente (Etapa 2 reduzida: F0, F1, F5, F6)
+# Bastidores do assistente (Puri após a reforma: abertura, dúvida, catálogo, visita, revenda, destinos, converter)
 
-Edge `assistente` (`supabase/functions/assistente/`: `index.ts`, `logica.ts` funções puras, `fatos.ts` base de fatos confirmados). Deploy via MCP, `verify_jwt = true` (o anon key do site passa). CORS: www.dupuroacai.com, dupuroacai.com, pws.dupuroacai.com, localhost:8855.
+Estado em 2026-11-23. Este arquivo descreve o código atual; as seções datadas mais abaixo são o histórico de cada ajuste (quando uma regra antiga foi trocada, a seção diz).
+
+Edge `assistente` (`supabase/functions/assistente/`: `index.ts`, `logica.ts` funções puras, `prompts.ts` textos fixos e prompts, `fatos.ts` fatos de reserva por assunto). Deploy via MCP ou CLI, `verify_jwt = true` (o anon key do site passa). CORS: www.dupuroacai.com, dupuroacai.com, pws.dupuroacai.com, localhost:8855.
+
+Ações do POST: `iniciar`, `mensagem`, `catalogo`, `visita`, `converter` e `revenda` (esta com vários `passo`, ver "Passos da ação revenda").
+
+Telefones: (65) 99288-8228 é o WhatsApp da fábrica/site; (65) 9694-9542 é o WhatsApp da LOJA física. O número antigo, com um 9 a mais no começo, que aparece em fotos e no perfil do Google, é outro número e está fora de uso: a Puri nunca o cita.
 
 ## Contrato (POST JSON, headers `apikey` + `Authorization: Bearer <anon>`)
 - `{acao:"iniciar", pagina:"home"|"revenda"|"delivery"}` → `{ok:true, token}` | `{ok:false, motivo:"limite_dia"}`
 - `{acao:"mensagem", token, etapa:"abertura"|"duvida", texto}` →
   - abertura: `{ok:true, tipo:"intencao", intencao:"revender|consumir|provar|duvida|humano|incerto"}` (regra abaixo)
+  - abertura só com cumprimento ou agradecimento (`socialAbertura`, sem IA, não gasta cotas de IA e não grava `intencao`): `{ok:true, tipo:"intencao", intencao:"social", texto}`. Cumprimento: "Oi, tudo bem? Eu sou a Puri. Me conta: você quer revender, comprar pra você, provar antes ou tirar uma dúvida?". Agradecimento: "Por nada! Se precisar de mais alguma coisa, é só falar."
+  - abertura ambígua (revender ou consumir?): `{ok:true, tipo:"resposta", texto:"Você quer revender açaí ou comprar pra você?", acoes:["revender","consumir"]}`
   - dúvida: `{ok:true, tipo:"resposta", texto}` ou `{ok:true, tipo:"humano", texto}`
-  - `{ok:false, motivo:"limite_conversa|limite_dia|token_invalido|texto_invalido|erro"}`
+  - `{ok:false, motivo:"limite_conversa|limite_ip_dia|limite_conversas_dia|limite_global_dia|limite_custo|limite_dia|token_invalido|texto_invalido|erro"}` (`limite_custo`: teto mensal de gasto com IA atingido, ver "Custo")
 - Erro/timeout do Jev (5 s) ou Haiku (8 s) → na dúvida `tipo:"humano"` com texto de reserva; na abertura `intencao:"incerto"` (log só com status).
 - Textos fixos de `tipo:"humano"` (sem número de WhatsApp: o site sempre mostra o botão "Falar com uma pessoa"): sem-fato "Essa eu prefiro não chutar. Uma pessoa da equipe te responde certinho."; reserva/erro "Não consegui confirmar isso agora. Uma pessoa da equipe te responde."; saúde (pediatra/nutricionista) inalterado. Nunca 500.
 - Texto: `<` e `>` são REMOVIDOS (o delimitador do prompt fica inviolável); vazio depois disso → `texto_invalido`.
@@ -16,12 +24,15 @@ Edge `assistente` (`supabase/functions/assistente/`: `index.ts`, `logica.ts` fun
 (i) J1=humano >= 0,6 → humano; (ii) J11 >= 0,9 → humano; (iii) J1 em revender/consumir/provar/duvida >= 0,6 → essa intenção; (iv) J11 >= 0,8 → humano; (v) senão `incerto`. O texto enviado ao Jev vai SEM os marcadores `[contato]`/`[nome]` (`ultimo_texto` continua com eles).
 
 ## Dúvida (F1)
-Pergunta de saúde (regex com contexto de saúde/pessoa; "pode dar desconto?" não conta) → texto fixo pediatra/nutricionista, sem número (o front mostra "Falar com uma pessoa"). Assunto [CONFIRMAR] (lactose, validade, mínimo R$ 20 do consumidor) → humano; "pedido mínimo" sem contexto de revenda (revend/atacado/litro/30 L/caixa) também → humano. Senão: J3 "respondível" (< 0,6 → humano) em paralelo com o Haiku (`claude-haiku-4-5`, 200 tokens, temp. 0,2, só com `fatos.ts`; `SEM_FATO` → humano); depois J4 "inventou" (>= 0,5 → humano). Defesas na resposta do Haiku: `stop_reason=max_tokens` → humano; link (`http(s)://`, `www.`), `@` ou sequência de >= 8 dígitos que não seja o WhatsApp (ou o CEP) dos fatos → humano. O prompt manda não citar telefone/WhatsApp/links salvo pedido explícito do contato e responder SEM_FATO quando a resposta depender de a pessoa ser revendedor ou consumidor. Preço, estoque, taxa e turnos não estão nos fatos: viram humano até a Etapa 4 ligar o banco.
+Pergunta de saúde (regex com contexto de saúde/pessoa; "pode dar desconto?" não conta) → texto fixo pediatra/nutricionista, sem número (o front mostra "Falar com uma pessoa"). Hoje não resta fato [CONFIRMAR] (lactose, validade, conservação e mínimo do delivery estão confirmados). `ehPendente` segura só `conservante` e `derret` (derrete na entrega) → humano direto; os demais assuntos vão à IA. Senão: J3 "respondível" (< 0,6 → humano) em paralelo com o Haiku (Haiku 5.5, `claude-haiku-5-5`, 220 tokens de saída antes do ajuste de +30% dos modelos 5.x, sem `temperature` nos modelos 5.x; recebe os fatos por assunto mais o CATÁLOGO AO VIVO; `SEM_FATO` → humano); depois J4 "inventou" (>= 0,5 → humano). Defesas na resposta do Haiku: `stop_reason=max_tokens` → humano; link (`http(s)://`, `www.`), `@` ou sequência de >= 8 dígitos que não seja o WhatsApp (ou o CEP) dos fatos → humano. O prompt manda não citar telefone/WhatsApp/links salvo pedido explícito do contato e responder SEM_FATO quando a resposta depender de a pessoa ser revendedor ou consumidor. Preço, estoque, taxa, turnos e mínimo do delivery não estão nos fatos: vêm do banco no bloco CATÁLOGO AO VIVO (ver "Repertório ampliado"); se o banco falhar, a resposta segue só com os fatos.
 
 ## Limites
 Tudo via `rate_check` (janela 86400 s, chave com o dia de America/Cuiaba quando global), **falhando fechado**: erro ou resposta diferente de `true` bloqueia (`limite_dia`/`limite_conversa`).
 - `iniciar`: 10/IP/dia (`puri-ip:<hash>`) e teto global folgado de 200 criações/dia (`puri-new-<dia>`). Não consome o teto principal.
-- `mensagem`: 60/IP/dia (`puri-ipm:<hash>`); 25/conversa (`turns` + `puri-tok:<token>`); **40 conversas/dia** contadas na PRIMEIRA mensagem de cada conversa (`puri-conv-<dia>`); **150 mensagens/dia globais** que chamam Jev/Haiku (`puri-global-<dia>`).
+- `mensagem` (valores da produção; o dev multiplica por 10, ver Isolamento): **150/IP/dia** (`puri-ipm:<hash>`); **60 turnos bem-sucedidos por conversa** (`turns`) e teto bruto de 180 requisições por conversa, falhas incluídas (`puri-tok:<token>`); **40 conversas/dia** contadas na PRIMEIRA mensagem de cada conversa (`puri-conv-<dia>`); **800 mensagens/dia globais** que chamam Jev/Haiku (`puri-global-<dia>`).
+- Outras cotas: `catalogo` 60/IP/dia (`puri-cat:`); `visita` 3/IP/dia (`puri-vis:`); `lista_espera` 3/IP/dia; `contato` 3/IP/dia; `interpretar` 12 por token, 150/IP/dia e 1.500/dia globais (leve, não soma turno); `converter` 3 por token; `escutar` rascunho conforme "Limites" da ação revenda.
+- Prazos: Jev 5 s; Haiku 8 s nas chamadas gerais; a dúvida tem prazo total de 15 s por requisição.
+- **Trava de custo:** `tetoEstourado()` soma o gasto do mês (dev e prod, fuso Cuiabá) via `puri_custo_mes_interno`; com o gasto >= teto (padrão US$ 5, ajustável em `app_settings.puri_teto_usd`) os passos que chamam IA devolvem `limite_custo`; em 80% grava um log de aviso; `converter` segue sem prioridade. Falha ao medir o custo não bloqueia.
 - IP: `cf-connecting-ip`, senão o ÚLTIMO valor de `x-forwarded-for`; IPv6 vira o prefixo /64, IPv4 inteiro. Hash SHA-256 com sal = SHA-256(`SUPABASE_SERVICE_ROLE_KEY` + 'puri'), nunca logado.
 - **Isolamento do dev (2026-11-21):** na `assistente-dev` (pathname ancorado `^(/functions/v1)?/assistente-dev/?$`, a mesma regex do debug) TODAS as chaves de `rate_check` ganham o prefixo `dev:` (ex.: `dev:puri-conv-2026-11-21`). O prefixo é calculado por requisição (`const P` no handler) e passado explicitamente a `limiteOk`/`limiteIpOk`, sem variável global. A produção segue com chaves sem prefixo; assim os testes do dev não esgotam o contador global (`puri-conv-<dia>`, 40/dia) dos clientes reais. Limpar teste do dev: `delete from rate_buckets where key like 'dev:puri-%'`.
 - **J4 e contatos (2026-11-21):** "qual o instagram de vocês?" caía em `j4_inventou` (J3 0,98, J4 0,52) porque o @ da resposta parecia dado não suportado; a instrução do J4 agora diz que contatos presentes em `facts` (Instagram, WhatsApp, endereço, horário) são suportados.
@@ -31,7 +42,7 @@ Tudo via `rate_check` (janela 86400 s, chave com o dia de America/Cuiaba quando 
 `mascarar()` (logica.ts) tira telefone, e-mail, CPF/CNPJ (`[contato]`) e nome (`[nome]`) antes de gravar e de chamar Jev/Haiku. `ultimo_texto` só guarda texto mascarado. O nome é mascarado inteiro: após "sou"/"aqui é" pega a sequência de palavras Capitalizadas com conectores (da, de, do, das, dos, e); após "meu nome é"/"me chamo"/"pode me chamar de" pega até 4 palavras em qualquer caixa. Logs só com status/código, nunca texto nem chave. Migrações `migration_072_puri_leads.sql` (`origem`, `pagina`, `intencao` em `qualificacao_leads`) e `migration_073_puri_checks.sql` (checks de `origem` = 'puri' e `intencao` nos 6 valores); RLS inalterada.
 
 ## Secrets
-`TYPESAFE_API_KEY` (Jev), `ANTHROPIC_API_KEY` (Haiku); opcional `ASSISTENTE_MODELO` para trocar o modelo.
+`TYPESAFE_API_KEY` (Jev), `ANTHROPIC_API_KEY` (Haiku); opcionais `ASSISTENTE_MODELO` (produção) e `ASSISTENTE_MODELO_DEV` (dev) para trocar o modelo. O padrão nos DOIS ambientes é `claude-haiku-5-5` (Haiku 5.5). O Jev fica fixo em `jev-1.13.0`.
 
 ## Testar
 POST com anon key (ver exemplos no relatório da Etapa 2). Funções puras: `node` roda `logica.ts` direto (Node 24, sem Deno instalado). Cada chamada de dúvida custa Jev + Haiku. Apagar as linhas de teste: `delete from qualificacao_leads where token = '...' and origem = 'puri'`.
@@ -39,14 +50,26 @@ POST com anon key (ver exemplos no relatório da Etapa 2). Funções puras: `nod
 ## `qualificar-turno`
 Desativada em 2026-11-19 (stub 410, sem tocar no banco); substituída por esta Edge.
 
-## Falta (Etapa 4)
-F2 consumir (dados ao vivo), F3 visita, F4 revenda (H2–H7, J2, J5–J10), `escutar`, `visita`, `catalogo`, `converter`, fatos de preço/taxa/turnos do banco.
+## O que existe hoje
+Tudo isto já está no código: F2 consumir (dados ao vivo, via `catalogo` e CATÁLOGO AO VIVO), F3 visita (ação `visita`), F4 revenda completa (passos abaixo, com H2–H7, J2, J5–J10), `converter`, destinos finais e fatos de preço/taxa/turnos/mínimo vindos do banco. Não há mais lista de "falta" de Etapa 4.
+
+## Passos da ação `revenda` (lista atual)
+`segmento`, `interpretar`, `qualif`, `lista_espera`, `confirma_acai`, `opcoes_compra`, `esclarecer_resp`, `perfil`, `escutar`, `simulacao`, `aprofundar`, `aprofundar_resp`, `palpite`, `palpite_resp`, `palpite_escolha`, `resumo`, `resumo_resp`, `mapa`, `mapa_ajuste`, `mapa_ok`, `destino`, `contato`, `conversao_falhou`. Contrato dos passos de botões, `interpretar`, `qualif`, `lista_espera`, `confirma_acai`, `opcoes_compra`: `ETAPA2-CONTRATO.md`. Destinos, `contato` e `conversao_falhou`: `ETAPA3-CONTRATO.md`.
+- `interpretar`: o Jev escolhe entre as opções do passo (ou `nao_sei`/`pulou`/null); sem Haiku; não soma turno.
+- `qualif`: só código; grava `anotacoes.qualif` (campos `ja_vende`, `compra`, `comeco`, `papel`, `conheceu`).
+- `destino`: o servidor decide 1 de 5 (`contato_rapido`, `visita`, `cadastro`, `delivery`, `lista_espera`) por esforço (0 a 3, só código) e perfil; idempotente.
+- `contato` ("Só quero que me chamem"): grava os dados na coluna do lead, 3/IP/dia; nada vai à IA.
+- `conversao_falhou`: marca `anotacoes.conversao_falhou` quando a conta foi criada mas o vínculo com o lead falhou; o admin mostra "Conta sem vínculo".
+- `lista_espera`: fora da área sem retirada na fábrica; nome, telefone e cidade só nas colunas do lead.
+- `catalogo` devolve também `minimo` (pedido mínimo do delivery, lido do banco) ao lado de `delivery` e `atacado`.
 
 ## Log de motivo (monitoramento sem dado pessoal)
 
 Cada saída de `mensagem` escreve uma linha JSON: `{"ev":"puri","etapa":"abertura|duvida","tipo":"...","motivo":"..."}`; na abertura vai também `"intencao"` (a decidida). Nunca texto do usuário, token, IP ou resposta.
 
 Códigos de `motivo`: `ok` (resposta do Haiku aprovada, ou abertura classificada), `saude`, `pendente` ([CONFIRMAR]/mínimo sem contexto), `j3_baixo` (Jev: fatos não cobrem), `sem_fato` (Haiku devolveu SEM_FATO ou vazio), `max_tokens` (Haiku cortou), `suspeita` (link/@/telefone na resposta), `j4_inventou`, `jev_falhou` (erro/timeout do Jev; na abertura vira `incerto`), `haiku_falhou` (erro HTTP do Haiku; timeout do Haiku cai em `jev_falhou`), `limite_ip_dia`, `limite_conversa`, `limite_conversas_dia`, `limite_global_dia`, `token_invalido`, `texto_invalido`.
+
+Trava de saúde (motivo `saude`): só roda se a PERGUNTA atual for de restrição (`perguntaDeRestricao`: glúten, celíaco, lactose, leite, alergia, intolerância, diabetes, açúcar/zero/diet, vegano, "restrição alimentar"); sem isso nunca reprova. Reprova resposta do Haiku com tema forte (glúten, lactose, celíaco, alergia, intolerância, diabetes, vegano, "quem evita", "quem não pode", "sem/livre de leite") mais afirmação forte ("seguro" de consumo, "sem risco/medo", "tranquilo", "liberado", "indicado") na mesma frase ou vizinha, ou afirmação fraca ("boa/melhor/ótima/ideal opção/escolha", "ideal pra quem", "pode consumir/comer/tomar" com pessoa, "recomendo pra...") só na mesma frase do tema; "opção livre de leite/sem glúten" como descrição do produto não reprova. Ressalva ("não oriento", "pergunte a um médico") ou negação libera. Esgotadas as reescritas, e só se a pergunta for de restrição, devolve `TXT_SAUDE_GLUTEN`, `TXT_SAUDE_LEITE` ou `TXT_SAUDE` (humano só se a pergunta admite pessoa); senão a resposta segura normal.
 
 Consultar: MCP `query_logs` (janela <= 24 h), `select timestamp, event_message from logs where source='function_logs' and event_message like '%"ev":"puri"%' order by timestamp desc`. Contar por motivo: filtrar e agrupar em `event_message`.
 
@@ -69,7 +92,7 @@ Consultar: MCP `query_logs` (janela <= 24 h), `select timestamp, event_message f
 | `segmento` | `texto` (mascarado) | `{ok,segmento}` | `segmento`, `negocio` (≤120, mascarado) | J5 (choice; sem os marcadores). Falha/prob. < 0,5 → `outro`. Conta como mensagem (+1 `turns`). |
 | `perfil` | `segmento` (da lista), `cidade` 2–60, `bairro?` 2–60, `movimento` (`ate20`/`20a50`/`50a100`/`100mais`) | `{ok,fora_area,coerente}` | `cidade`, `bairro`, `movimento`, `segmento`, `coerente` | J9 (noul ≥ 0,5 → true; falha → null; não bloqueia). Ao Jev vão SÓ segmento, movimento e "Cuiabá/VG" ou "fora"; cidade e bairro nunca vão a IA. `fora_area` = cidade não é Cuiabá/VG (mesma normalização da visita). |
 | `escutar` | `texto`, `final` | `{ok,anotacoes:[...]\|null}` | com `final:true`: `anotacoes` `{quer (≤500 mascarado), topicos[]}` + `historico` | `final:false`: J2 "suficiente" (≥ 0,7) → H2 (Haiku, JSON de 2–4 tópicos ≤ 8 palavras). `final:true`: pula J2 e roda H2 se o texto tiver ≥ 15 caracteres. Timeout/erro → `anotacoes:null`. |
-| `simulacao` | `preco_copo` 18–20 (arredonda) | `{ok,simulacao}` | `simulacao` jsonb | Nenhuma. Servidor calcula: custo = "Caixa de Açaí 10 L" atacado (mesma busca do `catalogo`), 20 copos/caixa, copos/dia por movimento (10/35/75/120), 6 dias/semana. Exige `movimento` gravado (senão `dados_invalidos`). |
+| `simulacao` | `preco_copo` 17–22 (arredonda) | `{ok,simulacao}` | `simulacao` jsonb | Nenhuma. Servidor calcula: custo = "Caixa de Açaí 10 L" atacado (mesma busca do `catalogo`), 20 copos/caixa, copos/dia por movimento (10/35/75/120), 6 dias/semana. Exige `movimento` gravado (senão `dados_invalidos`). |
 
 Limites: `segmento`, `perfil` e `escutar` com `final:true` passam pelos mesmos limites da `mensagem` (IP/dia, conversa 25, conversas/dia, global/dia; falha fechada). `escutar` com `final:false` (rascunho) NÃO passa por esse portão e não gasta `turns`: exige texto mascarado ≥ 25 caracteres (senão `anotacoes:null` sem custo) e usa cotas próprias, falha fechada: `puri-esc:<token>` máx 4, `puri-escip:<hash ip>` máx 40/dia, `puri-escg-<dia Cuiabá>` máx 300/dia; estourou → `{ok:true,anotacoes:null}` (silencioso). `simulacao` só checa a cota de conversa (`puri-tok`). `segmento`, `perfil` e `escutar` final incrementam `turns` (perfil conta como mensagem, pois consome `puri-conv`/`puri-tok`). Os tópicos do H2 passam por filtro (descarta o que tiver link, e-mail ou telefone) e depois por `mascarar()`.
 
@@ -119,7 +142,7 @@ Mesma ação `revenda` (token de lead `puri`), mesmos limites da `mensagem` (por
 
 ## Ambientes
 - `assistente-dev`: desenvolvimento e testes. O front local (localhost, `?puri=edge`) chama `functions/v1/assistente-dev`; `?puri=prod` em localhost força a produção. Mesmas tabelas e secrets; use tokens de teste e apague o lead e as chaves `puri-tok:`/`puri-esc:` depois.
-- `assistente` (produção): só no publicar. Trava: deploy com os 3 arquivos completos (`index.ts`, `logica.ts`, `fatos.ts`) + teste de fumaça (iniciar, mensagem, revenda) logo depois. Volta = redeploy do HEAD do git.
+- `assistente` (produção): só no publicar. Trava: deploy com os 4 arquivos completos (`index.ts`, `logica.ts`, `fatos.ts`, `prompts.ts`) + teste de fumaça (iniciar, mensagem, revenda) logo depois. Volta = redeploy do backup feito antes. Tudo isso é feito por `tools/puri-publicar-prod.ps1` (modos `-SoBackup`, `-Simular`, `-Publicar -Confirmo PUBLICAR`, `-Fumaca`, `-Voltar`). Este texto descreve o código do ramo `reforma-puri`: a produção passa a rodar essa versão a partir da publicação da Etapa 6, não antes.
 
 ## Visuais (Etapa 5A)
 - **Seu caso:** coluna à direita com painel largo (≥900px sem pointer coarse), ou aba recolhível; mostra os campos coletados; nada pessoal é persistido; "O que quer" vem da última anotação, só em memória.
@@ -146,3 +169,15 @@ Mesma ação `revenda` (token de lead `puri`), mesmos limites da `mensagem` (por
 - `atalhosDuvida(texto)` (index.ts) concentra saúde/leite, pendente, `pedido_humano` e `atalho_instagram` e vale nos DOIS ramos: abertura `incerto`→dúvida e ramo dúvida (mesmos textos, tipos, logs, grava histórico).
 - Regex novo do `pedido_humano` (exige pedido explícito): `\b(quero|preciso|posso|pode|gostaria de|deixa eu|me passa|chama|chamar)\b.{0,25}\b(atendente|pessoa|algu[eé]m|humano)\b|\bfalar com (uma |alguma |a |um )?(pessoa|atendente|algu[eé]m)\b|\bpessoa de verdade\b` (não casa "consumo humano" nem "tem atendente na loja?").
 - `respostaSuspeita` usa `(?<![\w.])@dupuroacai(?![\w.])`; `contextoBanco` só formata números finitos e, se falhar, guarda `''` em cache por 60 s.
+
+## Admin: custo, "O que o Jev viu" e Fatos (só o dono)
+- **Custo da Puri no mês** (aba de leads da Puri): total do mês contra o teto (`app_settings.puri_teto_usd`, padrão US$ 5), por ambiente (dev/produção) e serviço (Jev/Haiku), com um `<details>` por função. Vem de `puri_uso` via `puri_custo_mes()` e `puri_custo_mes_detalhe()` (migrações 077 e 082; só `is_admin()`). É estimativa; a fatura oficial é da Anthropic e da TypeSafe. O mesmo total alimenta o aviso de custo no painel inicial do admin.
+- **Painel "O que o Jev viu"** (detalhe do lead): para cada decisão da conversa mostra a pergunta feita ao Jev, a probabilidade e o limiar usado (espelho de `LIMIARES` em `logica.ts`, atualizar junto). Aparece só para o dono: a conta é identificada pela constante `PURI_AVISO_ADMIN` do `admin.html` (id do dono; os outros admins não veem o painel nem o custo).
+- **Subaba "Fatos da Puri"**: edita os fatos por assunto na tabela `puri_fatos` (rascunho x publicado, histórico em `puri_fatos_historico`, controle de `versao` contra conflito entre telas; migrações 083 e 084; contrato em `ETAPA5-FATOS-CONTRATO.md`). A Edge de teste lê o rascunho; a oficial lê o publicado (cache de 5 min); se o banco falhar, usa `fatos.ts`. Na produção isso vale a partir da publicação da Etapa 6.
+
+## Publicar a Puri de teste
+- Comando: `powershell -ExecutionPolicy Bypass -File tools\puri-publicar-dev.ps1` (na raiz do repo, ramo `reforma-puri`, sem mudança não commitada em `supabase/functions/assistente/`).
+- O que faz: copia só `index.ts`, `logica.ts`, `fatos.ts`, `prompts.ts` para uma pasta em `%TEMP%`, publica como `assistente-dev` (nome e projeto fixos, `verify_jwt` ligado) com `npx supabase@3.2.0 ... --use-api` (sem Docker), baixa a função de volta e compara sha256 arquivo a arquivo (OK/DIFERENTE; erro se divergir) e apaga a pasta temporária.
+- Não rode com `-Verbose` nem com `Start-Transcript` (a saída da CLI pode conter mensagens da API). A pasta `supabase/.temp/` é criada pela CLI quando usada a partir do repo e fica fora do git.
+- Só publica `assistente-dev`. A produção (`assistente`) só é publicada na etapa de publicação, com a trava da seção Ambientes.
+- Token: variável de usuário `SUPABASE_ACCESS_TOKEN`, gravada pela janela "Variáveis de ambiente" do Windows (nunca em arquivo do repo). Gerar em supabase.com/dashboard/account/tokens com Edge Functions escrita + Project read-only; vale 90 dias.

@@ -14,3 +14,7 @@ desktop.ini
 # Credenciais de contas de TESTE (nunca vão pro GitHub)
 *.local.txt
 .impeccable/
+supabase/.temp/
+
+tests/puri/resultados/
+tests/puri/__pycache__/

@@ -664,6 +664,30 @@ var DupuroAdmin = (function () {
     return { error: result.error };
   }
 
+  // Pedido mínimo do delivery, em reais (só produtos, sem taxa de entrega).
+  // Fica em delivery_config.config.pedido_minimo_delivery (migration_075); 0 = sem mínimo.
+  async function getPedidoMinimoDelivery() {
+    var r = await client.from('delivery_config').select('config').eq('id', 1).maybeSingle();
+    if (r.error || !r.data || !r.data.config) return 0;
+    var n = Number(r.data.config.pedido_minimo_delivery);
+    return isFinite(n) && n >= 0 ? n : 0;
+  }
+
+  async function setPedidoMinimoDelivery(valor) {
+    var n = Number(valor);
+    if (!isFinite(n) || n < 0) return { error: { message: 'Informe um valor em reais, de 0 em diante.' } };
+    if (n > 1000) return { error: { message: 'O valor máximo permitido é R$ 1.000,00.' } };
+    n = Math.round(n * 100) / 100;
+    // Lê a config de novo na hora de gravar: só muda o mínimo, as outras chaves ficam como estão.
+    var cur = await client.from('delivery_config').select('config').eq('id', 1).single();
+    if (cur.error) return { error: cur.error };
+    var cfg = Object.assign({}, cur.data.config || {}, { pedido_minimo_delivery: n });
+    var up = await client.from('delivery_config').update({ config: cfg, atualizado_em: new Date().toISOString() }).eq('id', 1).select('id');
+    if (up.error) return { error: up.error };
+    if (!up.data || !up.data.length) return { error: { message: 'Não foi possível salvar (sem permissão?)' } };
+    return { error: null, valor: n };
+  }
+
   // ---------- Acompanhamentos (migration_019) ----------
   async function getAcompanhamentos() {
     var result = await client
@@ -813,15 +837,86 @@ var DupuroAdmin = (function () {
 
   // ---------- Leads da Puri (assistente do site) ----------
   // Conversas do assistente que viraram lead; visita_status 'pedida' = vendedor com amostras esperando contato.
-  async function getLeadsPuri() {
+  // ambiente: 'prod' (padrão) ou 'dev' (conversas de teste); qualquer outro valor vira 'prod'.
+  async function getLeadsPuri(ambiente) {
+    var amb = ambiente === 'dev' ? 'dev' : 'prod';
     var r = await client
       .from('qualificacao_leads')
-      .select('id, criado_em, pagina, fluxo, intencao, nome, telefone, cidade, bairro, visita_status, visita_dia, visita_periodo, visita_em, resumo, prioridade, movimento, segmento, anotacoes, lead_profile, status')
+      .select('id, criado_em, pagina, fluxo, intencao, nome, telefone, cidade, bairro, visita_status, visita_dia, visita_periodo, visita_em, resumo, prioridade, movimento, segmento, anotacoes, lead_profile, status, destino, destino_em, esforco, atendido_em')
       .eq('origem', 'puri')
+      .eq('ambiente', amb) // produção por padrão (a Puri de teste grava ambiente 'dev')
       .order('criado_em', { ascending: false })
       .limit(200);
     if (r.error) throw r.error;
     return r.data || [];
+  }
+  // Detalhe do caso de um lead (pesado: só sob demanda, ao abrir "Ver o caso").
+  async function getLeadPuriDetalhe(id) {
+    var r = await client
+      .from('qualificacao_leads')
+      .select('id, simulacao, coerente, historico, jev_log, turns, negocio, atualizado_em')
+      .eq('id', id)
+      .maybeSingle();
+    if (r.error) throw r.error;
+    return r.data || {};
+  }
+  // Marca um lead de contato rápido como atendido (RPC só para admin; grava atendido_em).
+  async function setLeadAtendido(id) {
+    var r = await client.rpc('admin_lead_atendido', { p_lead: id });
+    return { error: r.error, data: r.data };
+  }
+  // Gasto do mês da Puri com IA e o teto (US$). Só admin; falha -> null (o Início não mostra nada).
+  async function getCustoPuri() {
+    var r = await client.rpc('puri_custo_mes');
+    if (r.error) throw r.error;
+    var d = Array.isArray(r.data) ? r.data[0] : r.data;
+    if (!d) return null;
+    var gasto = Number(d.gasto), teto = Number(d.teto);
+    return isFinite(gasto) && isFinite(teto) && teto > 0 ? { gasto: gasto, teto: teto } : null;
+  }
+  // Custo do mês da Puri por ambiente, serviço e função. Só admin; falha -> propaga o erro.
+  async function getCustoPuriDetalhe() {
+    var r = await client.rpc('puri_custo_mes_detalhe');
+    if (r.error) throw r.error;
+    return (Array.isArray(r.data) ? r.data : []).map(function (x) {
+      return { ambiente: x.ambiente, servico: x.servico, funcao: x.funcao, chamadas: Number(x.chamadas) || 0, custo_usd: Number(x.custo_usd) || 0, tem_estimado: x.tem_estimado === true };
+    });
+  }
+  // ---- Fatos da Puri (só o Kayo: o banco recusa os outros) ----
+  // "versao" volta ao banco exatamente como veio; se mudou em outra tela, a RPC recusa com "Conflito".
+  async function getPuriFatos() {
+    var r = await client
+      .from('puri_fatos')
+      .select('assunto, titulo, ordem, travado, aviso, publicado, rascunho, rascunho_em, publicado_em, versao')
+      .order('ordem', { ascending: true });
+    if (r.error) throw r.error;
+    return r.data || [];
+  }
+  // Textos que já foram publicados e saíram do ar (mais novos primeiro).
+  async function getPuriFatoHistorico(assunto) {
+    var r = await client
+      .from('puri_fatos_historico')
+      .select('id, assunto, tipo, texto, criado_em')
+      .eq('assunto', assunto)
+      .eq('tipo', 'publicado')
+      .order('criado_em', { ascending: false })
+      .order('id', { ascending: false })
+      .limit(20);
+    if (r.error) throw r.error;
+    return r.data || [];
+  }
+  function linhaFato(r) { return { error: r.error, data: Array.isArray(r.data) ? r.data[0] : r.data }; }
+  async function salvarPuriFato(assunto, texto, versao) {
+    return linhaFato(await client.rpc('puri_fato_salvar', { p_assunto: assunto, p_texto: texto, p_versao: versao }));
+  }
+  async function publicarPuriFato(assunto, versao) {
+    return linhaFato(await client.rpc('puri_fato_publicar', { p_assunto: assunto, p_versao: versao }));
+  }
+  async function descartarPuriFato(assunto, versao) {
+    return linhaFato(await client.rpc('puri_fato_descartar', { p_assunto: assunto, p_versao: versao }));
+  }
+  async function voltarPuriFato(assunto, historicoId, versao) {
+    return linhaFato(await client.rpc('puri_fato_voltar', { p_assunto: assunto, p_historico_id: historicoId, p_versao: versao }));
   }
   async function setVisitaStatus(id, status) {
     var r = await client.rpc('admin_visita_status', { p_lead: id, p_status: status });
@@ -1167,6 +1262,16 @@ var DupuroAdmin = (function () {
     generateCoupon: generateCoupon,
     deleteCoupon: deleteCoupon,
     getLeadsPuri: getLeadsPuri,
+    getLeadPuriDetalhe: getLeadPuriDetalhe,
+    setLeadAtendido: setLeadAtendido,
+    getCustoPuri: getCustoPuri,
+    getCustoPuriDetalhe: getCustoPuriDetalhe,
+    getPuriFatos: getPuriFatos,
+    getPuriFatoHistorico: getPuriFatoHistorico,
+    salvarPuriFato: salvarPuriFato,
+    publicarPuriFato: publicarPuriFato,
+    descartarPuriFato: descartarPuriFato,
+    voltarPuriFato: voltarPuriFato,
     setVisitaStatus: setVisitaStatus,
     getProducts: getProducts,
     updateProduct: updateProduct,
@@ -1178,6 +1283,8 @@ var DupuroAdmin = (function () {
     saveFlavorStock: saveFlavorStock,
     getLitrosMinimoPedido: getLitrosMinimoPedido,
     setLitrosMinimoPedido: setLitrosMinimoPedido,
+    getPedidoMinimoDelivery: getPedidoMinimoDelivery,
+    setPedidoMinimoDelivery: setPedidoMinimoDelivery,
     getAcompanhamentos: getAcompanhamentos,
     saveAcompanhamento: saveAcompanhamento,
     setAcompanhamentoAtivo: setAcompanhamentoAtivo,

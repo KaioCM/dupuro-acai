@@ -1,5 +1,7 @@
 # Assistente Dupuro (chat LLM + Jev) — plano
 
+> Nota (2026-11-23): o plano abaixo é o original e não foi reescrito. O que mudou: o modelo de escrita é o **Haiku 5.5** (`claude-haiku-5-5`, onde o texto diz "Haiku"); o Jev segue em `jev-1.13.0`. Já foram feitos: Edge `assistente` com abertura, dúvida, catálogo, visita, revenda completa (mapa, resumo, destinos) e `converter`; trava de custo mensal; painel "O que o Jev viu" e custo do mês no admin; fatos editáveis por assunto (`puri_fatos`). Estado atual: `BASTIDORES.md`. A produção roda a versão nova a partir da publicação da Etapa 6.
+
 Decidido com o Kayo em 2026-11-19. Referência visual/arquitetural: `referencias/jev-maestros-formulario/ANALISE.md` (fora do repo). Substitui o protótipo `revenda-chat.js` (v1 ainda publicado; diff local descartado).
 
 ## O que é
@@ -18,7 +20,7 @@ Os botões "Seja revendedor" do site abrem o assistente direto no fluxo de cadas
 - Sem "descoberta"/confirmação de CNPJ (muitos revendedores não têm CNPJ).
 
 ## Momentos visuais (identidade Dupuro: roxo, dourado, Klinko)
-Resumo ao vivo do revendedor · cena neon do ponto de venda montada com as respostas · pixel art "em escala real" · simulador "quanto rende 1 caixa" (10 L = 20 copos de 500 ml; preço sugerido R$ 18–20/copo → R$ 360–400 por caixa; margem pelo preço real da caixa no banco) · diagrama do caso que se monta nó a nó e se refaz em ajustes. Animações de base: "•••", entrada de balões, campo que vira balão, rolagem suave, abrir/fechar do painel; respeitar prefers-reduced-motion.
+Resumo ao vivo do revendedor · cena neon do ponto de venda montada com as respostas · pixel art "em escala real" · simulador "quanto rende 1 caixa" (10 L = 20 copos de 500 ml; preço sugerido R$ 17–22/copo → R$ 340–440 por caixa; margem pelo preço real da caixa no banco) · diagrama do caso que se monta nó a nó e se refaz em ajustes. Animações de base: "•••", entrada de balões, campo que vira balão, rolagem suave, abrir/fechar do painel; respeitar prefers-reduced-motion.
 
 ## Custos e limites
 Haiku via **API da Anthropic** (cobrança separada da assinatura Pro). Limite sugerido no console: **US$ 4–5/mês**. No app: **40 conversas/dia** e **25 mensagens/conversa**; passou disso → textos fixos + WhatsApp. Estimativa: ~R$ 0,04 por conversa completa de cadastro (Haiku 5.5 ~US$ 0,10/M entrada, 0,50/M saída — conferir na página oficial). Ação do Kayo antes da Etapa 2: criar a chave, pôr crédito e definir o limite.

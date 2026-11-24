@@ -3464,3 +3464,94 @@ body.end-travado { overflow: hidden; }
 .fin-row strong { color: var(--roxo-950); }
 .fin-row small { color: var(--text-light); }
 .fin-row em { color: var(--text-light); font-style: normal; }
+
+/* ---------- Detalhe do caso nos Leads da Puri ---------- */
+.puri-detalhe > td { background: color-mix(in srgb, var(--roxo-700) 4%, var(--white)); padding: 14px 16px; text-align: left; }
+.puri-det { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+.puri-det-secao { min-width: 0; }
+.puri-det-titulo { font-size: 13px; font-weight: 800; letter-spacing: 0.02em; color: var(--roxo-700); margin: 0 0 6px; }
+.puri-det-linha { display: flex; flex-direction: column; gap: 1px; padding: 4px 0; font-size: 14px; line-height: 1.4; overflow-wrap: anywhere; }
+.puri-det-rot { font-size: 12.5px; font-weight: 700; color: var(--text-light); }
+.puri-det-val { color: var(--text); }
+.puri-det-lista, .puri-det-nos { margin: 0; padding-left: 18px; font-size: 14px; line-height: 1.45; }
+.puri-det-nos { list-style: decimal; }
+.puri-det-seta { list-style: none; margin-left: -18px; padding-left: 4px; font-size: 12.5px; color: var(--text-light); }
+.puri-det-nota { font-size: 12.5px; color: var(--text-light); }
+.puri-det-texto { margin: 0; font-size: 14px; color: var(--text); }
+.puri-det-aviso { margin: 0 0 6px; font-size: 12.5px; color: var(--text-light); }
+.puri-det-tag { display: inline-block; padding: 2px 8px; border-radius: 999px; background: color-mix(in srgb, var(--gold) 25%, var(--white)); color: var(--warning); font-weight: 700; }
+.puri-det-jev { grid-column: 1 / -1; }
+.puri-det-jev:empty { display: none; }
+@media (max-width: 700px) { .puri-det { grid-template-columns: 1fr; } .puri-detalhe > td { padding: 12px 4px; } }
+
+/* ---------- Painel do Jev e filtros nos Leads da Puri ---------- */
+.puri-jev-resumo { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 8px; }
+.puri-jev-cont { padding: 2px 10px; border-radius: 999px; font-size: 12.5px; font-weight: 700; background: color-mix(in srgb, var(--roxo-700) 10%, var(--white)); color: var(--text); }
+.puri-jev-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.puri-jev-item { padding: 6px 8px; border-radius: 8px; background: color-mix(in srgb, var(--roxo-700) 4%, var(--white)); border: 1px solid color-mix(in srgb, var(--roxo-700) 10%, var(--white)); font-size: 13.5px; }
+.puri-jev-linha { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+.puri-jev-hora { font-variant-numeric: tabular-nums; color: var(--text-light); font-size: 12.5px; }
+.puri-jev-etapa { color: var(--text-light); font-size: 12.5px; }
+.puri-jev-rot { color: var(--text); }
+.puri-jev-valor { font-weight: 700; color: var(--roxo-700); font-variant-numeric: tabular-nums; }
+.puri-jev-efeito { color: var(--text); }
+.puri-jev-chip { margin-left: auto; padding: 1px 8px; border-radius: 999px; font-size: 11.5px; font-weight: 700; background: color-mix(in srgb, var(--roxo-700) 12%, var(--white)); color: var(--roxo-700); }
+.puri-jev-chip-codigo { background: color-mix(in srgb, var(--text-light) 15%, var(--white)); color: var(--text); }
+.puri-jev-chip-haiku { background: color-mix(in srgb, var(--gold) 25%, var(--white)); color: var(--warning); }
+.puri-jev-chip-prazo { background: color-mix(in srgb, var(--warning) 18%, var(--white)); color: var(--warning); }
+.puri-jev-regra { margin-top: 4px; font-size: 13px; }
+.puri-jev-regra summary { cursor: pointer; color: var(--roxo-700); font-weight: 700; }
+.puri-jev-regra p { margin: 4px 0 0; color: var(--text); line-height: 1.4; }
+.puri-filtros { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px 12px; margin: 0 0 12px; }
+.puri-filtro { display: flex; flex-direction: column; gap: 2px; }
+.puri-filtro-rot { font-size: 12px; font-weight: 700; color: var(--text-light); }
+.puri-filtro-sel { padding: 6px 8px; font-size: 14px; border: 1px solid color-mix(in srgb, var(--roxo-700) 25%, var(--white)); border-radius: 8px; background: var(--white); color: var(--text); }
+.puri-filtro-cont { font-size: 13px; color: var(--text-light); padding-bottom: 8px; }
+.puri-espera { margin: 0 0 12px; padding: 10px 14px; border-radius: 10px; background: color-mix(in srgb, var(--roxo-700) 4%, var(--white)); }
+.puri-espera-lista { margin: 0; padding-left: 18px; font-size: 14px; line-height: 1.5; }
+@media (max-width: 700px) { .puri-filtro { flex: 1 1 140px; } .puri-filtro-sel { width: 100%; } .puri-jev-chip { margin-left: 0; } }
+.puri-custo { margin: 0 0 14px; padding: 12px 14px; border: 1px solid color-mix(in srgb, var(--roxo-700) 18%, var(--white)); border-radius: var(--radius-sm); background: color-mix(in srgb, var(--roxo-700) 4%, var(--white)); }
+.puri-custo-total { margin: 0 0 8px; font-size: 18px; font-weight: 800; color: var(--text); }
+.puri-custo-amb { margin: 0 0 8px; }
+.puri-custo-amb-nome { display: block; font-size: 13px; color: var(--roxo-700); margin-bottom: 2px; }
+.puri-custo-linha { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; font-size: 14px; padding: 3px 0; }
+.puri-custo-serv { flex: 1 1 160px; }
+.puri-custo-n { color: var(--text-light); }
+.puri-custo-val { font-weight: 700; min-width: 7ch; text-align: right; }
+.puri-custo-det { margin: 6px 0; font-size: 14px; }
+.puri-custo-det summary { cursor: pointer; font-weight: 700; color: var(--roxo-700); }
+.puri-custo-nota { margin: 6px 0 0; font-size: 12.5px; color: var(--text-light); }
+@media (max-width: 700px) { .puri-custo-val { text-align: left; } }
+
+/* ---- Fatos da Puri (admin, subaba só do Kayo) ---- */
+.puri-fato-lista { display: grid; gap: 14px; margin-top: 14px; }
+.puri-fato { min-width: 0; padding: 16px; background: var(--white); border: 1px solid rgba(96,16,80,0.14); border-radius: var(--radius-md); }
+.puri-fato-cab { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; margin-bottom: 8px; }
+.puri-fato-titulo { margin: 0; font-size: 16px; font-weight: 800; color: var(--roxo-700); }
+.puri-fato-sit { font-size: 13px; font-weight: 700; color: var(--text-light); }
+.puri-fato-sit.dif { color: var(--warning); }
+.puri-fato-aviso { margin: 0 0 8px; padding: 8px 10px; border-left: 3px solid var(--gold); border-radius: var(--radius-sm); background: var(--cream); font-size: 13.5px; line-height: 1.4; color: var(--text); }
+.puri-fato-rot { display: block; margin-bottom: 4px; font-size: 13px; font-weight: 700; color: var(--text-light); }
+.puri-fato-ta { display: block; width: 100%; box-sizing: border-box; min-height: 96px; padding: 10px 12px; resize: vertical; font: inherit; font-size: 15px; line-height: 1.45; color: var(--text); background: var(--white); border: 1.5px solid rgba(96,16,80,0.25); border-radius: var(--radius-sm); }
+.puri-fato-ta:focus-visible { outline: 3px solid var(--roxo-700); outline-offset: 2px; }
+.puri-fato-ta[readonly] { background: var(--cream-2); }
+.puri-fato-rodape { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; margin: 4px 0 10px; font-size: 12.5px; color: var(--text-light); }
+.puri-fato-cont.erro { color: var(--danger); font-weight: 700; }
+.puri-fato-acoes { display: flex; flex-wrap: wrap; gap: 8px; }
+.puri-fato-msg { margin: 10px 0 0; font-size: 14px; line-height: 1.4; overflow-wrap: anywhere; }
+.puri-fato-msg:empty { display: none; }
+.puri-fato-msg.erro { color: var(--danger); font-weight: 700; }
+.puri-fato-msg.ok { color: var(--success); font-weight: 700; }
+.puri-fato-lista .btn.hidden { display: none; }
+.puri-fato .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.puri-fato > .btn { margin-top: 8px; }
+.puri-fato-fixo { margin: 0 0 8px; padding: 10px 12px; border-radius: var(--radius-sm); background: var(--cream-2); font-size: 15px; line-height: 1.45; color: var(--text); overflow-wrap: anywhere; }
+.puri-fato-trava { margin: 0; font-size: 13.5px; line-height: 1.4; color: var(--text-light); }
+.puri-fato-pub { margin-top: 12px; font-size: 14px; }
+.puri-fato-pub summary { cursor: pointer; padding: 6px 0; font-weight: 700; color: var(--roxo-700); }
+.puri-fato-pub summary:focus-visible { outline: 3px solid var(--roxo-700); outline-offset: 2px; }
+.puri-fato-hist { margin-top: 12px; display: grid; gap: 10px; }
+.puri-fato-hist-item { padding: 10px 12px; border: 1px solid rgba(96,16,80,0.14); border-radius: var(--radius-sm); background: var(--cream); }
+.puri-fato-hist-data { font-size: 12.5px; font-weight: 700; color: var(--text-light); }
+.puri-fato-hist-txt { margin: 4px 0 8px; font-size: 14px; line-height: 1.45; overflow-wrap: anywhere; }
+.puri-fato-vazio { margin: 0; font-size: 14px; color: var(--text-light); }

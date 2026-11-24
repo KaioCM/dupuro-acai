@@ -9,7 +9,7 @@
 <link rel="apple-touch-icon" href="../assets/img/brand/favicon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/css/style.css?v=73">
+<link rel="stylesheet" href="../assets/css/style.css?v=78">
 </head>
 <body class="pg-admin">
 <svg class="sprite" aria-hidden="true" focusable="false"><symbol id="m-grafico" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></symbol><symbol id="m-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol><symbol id="m-usuarios" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"/></symbol><symbol id="m-caixa" viewBox="0 0 24 24"><path d="M3 8l9-4 9 4v9l-9 4-9-4z"/><path d="M3 8l9 4 9-4M12 12v9"/></symbol><symbol id="m-painel" viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 10h6M9 14h6M9 18h3"/></symbol><symbol id="m-fabrica" viewBox="0 0 24 24"><path d="M3 21V10l5 3v-3l5 3V7l8 4v10z"/><path d="M7 17h2M12 17h2M17 17h1"/></symbol><symbol id="m-etiqueta" viewBox="0 0 24 24"><path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.4"/></symbol><symbol id="m-engrenagem" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></symbol><symbol id="m-casa" viewBox="0 0 24 24"><path d="M3 11l9-7 9 7M5 9.5V20h14V9.5M10 20v-6h4v6"/></symbol><symbol id="m-sair" viewBox="0 0 24 24"><path d="M14 4h5a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-5M10 16l-4-4 4-4M6 12h10"/></symbol><symbol id="m-carrinho" viewBox="0 0 24 24"><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2.5 3.5h3l2.4 11.2a1.5 1.5 0 0 0 1.5 1.3h8.4a1.5 1.5 0 0 0 1.5-1.2L21 7H6.3"/></symbol><symbol id="m-recibo" viewBox="0 0 24 24"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6M9 16h3"/></symbol><symbol id="m-calendario" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></symbol><symbol id="m-chat" viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></symbol><symbol id="m-usuario" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol><symbol id="m-globo" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></symbol><symbol id="m-hoje" viewBox="0 0 24 24"><path d="M4 13h4l2 3h4l2-3h4"/><path d="M4 13l2.5-8h11L20 13v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/></symbol><symbol id="m-pasta" viewBox="0 0 24 24"><path d="M3 6.5A1.5 1.5 0 0 1 4.5 5H9l2 2.5h8.5A1.5 1.5 0 0 1 21 9v9.5a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 18.5z"/></symbol><symbol id="m-mais" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol></svg>
@@ -384,6 +384,7 @@
         <button type="button" class="subnav-btn" role="tab" aria-selected="false" data-sub="cupons">Cupons</button>
         <button type="button" class="subnav-btn" role="tab" aria-selected="false" data-sub="regras">Regras de venda</button>
         <button type="button" class="subnav-btn" role="tab" aria-selected="false" data-sub="puri">Leads da Puri <span class="badge-pill hidden" data-badge="puri"></span></button>
+        <button type="button" class="subnav-btn hidden" role="tab" aria-selected="false" data-sub="fatos" id="subFatosBtn">Fatos da Puri</button>
       </div>
 
       <div class="sub-panel" data-sub-panel="revendedores">
@@ -692,6 +693,23 @@
         </div>
         <div class="field-note-inline" id="limiteNota">Hoje: 30 L = 3 caixas de 10 L ou 6 de 5 L.</div>
       </div>
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <h2>Pedido mínimo do delivery</h2>
+            <div class="subtitle">Valor mínimo em reais para o cliente fechar um pedido no site de delivery. Use 0 para não ter mínimo.</div>
+          </div>
+        </div>
+        <div class="limite-row">
+          <div class="field" style="margin-bottom:0;">
+            <label for="minDeliveryValor">Pedido mínimo do delivery (R$)</label>
+            <input type="number" id="minDeliveryValor" min="0" max="1000" step="0.01" placeholder="20,00">
+          </div>
+          <button type="button" class="btn btn-dark-outline btn-sm" id="salvarMinDeliveryBtn">Salvar</button>
+          <span class="limite-msg" id="minDeliveryMsg"></span>
+        </div>
+        <div class="field-note-inline" id="minDeliveryNota">Vale para o site de delivery (só produtos, sem a taxa de entrega). A Puri usa o mesmo valor. Vendas do caixa e do admin não seguem esse mínimo.</div>
+      </div>
       </div>
 
       <div class="sub-panel hidden" data-sub-panel="puri">
@@ -699,6 +717,13 @@
         <h2 id="tituloPuri">Leads da Puri</h2>
         <p class="subtitle">Conversas da assistente do site que viraram contato. Quem pediu a visita de um vendedor com amostras aparece primeiro; chame pelo WhatsApp e marque o andamento.</p>
         <div id="puriLeads"></div>
+      </section>
+      </div>
+      <div class="sub-panel hidden" data-sub-panel="fatos">
+      <section class="fila-secao" aria-labelledby="tituloFatos">
+        <h2 id="tituloFatos">Fatos da Puri</h2>
+        <p class="subtitle">Salvar rascunho muda só a Puri de teste, em até 1 minuto.<br>Publicar guarda o texto para a Puri do site. Por enquanto a Puri do site ainda não lê daqui; isso começa quando a versão nova for publicada.</p>
+        <div id="puriFatos"></div>
       </section>
       </div>
     </section>
@@ -855,7 +880,7 @@
 <script src="../assets/js/supabase-config.js"></script>
 <script src="../assets/js/supabase-client.js"></script>
 <script src="../assets/js/app-ui.js"></script>
-<script src="../assets/js/admin.js?v=12"></script>
+<script src="../assets/js/admin.js?v=17"></script>
 <script src="../assets/js/vendor/qrcode.js"></script>
 <script src="../assets/js/vendor/jszip.min.js"></script>
 <script src="../assets/js/printer.js?v=4"></script>
@@ -1644,7 +1669,7 @@
     var pending = await DupuroAdmin.getPendingProfiles();
     pendentesN = pending.length;
     marcarBadge('revendedores', pendentesN);
-    marcarBadge('cadastros', pendentesN + visitasPuriN);
+    marcarBadge('cadastros', pendentesN + visitasPuriN + quentesPuriN);
 
     var body = document.getElementById('pendingBody');
     if (!pending.length) {
@@ -3845,6 +3870,28 @@
     renderLimiteNota(v);
   });
 
+  // ---- Pedido mínimo do delivery (R$, só produtos) ----
+  async function loadPedidoMinimoDelivery() {
+    var v = await DupuroAdmin.getPedidoMinimoDelivery();
+    document.getElementById('minDeliveryValor').value = v;
+  }
+  document.getElementById('salvarMinDeliveryBtn').addEventListener('click', async function () {
+    var msg = document.getElementById('minDeliveryMsg');
+    var raw = String(document.getElementById('minDeliveryValor').value).replace(',', '.').trim();
+    var v = Number(raw);
+    if (!raw || !isFinite(v) || v < 0) { msg.textContent = 'Informe um valor em reais, de 0 em diante.'; msg.className = 'limite-msg erro'; return; }
+    if (v > 1000) { msg.textContent = 'O valor máximo permitido é R$ 1.000,00.'; msg.className = 'limite-msg erro'; return; }
+    this.disabled = true;
+    var r = await DupuroAdmin.setPedidoMinimoDelivery(v);
+    this.disabled = false;
+    if (r.error) { msg.textContent = 'Não foi possível salvar: ' + motivoErro(r.error); msg.className = 'limite-msg erro'; return; }
+    document.getElementById('minDeliveryValor').value = r.valor;
+    msg.textContent = r.valor > 0
+      ? 'Pronto: pedido mínimo do delivery agora é R$ ' + r.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '.'
+      : 'Pronto: o delivery ficou sem pedido mínimo.';
+    msg.className = 'limite-msg ok';
+  });
+
   // ---- Trilha de alterações/cancelamentos da loja (auditoria da caixa) ----
   // Histórico longo (fechamentos, auditoria): mostra 10 linhas e um
   // "Mostrar mais". Linhas de detalhe (já escondidas) ficam de fora da conta.
@@ -4366,6 +4413,20 @@
   var PURI_MOV = { ate20: 'Até 20 copos/dia', '20a50': '20 a 50 copos/dia', '50a100': '50 a 100 copos/dia', '100mais': 'Mais de 100 copos/dia' };
   var PURI_STATUS = { pedida: 'Pedida', agendada: 'Agendada', feita: 'Feita', cancelada: 'Cancelada' };
   var PURI_FLUXO = { revender: 'Quer revender', consumir: 'Quer consumir', provar: 'Quer provar', duvida: 'Dúvida', humano: 'Falar com pessoa' };
+  var PURI_DESTINO = { contato_rapido: 'Contato rápido', visita: 'Visita com amostras', cadastro: 'Cadastro', delivery: 'Delivery', lista_espera: 'Lista de espera' };
+  // Só controla o que aparece na tela, não é segurança; a Dilene vê a lista normal.
+  // (O RPC admin_lead_atendido continua exigindo admin no banco.)
+  var PURI_AVISO_ADMIN = '3954e9ce-d9e4-4516-a03f-87086ec68e11'; // id da conta do Kayo
+  var puriAmb = (function () { try { return new URLSearchParams(location.search).get('puri_amb') === 'dev' ? 'dev' : 'prod'; } catch (e) { return 'prod'; } })();
+  var puriEhKayo = null, quentesPuriN = 0;
+  async function ehKayoPuri() {
+    if (puriEhKayo === null) {
+      try { puriEhKayo = (await DupuroAdmin.getCurrentUserId()) === PURI_AVISO_ADMIN; }
+      catch (e) { return false; } // falha de rede: não guarda em cache, tenta de novo na próxima
+    }
+    return puriEhKayo;
+  }
+  function quentePuri(l) { return l.destino === 'contato_rapido' && !l.atendido_em && l.visita_status !== 'pedida'; }
   function quandoPuri(iso) {
     var d = new Date(iso);
     if (isNaN(d.getTime())) return '—';
@@ -4375,28 +4436,600 @@
     var d = String(l.telefone || '').replace(/\D/g, '');
     if (d.length >= 10 && d.length <= 11) d = '55' + d;
     else if (!(d.length >= 12 && d.length <= 13 && d.indexOf('55') === 0)) return '';
-    var texto = 'Oi, ' + (l.nome || '') + '! Aqui é da Dupuro Açaí. Você pediu pela nossa assistente a visita de um vendedor com amostras. Podemos combinar o dia?';
+    var pn = primeiroNome(l.nome), oi = pn ? 'Oi, ' + pn + '!' : 'Oi!';
+    var texto = ['pedida', 'agendada'].indexOf(l.visita_status) >= 0
+      ? oi + ' Aqui é da Dupuro Açaí. Você pediu pela nossa assistente a visita de um vendedor com amostras. Podemos combinar o dia?'
+      : l.destino === 'contato_rapido'
+        ? oi + ' Aqui é da Dupuro Açaí. Vimos pela nossa assistente que você tem interesse em revender o nosso açaí. Podemos conversar?'
+        : oi + ' Aqui é da Dupuro Açaí. Vimos que você conversou com a nossa assistente. Como podemos ajudar?';
     return 'https://wa.me/' + d + '?text=' + encodeURIComponent(texto);
+  }
+  // ---- Detalhe do caso (Leads da Puri) ----
+  var puriDetCache = {}, puriLeadsPorId = {};
+  var PURI_QROT = { ja_vende: 'Já vende açaí hoje?', movimento: 'Movimento', comeco: 'Quando pensa em começar', compra: 'Primeira compra', papel: 'Papel no negócio', conheceu: 'Como conheceu a Dupuro' };
+  var PURI_QVAL = {
+    ja_vendo: 'Já vendo', quero_comecar: 'Ainda não, quer começar', outras_coisas: 'Vende outras coisas',
+    esta_semana: 'Esta semana', este_mes: 'Este mês', pesquisando: 'Só pesquisando por enquanto',
+    dono: 'Dono', socio: 'Sócio', trabalho: 'Trabalha no negócio', vou_abrir: 'Ainda vai abrir',
+    instagram: 'Instagram', indicacao: 'Indicação', google: 'Google', compro_loja: 'Já compra na loja', outro: 'Outro',
+    testar_1cx: 'Testar com 1 caixa', '30l_mais': 'Já vai pedir 30 L ou mais', nao_sei: 'Ainda não sabe'
+  };
+  var PURI_PALPITE = { mosca: 'Acertou na mosca', parte: 'Em parte', nao: 'Não acertou' };
+  var PURI_SIMROT = [['preco_copo', 'Preço do copo', 1], ['custo_caixa', 'Custo da caixa', 1], ['copos_caixa', 'Copos por caixa', 0], ['venda_caixa', 'Venda por caixa', 1], ['sobra_caixa', 'Sobra por caixa', 1], ['copos_dia', 'Copos por dia', 0], ['caixas_semana', 'Caixas por semana', 0], ['sobra_semana', 'Sobra na semana', 1]];
+  function puriTxt(v) { return typeof v === 'string' ? v : (typeof v === 'number' || typeof v === 'boolean') ? String(v) : JSON.stringify(v); }
+  function puriEl(tag, cls, texto) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (texto != null) e.textContent = texto;
+    return e;
+  }
+  function puriLinha(rotulo, valor) {
+    var d = puriEl('div', 'puri-det-linha');
+    d.appendChild(puriEl('span', 'puri-det-rot', rotulo));
+    d.appendChild(puriEl('span', 'puri-det-val', valor));
+    return d;
+  }
+  function puriLista(itens) {
+    var ul = puriEl('ul', 'puri-det-lista');
+    itens.forEach(function (t) { ul.appendChild(puriEl('li', '', puriTxt(t))); });
+    return ul;
+  }
+  function puriLinhaLista(rotulo, itens) {
+    var d = puriEl('div', 'puri-det-linha');
+    d.appendChild(puriEl('span', 'puri-det-rot', rotulo));
+    d.appendChild(puriLista(itens));
+    return d;
+  }
+  function puriSecao(titulo, filhos) {
+    filhos = filhos.filter(Boolean);
+    if (!filhos.length) return null;
+    var s = puriEl('section', 'puri-det-secao');
+    s.appendChild(puriEl('h4', 'puri-det-titulo', titulo));
+    filhos.forEach(function (f) { s.appendChild(f); });
+    return s;
+  }
+  function puriTemTxt(v) { return typeof v === 'string' && v.trim() !== ''; }
+  function puriPct(v) { var n = Number(v); return v != null && v !== '' && isFinite(n) ? Math.round(n * 100) + '%' : ''; }
+  var PURI_MAPA_TIPO = { negocio: 'negócio', problema: 'problema', causa: 'causa', risco: 'risco', destino: 'destino', passo: 'passo' };
+  function puriDestinoChave(l) {
+    if (l.destino) return l.destino;
+    var a = (l.anotacoes && typeof l.anotacoes === 'object') ? l.anotacoes : {};
+    return a.lista_espera === true ? 'lista_espera' : '';
+  }
+  function puriN(n, um, varios) { return n + ' ' + (n === 1 ? um : varios); }
+  function puriDetalheNo(l, d, kayo) {
+    var a = (l.anotacoes && typeof l.anotacoes === 'object') ? l.anotacoes : {};
+    var raiz = puriEl('div', 'puri-det');
+    var secs = [];
+
+    // O que a pessoa contou
+    var c = [];
+    if (puriTemTxt(a.quer)) c.push(puriLinha('Objetivo escrito', a.quer));
+    if (Array.isArray(a.topicos) && a.topicos.length) c.push(puriLinhaLista('Tópicos', a.topicos));
+    if (puriTemTxt(a.esclarecimento)) c.push(puriLinha('Esclarecimento', a.esclarecimento));
+    if (puriTemTxt(a.aprof_pergunta)) c.push(puriLinha('Pergunta para entender melhor', a.aprof_pergunta));
+    if (puriTemTxt(a.aprof_resposta)) c.push(puriLinha('Resposta', a.aprof_resposta));
+    if (a.qualif && typeof a.qualif === 'object' && !Array.isArray(a.qualif)) {
+      Object.keys(a.qualif).forEach(function (k) {
+        var v = a.qualif[k];
+        if (v == null || v === '') return;
+        var texto = k.slice(-6) === '_texto';
+        var base = texto ? k.slice(0, -6) : k;
+        if (texto && a.qualif[base] === 'texto') return; // já mostrado na linha "Outro (escreveu: ...)"
+        var rot = PURI_QROT[base] || base;
+        var val;
+        if (v === 'texto') {
+          var esc2 = a.qualif[k + '_texto'];
+          val = 'Outro' + (puriTemTxt(esc2) ? ' (escreveu: ' + esc2 + ')' : '');
+        } else val = texto ? '(escreveu: ' + puriTxt(v) + ')' : (PURI_QVAL[v] || (base === 'movimento' && PURI_MOV[v]) || puriTxt(v));
+        c.push(puriLinha(rot, val));
+      });
+    }
+    if (a.retira === true || a.retira === false) c.push(puriLinha('Retira na fábrica', a.retira ? 'Sim' : 'Não'));
+    if (a.confirma_acai != null && a.confirma_acai !== '') c.push(puriLinha('Confirmou que é sobre açaí', a.confirma_acai === 'sim' ? 'Sim' : a.confirma_acai === 'nao' ? 'Não' : a.confirma_acai === 'consumo' ? 'Só quer consumir' : puriTxt(a.confirma_acai)));
+    if (a.nao_acai != null && a.nao_acai !== '' && a.nao_acai !== false) c.push(puriLinha('Não era sobre açaí', a.nao_acai === true ? 'Sim' : puriTxt(a.nao_acai)));
+    if (puriTemTxt(a.termo)) c.push(puriLinha('Termo', a.termo));
+    if (a.leitura && typeof a.leitura === 'object') {
+      var lt = [];
+      if (puriPct(a.leitura.e_acai)) lt.push('Fala de vender açaí: ' + puriPct(a.leitura.e_acai));
+      if (puriPct(a.leitura.cenario)) lt.push('Deu para entender o cenário: ' + puriPct(a.leitura.cenario));
+      if (puriPct(a.leitura.iniciante)) lt.push('Parece iniciante: ' + puriPct(a.leitura.iniciante));
+      if (a.leitura.cena != null && a.leitura.cena !== '') lt.push('Cena mostrada: ' + (PURI_SEG[a.leitura.cena] || puriTxt(a.leitura.cena).replace(/_/g, ' ')));
+      if (lt.length) c.push(puriLinha('Leitura', lt.join(' · ')));
+    }
+    secs.push(puriSecao('O que a pessoa contou', c));
+
+    // Palpite da Puri
+    var p = [];
+    if (puriTemTxt(a.palpite)) p.push(puriLinha('Palpite', a.palpite));
+    if (a.palpite_valor) p.push(puriLinha('Reação', PURI_PALPITE[a.palpite_valor] || puriTxt(a.palpite_valor)));
+    if (puriTemTxt(a.palpite_correcao)) p.push(puriLinha('Correção da pessoa', a.palpite_correcao));
+    if (Array.isArray(a.palpite_alternativas) && a.palpite_alternativas.length) p.push(puriLinhaLista('Alternativas', a.palpite_alternativas));
+    if (puriTemTxt(a.palpite_final)) p.push(puriLinha('Palpite final', a.palpite_final));
+    secs.push(puriSecao('Palpite da Puri', p));
+
+    // Resumo e mapa
+    var r = [];
+    if (puriTemTxt(a.problema)) r.push(puriLinha('Problema', a.problema));
+    if (puriTemTxt(l.resumo)) r.push(puriLinha('Resumo', l.resumo));
+    if (a.resumo_ok === true) r.push(puriLinha('Resumo', 'A pessoa confirmou'));
+    if (a.resumo_corrigido === true) r.push(puriLinha('Resumo', 'A pessoa pediu correção do resumo'));
+    else if (puriTemTxt(a.resumo_corrigido)) r.push(puriLinha('Resumo corrigido pela pessoa', a.resumo_corrigido));
+    var m = a.mapa;
+    if (m && typeof m === 'object' && Array.isArray(m.nos) && m.nos.length) {
+      var mw = puriEl('div', 'puri-det-mapa');
+      if (m.simples === true) {
+        var tg = puriEl('p', 'puri-det-aviso');
+        tg.appendChild(puriEl('span', 'puri-det-tag', 'Mapa na versão simples'));
+        tg.appendChild(document.createTextNode(' a IA não montou o mapa; saiu o padrão.'));
+        mw.appendChild(tg);
+      }
+      var ol = puriEl('ol', 'puri-det-nos');
+      m.nos.forEach(function (n, i) {
+        if (!n || typeof n !== 'object') return;
+        var li = puriEl('li', '');
+        li.appendChild(puriEl('strong', '', puriTxt(n.titulo != null && n.titulo !== '' ? n.titulo : (PURI_MAPA_TIPO[n.tipo] || n.tipo || 'Item')) + ': '));
+        li.appendChild(document.createTextNode(n.texto != null ? puriTxt(n.texto) : ''));
+        if (n.ajustado === true) li.appendChild(puriEl('span', 'puri-det-nota', ' (ajustado)'));
+        ol.appendChild(li);
+        var seta = Array.isArray(m.setas) ? m.setas[i] : null;
+        if (seta && i < m.nos.length - 1) ol.appendChild(puriEl('li', 'puri-det-seta', 'liga com: ' + puriTxt(seta)));
+      });
+      mw.appendChild(ol);
+      r.push(mw);
+    }
+    if (a.mapa_ajustes != null && a.mapa_ajustes !== '') r.push(puriLinha('Ajustes pedidos', puriTxt(a.mapa_ajustes) + ' de 2'));
+    if (Array.isArray(a.mapa_pedidos) && a.mapa_pedidos.length) r.push(puriLinhaLista('Pedidos de ajuste', a.mapa_pedidos));
+    if (a.mapa_pulou === true) r.push(puriLinha('Mapa', 'Pulou o mapa'));
+    secs.push(puriSecao('Resumo e mapa', r));
+
+    // Simulação
+    var s = [];
+    var sim = d.simulacao;
+    if (sim && typeof sim === 'object') {
+      PURI_SIMROT.forEach(function (x) {
+        var v = sim[x[0]];
+        if (v == null || v === '') return;
+        var n = Number(v);
+        s.push(puriLinha(x[1], isFinite(n) ? (x[2] ? DupuroUI.brl(n) : String(n)) : puriTxt(v)));
+      });
+    }
+    secs.push(puriSecao('Simulação', s));
+
+    // Coerência
+    if (d.coerente === false) secs.push(puriSecao('Coerência', [puriEl('p', 'puri-det-texto', 'Respostas desencontradas (a Puri pediu para esclarecer)')]));
+    else if (d.coerente === true) secs.push(puriSecao('Coerência', [puriEl('p', 'puri-det-texto', 'Respostas coerentes')]));
+
+    // Dúvidas
+    var h = [];
+    if (Array.isArray(d.historico)) d.historico.forEach(function (x) {
+      if (!x || typeof x !== 'object' || x.t == null || x.t === '') return;
+      h.push(puriLinha(x.r === 'a' ? 'Puri:' : 'Pessoa:', puriTxt(x.t)));
+    });
+    secs.push(puriSecao('Dúvidas que a pessoa tirou', h));
+
+    // Destino
+    var ds = [];
+    var dch = puriDestinoChave(l);
+    ds.push(puriLinha('Resultado', dch ? (PURI_DESTINO[dch] || puriTxt(dch)) : (puriIntencaoChave(l) === 'revender' ? 'Ainda sem destino (a conversa não chegou ao fim)' : 'Sem destino (só a conversa de revenda ganha destino)')));
+    if (l.destino_em) ds.push(puriLinha('Destino em', quandoPuri(l.destino_em)));
+    if (l.esforco != null && l.esforco !== '') ds.push(puriLinha('Esforço', puriTxt(l.esforco) + '/3'));
+    if (kayo && Number(l.prioridade)) ds.push(puriLinha('Prioridade', Number(l.prioridade) + '/3'));
+    if (l.atendido_em) ds.push(puriLinha('Atendido em', quandoPuri(l.atendido_em)));
+    if (d.turns != null && d.turns !== '') ds.push(puriLinha('Mensagens trocadas', puriTxt(d.turns)));
+    if (a.so_contato === true) ds.push(puriLinha('Só contato', 'Sim'));
+    if (a.conversao_falhou === true) ds.push(puriLinha('Conta sem vínculo', 'A conversão em conta falhou'));
+    if (a.lista_espera === true && l.destino && l.destino !== 'lista_espera') ds.push(puriLinha('Lista de espera', 'Sim'));
+    secs.push(puriSecao('Destino', ds));
+
+    secs.filter(Boolean).forEach(function (x) { raiz.appendChild(x); });
+    if (!raiz.firstChild) raiz.appendChild(puriEl('p', 'puri-det-texto', 'Esta conversa ainda não guardou detalhes.'));
+    if (kayo) { var j = puriEl('div', 'puri-det-jev'); j.setAttribute('data-lead', String(l.id)); puriMontarJev(j, d.jev_log); raiz.appendChild(j); }
+    return raiz;
+  }
+  // ---- Painel "O que o Jev viu" (só o Kayo) ----
+  // espelho de LIMIARES em supabase/functions/assistente/logica.ts — atualizar junto
+  var PURI_LIM = { PERGUNTA_ESCLARECER_MIN: 0.5, CATEGORIA_P_MIN: 0.5, IRRITADO_NOTA_MIN: 0.6, IRRITADO_FORTE_MIN: 0.85, RESPONDIVEL_MIN: 0.6, AMBIGUO_MIN: 0.6, INVENTOU_MAX: 0.5, RESPONDEU_MIN: 0.5, SEGUIU_NOTAS_MIN: 0.5, EMPRESA_AMBIGUA_MIN: 0.6, ABERTURA_REVENDER_MIN: 0.75, SEGMENTO_P_MIN: 0.5, TIPO_OBJETIVO_MIN: 0.8, INICIANTE_MIN: 0.6, E_ACAI_MIN: 0.35, CENARIO_MIN: 0.55, PRECISA_APROFUNDAR_MIN: 0.55, PALPITE_INVENTA_MAX: 0.5, RESUMO_INVENTA_MAX: 0.5, OBJETIVO_VALE_MIN: 0.5, MAPA_TIPO_MIN: 0.5, MAPA_J8_MAX: 0.62, CONSUMIDOR_MIN: 0.8, PONTO_DEFINIDO_MIN: 0.8, PROVAR_MIN: 0.6, INTERPRETAR_P_MIN: 0.5, ESFORCO_MIN_MS: 180000, ESFORCO_DETALHE_CHARS: 60 };
+  // limiares em porcentagem, como aparecem na tela (0,6 vira 60%); ESFORCO_* não são probabilidades
+  var PURI_LIMP = {};
+  Object.keys(PURI_LIM).forEach(function (k) { if (PURI_LIM[k] <= 1) PURI_LIMP[k] = Math.round(PURI_LIM[k] * 100) + '%'; });
+  var PURI_JEV_ETAPA = { abertura: 'Abertura', duvida: 'Dúvida', revenda_perfil: 'Perfil de revenda', escutar: 'Escuta do objetivo', cartoes: 'Cartões', esclarecer: 'Esclarecimento', aprofundar: 'Aprofundar', palpite: 'Palpite', palpite_alt: 'Palpite (alternativas)', resumo: 'Resumo', mapa: 'Mapa', destino: 'Destino', compra: 'Compra', segmento: 'Segmento' };
+  var PURI_JEV_ROT = {
+    prazo: 'Pouco tempo restante', adequada: 'Pergunta de esclarecimento adequada', categoria: 'Categoria da dúvida', irritado: 'Pessoa irritada', respondivel: 'Dá para responder com os fatos', ambiguo: 'Revenda ou consumo não está claro',
+    inventou: 'Inventou fato da Dupuro', respondeu: 'Respondeu o que foi perguntado', seguiu_notas: 'Seguiu as notas', checagem_codigo: 'Checagem do código',
+    empresa_sem_intencao: 'Fala de empresa sem dizer o que quer', revender_ou_consumir: 'Revender ou consumir', segmento: 'Segmento do negócio', tipo_objetivo: 'Tipo de negócio do objetivo', regra_inicio_movimento: 'Quem vai começar x movimento',
+    e_sobre_vender_acai: 'É sobre vender açaí', cenario_suficiente: 'Texto suficiente para os cartões', iniciante: 'Pessoa iniciante', cena: 'Cena', precisa_aprofundar: 'Vale perguntar mais', melhor_pergunta: 'Melhor pergunta',
+    inventa: 'Inventa', objetivo_ainda_vale: 'Objetivo ainda vale', tipo_causa: 'Incluir no mapa: causa', tipo_risco: 'Incluir no mapa: risco', tipo_destino: 'Incluir no mapa: destino', tipo_passo: 'Incluir no mapa: passo', tipo_problema: 'Incluir no mapa: problema', j8: 'Texto do mapa', tipos: 'Tipos de item do mapa', objetivo: 'Objetivo ainda vale',
+    consumidor: 'Compra para consumo', ponto_definido: 'Ponto de venda definido', ganha_provando: 'Ganha provando antes', escolha: 'Escolha do destino',
+    haiku_falhou: 'IA não escreveu', haiku_ou_formato: 'IA falhou ou veio fora do formato', reescrita: 'IA reescreveu',
+    resposta_segura: 'Resposta segura', candidatas: 'Candidatas', sem_base: 'A IA não achou base para um palpite', termo: 'Termo', fixa: 'Resposta fixa', ordem_opcoes: 'Ordem das opções', nao_acai: 'Não é sobre açaí',
+    jev_falhou: 'Jev não respondeu', jev_antes_falhou: 'Jev não respondeu (antes)', jev_depois_falhou: 'Jev não respondeu (depois)'
+  };
+  var PURI_JEV_X = {
+    encaminha: 'encaminha para uma pessoa', nota: 'acrescenta nota de empatia', nada: 'seguiu normal', oferece_pessoa: 'oferece falar com uma pessoa', ok: 'seguiu normal', ambigua: 'revenda ou consumo ficou ambíguo', pergunta_ou_dois_casos: 'pergunta ou responde os dois casos',
+    reprova: 'reprova', pergunta_revender_ou_consumir: 'pergunta se é para revender ou consumir', segue: 'seguiu normal', aceita: 'aceita o tipo de negócio', sugere_tres: 'sugere três opções',
+    nao_acai: 'não é sobre açaí', escreve_cartoes: 'escreve os cartões', sem_cena: 'sem cena suficiente', vai_comecar: 'vai começar', pergunta: 'faz a pergunta', pula: 'pula a pergunta',
+    nota_objetivo_mudou: 'nota que o objetivo mudou', entra: 'entra no mapa', fora: 'fica fora do mapa', mapa_simples: 'mapa simples (padrão)', delivery: 'vai para o delivery', pulado: 'pulado',
+    ponto_definido: 'contato rápido (ponto definido)', visita_se_cuiaba_vg: 'visita (se Cuiabá ou Várzea Grande)', jev_falhou: 'Jev não respondeu',
+    segura_antes_haiku: 'sem tempo para a IA: resposta segura', segura_na_escrita: 'IA falhou ao escrever: resposta segura', segura_na_reescrita: 'IA falhou ao reescrever: resposta segura', entrega_so_checagem_codigo: 'sem tempo para o Jev: entrega só com a checagem do código',
+    sem_pergunta: 'sem pergunta', sem_palpite: 'sem palpite', sem_alternativas: 'sem alternativas', sem_conferencia: 'sem conferência do Jev', sem_resumo: 'sem resumo', pergunta_fixa: 'usa a pergunta fixa', segue_sem_notas: 'segue sem notas', segue_sem_nota: 'segue sem nota', todos: 'todos os tipos entram',
+    nenhuma: 'nenhuma opção reconhecida', nao_respondeu: 'não respondeu o que foi perguntado', nao_seguiu_notas: 'não seguiu as notas', inadequada: 'pergunta inadequada',
+    suspeita: 'texto suspeito (link, e-mail ou telefone fora da Dupuro)', pede_dados: 'pede dados pessoais', cupom: 'fala de cupom sem base', emoji: 'tem emoji', longo: 'resposta longa demais',
+    markdown: 'tem formatação de markdown', nota_fiscal: 'promete nota fiscal', telefone_sem_pedido: 'telefone fora da lista ou sem o cliente pedir', vagas: 'fala de vagas sem base', saude: 'deu orientação de saúde', vazamento: 'falou de validade ou lactose sem ser perguntado', vazio: 'resposta vazia ou sem fato na base'
+  };
+  var PURI_JEV_CAMADA = { jev: 'Jev', codigo: 'Código', haiku: 'IA escreveu', prazo: 'Pouco tempo' };
+  var PURI_JEV_REGRA = {
+    categoria: 'O Jev classifica a dúvida. Se a probabilidade da categoria ficar abaixo de ' + PURI_LIMP.CATEGORIA_P_MIN + ', ela vira "pergunta sobre a Dupuro".',
+    irritado: 'Mede o quanto a pessoa está irritada. A partir de ' + PURI_LIMP.IRRITADO_NOTA_MIN + ' entra uma nota de empatia; a partir de ' + PURI_LIMP.IRRITADO_FORTE_MIN + ' vira encaminhamento para uma pessoa.',
+    respondivel: 'O Jev vê se os fatos da Dupuro cobrem a pergunta. A partir de ' + PURI_LIMP.RESPONDIVEL_MIN + ' a Puri responde; abaixo, oferece uma pessoa.',
+    ambiguo: 'Revenda ou consumo não está claro. A partir de ' + PURI_LIMP.AMBIGUO_MIN + ' a Puri pergunta ou cobre os dois casos.',
+    inventou: 'Depois que a IA escreve, o Jev vê se ela inventou fato. Reprova se passar de ' + PURI_LIMP.INVENTOU_MAX + '.',
+    respondeu: 'O Jev confere se a resposta respondeu o que foi perguntado. Reprova se ficar abaixo de ' + PURI_LIMP.RESPONDEU_MIN + '.',
+    seguiu_notas: 'O Jev confere se a resposta seguiu as notas. Reprova se ficar abaixo de ' + PURI_LIMP.SEGUIU_NOTAS_MIN + '.',
+    checagem_codigo: 'Checagem sem IA: no máximo 3 frases e 400 caracteres, sem link, e-mail ou telefone que não seja da Dupuro. Se reprovar, a IA reescreve (até 2 vezes); depois sai a resposta segura.',
+    empresa_sem_intencao: 'Fala de empresa ou trabalho sem dizer o que quer. A partir de ' + PURI_LIMP.EMPRESA_AMBIGUA_MIN + ' a Puri pergunta se é para revender ou consumir.',
+    revender_ou_consumir: 'Se a chance de revender ficar abaixo de ' + PURI_LIMP.ABERTURA_REVENDER_MIN + ' e consumir for relevante (20% ou mais), a Puri pergunta se é para revender ou comprar para si.',
+    segmento: 'Tipo de negócio da pessoa. A partir de ' + PURI_LIMP.SEGMENTO_P_MIN + ' a Puri aceita; abaixo, sugere três opções.',
+    tipo_objetivo: 'O Jev vê se o objetivo escrito descreve outro tipo de negócio. Só é incoerente a partir de ' + PURI_LIMP.TIPO_OBJETIVO_MIN + '; aí a Puri pede esclarecimento.',
+    regra_inicio_movimento: 'Regra fixa: quem vai começar (ainda não vende, vai abrir ou o Jev vê iniciante a partir de ' + PURI_LIMP.INICIANTE_MIN + ') não declara mais de 100 copos por dia; se declarar, a Puri pede esclarecimento.',
+    iniciante: 'O Jev vê se a pessoa ainda vai começar. A partir de ' + PURI_LIMP.INICIANTE_MIN + ' conta como iniciante e muda a ordem das opções de compra.',
+    e_sobre_vender_acai: 'O Jev vê se o objetivo é sobre vender açaí. Abaixo de ' + PURI_LIMP.E_ACAI_MIN + ' a Puri pergunta se a pessoa quer mesmo vender açaí.',
+    cenario_suficiente: 'O Jev vê se o texto tem informação para os cartões. A partir de ' + PURI_LIMP.CENARIO_MIN + ' a Puri escreve os cartões; abaixo, pede mais cena.',
+    precisa_aprofundar: 'O Jev vê se vale fazer mais uma pergunta. A partir de ' + PURI_LIMP.PRECISA_APROFUNDAR_MIN + ' a Puri pergunta; abaixo, pula (sem gastar a IA).',
+    inventa: 'O Jev vê se o texto escrito pela IA inventou algo. No palpite reprova acima de ' + PURI_LIMP.PALPITE_INVENTA_MAX + '; no resumo, acima de ' + PURI_LIMP.RESUMO_INVENTA_MAX + '. Se reprovar, a IA reescreve.',
+    objetivo_ainda_vale: 'O Jev vê se o objetivo do começo ainda vale no fim da conversa. Abaixo de ' + PURI_LIMP.OBJETIVO_VALE_MIN + ' o resumo traz uma nota de que o objetivo mudou.',
+    tipo_causa: 'O Jev decide se esse tipo de item entra no mapa. Entra a partir de ' + PURI_LIMP.MAPA_TIPO_MIN + '.',
+    tipo_risco: 'O Jev decide se esse tipo de item entra no mapa. Entra a partir de ' + PURI_LIMP.MAPA_TIPO_MIN + '.',
+    tipo_destino: 'O Jev decide se esse tipo de item entra no mapa. Entra a partir de ' + PURI_LIMP.MAPA_TIPO_MIN + '.',
+    tipo_passo: 'O Jev decide se esse tipo de item entra no mapa. Entra a partir de ' + PURI_LIMP.MAPA_TIPO_MIN + '.',
+    j8: 'O Jev avalia o texto de um item do mapa. Reprova a partir de ' + PURI_LIMP.MAPA_J8_MAX + ' (texto ruim); a IA reescreve até 2 vezes, depois sai o mapa simples.',
+    consumidor: 'O Jev vê se a compra é para consumo próprio. A partir de ' + PURI_LIMP.CONSUMIDOR_MIN + ' o destino é o delivery.',
+    ponto_definido: 'O Jev vê se a pessoa monta um ponto de açaí com local definido. A partir de ' + PURI_LIMP.PONTO_DEFINIDO_MIN + ', com começo esta semana ou este mês, vai para contato rápido.',
+    ganha_provando: 'O Jev vê se a pessoa ganha provando antes. A partir de ' + PURI_LIMP.PROVAR_MIN + ', e só em Cuiabá ou Várzea Grande, vai para visita com amostras.',
+    escolha: 'Escolha do destino, por código, na ordem: lista de espera; delivery; contato rápido (1: já vende, com movimento de 50 a 100 ou mais de 100 por dia e respostas coerentes; ou 2: o Jev vê ponto definido com nota a partir de ' + PURI_LIMP.PONTO_DEFINIDO_MIN + ' e o começo é "esta semana" ou "este mês"); visita (cidade Cuiabá ou Várzea Grande e "ganha provando" a partir de ' + PURI_LIMP.PROVAR_MIN + '); cadastro. O esforço (0 a 3) soma 1 ponto por: ' + (PURI_LIM.ESFORCO_MIN_MS / 60000) + ' minutos de conversa; objetivo com ' + PURI_LIM.ESFORCO_DETALHE_CHARS + ' caracteres ou mais (ou resposta útil no aprofundar); 4 ou mais perguntas de qualificação respondidas.',
+    interpretar: 'O Jev interpreta a resposta livre da pessoa como uma das opções. Abaixo de ' + PURI_LIMP.INTERPRETAR_P_MIN + ' a escolha vira vazia e a Puri pergunta de novo.',
+    prazo: 'Faltou tempo para mais uma chamada de IA dentro do limite da etapa; a Puri seguiu pelo caminho seguro (pulou o passo ou usou a resposta pronta).',
+    adequada: 'O Jev vê se a pergunta de esclarecimento ficou adequada. Reprova se ficar abaixo de ' + PURI_LIMP.PERGUNTA_ESCLARECER_MIN + '; a IA reescreve.',
+    candidatas: 'Código: lista de respostas candidatas tiradas da base de fatos.', sem_base: 'Código: nenhuma resposta na base de fatos para essa pergunta.',
+    resposta_segura: 'Código: depois de 2 reescritas reprovadas, a Puri usa uma resposta segura pronta.', termo: 'Código: termo reconhecido por regra.', fixa: 'Código: resposta fixa, sem IA.',
+    ordem_opcoes: 'Código: ordem das opções de compra definida pela leitura de iniciante.', nao_acai: 'Código: o objetivo não é sobre açaí; a Puri confirma antes de seguir.'
+  };
+  var PURI_JEV_CODIGO = ['resposta_segura', 'checagem_codigo', 'regra_inicio_movimento', 'candidatas', 'termo', 'fixa', 'escolha', 'ordem_opcoes'];
+  var PURI_JEV_HAIKU = ['haiku_falhou', 'haiku_ou_formato', 'reescrita', 'sem_base'];
+  var PURI_JEV_NAOPROB = ['melhor_pergunta', 'jev_falhou', 'jev_antes_falhou', 'jev_depois_falhou', 'haiku_falhou', 'haiku_ou_formato', 'reescrita', 'prazo', 'sem_base', 'candidatas', 'termo', 'fixa', 'resposta_segura', 'checagem_codigo', 'regra_inicio_movimento', 'escolha', 'ordem_opcoes', 'nao_acai'];
+  function puriJevCamada(en) {
+    var r = String(en.r);
+    if (r === 'prazo') return 'prazo';
+    if (en.e && String(en.e).indexOf('interpretar:') === 0) return 'jev';
+    if (PURI_JEV_HAIKU.indexOf(r) >= 0) return 'haiku';
+    if (PURI_JEV_CODIGO.indexOf(r) >= 0 || (r === 'nao_acai' && en.e === 'palpite')) return 'codigo';
+    return 'jev';
+  }
+  function puriJevEtapa(e) {
+    e = String(e == null ? '' : e);
+    if (e.indexOf('interpretar:') === 0) return 'Interpretar resposta (' + (PURI_QROT[e.slice(12)] || e.slice(12)) + ')';
+    return PURI_JEV_ETAPA[e] || e;
+  }
+  function puriJevRotulo(r) {
+    r = String(r == null ? '' : r);
+    if (PURI_JEV_ROT[r]) return PURI_JEV_ROT[r];
+    var m = /^(.*)_jev_falhou$/.exec(r);
+    if (m) return 'Jev não respondeu (' + (PURI_JEV_ROT[m[1]] || m[1]) + ')';
+    m = /^j8_(.+)$/.exec(r);
+    if (m) return 'Texto do mapa: ' + (PURI_MAPA_TIPO[m[1]] || m[1].replace(/_/g, ' '));
+    return r;
+  }
+  var PURI_JEV_SEGURA = { pergunta_dupuro: 'pergunta sobre a Dupuro', fora_do_assunto: 'fora do assunto', conversa_social: 'conversa social', reclamacao_ou_problema_pedido: 'reclamação ou problema no pedido', negociacao: 'negociação', ambiguo: 'pergunta ambígua', cupom_frete: 'cupom e frete', vagas_turno: 'vagas por turno', quer: 'quer seguir pelo chat' };
+  var PURI_JEV_CAT = { pergunta_dupuro: 'pergunta sobre a Dupuro', fora_do_assunto: 'fora do assunto', conversa_social: 'conversa social', reclamacao_ou_problema_pedido: 'reclamação ou problema no pedido', negociacao: 'negociação', pede_pessoa: 'pede para falar com uma pessoa', quer_revender: 'quer revender', quer_comprar: 'quer comprar para consumir', quer_provar: 'quer provar antes', instagram: 'pede o Instagram' };
+  var PURI_JEV_ESCLARECE = { inicio_movimento: 'início e movimento não combinam', tipo_objetivo: 'objetivo de outro tipo de negócio' };
+  var PURI_JEV_MOTIVO_COMPRA = { ja_vende_movimento_alto: 'já vende e tem movimento alto: 30 L primeiro', movimento_alto: 'movimento alto: 30 L primeiro', vai_comecar: 'vai começar: 1 caixa primeiro', padrao: 'ordem padrão: 1 caixa primeiro' };
+  var PURI_JEV_REGRA_DEST = { a: 'lista de espera', b: 'consumo próprio', c1: 'já vende e movimenta muito', c2: 'ponto definido e começa logo', d: 'provar antes em Cuiabá/VG', e: 'caminho normal' };
+  var PURI_JEV_APROVA = ['inventou', 'respondeu', 'seguiu_notas', 'adequada', 'inventa'];
+  function puriJevEfeito(x, en) {
+    if (x == null || x === '') return '';
+    x = String(x);
+    var rr = String(en && en.r != null ? en.r : '');
+    var ee = String(en && en.e != null ? en.e : '');
+    if (rr === 'resposta_segura') return PURI_JEV_SEGURA[x] ? 'Resposta pronta: ' + PURI_JEV_SEGURA[x] : 'Resposta pronta (' + x.replace(/_/g, ' ') + ')';
+    if (rr === 'cena' && x === 'outro') return 'Cena: ' + (PURI_SEG[x] || 'outro') + ((typeof en.v === 'number' && en.v >= PURI_LIM.SEGMENTO_P_MIN) ? '' : ' (nenhum tipo com certeza suficiente)');
+    if (rr === 'cena' && x !== 'sem_cena') return 'Cena: ' + (PURI_SEG[x] || x.replace(/_/g, ' '));
+    if (rr === 'categoria' && PURI_JEV_CAT[x]) return PURI_JEV_CAT[x];
+    if (rr === 'ordem_opcoes' && PURI_JEV_MOTIVO_COMPRA[x]) return PURI_JEV_MOTIVO_COMPRA[x];
+    if (rr === 'termo' && x === 'ok') return 'termo reconhecido';
+    if (x === 'ok' && PURI_JEV_APROVA.indexOf(rr) >= 0) return 'aprovado';
+    if (ee.indexOf('interpretar:') === 0 && rr === 'escolha' && x !== 'nenhuma') return 'entendeu: ' + (PURI_QVAL[x] || PURI_MOV[x] || x.replace(/_/g, ' '));
+    if (rr === 'reescrita' && ee === 'mapa') return 'reprovados: ' + x.split(',').map(function (t) { return PURI_MAPA_TIPO[t] || t.replace(/_/g, ' '); }).join(', ');
+    if (PURI_JEV_X[x]) return PURI_JEV_X[x];
+    var m = /^pede_esclarecimento:(.+)$/.exec(x);
+    if (m) return 'pede esclarecimento (' + (PURI_JEV_ESCLARECE[m[1]] || m[1].replace(/_/g, ' ')) + ')';
+    m = /^(lista_espera|delivery|contato_rapido|visita|cadastro):(.+)$/.exec(x);
+    if (m) {
+      var dsc = PURI_JEV_REGRA_DEST[m[2]];
+      if (m[1] === 'lista_espera' && m[2] === 'a') dsc = '';
+      return (PURI_DESTINO[m[1]] || m[1].replace(/_/g, ' ')) + (dsc ? ' (' + dsc + ')' : '');
+    }
+    m = /^destino:(.+)$/.exec(x);
+    if (m) return PURI_JEV_REGRA_DEST[m[1]] || m[1].replace(/_/g, ' ');
+    m = /^q(\d+|N)$/.exec(x); if (m) return 'escolheu a pergunta ' + m[1];
+    if (x === 'sem_leitura') return 'sem leitura do Jev';
+    if (x === 'sem_termo') return 'sem termo reconhecido';
+    if (x === 'inventou') return 'inventou fato';
+    if (x === 'formato') return 'formato errado';
+    m = /^ok_(\d+)$/.exec(x); if (m) return 'alternativa ' + m[1] + ' aprovada';
+    m = /^descarta_(\d+)$/.exec(x); if (m) return 'alternativa ' + m[1] + ' descartada';
+    return PURI_DESTINO[x] || PURI_QVAL[x] || PURI_MOV[x] || x.replace(/_/g, ' ');
+  }
+  function puriJevRegra(en) {
+    var r = String(en.r);
+    if (en.e && String(en.e).indexOf('interpretar:') === 0) return PURI_JEV_REGRA.interpretar;
+    if (/^j8_/.test(r)) return PURI_JEV_REGRA.j8;
+    if (r === 'sem_base') return 'A IA respondeu NENHUM: não achou base nos fatos para um palpite, então a Puri não gera palpite.';
+    if (/_jev_falhou$/.test(r) || r === 'jev_falhou') return 'O Jev não respondeu. Esta decisão é tratada como "não" e a Puri segue pelo caminho seguro.';
+    if (r === 'nao_acai' && en.e === 'palpite') return 'Código: o objetivo não é sobre açaí; o palpite não é gerado.';
+    if (r === 'ordem_opcoes') return PURI_JEV_REGRA.ordem_opcoes;
+    if (r === 'cena' || r === 'melhor_pergunta') return 'Texto lido pelo Jev da conversa e usado nas etapas seguintes. Não tem limiar.';
+    return PURI_JEV_REGRA[r] || '';
+  }
+  function puriHora(t) {
+    var n = Number(t);
+    if (!isFinite(n)) return '--:--:--';
+    return new Date(n * 1000).toLocaleTimeString('pt-BR', { timeZone: 'America/Cuiaba', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  }
+  function puriJevValor(v, en, cam) {
+    if (v == null || v === '') return '';
+    var r = String(en && en.r != null ? en.r : '');
+    var e = String(en && en.e != null ? en.e : '');
+    var x = String(en && en.x != null ? en.x : '');
+    if (e.indexOf('interpretar:') === 0 && r === 'escolha') {
+      if (x === 'nenhuma') return '';
+      return (typeof v === 'number' && isFinite(v)) ? 'chance: ' + Math.round(v * 100) + '%' : '';
+    }
+    if (r === 'prazo') return '';
+    if ((r === 'consumidor' || r === 'ponto_definido' || r === 'ganha_provando') && (x === 'pulado' || x === 'jev_falhou')) return '';
+    if (r === 'inventa' && e === 'palpite_alt' && v === 1 && x.indexOf('descarta') === 0) return '';
+    if (r === 'cena' && v === 1) return '';
+    if (r === 'cena' && x === 'outro' && !(typeof v === 'number' && v >= PURI_LIM.SEGMENTO_P_MIN)) return '';
+    if (r === 'categoria' && typeof v === 'string') {
+      var mc = /:(\d*\.?\d+)$/.exec(v);
+      return mc ? 'chance: ' + Math.round(parseFloat(mc[1]) * 100) + '%' : '';
+    }
+    if (r === 'jev_antes_falhou' || r === 'objetivo_jev_falhou' || r === 'tipos_jev_falhou') return '';
+    if (r === 'jev_falhou' && e === 'aprofundar') return '';
+    if (cam === 'codigo' && r !== 'escolha') return '';
+    if (typeof v === 'number' && isFinite(v)) {
+      var n = Math.round(v * 10) / 10;
+      if (cam === 'jev' && PURI_JEV_NAOPROB.indexOf(r) < 0 && !/_jev_falhou$/.test(r) && v >= 0 && v <= 1) return 'chance: ' + Math.round(v * 100) + '%';
+      if (r === 'escolha') return 'esforço ' + n;
+      if (r === 'reescrita') return 'tentativa ' + n;
+      if (r === 'haiku_falhou' || r === 'haiku_ou_formato' || r === 'sem_base' || r === 'jev_depois_falhou' || /jev_falhou$/.test(r)) return 'tentativa ' + (n + 1);
+      if (r === 'melhor_pergunta') return n + ' candidatas';
+      return String(n);
+    }
+    return puriTxt(v);
+  }
+  function puriMontarJev(alvo, log) {
+    var itens = (Array.isArray(log) ? log : []).filter(function (x) { return x && typeof x === 'object'; })
+      .sort(function (a, b) { return (Number(a.t) || 0) - (Number(b.t) || 0); });
+    var cont = { jev: 0, codigo: 0, haiku: 0, prazo: 0 };
+    var cams = itens.map(function (x) { var c = puriJevCamada(x); cont[c]++; return c; });
+    alvo.appendChild(puriEl('h4', 'puri-det-titulo', 'O que o Jev viu'));
+    if (!itens.length) { alvo.appendChild(puriEl('p', 'puri-det-texto', 'Nenhuma decisão registrada.')); return; }
+    var chips = puriEl('div', 'puri-jev-resumo');
+    [[cont.jev, 'decisão do Jev', 'decisões do Jev'], [cont.codigo, 'regra do código', 'regras do código'], [cont.haiku, 'texto da IA refeito ou com falha', 'textos da IA refeitos ou com falha'], [cont.prazo, 'vez com pouco tempo', 'vezes com pouco tempo']].forEach(function (c) {
+      if (c[0] > 0) chips.appendChild(puriEl('span', 'puri-jev-cont', puriN(c[0], c[1], c[2])));
+    });
+    alvo.appendChild(chips);
+    var ul = puriEl('ul', 'puri-jev-lista');
+    itens.forEach(function (x, i) {
+      var cam = cams[i];
+      var li = puriEl('li', 'puri-jev-item');
+      var topo = puriEl('div', 'puri-jev-linha');
+      topo.appendChild(puriEl('span', 'puri-jev-hora', puriHora(x.t)));
+      topo.appendChild(puriEl('span', 'puri-jev-etapa', puriJevEtapa(x.e)));
+      topo.appendChild(puriEl('strong', 'puri-jev-rot', puriJevRotulo(x.r)));
+      var v = puriJevValor(x.v, x, cam);
+      if (v) topo.appendChild(puriEl('span', 'puri-jev-valor', v));
+      var ef = puriJevEfeito(x.x, x);
+      if (ef) topo.appendChild(puriEl('span', 'puri-jev-efeito', '→ ' + ef));
+      topo.appendChild(puriEl('span', 'puri-jev-chip puri-jev-chip-' + cam, PURI_JEV_CAMADA[cam]));
+      li.appendChild(topo);
+      if (cam === 'jev' || cam === 'codigo' || cam === 'prazo') {
+        var rg = puriJevRegra(x);
+        if (rg) {
+          var dt = puriEl('details', 'puri-jev-regra');
+          dt.appendChild(puriEl('summary', '', 'Ver a regra'));
+          dt.appendChild(puriEl('p', '', rg));
+          li.appendChild(dt);
+        }
+      }
+      ul.appendChild(li);
+    });
+    alvo.appendChild(ul);
+    if (itens.length >= 60) alvo.appendChild(puriEl('p', 'puri-det-nota', 'O servidor guarda só as últimas 60 decisões; as mais antigas podem ter ficado de fora.'));
+  }
+  async function alternarCasoPuri(btn) {
+    var id = btn.getAttribute('data-puri-caso');
+    var tr = btn.closest('tr');
+    var prox = tr.nextElementSibling;
+    if (prox && prox.classList.contains('puri-detalhe') && prox.getAttribute('data-lead') === id) { prox.remove(); btn.setAttribute('aria-expanded', 'false'); return; }
+    var dr = document.createElement('tr');
+    dr.className = 'puri-detalhe'; dr.setAttribute('data-lead', id);
+    var td = document.createElement('td');
+    td.colSpan = 5;
+    dr.appendChild(td);
+    td.appendChild(puriEl('p', 'puri-det-texto', 'Carregando...'));
+    tr.parentNode.insertBefore(dr, tr.nextSibling);
+    btn.setAttribute('aria-expanded', 'true');
+    try {
+      if (!puriDetCache[id]) puriDetCache[id] = await DupuroAdmin.getLeadPuriDetalhe(id);
+      if (!dr.isConnected) return;
+      var kayo = await ehKayoPuri();
+      td.textContent = '';
+      td.appendChild(puriDetalheNo(puriLeadsPorId[id] || {}, puriDetCache[id] || {}, kayo));
+    } catch (e) {
+      console.error(e);
+      if (dr.isConnected) { td.textContent = ''; td.appendChild(puriEl('p', 'puri-det-texto', 'Não consegui carregar o caso: ' + motivoErro(e) + '.')); }
+    }
+  }
+  // ---- Filtros e lista de espera (Leads da Puri) ----
+  var puriFiltro = { intencao: '', destino: '', papel: '', prioridade: '' }, puriLeadsUlt = null, puriReusar = false;
+  var PURI_INTENCAO = { revender: 'Quer revender', consumir: 'Quer consumir', provar: 'Quer provar', duvida: 'Dúvida', humano: 'Falar com pessoa', incerto: 'Incerto' };
+  var PURI_PAPEL = { dono: 'Dono', socio: 'Sócio', trabalho: 'Trabalha no negócio', vou_abrir: 'Ainda vai abrir', texto: 'Outro' };
+  // mesma ordem do rótulo da linha: fluxo conhecido, intenção conhecida, depois o valor cru
+  function puriIntencaoChave(l) {
+    if (PURI_FLUXO[l.fluxo]) return l.fluxo;
+    if (PURI_FLUXO[l.intencao]) return l.intencao;
+    return l.fluxo || l.intencao || '';
+  }
+  function puriPassaFiltro(l) {
+    var f = puriFiltro, a = (l.anotacoes && typeof l.anotacoes === 'object') ? l.anotacoes : {};
+    if (f.intencao && (f.intencao === '_sem' ? !!PURI_INTENCAO[puriIntencaoChave(l)] : puriIntencaoChave(l) !== f.intencao)) return false;
+    if (f.destino && (f.destino === '_sem' ? !!puriDestinoChave(l) : puriDestinoChave(l) !== f.destino)) return false;
+    if (f.papel && !(a.qualif && typeof a.qualif === 'object' && a.qualif.papel === f.papel)) return false;
+    if (f.prioridade) {
+      var semP = l.prioridade == null || l.prioridade === '';
+      if (f.prioridade === '_sem' ? !semP : (semP || Number(l.prioridade) !== Number(f.prioridade))) return false;
+    }
+    return true;
+  }
+  function puriSelectFiltro(chave, rotulo, opcoes) {
+    var w = puriEl('label', 'puri-filtro');
+    w.appendChild(puriEl('span', 'puri-filtro-rot', rotulo));
+    var sel = puriEl('select', 'puri-filtro-sel');
+    sel.id = 'puriFiltro_' + chave;
+    sel.appendChild(new Option('Todos', ''));
+    opcoes.forEach(function (o) { sel.appendChild(new Option(o[1], o[0])); });
+    sel.value = puriFiltro[chave];
+    sel.addEventListener('change', function () { puriFiltro[chave] = sel.value; puriReusar = true; renderLeadsPuri().then(function () { var n = document.getElementById(sel.id); if (n) n.focus(); }); });
+    w.appendChild(sel);
+    return w;
+  }
+  function puriMontarBarra(alvo, todos, n, kayo) {
+    if (!alvo) return;
+    alvo.className = 'puri-filtros';
+    function ops(mapa) { return Object.keys(mapa).map(function (k) { return [k, mapa[k]]; }); }
+    alvo.appendChild(puriSelectFiltro('intencao', 'Intenção', ops(PURI_INTENCAO).concat([['_sem', 'Sem intenção']])));
+    alvo.appendChild(puriSelectFiltro('destino', 'Destino', ops(PURI_DESTINO).concat([['_sem', 'Sem destino']])));
+    alvo.appendChild(puriSelectFiltro('papel', 'Papel', ops(PURI_PAPEL)));
+    if (kayo) alvo.appendChild(puriSelectFiltro('prioridade', 'Prioridade', [['0', '0'], ['1', '1'], ['2', '2'], ['3', '3'], ['_sem', 'Sem prioridade']]));
+    alvo.appendChild(puriEl('span', 'puri-filtro-cont', 'Mostrando ' + n + ' de ' + todos.length));
+    var b = puriEl('button', 'btn btn-dark-outline btn-sm', 'Limpar filtros');
+    b.type = 'button';
+    b.addEventListener('click', function () { puriFiltro = { intencao: '', destino: '', papel: '', prioridade: '' }; puriReusar = true; renderLeadsPuri(); });
+    alvo.appendChild(b);
+  }
+  function puriMontarEspera(alvo, todos) {
+    if (!alvo) return;
+    var esp = todos.filter(function (l) { return puriDestinoChave(l) === 'lista_espera'; });
+    if (!esp.length) return;
+    var grupos = {};
+    esp.forEach(function (l) {
+      var bruto = String(l.cidade || '').replace(/\s+/g, ' ').trim();
+      var chave = bruto ? bruto.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase() : '';
+      var g = grupos[chave] || (grupos[chave] = { n: 0, graf: {} });
+      g.n++;
+      if (bruto) g.graf[bruto] = (g.graf[bruto] || 0) + 1;
+    });
+    var lista = Object.keys(grupos).map(function (k) {
+      var g = grupos[k], nome = Object.keys(g.graf).sort(function (a, b) { return g.graf[b] - g.graf[a]; })[0] || 'Sem cidade';
+      return { nome: nome, n: g.n };
+    }).sort(function (a, b) { return b.n - a.n || a.nome.localeCompare(b.nome, 'pt-BR'); });
+    alvo.className = 'puri-espera';
+    alvo.appendChild(puriEl('h4', 'puri-det-titulo', 'Lista de espera por cidade'));
+    var ul = puriEl('ul', 'puri-espera-lista');
+    lista.forEach(function (x) { ul.appendChild(puriEl('li', '', x.nome + ' — ' + puriN(x.n, 'pessoa', 'pessoas'))); });
+    alvo.appendChild(ul);
+  }
+  // Custo da Puri no mês (só o Kayo): total/teto + por ambiente e serviço; por função num <details>.
+  var PURI_CUSTO_AMB = { prod: 'Site oficial', dev: 'Teste' }, PURI_CUSTO_SERV = { anthropic: 'IA (Haiku)', jev: 'Jev' };
+  function puriUsd(v) { return v > 0 && v < 0.005 ? 'menos de US$ 0,01' : 'US$ ' + v.toFixed(2).replace('.', ','); }
+  function puriChamadas(n) { return puriN(n, 'chamada', 'chamadas'); }
+  var puriCustoCache = null, puriCustoGer = 0, puriCustoAberto = false; // último custo carregado; estado do <details> entre renders
+  async function puriMontarCusto(alvo) {
+    alvo.textContent = '';
+    if (!(await ehKayoPuri())) return;
+    var sec = puriEl('section', 'puri-custo');
+    sec.appendChild(puriEl('h4', 'puri-det-titulo', 'Custo da Puri no mês'));
+    alvo.appendChild(sec);
+    var res, ger = puriCustoGer;
+    if (puriCustoCache && Date.now() - puriCustoCache.t < 300000) res = puriCustoCache.res; // reaproveita: filtro não refaz as RPCs
+    else {
+      res = await Promise.all([
+        DupuroAdmin.getCustoPuri().catch(function () { return null; }),
+        DupuroAdmin.getCustoPuriDetalhe().then(function (d) { return { d: d }; }, function (e) { return { e: e }; })
+      ]);
+      if (ger === puriCustoGer && res[0] && !res[1].e) puriCustoCache = { t: Date.now(), res: res }; // erro não fica em cache
+    }
+    if (!alvo.isConnected) return;
+    var tot = res[0], det = res[1];
+    if (tot) sec.appendChild(puriEl('p', 'puri-custo-total', puriUsd(tot.gasto) + ' de ' + puriUsd(tot.teto)));
+    if (det.e) { console.error(det.e); sec.appendChild(puriEl('p', 'puri-custo-nota', 'Não consegui carregar o detalhe do custo: ' + motivoErro(det.e) + '.')); return; }
+    var linhas = det.d, estimado = false;
+    if (!linhas.length) sec.appendChild(puriEl('p', 'puri-custo-nota', 'Nenhuma chamada de IA neste mês.'));
+    ['prod', 'dev'].concat(linhas.map(function (x) { return x.ambiente; }).filter(function (a, i, v) { return a !== 'prod' && a !== 'dev' && v.indexOf(a) === i; })).forEach(function (amb) {
+      var doAmb = linhas.filter(function (x) { return x.ambiente === amb; });
+      if (!doAmb.length) return;
+      var bloco = puriEl('div', 'puri-custo-amb');
+      bloco.appendChild(puriEl('strong', 'puri-custo-amb-nome', PURI_CUSTO_AMB[amb] || amb));
+      var servs = [];
+      doAmb.forEach(function (x) { if (servs.indexOf(x.servico) < 0) servs.push(x.servico); });
+      servs.forEach(function (sv) {
+        var f = doAmb.filter(function (x) { return x.servico === sv; });
+        var ch = 0, cu = 0;
+        f.forEach(function (x) { ch += x.chamadas; cu += x.custo_usd; if (x.tem_estimado) estimado = true; });
+        var li = puriEl('div', 'puri-custo-linha');
+        li.appendChild(puriEl('span', 'puri-custo-serv', PURI_CUSTO_SERV[sv] || sv));
+        li.appendChild(puriEl('span', 'puri-custo-n', puriChamadas(ch)));
+        li.appendChild(puriEl('span', 'puri-custo-val', puriUsd(cu)));
+        bloco.appendChild(li);
+      });
+      sec.appendChild(bloco);
+    });
+    if (linhas.length) {
+      var dt = puriEl('details', 'puri-custo-det');
+      dt.open = puriCustoAberto;
+      dt.addEventListener('toggle', function () { puriCustoAberto = dt.open; });
+      dt.appendChild(puriEl('summary', '', 'Ver por função'));
+      linhas.forEach(function (x) {
+        var li = puriEl('div', 'puri-custo-linha');
+        li.appendChild(puriEl('span', 'puri-custo-serv', (PURI_CUSTO_AMB[x.ambiente] || x.ambiente) + ' · ' + (PURI_CUSTO_SERV[x.servico] || x.servico) + ' · ' + x.funcao));
+        li.appendChild(puriEl('span', 'puri-custo-n', puriChamadas(x.chamadas)));
+        li.appendChild(puriEl('span', 'puri-custo-val', puriUsd(x.custo_usd)));
+        dt.appendChild(li);
+      });
+      sec.appendChild(dt);
+    }
+    sec.appendChild(puriEl('p', 'puri-custo-nota', 'Estimativa feita pela Puri. A fatura oficial é da Anthropic e da TypeSafe.' + (estimado ? ' Parte do valor usa preço estimado.' : '')));
   }
   async function renderLeadsPuri() {
     var box = document.getElementById('puriLeads');
     var leads;
-    try { leads = await DupuroAdmin.getLeadsPuri(); }
+    puriDetCache = {};
+    try { if (!(puriReusar && puriLeadsUlt)) { puriCustoCache = null; puriCustoGer++; } leads = (puriReusar && puriLeadsUlt) ? puriLeadsUlt : await DupuroAdmin.getLeadsPuri(puriAmb); puriLeadsUlt = leads; puriReusar = false; }
     catch (e) { console.error(e); box.innerHTML = '<div class="empty-state">Não consegui carregar os leads agora: ' + esc(motivoErro(e)) + '.</div>'; return; }
-    visitasPuriN = leads.filter(function (l) { return l.visita_status === 'pedida'; }).length;
-    marcarBadge('puri', visitasPuriN);
-    marcarBadge('cadastros', pendentesN + visitasPuriN);
+    var kayo = await ehKayoPuri();
+    puriLeadsPorId = {}; leads.forEach(function (x) { puriLeadsPorId[x.id] = x; });
+    var avisoDev = puriAmb === 'dev' ? '<div class="empty-state" style="margin-bottom:12px;"><strong>Mostrando conversas de TESTE</strong></div>' : '';
+    if (puriAmb === 'prod') { // contadores do menu só refletem produção
+      visitasPuriN = leads.filter(function (l) { return l.visita_status === 'pedida'; }).length;
+      quentesPuriN = kayo ? leads.filter(quentePuri).length : 0;
+      marcarBadge('puri', visitasPuriN + quentesPuriN);
+      marcarBadge('cadastros', pendentesN + visitasPuriN + quentesPuriN);
+    }
     if (!leads.length) {
-      box.innerHTML = '<div class="empty-state">Nenhum lead da Puri ainda. Quando alguém pedir a visita de um vendedor ou deixar contato, aparece aqui.</div>';
+      box.innerHTML = avisoDev + '<div id="puriCusto"></div><div class="empty-state">Nenhum lead da Puri ainda. Quando alguém pedir a visita de um vendedor ou deixar contato, aparece aqui.</div>';
+      puriMontarCusto(box.querySelector('#puriCusto')).catch(function (e) { console.error(e); });
       return;
     }
-    var ordem = { pedida: 0, agendada: 1 };
-    function grupoPuri(l) { return ordem[l.visita_status] != null ? ordem[l.visita_status] : (l.lead_profile ? 2 : 3); } // visitas pedidas, agendadas, convertidos, resto
+    var ordem = { pedida: 1, agendada: 2 };
+    function grupoPuri(l) { return quentePuri(l) ? 0 : (ordem[l.visita_status] != null ? ordem[l.visita_status] : (l.lead_profile ? 3 : 4)); } // contato rápido aberto, visitas pedidas, agendadas, convertidos, resto
     leads = leads.slice().sort(function (a, b) {
       var oa = grupoPuri(a), ob = grupoPuri(b);
       if (oa !== ob) return oa - ob;
-      return oa === 2 ? (Number(b.prioridade) || 0) - (Number(a.prioridade) || 0) : 0; // convertidos: prioridade maior primeiro; senão mantém do mais novo pro mais antigo (sort estável)
+      return (oa === 0 || oa === 3) ? (Number(b.prioridade) || 0) - (Number(a.prioridade) || 0) : 0; // prioridade maior primeiro; empate/resto mantém do mais novo pro mais antigo (sort estável)
     });
+    var todosPuri = leads;
+    leads = leads.filter(puriPassaFiltro);
     function btnStatus(l, st, texto, perigo) {
       return '<button type="button" class="btn ' + (perigo ? 'btn-dark-outline' : 'btn-primary') + ' btn-sm" data-puri-status="' + esc(st) + '" data-puri-id="' + esc(l.id) + '">' + texto + '</button>';
     }
@@ -4404,6 +5037,10 @@
       var onde = [l.bairro, l.cidade].filter(Boolean).map(esc).join(', ');
       var origem = esc(l.pagina || '—') + ' · ' + esc(PURI_FLUXO[l.fluxo] || PURI_FLUXO[l.intencao] || l.fluxo || l.intencao || 'conversa');
       var visita = '', acoes = '', extra = '';
+      extra += '<br><span class="badge-pill">Destino: ' + esc(PURI_DESTINO[puriDestinoChave(l)] || '—') + '</span>' + (l.esforco != null && l.esforco !== '' ? ' <span class="badge-pill">Esforço ' + esc(l.esforco) + '/3</span>' : '');
+      if (kayo && !l.lead_profile && quentePuri(l)) extra += ' <span class="badge-pill">Prioridade' + (Number(l.prioridade) ? ' ' + esc(Number(l.prioridade)) + '/3' : '') + '</span>';
+      if (l.anotacoes && l.anotacoes.mapa && l.anotacoes.mapa.simples === true) extra += ' <span class="badge-pill">Mapa simples</span>';
+      if (!l.lead_profile && l.anotacoes && l.anotacoes.conversao_falhou === true) extra += ' <span class="badge-pill">Conta sem vínculo</span>';
       if (l.lead_profile) extra += '<br><span class="badge-pill">Virou conta</span>' + (Number(l.prioridade) ? ' <span class="badge-pill">Prioridade ' + esc(Number(l.prioridade)) + '/3</span>' : '');
       var detPuri = [l.segmento ? (PURI_SEG[l.segmento] || l.segmento) : '', l.movimento ? (PURI_MOV[l.movimento] || l.movimento) : ''].filter(Boolean).map(esc).join(' · ');
       if (detPuri) extra += '<br><span class="subtitle">' + detPuri + '</span>';
@@ -4415,12 +5052,16 @@
         visita = '<strong>' + esc(dia) + (per ? ', de ' + esc(per) : '') + '</strong><br>' + esc(l.nome || '—') + '<br>' + esc(l.telefone || '—') +
           '<br><span class="badge-pill">' + esc(PURI_STATUS[l.visita_status] || l.visita_status) + '</span>' + (l.resumo ? '<br>' + esc(l.resumo) : '') + extra;
         var wa = waPuri(l);
-        if (wa) acoes += '<a class="btn btn-green btn-sm" href="' + esc(wa) + '" target="_blank" rel="noopener">Chamar cliente no WhatsApp</a>';
+        if (wa) acoes += '<a class="btn btn-green btn-sm" href="' + esc(wa) + '" target="_blank" rel="noopener">Chamar no WhatsApp</a>';
         if (l.visita_status === 'pedida') acoes += btnStatus(l, 'agendada', 'Marcar agendada');
         if (l.visita_status === 'pedida' || l.visita_status === 'agendada') acoes += btnStatus(l, 'feita', 'Marcar feita') + btnStatus(l, 'cancelada', 'Cancelar', true);
       } else {
         visita = (l.resumo ? esc(l.resumo) : '<span class="subtitle">Sem visita pedida.</span>') + (l.nome ? '<br>' + esc(l.nome) : '') + (l.telefone ? '<br>' + esc(l.telefone) : '') + extra;
+        var wa2 = waPuri(l);
+        if (wa2) acoes += '<a class="btn btn-green btn-sm" href="' + esc(wa2) + '" target="_blank" rel="noopener">Chamar no WhatsApp</a>';
       }
+      acoes += '<button type="button" class="btn btn-dark-outline btn-sm" data-puri-caso="' + esc(l.id) + '" aria-expanded="false">Ver o caso</button>';
+      if (kayo && quentePuri(l)) acoes += '<button type="button" class="btn btn-primary btn-sm" data-puri-atendido="' + esc(l.id) + '">Marcar como atendido</button>';
       return '<tr>' +
         '<td>' + quandoPuri(l.criado_em) + '</td>' +
         '<td>' + origem + '</td>' +
@@ -4429,7 +5070,23 @@
         '<td><div class="admin-table-actions" style="white-space:normal;">' + acoes + '</div></td>' +
         '</tr>';
     }).join('');
-    box.innerHTML = '<div style="overflow-x:auto;"><table class="data-table"><thead><tr><th>Quando</th><th>Página e fluxo</th><th>Onde</th><th>Visita / resumo</th><th></th></tr></thead><tbody>' + linhas + '</tbody></table></div>';
+    box.innerHTML = avisoDev + '<div id="puriCusto"></div><div id="puriBarra"></div><div id="puriEspera"></div>' + (leads.length ? '<div style="overflow-x:auto;"><table class="data-table"><thead><tr><th>Quando</th><th>Página e fluxo</th><th>Onde</th><th>Destino / visita / resumo</th><th></th></tr></thead><tbody>' + linhas + '</tbody></table></div>' : '<div class="empty-state">Nenhum lead com esses filtros.</div>');
+    puriMontarBarra(box.querySelector('#puriBarra'), todosPuri, leads.length, kayo);
+    puriMontarEspera(box.querySelector('#puriEspera'), todosPuri);
+    puriMontarCusto(box.querySelector('#puriCusto')).catch(function (e) { console.error(e); });
+    box.querySelectorAll('[data-puri-caso]').forEach(function (b) { b.addEventListener('click', function () { alternarCasoPuri(b); }); });
+    box.querySelectorAll('[data-puri-atendido]').forEach(function (b) {
+      b.addEventListener('click', async function () {
+        if (!await confirmar('Marcar este contato como atendido?', { ok: 'Marcar atendido' })) return;
+        b.disabled = true;
+        try {
+          var r = await DupuroAdmin.setLeadAtendido(b.getAttribute('data-puri-atendido'));
+          if (r && r.error) throw r.error;
+        } catch (e) { b.disabled = false; await aviso(motivoErro(e)); return; }
+        await renderLeadsPuri();
+        if (abaAtual === 'inicio') renderInicio();
+      });
+    });
     box.querySelectorAll('[data-puri-status]').forEach(function (b) {
       b.addEventListener('click', async function () {
         var st = b.getAttribute('data-puri-status'), id = b.getAttribute('data-puri-id');
@@ -4583,8 +5240,9 @@
   // ---- Navegação: cada aba tem endereço próprio (#pedidos, #cadastros/produtos) ----
   // Recarregar a página volta pra mesma aba, e o Voltar do navegador funciona.
   var ABAS = ['inicio', 'pedidos', 'estoque', 'numeros', 'cadastros', 'feedbacks', 'equipe', 'conta'];
-  var SUBS = ['revendedores', 'produtos', 'loja', 'cupons', 'regras', 'puri'];
+  var SUBS = ['revendedores', 'produtos', 'loja', 'cupons', 'regras', 'puri', 'fatos'];
   var abaAtual = null, subAtual = 'revendedores';
+  var fatosLiberado = false, fatosPedido = false; // 'fatos' só existe para o Kayo; link ou estado salvo de outra pessoa cai em Revendedores
   var links = document.querySelectorAll('.sidebar [data-tab], .bottom-nav [data-tab]');
   var sidebar = document.getElementById('sidebar');
 
@@ -4615,6 +5273,7 @@
   }
 
   function mostrarSub(sub) {
+    if (sub === 'fatos' && !fatosLiberado) { fatosPedido = true; sub = 'revendedores'; }
     subAtual = sub;
     document.querySelectorAll('#cadSubnav [data-sub]').forEach(function (b) {
       var on = b.getAttribute('data-sub') === sub;
@@ -4628,7 +5287,7 @@
 
   function goTo(tab, sub, opcoes) {
     opcoes = opcoes || {};
-    if (tab === 'cadastros') mostrarSub(sub || subAtual);
+    if (tab === 'cadastros') { if (!fatosLiberado) tentarLiberarFatos(); mostrarSub(sub || subAtual); } // se a checagem do Kayo falhou na abertura, tenta de novo
     var mudouAba = tab !== abaAtual;
     abaAtual = tab;
     document.querySelectorAll('.tab-panel').forEach(function (p) { p.classList.toggle('hidden', p.id !== 'tab-' + tab); });
@@ -4670,7 +5329,7 @@
   ['cadSubnav', 'pedEtapas'].forEach(function (id) {
     document.getElementById(id).addEventListener('keydown', function (e) {
       if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
-      var bs = Array.prototype.slice.call(this.querySelectorAll('[role="tab"]'));
+      var bs = Array.prototype.slice.call(this.querySelectorAll('[role="tab"]')).filter(function (x) { return !x.classList.contains('hidden'); });
       var i = bs.indexOf(document.activeElement);
       if (i < 0) return;
       e.preventDefault();
@@ -4728,7 +5387,9 @@
       DupuroAdmin.getAllOrders(), DupuroAdmin.getPendingProfiles(),
       DupuroAdmin.getProducts(), DupuroAdmin.getDeliveryPedidos(),
       DupuroAdmin.getLeadsPuri().catch(function (e) { console.error(e); return []; }) // tabela/colunas novas: se faltar, o Início segue sem a visita
+      , ehKayoPuri().then(function (k) { return k ? DupuroAdmin.getCustoPuri().catch(function () { return null; }) : null; }) // aviso de custo da Puri: só o Kayo; se falhar, não mostra nada
     ]);
+    var custoPuri = r[5];
     var pedidos = r[0], pendentes = r[1], estoque = contarEstoque(r[2]), delivery = r[3];
     var visitas = r[4].filter(function (l) { return l.visita_status === 'pedida'; });
     var naoLoja = pedidos.filter(function (o) { return o.origem !== 'loja'; }); // mesma regra da fila de Pedidos
@@ -4736,10 +5397,11 @@
     var confirmados = naoLoja.filter(function (o) { return o.status === 'processando'; });
     var entregas = delivery.filter(function (d) { return d.status === 'pago'; }); // 'pago' = confirmado: quem paga na entrega (migration_049) entra na rota com esse status e o dinheiro só entra na porta
     marcarBadge('pedidos', novos.length + entregas.length);
-    pendentesN = pendentes.length; visitasPuriN = visitas.length;
+    var quentes = (await ehKayoPuri()) ? r[4].filter(quentePuri) : []; // só o Kayo vê os casos quentes
+    pendentesN = pendentes.length; visitasPuriN = visitas.length; quentesPuriN = quentes.length;
     marcarBadge('revendedores', pendentesN);
-    marcarBadge('puri', visitasPuriN);
-    marcarBadge('cadastros', pendentesN + visitasPuriN);
+    marcarBadge('puri', visitasPuriN + quentesPuriN);
+    marcarBadge('cadastros', pendentesN + visitasPuriN + quentesPuriN);
 
     function resumoPedido(o) { return esc(o.numero) + ' · ' + esc(o.revendedorNome) + ' · ' + moeda(o.valor); }
     var itens = [];
@@ -4768,6 +5430,11 @@
       detalhe: 'O mais antigo espera ' + haQuanto(pendentes[0].created_at).replace('há ', '') +
         ' · ' + pendentes.slice(0, 3).map(function (p) { return esc(p.empresa || p.nome || '—'); }).join(', ')
     });
+    if (quentes.length) itens.push({
+      tom: 'urgente', n: quentes.length, ir: 'cadastros/puri', acao: 'Chamar agora',
+      titulo: plural(quentes.length, 'caso quente da Puri', 'casos quentes da Puri'),
+      detalhe: quentes.slice(0, 3).map(function (l) { return esc(l.nome || '—') + ' · ' + esc(l.bairro || '—') + (l.cidade ? ', ' + esc(l.cidade) : '') + ' · ' + haQuanto(l.criado_em); }).join('<br>')
+    });
     if (visitas.length) itens.push({
       tom: 'atencao', n: visitas.length, ir: 'cadastros/puri', acao: 'Chamar clientes',
       titulo: plural(visitas.length, 'visita de vendedor pedida pela Puri', 'visitas de vendedor pedidas pela Puri'),
@@ -4779,6 +5446,15 @@
         return esc(l.nome || '—') + ' · ' + esc(l.bairro || '—') + (l.cidade ? ', ' + esc(l.cidade) : '') + ' · ' + esc(dia || '—') + (per ? ', de ' + esc(per) : '') + ' (pedida ' + pedida + ')';
       }).join('<br>')
     });
+    if (custoPuri && (await ehKayoPuri()) && custoPuri.gasto >= custoPuri.teto * 0.8) { // custo da Puri é só do Kayo
+      var pctPuri = Math.floor(custoPuri.gasto / custoPuri.teto * 100), usd = function (v) { return 'US$ ' + v.toFixed(2).replace('.', ','); };
+      var estouro = custoPuri.gasto >= custoPuri.teto;
+      itens.push({
+        tom: estouro ? 'urgente' : 'atencao', n: pctPuri + '%', ir: 'cadastros/puri', acao: 'Ver a Puri',
+        titulo: estouro ? 'A Puri está sem IA até o mês virar (limite de ' + esc(usd(custoPuri.teto)) + ' atingido)' : 'A Puri usou ' + esc(String(pctPuri)) + '% do limite de gastos do mês (' + esc(usd(custoPuri.gasto)) + ' de ' + esc(usd(custoPuri.teto)) + ')',
+        detalhe: estouro ? 'Ela segue com respostas fixas.' : 'Passando do limite, ela segue só com respostas fixas até o mês virar.'
+      });
+    }
     if (estoque.esgotado || estoque.baixo) itens.push({
       tom: 'info', n: estoque.esgotado || estoque.baixo, ir: 'estoque', acao: 'Ver estoque',
       titulo: estoque.esgotado ? plural(estoque.esgotado, 'sabor esgotado', 'sabores esgotados') : plural(estoque.baixo, 'sabor com estoque baixo', 'sabores com estoque baixo'),
@@ -5377,12 +6053,257 @@
       box.classList.remove('hidden');
     }
   }
+  // ---- Fatos da Puri (subaba só do Kayo; a proteção real é do banco) ----
+  var fatoLinhas = {}; // assunto -> { f: linha do banco, el: elementos do bloco, ocupado, histAberto }
+  function fatoNorm(t) { return String(t == null ? '' : t).replace(/\r/g, '').replace(/\t/g, ' ').replace(/\s+/g, ' ').trim(); }
+  // Estado dos botões: depende só da linha do banco, do texto da caixa e de haver gravação em andamento.
+  function fatoBotoes(f, texto, ocupado) {
+    var editado = fatoNorm(texto) !== fatoNorm(f.rascunho);
+    var difere = fatoNorm(f.rascunho) !== fatoNorm(f.publicado); // compara normalizado: quebras de linha do banco não contam como diferença
+    var livre = !f.travado && !ocupado;
+    return { editado: editado, difere: difere, salvar: livre && editado, publicar: livre && difere && !editado, descartar: livre && difere && !editado, versoes: livre };
+  }
+  function fatoValida(texto) {
+    var n = fatoNorm(texto);
+    if (/[<>]/.test(n)) return 'O texto não pode ter os sinais < ou >.';
+    if (n.length < 10 || n.length > 2000) return 'O texto precisa ter entre 10 e 2000 caracteres (agora tem ' + n.length + ').';
+    return '';
+  }
+  function fatosTemEdicao() {
+    return Object.keys(fatoLinhas).some(function (k) {
+      var st = fatoLinhas[k];
+      return st.el.ta && fatoBotoes(st.f, st.el.ta.value, false).editado;
+    });
+  }
+  window.addEventListener('beforeunload', function (e) {
+    if (fatosTemEdicao()) { e.preventDefault(); e.returnValue = ''; }
+  });
+  function fatoQuando(iso) {
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return '—';
+    return d.toLocaleString('pt-BR', { timeZone: 'America/Cuiaba', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  }
+  function fatoMsg(assunto, texto, tipo, conflito) {
+    var el = fatoLinhas[assunto].el;
+    fatoLinhas[assunto].msgValida = false;
+    el.msg.textContent = texto || '';
+    el.msg.className = 'puri-fato-msg' + (tipo ? ' ' + tipo : '');
+    el.recarregar.classList.toggle('hidden', !conflito);
+  }
+  function fatoAplicar(assunto) {
+    var st = fatoLinhas[assunto], el = st.el, f = st.f;
+    var e = fatoBotoes(f, el.ta ? el.ta.value : '', st.ocupado);
+    el.sit.textContent = (e.difere ? 'Rascunho diferente do publicado' : 'Publicado') + (e.editado && !f.travado ? ' · edição ainda não salva' : '');
+    el.sit.classList.toggle('dif', e.difere || (e.editado && !f.travado));
+    if (f.aviso) el.aviso.textContent = /^aten[cç][aã]o:/i.test(f.aviso) ? f.aviso : 'Atenção: ' + f.aviso;
+    el.aviso.classList.toggle('hidden', !f.aviso);
+    if (f.travado) return;
+    el.ta.readOnly = !!st.ocupado;
+    var n = fatoNorm(el.ta.value).length;
+    el.cont.textContent = n + ' / 2000';
+    el.cont.classList.toggle('erro', n > 2000 || (n > 0 && n < 10));
+    el.pub.classList.toggle('hidden', !e.difere);
+    el.pubTxt.textContent = fatoNorm(f.publicado);
+    var invalido = e.editado && !st.ocupado ? fatoValida(el.ta.value) : '';
+    if (invalido && !el.recarregar.classList.contains('hidden')) { /* conflito pendente: mantém a explicação e o Recarregar */ }
+    else if (invalido) { el.msg.textContent = invalido; el.msg.className = 'puri-fato-msg erro'; st.msgValida = true; }
+    else if (st.msgValida) { el.msg.textContent = ''; el.msg.className = 'puri-fato-msg'; st.msgValida = false; }
+    el.bSalvar.disabled = !e.salvar || !!invalido;
+    el.bPublicar.disabled = !e.publicar;
+    el.bDescartar.disabled = !e.descartar;
+    el.bVersoes.disabled = !e.versoes;
+    el.hist.querySelectorAll('.puri-fato-usar').forEach(function (b) { b.disabled = !!st.ocupado; });
+  }
+  async function fatoHistCarregar(assunto) {
+    var st = fatoLinhas[assunto], lista = st.el.histLista;
+    lista.textContent = 'Carregando...';
+    var itens;
+    try { itens = await DupuroAdmin.getPuriFatoHistorico(assunto); }
+    catch (e) { console.error(e); lista.textContent = 'Não consegui carregar as versões anteriores: ' + motivoErro(e) + '.'; return; }
+    lista.textContent = '';
+    if (!itens.length) { lista.appendChild(puriEl('p', 'puri-fato-vazio', 'Nenhuma versão anterior ainda. Elas aparecem depois da primeira publicação.')); return; }
+    itens.forEach(function (h) {
+      var item = puriEl('div', 'puri-fato-hist-item');
+      item.appendChild(puriEl('div', 'puri-fato-hist-data', 'Publicado até ' + fatoQuando(h.criado_em)));
+      item.appendChild(puriEl('p', 'puri-fato-hist-txt', h.texto));
+      var b = puriEl('button', 'btn btn-dark-outline btn-sm puri-fato-usar', 'Usar este texto');
+      b.type = 'button'; b.disabled = !!st.ocupado;
+      b.addEventListener('click', function () { fatoUsar(assunto, h); });
+      item.appendChild(b);
+      lista.appendChild(item);
+    });
+  }
+  // Grava pelo banco com a versão que a tela recebeu; trava os botões enquanto espera.
+  async function fatoGravar(assunto, operacao, sucesso) {
+    var st = fatoLinhas[assunto];
+    if (!st || st.ocupado) return false;
+    st.ocupado = true; fatoAplicar(assunto); fatoMsg(assunto, 'Gravando...', '');
+    var r;
+    try { r = await operacao(st.f.versao); } catch (e) { r = { error: e }; }
+    st.ocupado = false;
+    if (r.error || !r.data) {
+      var m = r.error ? motivoErro(r.error) : 'tente de novo em instantes';
+      var conflito = /^conflito/i.test(m);
+      var txt = /\.$/.test(m) ? m : m + '.';
+      if (/n[úu]mero|telefone/i.test(m)) txt += ' Números longos podem ser confundidos com telefone; escreva de outro jeito.';
+      if (conflito) txt += ' O que você digitou continua na caixa; copie se precisar e depois recarregue este fato.';
+      fatoMsg(assunto, txt, 'erro', conflito);
+      fatoAplicar(assunto);
+      return false;
+    }
+    st.f = r.data;
+    if (st.el.ta) st.el.ta.value = fatoNorm(r.data.rascunho);
+    fatoMsg(assunto, sucesso, 'ok');
+    fatoAplicar(assunto);
+    if (st.histAberto) fatoHistCarregar(assunto);
+    return true;
+  }
+  async function fatoSalvar(assunto) {
+    var st = fatoLinhas[assunto], ta = st.el.ta;
+    var v = fatoValida(ta.value);
+    if (v) { fatoMsg(assunto, v, 'erro'); ta.focus(); return; }
+    var n = fatoNorm(ta.value);
+    await fatoGravar(assunto, function (ver) { return DupuroAdmin.salvarPuriFato(assunto, n, ver); }, 'Rascunho salvo. A Puri de teste leva até 1 minuto para usar o texto novo.');
+  }
+  async function fatoPublicar(assunto) {
+    var st = fatoLinhas[assunto];
+    if (st.ocupado || fatoBotoes(st.f, st.el.ta.value, false).editado) return;
+    var ok = await confirmar('Publicar este texto em "' + st.f.titulo + '"?\n\n' + fatoNorm(st.f.rascunho) + '\n\nGuarda o texto para a Puri do site. Por enquanto a Puri do site ainda não lê daqui; isso começa quando a versão nova for publicada.', { ok: 'Publicar' });
+    if (!ok) return;
+    await fatoGravar(assunto, function (ver) { return DupuroAdmin.publicarPuriFato(assunto, ver); }, 'Publicado. A Puri do site só vai ler este texto quando a versão nova for publicada.');
+  }
+  async function fatoDescartar(assunto) {
+    var st = fatoLinhas[assunto];
+    if (st.ocupado || fatoBotoes(st.f, st.el.ta.value, false).editado) return;
+    var ok = await confirmar('Descartar o rascunho de "' + st.f.titulo + '"? O texto publicado continua valendo e o rascunho volta a ser igual a ele.', { ok: 'Descartar', perigo: true });
+    if (!ok) return;
+    await fatoGravar(assunto, function (ver) { return DupuroAdmin.descartarPuriFato(assunto, ver); }, 'Rascunho descartado.');
+  }
+  async function fatoUsar(assunto, h) {
+    var st = fatoLinhas[assunto];
+    if (st.ocupado) return;
+    if (fatoBotoes(st.f, st.el.ta.value, false).editado) {
+      var ok = await confirmar('Você tem uma edição que ainda não foi salva em "' + st.f.titulo + '". Usar o texto antigo troca a caixa por ele e a edição se perde. Continuar?', { ok: 'Usar texto antigo' });
+      if (!ok) return;
+    }
+    await fatoGravar(assunto, function (ver) { return DupuroAdmin.voltarPuriFato(assunto, h.id, ver); }, 'Texto antigo colocado no rascunho. Ainda não foi publicado.');
+  }
+  // Busca a linha de novo, mas deixa na caixa o que a pessoa digitou (para copiar).
+  async function fatoRecarregar(assunto) {
+    var st = fatoLinhas[assunto];
+    if (st.ocupado) return;
+    st.ocupado = true; fatoAplicar(assunto); fatoMsg(assunto, 'Recarregando...', '');
+    try {
+      var nova = (await DupuroAdmin.getPuriFatos()).filter(function (x) { return x.assunto === assunto; })[0];
+      if (!nova) throw new Error('Assunto não encontrado.');
+      st.f = nova;
+      st.ocupado = false;
+      fatoMsg(assunto, 'Fato recarregado do banco. O que você digitou continua na caixa, sem salvar.', 'ok');
+    } catch (e) {
+      console.error(e);
+      st.ocupado = false;
+      fatoMsg(assunto, 'Não consegui recarregar: ' + motivoErro(e) + '.', 'erro', true);
+    }
+    fatoAplicar(assunto);
+    if (st.histAberto) fatoHistCarregar(assunto);
+  }
+  function fatoMontar(f) {
+    var bloco = puriEl('article', 'puri-fato');
+    var idTa = 'fatoTa_' + f.assunto;
+    var el = {};
+    var cab = puriEl('div', 'puri-fato-cab');
+    cab.appendChild(puriEl('h3', 'puri-fato-titulo', f.titulo));
+    el.sit = puriEl('span', 'puri-fato-sit', '');
+    cab.appendChild(el.sit);
+    bloco.appendChild(cab);
+    el.aviso = puriEl('p', 'puri-fato-aviso hidden', '');
+    bloco.appendChild(el.aviso);
+    var st = { f: f, el: el, ocupado: false, histAberto: false };
+    fatoLinhas[f.assunto] = st;
+    if (f.travado) {
+      bloco.appendChild(puriEl('p', 'puri-fato-fixo', f.publicado));
+      bloco.appendChild(puriEl('p', 'puri-fato-trava', 'Este assunto só muda no código. Peça a troca.' + (f.assunto === 'leite_gluten' ? ' As respostas de saúde são fixas para proteger quem tem alergia.' : '')));
+      fatoAplicar(f.assunto);
+      return bloco;
+    }
+    var rot = puriEl('label', 'puri-fato-rot', 'Texto do rascunho');
+    rot.htmlFor = idTa;
+    bloco.appendChild(rot);
+    el.ta = puriEl('textarea', 'puri-fato-ta');
+    el.ta.id = idTa; el.ta.maxLength = 2000; el.ta.rows = 4; el.ta.value = fatoNorm(f.rascunho);
+    el.ta.setAttribute('aria-describedby', idTa + '_dica');
+    el.ta.addEventListener('input', function () { fatoAplicar(f.assunto); });
+    bloco.appendChild(el.ta);
+    var rod = puriEl('div', 'puri-fato-rodape');
+    rod.id = idTa + '_dica';
+    rod.appendChild(puriEl('span', '', 'Quebras de linha viram espaço ao salvar.'));
+    el.cont = puriEl('span', 'puri-fato-cont', '');
+    rod.appendChild(el.cont);
+    bloco.appendChild(rod);
+    var acoes = puriEl('div', 'puri-fato-acoes');
+    function botao(cls, texto, fn) {
+      var b = puriEl('button', 'btn btn-sm ' + cls, texto);
+      b.type = 'button';
+      b.addEventListener('click', fn);
+      acoes.appendChild(b);
+      return b;
+    }
+    el.bSalvar = botao('btn-primary', 'Salvar rascunho', function () { fatoSalvar(f.assunto); });
+    el.bPublicar = botao('btn-dark-outline', 'Publicar', function () { fatoPublicar(f.assunto); });
+    el.bDescartar = botao('btn-dark-outline', 'Descartar rascunho', function () { fatoDescartar(f.assunto); });
+    el.bVersoes = botao('btn-dark-outline', 'Versões anteriores', function () {
+      st.histAberto = !st.histAberto;
+      el.bVersoes.setAttribute('aria-expanded', st.histAberto ? 'true' : 'false');
+      el.hist.classList.toggle('hidden', !st.histAberto);
+      if (st.histAberto) fatoHistCarregar(f.assunto);
+    });
+    el.bVersoes.setAttribute('aria-expanded', 'false');
+    bloco.appendChild(acoes);
+    el.msg = puriEl('p', 'puri-fato-msg', '');
+    el.msg.setAttribute('aria-live', 'polite');
+    bloco.appendChild(el.msg);
+    el.recarregar = puriEl('button', 'btn btn-dark-outline btn-sm hidden', 'Recarregar este fato');
+    el.recarregar.type = 'button';
+    el.recarregar.addEventListener('click', function () { fatoRecarregar(f.assunto); });
+    bloco.appendChild(el.recarregar);
+    el.pub = puriEl('details', 'puri-fato-pub hidden');
+    el.pub.appendChild(puriEl('summary', '', 'Ver o que está publicado'));
+    el.pubTxt = puriEl('p', 'puri-fato-fixo', '');
+    el.pub.appendChild(el.pubTxt);
+    bloco.appendChild(el.pub);
+    el.hist = puriEl('div', 'puri-fato-hist hidden');
+    el.histLista = puriEl('div', '', '');
+    el.hist.appendChild(el.histLista);
+    bloco.appendChild(el.hist);
+    fatoAplicar(f.assunto);
+    return bloco;
+  }
+  async function renderFatosPuri() {
+    var box = document.getElementById('puriFatos');
+    if (!box || !(await ehKayoPuri())) return;
+    var linhas;
+    try { linhas = await DupuroAdmin.getPuriFatos(); }
+    catch (e) {
+      console.error(e);
+      box.textContent = '';
+      box.appendChild(puriEl('p', 'puri-fato-msg erro', 'Não consegui carregar os fatos agora: ' + motivoErro(e) + '.'));
+      var t = puriEl('button', 'btn btn-dark-outline btn-sm', 'Tentar de novo');
+      t.type = 'button';
+      t.addEventListener('click', function () { renderFatosPuri(); });
+      box.appendChild(t);
+      return;
+    }
+    box.textContent = '';
+    var lista = puriEl('div', 'puri-fato-lista');
+    linhas.forEach(function (f) { lista.appendChild(fatoMontar(f)); });
+    box.appendChild(lista);
+  }
   var CARREGA = {
     inicio: [renderInicio],
-    pedidos: [renderProducts, renderPedidosFila, renderOrders, populateResellerSelect, updateOrderNumberPreview, loadLimiteLitros, renderFinanceiro],
+    pedidos: [renderProducts, renderPedidosFila, renderOrders, populateResellerSelect, updateOrderNumberPreview, loadLimiteLitros, loadPedidoMinimoDelivery, renderFinanceiro],
     estoque: [renderProducts, resetProdForm, renderProducoes, renderAjustes],
     numeros: [renderOverview, renderAudits, renderCaixaFechamentos, renderTaxasEntregador, renderNotas],
-    cadastros: [renderPending, renderResellers, renderProducts, renderAcompanhamentos, renderPromocoesAdmin, renderCoupons, loadLimiteLitros, populateResellerSelect, renderLeadsPuri],
+    cadastros: [renderPending, renderResellers, renderProducts, renderAcompanhamentos, renderPromocoesAdmin, renderCoupons, loadLimiteLitros, loadPedidoMinimoDelivery, populateResellerSelect, renderLeadsPuri, renderFatosPuri],
     feedbacks: [renderFeedbacks],
     equipe: [renderAdmins, renderAtendentes, preencherAcesso],
     conta: [renderWhatsapp]
@@ -5412,6 +6333,17 @@
   DupuroAdmin.getAllOrders(); DupuroAdmin.getPendingProfiles(); DupuroAdmin.getProducts(); carregarFeedbacks();
   var inicial = lerEndereco();
   goTo(inicial.tab, inicial.sub, { substituir: true });
+  // Libera a subaba Fatos da Puri só para o Kayo (nasce escondida, sem piscar para os outros).
+  function tentarLiberarFatos() {
+    if (fatosLiberado) return;
+    ehKayoPuri().then(function (k) {
+      if (!k || fatosLiberado) return;
+      fatosLiberado = true;
+      document.getElementById('subFatosBtn').classList.remove('hidden');
+      if (fatosPedido && abaAtual === 'cadastros') goTo('cadastros', 'fatos', { substituir: true });
+    });
+  }
+  tentarLiberarFatos();
 
   // ---- Aviso de pedido novo ----
   // A cada minuto (com a aba do navegador visível) conta os pedidos esperando

@@ -2,6 +2,8 @@
 
 Lactose e validade confirmadas em 2026-11-20.
 
+Nota (reforma da Puri): a conservação confirmada é "freezer, sem recongelar" (validade de 6 meses mantido congelado). O mínimo do delivery não é mais fato fixo: vem do banco, no CATÁLOGO AO VIVO. Os fatos de `fatos.ts` são divididos por assunto (`FATOS_LISTA`) e, a partir da publicação da Etapa 6, ficam editáveis no admin (subaba Fatos da Puri, tabela `puri_fatos`); este arquivo é só a base de consulta.
+
 Fonte única do que o Haiku pode afirmar. Tudo marcado **[CONFIRMAR]** depende do Kayo (hoje não resta nenhum). Preço, estoque, sabores disponíveis, taxa de entrega e turnos **não ficam aqui**: são lidos do banco na hora (`products`, `product_flavor_stock`, `delivery_catalogo()`, `delivery_config`).
 
 ## Empresa
@@ -22,7 +24,7 @@ Fonte única do que o Haiku pode afirmar. Tudo marcado **[CONFIRMAR]** depende d
 
 ## Revenda (atacado)
 - **Regra nova (vigente quando a tarefa da regra for publicada)**: pedido de atacado precisa somar **no mínimo 30 L**, misturando caixas de 5 L e 10 L (ex.: 3 de 10 L, ou 6 de 5 L). **Primeiro pedido: sem mínimo**, qualquer quantidade de produtos de 5 L e 10 L.
-- Rendimento: 1 caixa de 10 L ≈ 20 copos de 500 ml (conta de volume; com complementos rende um pouco mais). Preço sugerido de venda: R$ 18–20 o copo de 500 ml → R$ 360–400 por caixa de 10 L.
+- Rendimento: 1 caixa de 10 L ≈ 20 copos de 500 ml (conta de volume; com complementos rende um pouco mais). Preço sugerido de venda: R$ 17–22 o copo de 500 ml → R$ 340–440 por caixa de 10 L.
 - Cadastro: cria conta (nome, negócio, telefone, e-mail, cidade, senha ≥ 6). Fica **pendente** até o time Dupuro aprovar; só então o painel libera.
 - Pedido do revendedor vale na hora (sem confirmação do admin).
 - Pagamento: Pode pagar como preferir: pelo site (Pix ou crédito até 3x) ou na entrega/retirada (Pix, dinheiro com troco, débito, crédito). A prazo só para revendedor liberado pelo admin.
